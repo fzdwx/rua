@@ -1,7 +1,7 @@
-import Home from "./components/Home/index.tsx";
+import CommandPalette from "./components/CommandPalette";
 
 function App() {
-    return <Home/>;
+    return <CommandPalette />;
 }
 
 export default App;
