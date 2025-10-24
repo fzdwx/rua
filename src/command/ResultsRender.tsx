@@ -2,8 +2,6 @@ import {ActionId, ActionImpl, getListboxItemId, KBAR_LISTBOX} from "./";
 import * as React from "react";
 import {useVirtualizer} from "@tanstack/react-virtual";
 import {usePointerMovedSinceMount} from "./utils";
-import {ActionImpl, ActionId} from "./action/ActionImpl";
-import {KBAR_LISTBOX, getListboxItemId} from "./Input";
 
 const START_INDEX = 0;
 
@@ -51,6 +49,7 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
     });
 
     React.useEffect(() => {
+        // @ts-ignore
         const handler = (event) => {
             if (!props.handleKeyEvent) {
                 return;

@@ -70,7 +70,7 @@ export const useActionStore = (actions?: Action[]) => {
             };
         });
     }
-
+    //@ts-ignore
     const setActiveIndex = (cb) =>
         setState((state) => ({
             ...state,

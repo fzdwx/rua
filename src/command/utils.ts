@@ -1,6 +1,7 @@
 import * as React from "react";
 import type {Action} from "./types";
 
+//@ts-ignore
 export function swallowEvent(event) {
     event.stopPropagation();
     event.preventDefault();
@@ -14,6 +15,7 @@ export function useOuterClick(
     cbRef.current = cb;
 
     React.useEffect(() => {
+        //@ts-ignore
         function handler(event) {
             if (
                 dom.current?.contains(event.target) ||

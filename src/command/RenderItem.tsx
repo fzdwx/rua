@@ -8,6 +8,7 @@ const RenderItem = React.forwardRef(
             action,
             active,
             currentRootActionId,
+            // @ts-ignore
             style
         }: {
             action: ActionImpl;

@@ -2,11 +2,7 @@ import * as React from "react";
 import type {ActionImpl} from "./action";
 import {Priority, useThrottledValue} from "./utils";
 import Fuse, {IFuseOptions} from "fuse.js";
-import * as React from "react";
-import Fuse, {IFuseOptions} from "fuse.js";
 import {ActionId, ActionTree} from "./types";
-import {ActionImpl, Priority} from "./action/ActionImpl";
-import {useThrottledValue} from "ahooks";
 
 export const NO_GROUP = {
     name: "none",
@@ -32,6 +28,7 @@ const fuseOptions: IFuseOptions<ActionImpl> = {
     minMatchCharLength: 1,
 };
 
+//@ts-ignore
 function order(a, b) {
     /**
      * Larger the priority = higher up the list
