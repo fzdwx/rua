@@ -4,17 +4,25 @@
   "version": "0.1.0",
   "identifier": "like.rua.ai",
   "build": {
-    "beforeDevCommand": "pnpm dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeDevCommand": "pnpm run dev",
+    "devUrl": "http://localhost:1421",
+    "beforeBuildCommand": "pnpm run build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "rua",
-        "width": 800,
-        "height": 600
+        "title": "Rua",
+        "width": 900,
+        "height": 540,
+        "center": true,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": true,
+        "focus": true
       }
     ],
     "security": {
