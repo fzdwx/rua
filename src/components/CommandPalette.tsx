@@ -92,29 +92,28 @@ export default function CommandPalette() {
 
   return (
     <div className="command-container">
-      <div className="command-background">
-        {/* Input */}
-        <div>
-          <input
-            ref={inputRef}
-            type="text"
-            className="command-input"
-            autoComplete="off"
-            autoFocus
-            spellCheck="false"
-            placeholder="Type a command or search…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-        </div>
+      {/* Fixed Input at Top */}
+      <input
+        ref={inputRef}
+        type="text"
+        className="command-input"
+        autoComplete="off"
+        autoFocus
+        spellCheck="false"
+        placeholder="Type a command or search…"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={handleKeyDown}
+      />
 
-        {/* Results */}
+      {/* Scrollable Results */}
+      <div className="command-background">
         <div
           className="command-listbox"
           style={{
-            maxHeight: "450px",
+            height: "100%",
             overflowY: "auto",
+            paddingTop: "60px",
           }}
         >
           {loading ? (
