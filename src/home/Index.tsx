@@ -1,4 +1,4 @@
-import {useState, useRef, useMemo} from "react";
+import {useState, useRef} from "react";
 import {
     Container,
     Background,
@@ -12,27 +12,23 @@ import {
 } from "../command";
 import {useApplications} from "./useApplications";
 import {useQuickActions} from "./useQuickActions";
+import {QuickResult} from "./QuickResult";
 
 export default function Home() {
     const [search, setSearch] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Load applications and convert to actions
-    const {loading, actions: applicationActions} = useApplications();
+    const {loading, actions} = useApplications();
 
-    // Generate quick actions based on search input
-    const quickActions = useQuickActions(search);
-
-    // Combine all actions (quick actions first for priority)
-    const allActions = useMemo(() => {
-        return [...quickActions, ...applicationActions];
-    }, [quickActions, applicationActions]);
+    // Check for quick result based on search input
+    const quickResult = useQuickActions(search);
 
     // Initialize action store
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
 
     // Register actions when applications change
-    useRegisterActions(allActions, [allActions]);
+    useRegisterActions(actions, [actions]);
 
     // Use the matches hook for search and filtering
     const {results} = useMatches(search, state.actions, state.rootActionId);
@@ -51,6 +47,9 @@ export default function Home() {
                     }}
                     defaultPlaceholder="Type a command or search…"
                 />
+
+                {/* Quick result view for calculations and built-in functions */}
+                {quickResult && <QuickResult result={quickResult} />}
 
                 {loading ? (
                     <div

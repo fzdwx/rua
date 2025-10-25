@@ -1,5 +1,11 @@
 import {useMemo} from "react";
-import {Action} from "../command";
+
+export interface QuickResult {
+    type: "calculation" | "function";
+    expression: string;
+    result: string;
+    icon: string;
+}
 
 /**
  * Safely evaluate a mathematical expression
@@ -85,34 +91,26 @@ const builtInFunctions: Record<string, () => string> = {
 };
 
 /**
- * Custom hook to generate quick actions based on search input
+ * Custom hook to check for quick result based on search input
  */
-export function useQuickActions(search: string): Action[] {
+export function useQuickActions(search: string): QuickResult | null {
     return useMemo(() => {
         if (!search.trim()) {
-            return [];
+            return null;
         }
 
-        const actions: Action[] = [];
         const trimmedSearch = search.trim();
         const lowerSearch = trimmedSearch.toLowerCase();
 
         // Check for built-in functions
         for (const [funcName, funcImpl] of Object.entries(builtInFunctions)) {
             if (lowerSearch === funcName.toLowerCase()) {
-                const result = funcImpl();
-                actions.push({
-                    id: `builtin-${funcName}`,
-                    name: result,
-                    subtitle: `Result of ${funcName}`,
-                    keywords: funcName,
-                    icon: <div style={{fontSize: "20px"}}>⚡</div>,
-                    kind: "quick-action",
-                    perform: async () => {
-                        // Copy to clipboard
-                        await navigator.clipboard.writeText(result);
-                    },
-                });
+                return {
+                    type: "function",
+                    expression: funcName,
+                    result: funcImpl(),
+                    icon: "⚡",
+                };
             }
         }
 
@@ -125,21 +123,15 @@ export function useQuickActions(search: string): Action[] {
                     ? result.toString()
                     : result.toFixed(6).replace(/\.?0+$/, "");
 
-                actions.push({
-                    id: `calc-${trimmedSearch}`,
-                    name: formattedResult,
-                    subtitle: `Result of ${trimmedSearch}`,
-                    keywords: trimmedSearch,
-                    icon: <div style={{fontSize: "20px"}}>🔢</div>,
-                    kind: "calculation",
-                    perform: async () => {
-                        // Copy to clipboard
-                        await navigator.clipboard.writeText(formattedResult);
-                    },
-                });
+                return {
+                    type: "calculation",
+                    expression: trimmedSearch,
+                    result: formattedResult,
+                    icon: "🔢",
+                };
             }
         }
 
-        return actions;
+        return null;
     }, [search]);
 }
