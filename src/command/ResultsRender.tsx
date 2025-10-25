@@ -146,12 +146,12 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
     const pointerMoved = usePointerMovedSinceMount();
 
     return (
-        <div className='flex'>
+        <div className='flex' style={{ flex: props.height === 'auto' ? 1 : undefined, overflow: 'hidden' }}>
             <div
                 ref={parentRef}
                 style={{
                     maxHeight: props.maxHeight || '450px',
-                    height: props.height || '450px',
+                    height: props.height === 'auto' ? '100%' : props.height || '450px',
                     position: "relative",
                     overflow: "auto",
                     width: props.width || '100%',

@@ -12,6 +12,7 @@ export const Footer: React.FC<{
     onSubCommandHide?: () => void
     onSubCommandShow?: () => void
     mainInputRef?: React.RefObject<HTMLInputElement | null>
+    settings?: Action[]  // Settings actions for settings menu
 }> = ({
           current,
           actions,
@@ -19,7 +20,8 @@ export const Footer: React.FC<{
           content,
           onSubCommandShow,
           onSubCommandHide,
-          mainInputRef
+          mainInputRef,
+          settings
       }) => {
     return <div className='command-footer'>
         <div className='command-footer-icon'>
@@ -36,6 +38,18 @@ export const Footer: React.FC<{
             current={current}
             mainInputRef={mainInputRef}
         />
+
+        {settings && settings.length > 0 && (
+            <>
+                <FooterHr/>
+                <FooterSettings
+                    onSubCommandHide={onSubCommandHide}
+                    onSubCommandShow={onSubCommandShow}
+                    settings={settings}
+                    mainInputRef={mainInputRef}
+                />
+            </>
+        )}
     </div>
 }
 
@@ -187,6 +201,79 @@ const FooterActions: React.FC<{
                        inputRefSetter={(ref) => {
                            footerInputRef.current = ref
                        }}
+                />
+            </div>
+        </Popover.Content>
+    </Popover.Root>
+}
+
+const FooterSettings: React.FC<{
+    settings: Action[]
+    onSubCommandHide?: () => void
+    onSubCommandShow?: () => void
+    mainInputRef?: React.RefObject<HTMLInputElement | null>
+}> = ({
+          settings,
+          onSubCommandHide,
+          onSubCommandShow,
+      }) => {
+    const [open, setOpen] = React.useState(false)
+
+    const changeVisible = () => setOpen((o) => !o)
+
+    React.useEffect(() => {
+        if (open) {
+            onSubCommandShow?.()
+        }
+    }, [open, onSubCommandShow])
+
+    const {useRegisterActions, state, setActiveIndex, setRootActionId} = useActionStore();
+    useRegisterActions(settings, [settings])
+
+    const {results} = useMatches("", state.actions, state.rootActionId);
+
+    return <Popover.Root open={open} onOpenChange={setOpen} modal>
+        <Popover.Trigger className='command-subcommand-trigger' onClick={changeVisible} aria-expanded={open}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+            </div>
+        </Popover.Trigger>
+        <Popover.Content
+            side="top"
+            align="end"
+            sideOffset={16}
+            alignOffset={0}
+            onCloseAutoFocus={(e) => {
+                e.preventDefault()
+                onSubCommandHide?.()
+            }}
+        >
+            <div className='command-submenu'>
+                <ResultsRender items={results}
+                               maxHeight={200}
+                               height='auto'
+                               handleKeyEvent={true}
+                               setActiveIndex={setActiveIndex}
+                               search=""
+                               setSearch={() => {}}
+                               setRootActionId={setRootActionId}
+                               currentRootActionId={state.rootActionId}
+                               activeIndex={state.activeIndex}
+                               onRender={({item, active}) => {
+                                   if (typeof item === "string") {
+                                       return <div>{item}</div>
+                                   }
+
+                                   return <RenderItem
+                                       active={active}
+                                       action={item}
+                                       currentRootActionId={state.rootActionId ?? ''}
+                                   />
+                               }
+                               }
                 />
             </div>
         </Popover.Content>

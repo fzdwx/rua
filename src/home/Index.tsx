@@ -72,19 +72,6 @@ export default function Home() {
     const getFooterActions = useCallback((current: string | ActionImpl | null, changeVisible: () => void) => {
         const footerActions = [];
 
-        // Always available: Theme toggle
-        footerActions.push({
-            id: "toggle-theme",
-            name: "Toggle Theme",
-            subtitle: `Switch to ${theme === "dark" ? "light" : "dark"} mode`,
-            icon: <Icon icon={theme === "dark" ? "tabler:sun" : "tabler:moon"} style={{fontSize: "20px"}} />,
-            keywords: "theme dark light mode",
-            perform: () => {
-                toggleTheme();
-                changeVisible();
-            },
-        });
-
         // Add action-specific footer actions if available
         // Only process if current is an ActionImpl (not string)
         if (current && typeof current !== "string" && current.footerAction) {
@@ -93,6 +80,22 @@ export default function Home() {
         }
 
         return footerActions;
+    }, []);
+
+    // Generate settings actions
+    const getSettingsActions = useCallback(() => {
+        return [
+            {
+                id: "toggle-theme",
+                name: "Toggle Theme",
+                subtitle: `Switch to ${theme === "dark" ? "light" : "dark"} mode`,
+                icon: <Icon icon={theme === "dark" ? "tabler:sun" : "tabler:moon"} style={{fontSize: "20px"}} />,
+                keywords: "theme dark light mode",
+                perform: () => {
+                    toggleTheme();
+                },
+            },
+        ];
     }, [theme, toggleTheme]);
 
     return (
@@ -114,93 +117,96 @@ export default function Home() {
                     defaultPlaceholder="Type a command or search…"
                 />
 
-                {/* Show translate view if translate action is active */}
-                {state.rootActionId === "built-in-translate" ? (
-                    <TranslateView search={search} onLoadingChange={handleActionLoadingChange} />
-                ) : (
-                    <>
-                        {/* Quick result view for calculations and built-in functions */}
-                        <QuickResult search={search} />
+                {/* Main content area with flex: 1 to prevent footer from being squeezed */}
+                <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                    {/* Show translate view if translate action is active */}
+                    {state.rootActionId === "built-in-translate" ? (
+                        <TranslateView search={search} onLoadingChange={handleActionLoadingChange} />
+                    ) : (
+                        <>
+                            {/* Quick result view for calculations and built-in functions */}
+                            <QuickResult search={search} />
 
-                        {loading ? (
-                            <div
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    padding: "40px 20px",
-                                }}
-                            >
+                            {loading ? (
                                 <div
                                     style={{
-                                        width: "40px",
-                                        height: "4px",
-                                        background: "var(--gray6)",
-                                        borderRadius: "2px",
-                                        overflow: "hidden",
-                                        position: "relative",
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        padding: "40px 20px",
                                     }}
                                 >
                                     <div
                                         style={{
-                                            width: "50%",
-                                            height: "100%",
-                                            background: "var(--primary)",
+                                            width: "40px",
+                                            height: "4px",
+                                            background: "var(--gray6)",
                                             borderRadius: "2px",
-                                            animation: "loading 1.5s ease-in-out infinite",
+                                            overflow: "hidden",
+                                            position: "relative",
                                         }}
-                                    />
-                                </div>
-                            </div>
-                        ) : results.length === 0 ? (
-                            <div
-                                style={{
-                                    textAlign: "center",
-                                    padding: "40px 20px",
-                                    color: "var(--gray11)",
-                                    fontSize: "14px",
-                                }}
-                            >
-                                No applications found
-                            </div>
-                        ) : (
-                            <ResultsRender
-                                items={results}
-                                onRender={({item, active}) => {
-                                    if (typeof item === "string") {
-                                        return (
-                                            <div
-                                                style={{
-                                                    padding: "8px 16px",
-                                                    fontSize: "12px",
-                                                    color: "var(--gray11)",
-                                                    fontWeight: "bold",
-                                                }}
-                                            >
-                                                {item}
-                                            </div>
-                                        );
-                                    }
-                                    return (
-                                        <RenderItem
-                                            action={item as ActionImpl}
-                                            active={active}
-                                            currentRootActionId={state.rootActionId || ""}
+                                    >
+                                        <div
+                                            style={{
+                                                width: "50%",
+                                                height: "100%",
+                                                background: "var(--primary)",
+                                                borderRadius: "2px",
+                                                animation: "loading 1.5s ease-in-out infinite",
+                                            }}
                                         />
-                                    );
-                                }}
-                                height="auto"
-                                search={search}
-                                setSearch={setSearch}
-                                activeIndex={state.activeIndex}
-                                setActiveIndex={setActiveIndex}
-                                setRootActionId={setRootActionId}
-                                currentRootActionId={state.rootActionId}
-                                handleKeyEvent={resultHandleEvent}
-                            />
-                        )}
-                    </>
-                )}
+                                    </div>
+                                </div>
+                            ) : results.length === 0 ? (
+                                <div
+                                    style={{
+                                        textAlign: "center",
+                                        padding: "40px 20px",
+                                        color: "var(--gray11)",
+                                        fontSize: "14px",
+                                    }}
+                                >
+                                    No applications found
+                                </div>
+                            ) : (
+                                <ResultsRender
+                                    items={results}
+                                    onRender={({item, active}) => {
+                                        if (typeof item === "string") {
+                                            return (
+                                                <div
+                                                    style={{
+                                                        padding: "8px 16px",
+                                                        fontSize: "12px",
+                                                        color: "var(--gray11)",
+                                                        fontWeight: "bold",
+                                                    }}
+                                                >
+                                                    {item}
+                                                </div>
+                                            );
+                                        }
+                                        return (
+                                            <RenderItem
+                                                action={item as ActionImpl}
+                                                active={active}
+                                                currentRootActionId={state.rootActionId || ""}
+                                            />
+                                        );
+                                    }}
+                                    height="auto"
+                                    search={search}
+                                    setSearch={setSearch}
+                                    activeIndex={state.activeIndex}
+                                    setActiveIndex={setActiveIndex}
+                                    setRootActionId={setRootActionId}
+                                    currentRootActionId={state.rootActionId}
+                                    handleKeyEvent={resultHandleEvent}
+                                />
+                            )}
+                        </>
+                    )}
+                </div>
 
                 {/* Footer with theme toggle and dynamic actions */}
                 <Footer
@@ -214,6 +220,7 @@ export default function Home() {
                         </div>
                     )}
                     actions={getFooterActions}
+                    settings={getSettingsActions()}
                     mainInputRef={inputRef}
                     onSubCommandHide={() => {
                         setResultHandleEvent(true)
