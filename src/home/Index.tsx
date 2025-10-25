@@ -76,69 +76,73 @@ export default function Home() {
                     defaultPlaceholder="Type a command or search…"
                 />
 
-                {/* Quick result view for calculations and built-in functions */}
-                <QuickResult search={search} />
-
                 {/* Show translate view if translate action is active */}
                 {state.rootActionId === "built-in-translate" ? (
                     <TranslateView search={search} />
-                ) : loading ? (
-                    <div
-                        style={{
-                            textAlign: "center",
-                            padding: "40px 20px",
-                            color: "var(--gray11)",
-                            fontSize: "14px",
-                        }}
-                    >
-                        Loading applications...
-                    </div>
-                ) : results.length === 0 ? (
-                    <div
-                        style={{
-                            textAlign: "center",
-                            padding: "40px 20px",
-                            color: "var(--gray11)",
-                            fontSize: "14px",
-                        }}
-                    >
-                        No applications found
-                    </div>
                 ) : (
-                    <ResultsRender
-                        items={results}
-                        onRender={({item, active}) => {
-                            if (typeof item === "string") {
-                                return (
-                                    <div
-                                        style={{
-                                            padding: "8px 16px",
-                                            fontSize: "12px",
-                                            color: "var(--gray11)",
-                                            fontWeight: "bold",
-                                        }}
-                                    >
-                                        {item}
-                                    </div>
-                                );
-                            }
-                            return (
-                                <RenderItem
-                                    action={item as ActionImpl}
-                                    active={active}
-                                    currentRootActionId={state.rootActionId || ""}
-                                />
-                            );
-                        }}
-                        height="auto"
-                        search={search}
-                        setSearch={setSearch}
-                        activeIndex={state.activeIndex}
-                        setActiveIndex={setActiveIndex}
-                        setRootActionId={setRootActionId}
-                        currentRootActionId={state.rootActionId}
-                        handleKeyEvent={state.resultHandleEvent}
-                    />
+                    <>
+                        {/* Quick result view for calculations and built-in functions */}
+                        <QuickResult search={search} />
+
+                        {loading ? (
+                            <div
+                                style={{
+                                    textAlign: "center",
+                                    padding: "40px 20px",
+                                    color: "var(--gray11)",
+                                    fontSize: "14px",
+                                }}
+                            >
+                                Loading applications...
+                            </div>
+                        ) : results.length === 0 ? (
+                            <div
+                                style={{
+                                    textAlign: "center",
+                                    padding: "40px 20px",
+                                    color: "var(--gray11)",
+                                    fontSize: "14px",
+                                }}
+                            >
+                                No applications found
+                            </div>
+                        ) : (
+                            <ResultsRender
+                                items={results}
+                                onRender={({item, active}) => {
+                                    if (typeof item === "string") {
+                                        return (
+                                            <div
+                                                style={{
+                                                    padding: "8px 16px",
+                                                    fontSize: "12px",
+                                                    color: "var(--gray11)",
+                                                    fontWeight: "bold",
+                                                }}
+                                            >
+                                                {item}
+                                            </div>
+                                        );
+                                    }
+                                    return (
+                                        <RenderItem
+                                            action={item as ActionImpl}
+                                            active={active}
+                                            currentRootActionId={state.rootActionId || ""}
+                                        />
+                                    );
+                                }}
+                                height="auto"
+                                search={search}
+                                setSearch={setSearch}
+                                activeIndex={state.activeIndex}
+                                setActiveIndex={setActiveIndex}
+                                setRootActionId={setRootActionId}
+                                currentRootActionId={state.rootActionId}
+                                handleKeyEvent={state.resultHandleEvent}
+                            />
+                        )}
+                    </>
                 )}
             </Background>
         </Container>
