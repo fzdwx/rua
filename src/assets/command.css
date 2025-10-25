@@ -174,9 +174,12 @@ button {
   color: var(--text);
   width: 100%;
   max-width: 900px;
+  height: 100%;
   border-radius: 8px;
   overflow: hidden;
-  pointer-events: auto
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .command-background .command-submenu {
@@ -191,6 +194,11 @@ button {
 .command-listbox {
   transition: .1s ease;
   transition-property: height
+}
+
+.command-listbox-container {
+  flex: 1;
+  overflow: auto;
 }
 
 .command-submenu {

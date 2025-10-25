@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "like.rua.ai",
   "build": {
-    "beforeDevCommand": "pnpm run dev",
+    "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1421",
-    "beforeBuildCommand": "pnpm run build",
+    "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist"
   },
   "app": {

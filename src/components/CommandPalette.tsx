@@ -1,5 +1,16 @@
-import {useState, useEffect, useRef} from "react";
+import {useState, useEffect, useRef, useMemo, useCallback} from "react";
 import {invoke} from "@tauri-apps/api/core";
+import {
+    Container,
+    Background,
+    Input,
+    ResultsRender,
+    RenderItem,
+    useActionStore,
+    useMatches,
+    Action,
+    ActionImpl,
+} from "../command";
 
 interface Application {
     name: string;
@@ -10,50 +21,24 @@ interface Application {
 }
 
 export default function CommandPalette() {
-    const [query, setQuery] = useState("");
-    const [applications, setApplications] = useState<Application[]>([]);
-    const [filteredApps, setFilteredApps] = useState<Application[]>([]);
-    const [selectedIndex, setSelectedIndex] = useState(0);
+    const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
+    const [applications, setApplications] = useState<Application[]>([]);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Initialize action store
+    const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
 
     // Load applications on mount
     useEffect(() => {
         loadApplications();
     }, []);
 
-    // Focus input on mount
-    useEffect(() => {
-        inputRef.current?.focus();
-    }, []);
-
-    // Filter applications based on query
-    useEffect(() => {
-        if (!query.trim()) {
-            setFilteredApps(applications);
-            setSelectedIndex(0);
-            return;
-        }
-
-        const lowerQuery = query.toLowerCase();
-        const filtered = applications.filter((app) => {
-            const nameLower = app.name.toLowerCase();
-            const descLower = app.description?.toLowerCase() || "";
-
-            // Simple fuzzy matching: check if all characters appear in order
-            return nameLower.includes(lowerQuery) || descLower.includes(lowerQuery);
-        });
-
-        setFilteredApps(filtered);
-        setSelectedIndex(0);
-    }, [query, applications]);
-
     const loadApplications = async () => {
         try {
             setLoading(true);
             const apps = await invoke<Application[]>("get_applications");
             setApplications(apps);
-            setFilteredApps(apps);
         } catch (error) {
             console.error("Failed to load applications:", error);
         } finally {
@@ -61,7 +46,7 @@ export default function CommandPalette() {
         }
     };
 
-    const launchApplication = async (app: Application) => {
+    const launchApplication = useCallback(async (app: Application) => {
         try {
             await invoke("launch_application", {exec: app.exec});
             // Hide window after launching
@@ -70,113 +55,94 @@ export default function CommandPalette() {
         } catch (error) {
             console.error("Failed to launch application:", error);
         }
-    };
+    }, []);
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        switch (e.key) {
-            case "ArrowDown":
-                e.preventDefault();
-                setSelectedIndex((prev) =>
-                    prev < filteredApps.length - 1 ? prev + 1 : prev
-                );
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0));
-                break;
-            case "Enter":
-                e.preventDefault();
-                if (filteredApps[selectedIndex]) {
-                    launchApplication(filteredApps[selectedIndex]);
-                }
-                break;
-            case "Escape":
-                e.preventDefault();
-                setQuery("");
-                break;
-        }
-    };
+    // Convert applications to actions and register them
+    const actions: Action[] = useMemo(() =>
+        applications.map((app) => ({
+            id: app.path,
+            name: app.name,
+            subtitle: app.description,
+            keywords: app.description,
+            icon: <div style={{fontSize: "20px"}}>{app.icon ? "📱" : "📦"}</div>,
+            item: app,
+            kind: "application",
+            perform: async () => {
+                await launchApplication(app);
+            },
+        })),
+        [applications, launchApplication]
+    );
+
+    // Register actions when applications change
+    useRegisterActions(actions, [applications]);
+
+    // Use the matches hook for search and filtering
+    const {results} = useMatches(search, state.actions, state.rootActionId);
 
     return (
-        <div className="command-container">
-            {/* Fixed Input at Top */}
-            <input
-                ref={inputRef}
-                type="text"
-                className="command-input"
-                autoComplete="off"
-                autoFocus
-                spellCheck="false"
-                placeholder="Type a command or search…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
+        <Container>
+            <Input
+                value={search}
+                onValueChange={setSearch}
+                currentRootActionId={state.rootActionId}
+                onCurrentRootActionIdChange={setRootActionId}
+                actions={state.actions}
+                inputRefSetter={(ref) => {
+                    inputRef.current = ref;
+                }}
+                defaultPlaceholder="Type a command or search…"
             />
 
-            {/* Scrollable Results */}
-            <div className="command-background">
-                <div
-                    className="command-listbox"
-                    style={{
-                        height: "100%",
-                        overflowY: "auto",
-                        paddingTop: "60px",
-                    }}
-                >
-                    {loading ? (
-                        <div style={{
+            <Background>
+                {loading ? (
+                    <div
+                        style={{
                             textAlign: "center",
                             padding: "40px 20px",
                             color: "var(--gray11)",
-                            fontSize: "14px"
-                        }}>
-                            Loading applications...
-                        </div>
-                    ) : filteredApps.length === 0 ? (
-                        <div style={{
+                            fontSize: "14px",
+                        }}
+                    >
+                        Loading applications...
+                    </div>
+                ) : results.length === 0 ? (
+                    <div
+                        style={{
                             textAlign: "center",
                             padding: "40px 20px",
                             color: "var(--gray11)",
-                            fontSize: "14px"
-                        }}>
-                            No applications found
-                        </div>
-                    ) : (
-                        filteredApps.slice(0, 10).map((app, index) => (
-                            <div
-                                key={app.path}
-                                className={index === selectedIndex ? "command-item-active" : "command-item"}
-                                onClick={() => launchApplication(app)}
-                                onMouseEnter={() => setSelectedIndex(index)}
-                            >
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        gap: "12px",
-                                        alignItems: "center",
-                                        fontSize: "14px",
-                                    }}
-                                >
-                                    {/* Icon */}
-                                    <div style={{fontSize: "20px"}}>
-                                        {app.icon ? "📱" : "📦"}
-                                    </div>
-
-                                    {/* Name and description */}
-                                    <div style={{display: "flex", flexDirection: "column"}}>
-                                        <div>{app.name}</div>
-                                        {app.description && (
-                                            <span style={{fontSize: "12px", color: "var(--gray11)"}}>
-                        {app.description}
-                      </span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
-        </div>
+                            fontSize: "14px",
+                        }}
+                    >
+                        No applications found
+                    </div>
+                ) : (
+                    <ResultsRender
+                        items={results}
+                        onRender={({item, active}) => {
+                            if (typeof item === "string") {
+                                return <div style={{padding: "8px 16px", fontSize: "12px", color: "var(--gray11)", fontWeight: "bold"}}>{item}</div>;
+                            }
+                            return (
+                                <RenderItem
+                                    action={item as ActionImpl}
+                                    active={active}
+                                    currentRootActionId={state.rootActionId || ""}
+                                />
+                            );
+                        }}
+                        height="auto"
+                        search={search}
+                        setSearch={setSearch}
+                        activeIndex={state.activeIndex}
+                        setActiveIndex={setActiveIndex}
+                        setRootActionId={setRootActionId}
+                        currentRootActionId={state.rootActionId}
+                        handleKeyEvent={state.resultHandleEvent}
+                    />
+                )}
+            </Background>
+        </Container>
     );
 }
