@@ -17,10 +17,7 @@ export function useBuiltInActions(): Action[] {
             keywords: "translate 翻译 tr",
             icon: <div style={{fontSize: "20px"}}>🌐</div>,
             kind: "built-in",
-            perform: async () => {
-                // This will be handled by setting rootActionId
-                // The actual translation view will be shown in Home component
-            },
+            // No perform function - this makes it enterable (navigable)
         });
 
         // TODO: Add more built-in actions here
