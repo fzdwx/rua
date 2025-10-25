@@ -94,6 +94,14 @@ export const Input = ({
     };
 
     const handleQueryInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        // Tab to switch back to main input
+        if (event.key === "Tab") {
+            event.preventDefault();
+            setQueryFocused(false);
+            mainInputRef.current?.focus();
+            return;
+        }
+
         // Enter to submit query
         if (event.key === "Enter" && queryValue.trim() && activeAction) {
             event.preventDefault();
