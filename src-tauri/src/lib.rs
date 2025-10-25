@@ -2,6 +2,12 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tauri::Manager;
 use walkdir::WalkDir;
+use std::collections::HashMap;
+use std::sync::Mutex;
+
+lazy_static::lazy_static! {
+    static ref ICON_CACHE: Mutex<HashMap<String, Option<String>>> = Mutex::new(HashMap::new());
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Application {
@@ -58,6 +64,80 @@ fn get_applications() -> Vec<Application> {
     applications
 }
 
+/// Generate possible icon paths for a given icon name
+fn generate_icon_paths(icon_name: &str) -> Vec<String> {
+    vec![
+        icon_name.to_string(),
+        format!("/usr/share/icons/hicolor/scalable/apps/{}.svg", icon_name),
+        format!("/usr/share/icons/hicolor/48x48/apps/{}.png", icon_name),
+        format!("/usr/share/icons/hicolor/32x32/apps/{}.png", icon_name),
+        format!("/usr/share/icons/hicolor/16x16/apps/{}.png", icon_name),
+        format!("/usr/share/icons/hicolor/128x128/apps/{}.png", icon_name),
+        format!("/usr/share/icons/hicolor/256x256/apps/{}.png", icon_name),
+        format!("/usr/share/icons/hicolor/512x512/apps/{}.png", icon_name),
+        format!("/usr/share/icons/breeze/apps/48/{}.png", icon_name),
+        format!("/usr/share/icons/breeze/apps/48/{}.svg", icon_name),
+        format!("/usr/share/icons/breeze/apps/16/{}.svg", icon_name),
+        format!("/usr/share/icons/breeze/status/16/{}.svg", icon_name),
+        format!("/usr/share/icons/breeze/status/24/{}.svg", icon_name),
+        format!("/usr/share/pixmaps/{}.svg", icon_name),
+        format!("/usr/share/pixmaps/{}.png", icon_name),
+        format!("/usr/share/pixmaps/{}", icon_name),
+        format!("/usr/share/icons/{}.png", icon_name),
+        format!("/usr/share/icons/breeze/actions/16/{}.svg", icon_name),
+        format!("/usr/share/icons/breeze/actions/24/{}.svg", icon_name),
+        format!("/usr/share/icons/breeze/places/16/{}.svg", icon_name),
+        format!("/usr/share/icons/breeze/preferences/16/{}.svg", icon_name),
+        format!("/usr/share/icons/breeze/devices/16/{}.svg", icon_name),
+        format!("/usr/share/icons/breeze/applets/64/{}.svg", icon_name),
+        format!("/usr/share/icons/breeze/preferences/24/{}.svg", icon_name),
+        format!("/usr/share/icons/breeze/preferences/32/{}.svg", icon_name),
+        format!("/usr/share/icons/Adwaita/16x16/legacy/{}-symbolic.png", icon_name),
+        format!("/usr/share/icons/Adwaita/symbolic/legacy/{}-symbolic.png", icon_name),
+        format!("/usr/share/icons/Adwaita/symbolic/legacy/{}-symbolic.svg", icon_name),
+        format!("/usr/share/icons/breeze/actions/symbolic/{}.svg", icon_name),
+        format!("/usr/share/icons/Adwaita/symbolic/legacy/{}.svg", icon_name),
+    ]
+}
+
+/// Find the actual icon file path for a given icon name
+fn resolve_icon_path(icon_name: &str) -> Option<String> {
+    if icon_name.is_empty() {
+        return None;
+    }
+
+    // Check cache first
+    {
+        let cache = ICON_CACHE.lock().unwrap();
+        if let Some(cached) = cache.get(icon_name) {
+            return cached.clone();
+        }
+    }
+
+    // If the icon name is already an absolute path, check if it exists
+    if icon_name.starts_with('/') {
+        if std::path::Path::new(icon_name).exists() {
+            let result = Some(format!("file://{}", icon_name));
+            ICON_CACHE.lock().unwrap().insert(icon_name.to_string(), result.clone());
+            return result;
+        }
+    }
+
+    // Search through common icon paths
+    let paths = generate_icon_paths(icon_name);
+    for path in paths {
+        if std::path::Path::new(&path).exists() {
+            let result = Some(format!("file://{}", path));
+            ICON_CACHE.lock().unwrap().insert(icon_name.to_string(), result.clone());
+            return result;
+        }
+    }
+
+    // Cache the negative result
+    ICON_CACHE.lock().unwrap().insert(icon_name.to_string(), None);
+    None
+}
+
 fn parse_desktop_file(path: &std::path::Path) -> Result<Application, Box<dyn std::error::Error>> {
     use freedesktop_desktop_entry::DesktopEntry;
 
@@ -71,8 +151,19 @@ fn parse_desktop_file(path: &std::path::Path) -> Result<Application, Box<dyn std
 
     let name = entry.name(None).unwrap_or_default().to_string();
     let exec = entry.exec().unwrap_or_default().to_string();
-    let icon = entry.icon().map(|s| s.to_string());
     let description = entry.comment(None).map(|s| s.to_string());
+
+    // Resolve icon path
+    let icon = entry.icon().and_then(|icon_name| {
+        let resolved = resolve_icon_path(icon_name);
+        // Debug logging
+        if resolved.is_some() {
+            eprintln!("Icon for {}: {} -> {:?}", name, icon_name, resolved);
+        } else {
+            eprintln!("Icon not found for {}: {}", name, icon_name);
+        }
+        resolved
+    });
 
     Ok(Application {
         name,
