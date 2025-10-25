@@ -1,4 +1,4 @@
-import {useState, useRef, useMemo} from "react";
+import {useState, useRef, useMemo, useCallback} from "react";
 import {
     Container,
     Background,
@@ -17,6 +17,7 @@ import {TranslateView} from "./TranslateView";
 
 export default function Home() {
     const [search, setSearch] = useState("");
+    const [actionLoading, setActionLoading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Load applications and convert to actions
@@ -58,6 +59,11 @@ export default function Home() {
         setSearch(query);
     };
 
+    // Handle action loading state change
+    const handleActionLoadingChange = useCallback((loading: boolean) => {
+        setActionLoading(loading);
+    }, []);
+
     return (
         <Container>
             <Background>
@@ -70,6 +76,7 @@ export default function Home() {
                     activeAction={activeAction}
                     onQuerySubmit={handleQuerySubmit}
                     setResultHandleEvent={setResultHandleEvent}
+                    loading={actionLoading}
                     inputRefSetter={(ref) => {
                         inputRef.current = ref;
                     }}
@@ -78,7 +85,7 @@ export default function Home() {
 
                 {/* Show translate view if translate action is active */}
                 {state.rootActionId === "built-in-translate" ? (
-                    <TranslateView search={search} />
+                    <TranslateView search={search} onLoadingChange={handleActionLoadingChange} />
                 ) : (
                     <>
                         {/* Quick result view for calculations and built-in functions */}
@@ -87,13 +94,32 @@ export default function Home() {
                         {loading ? (
                             <div
                                 style={{
-                                    textAlign: "center",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
                                     padding: "40px 20px",
-                                    color: "var(--gray11)",
-                                    fontSize: "14px",
                                 }}
                             >
-                                Loading applications...
+                                <div
+                                    style={{
+                                        width: "40px",
+                                        height: "4px",
+                                        background: "var(--gray6)",
+                                        borderRadius: "2px",
+                                        overflow: "hidden",
+                                        position: "relative",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            width: "50%",
+                                            height: "100%",
+                                            background: "var(--primary)",
+                                            borderRadius: "2px",
+                                            animation: "loading 1.5s ease-in-out infinite",
+                                        }}
+                                    />
+                                </div>
                             </div>
                         ) : results.length === 0 ? (
                             <div

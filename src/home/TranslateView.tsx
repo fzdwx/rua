@@ -1,7 +1,8 @@
-import {useMemo} from "react";
+import {useMemo, useEffect} from "react";
 
 interface TranslateViewProps {
     search: string;
+    onLoadingChange?: (loading: boolean) => void;
 }
 
 /**
@@ -26,7 +27,20 @@ function translateText(text: string): string {
     }
 }
 
-export function TranslateView({search}: TranslateViewProps) {
+export function TranslateView({search, onLoadingChange}: TranslateViewProps) {
+    // Simulate loading for 2000ms when component mounts or search changes
+    useEffect(() => {
+        onLoadingChange?.(true);
+        const timer = setTimeout(() => {
+            onLoadingChange?.(false);
+        }, 2000);
+
+        return () => {
+            clearTimeout(timer);
+            onLoadingChange?.(false);
+        };
+    }, [search, onLoadingChange]);
+
     const translationResult = useMemo(() => {
         if (!search.trim()) {
             return null;

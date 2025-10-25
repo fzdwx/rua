@@ -15,6 +15,7 @@ interface InputProps {
     activeAction?: ActionImpl | null;  // Currently active action in results
     onQuerySubmit?: (query: string, actionId: ActionId) => void;  // Called when query is submitted
     setResultHandleEvent?: (enabled: boolean) => void;  // Control whether ResultsRender handles keyboard events
+    loading?: boolean;  // Show loading indicator in input
 
     defaultPlaceholder?: string;
     inputRefSetter?: (ref: HTMLInputElement) => void;
@@ -31,6 +32,7 @@ export const Input = ({
                           activeAction,
                           onQuerySubmit,
                           setResultHandleEvent,
+                          loading,
                       }: InputProps) => {
     const [inputValue, setInputValue] = React.useState(value);
     const [queryValue, setQueryValue] = React.useState("");
@@ -202,6 +204,30 @@ export const Input = ({
                 }}
                 onKeyDown={handleMainInputKeyDown}
             />
+
+            {/* Loading indicator at bottom of input */}
+            {loading && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: '2px',
+                        background: 'var(--gray6)',
+                        overflow: 'hidden',
+                    }}
+                >
+                    <div
+                        style={{
+                            width: '50%',
+                            height: '100%',
+                            background: 'var(--primary)',
+                            animation: 'loading 1.5s ease-in-out infinite',
+                        }}
+                    />
+                </div>
+            )}
 
             {showQueryInput && (
                 <>
