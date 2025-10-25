@@ -82,19 +82,19 @@ export default function CommandPalette() {
 
     return (
         <Container>
-            <Input
-                value={search}
-                onValueChange={setSearch}
-                currentRootActionId={state.rootActionId}
-                onCurrentRootActionIdChange={setRootActionId}
-                actions={state.actions}
-                inputRefSetter={(ref) => {
-                    inputRef.current = ref;
-                }}
-                defaultPlaceholder="Type a command or search…"
-            />
-
             <Background>
+                <Input
+                    value={search}
+                    onValueChange={setSearch}
+                    currentRootActionId={state.rootActionId}
+                    onCurrentRootActionIdChange={setRootActionId}
+                    actions={state.actions}
+                    inputRefSetter={(ref) => {
+                        inputRef.current = ref;
+                    }}
+                    defaultPlaceholder="Type a command or search…"
+                />
+
                 {loading ? (
                     <div
                         style={{
