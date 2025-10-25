@@ -9,6 +9,7 @@ export interface Application {
     icon?: string;
     description?: string;
     path: string;
+    terminal: boolean;
 }
 
 /**
@@ -29,7 +30,10 @@ async function loadApplications(): Promise<Application[]> {
  */
 async function launchApplication(app: Application): Promise<void> {
     try {
-        await invoke("launch_application", {exec: app.exec});
+        await invoke("launch_application", {
+            exec: app.exec,
+            terminal: app.terminal
+        });
         // Hide window after launching
         const {getCurrentWindow} = await import("@tauri-apps/api/window");
         getCurrentWindow().hide();

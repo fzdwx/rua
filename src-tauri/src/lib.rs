@@ -1,12 +1,14 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::process::Command;
+use std::sync::Mutex;
 use tauri::Manager;
 use walkdir::WalkDir;
-use std::collections::HashMap;
-use std::sync::Mutex;
 
 lazy_static::lazy_static! {
     static ref ICON_CACHE: Mutex<HashMap<String, Option<String>>> = Mutex::new(HashMap::new());
+    static ref TERMINAL_EMULATOR: Mutex<Option<String>> = Mutex::new(None);
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,6 +18,7 @@ pub struct Application {
     icon: Option<String>,
     description: Option<String>,
     path: String,
+    terminal: bool,
 }
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -92,9 +95,18 @@ fn generate_icon_paths(icon_name: &str) -> Vec<String> {
         format!("/usr/share/icons/breeze/applets/64/{}.svg", icon_name),
         format!("/usr/share/icons/breeze/preferences/24/{}.svg", icon_name),
         format!("/usr/share/icons/breeze/preferences/32/{}.svg", icon_name),
-        format!("/usr/share/icons/Adwaita/16x16/legacy/{}-symbolic.png", icon_name),
-        format!("/usr/share/icons/Adwaita/symbolic/legacy/{}-symbolic.png", icon_name),
-        format!("/usr/share/icons/Adwaita/symbolic/legacy/{}-symbolic.svg", icon_name),
+        format!(
+            "/usr/share/icons/Adwaita/16x16/legacy/{}-symbolic.png",
+            icon_name
+        ),
+        format!(
+            "/usr/share/icons/Adwaita/symbolic/legacy/{}-symbolic.png",
+            icon_name
+        ),
+        format!(
+            "/usr/share/icons/Adwaita/symbolic/legacy/{}-symbolic.svg",
+            icon_name
+        ),
         format!("/usr/share/icons/breeze/actions/symbolic/{}.svg", icon_name),
         format!("/usr/share/icons/Adwaita/symbolic/legacy/{}.svg", icon_name),
     ]
@@ -118,7 +130,10 @@ fn resolve_icon_path(icon_name: &str) -> Option<String> {
     if icon_name.starts_with('/') {
         if std::path::Path::new(icon_name).exists() {
             let result = Some(format!("file://{}", icon_name));
-            ICON_CACHE.lock().unwrap().insert(icon_name.to_string(), result.clone());
+            ICON_CACHE
+                .lock()
+                .unwrap()
+                .insert(icon_name.to_string(), result.clone());
             return result;
         }
     }
@@ -128,13 +143,58 @@ fn resolve_icon_path(icon_name: &str) -> Option<String> {
     for path in paths {
         if std::path::Path::new(&path).exists() {
             let result = Some(format!("file://{}", path));
-            ICON_CACHE.lock().unwrap().insert(icon_name.to_string(), result.clone());
+            ICON_CACHE
+                .lock()
+                .unwrap()
+                .insert(icon_name.to_string(), result.clone());
             return result;
         }
     }
 
     // Cache the negative result
-    ICON_CACHE.lock().unwrap().insert(icon_name.to_string(), None);
+    ICON_CACHE
+        .lock()
+        .unwrap()
+        .insert(icon_name.to_string(), None);
+    None
+}
+
+/// Detect available terminal emulator
+fn detect_terminal_emulator() -> Option<String> {
+    // Check cache first
+    {
+        let cache = TERMINAL_EMULATOR.lock().unwrap();
+        if cache.is_some() {
+            return cache.clone();
+        }
+    }
+
+    // List of common terminal emulators in order of preference
+    let terminals = vec![
+        "wezterm",
+        "konsole",        // KDE
+        "gnome-terminal", // GNOME
+        "alacritty",      // Modern, GPU-accelerated
+        "kitty",          // Modern, GPU-accelerated
+        "terminator",     // Feature-rich
+        "tilix",          // Tiling terminal
+        "xfce4-terminal", // XFCE
+        "mate-terminal",  // MATE
+        "lxterminal",     // LXDE
+        "xterm",          // Fallback, always available
+    ];
+
+    for terminal in terminals {
+        // Use which crate to find terminal in PATH (similar to exec.LookPath in Go)
+        if which::which(terminal).is_ok() {
+            let result = Some(terminal.to_string());
+            *TERMINAL_EMULATOR.lock().unwrap() = result.clone();
+            eprintln!("Detected terminal emulator: {}", terminal);
+            return result;
+        }
+    }
+
+    eprintln!("No terminal emulator found!");
     None
 }
 
@@ -152,6 +212,7 @@ fn parse_desktop_file(path: &std::path::Path) -> Result<Application, Box<dyn std
     let name = entry.name(None).unwrap_or_default().to_string();
     let exec = entry.exec().unwrap_or_default().to_string();
     let description = entry.comment(None).map(|s| s.to_string());
+    let terminal = entry.terminal();
 
     // Resolve icon path
     let icon = entry.icon().and_then(|icon_name| {
@@ -171,11 +232,12 @@ fn parse_desktop_file(path: &std::path::Path) -> Result<Application, Box<dyn std
         icon,
         description,
         path: path.to_string_lossy().to_string(),
+        terminal,
     })
 }
 
 #[tauri::command]
-fn launch_application(exec: String) -> Result<String, String> {
+fn launch_application(exec: String, terminal: bool) -> Result<String, String> {
     // Remove field codes like %f, %F, %u, %U, etc.
     let cleaned_exec = exec
         .split_whitespace()
@@ -183,14 +245,48 @@ fn launch_application(exec: String) -> Result<String, String> {
         .collect::<Vec<_>>()
         .join(" ");
 
-    // Launch the application
-    std::process::Command::new("sh")
-        .arg("-c")
-        .arg(&cleaned_exec)
-        .spawn()
-        .map_err(|e| format!("Failed to launch application: {}", e))?;
+    if terminal {
+        // Application needs to run in terminal
+        let terminal_emulator =
+            detect_terminal_emulator().ok_or_else(|| "No terminal emulator found".to_string())?;
 
-    Ok(format!("Launched: {}", cleaned_exec))
+        // Build command based on terminal emulator
+        let (cmd, args) = match terminal_emulator.as_str() {
+            "wezterm"=> ("wezterm", vec!["-e", &cleaned_exec]),
+            "konsole" => ("konsole", vec!["-e", &cleaned_exec]),
+            "gnome-terminal" => ("gnome-terminal", vec!["--", "sh", "-c", &cleaned_exec]),
+            "alacritty" => ("alacritty", vec!["-e", "sh", "-c", &cleaned_exec]),
+            "kitty" => ("kitty", vec!["sh", "-c", &cleaned_exec]),
+            "terminator" => ("terminator", vec!["-e", &cleaned_exec]),
+            "tilix" => ("tilix", vec!["-e", &cleaned_exec]),
+            "xfce4-terminal" => ("xfce4-terminal", vec!["-e", &cleaned_exec]),
+            "mate-terminal" => ("mate-terminal", vec!["-e", &cleaned_exec]),
+            "lxterminal" => ("lxterminal", vec!["-e", &cleaned_exec]),
+            "xterm" => ("xterm", vec!["-e", &cleaned_exec]),
+            _ => return Err(format!("Unknown terminal emulator: {}", terminal_emulator)),
+        };
+
+        eprintln!("Launching in terminal: {} {:?}", cmd, args);
+
+        Command::new(cmd)
+            .args(&args)
+            .spawn()
+            .map_err(|e| format!("Failed to launch application in terminal: {}", e))?;
+
+        Ok(format!(
+            "Launched in {}: {}",
+            terminal_emulator, cleaned_exec
+        ))
+    } else {
+        // Normal application launch
+        Command::new("sh")
+            .arg("-c")
+            .arg(&cleaned_exec)
+            .spawn()
+            .map_err(|e| format!("Failed to launch application: {}", e))?;
+
+        Ok(format!("Launched: {}", cleaned_exec))
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
