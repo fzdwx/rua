@@ -158,12 +158,16 @@ const FooterActions: React.FC<{
 
     const {results, rootActionId} = useMatches(inputValue, state.actions, state.rootActionId);
 
-    return <Popover open={open} onOpenChange={(e) => {
-        setOpen(e)
+    return <Popover open={open} onOpenChangeComplete={e => {
         if (!e) {
             onSubCommandHide?.()
-            mainInputRef?.current?.focus()
+            // Use setTimeout to ensure focus happens after popover is fully closed
+            setTimeout(() => {
+                mainInputRef?.current?.focus()
+            }, 100)
         }
+    }} onOpenChange={(e) => {
+        setOpen(e)
     }} modal>
         <PopoverTrigger className='command-subcommand-trigger' onClick={changeVisible} aria-expanded={open}>
             <span>Actions</span>
@@ -241,12 +245,16 @@ const FooterSettings: React.FC<{
 
     const {results} = useMatches("", state.actions, state.rootActionId);
 
-    return <Popover open={open} onOpenChange={(e) => {
-        setOpen(e)
+    return <Popover open={open} onOpenChangeComplete={e => {
         if (!e) {
             onSubCommandHide?.()
-            mainInputRef?.current?.focus()
+            // Use setTimeout to ensure focus happens after popover is fully closed
+            setTimeout(() => {
+                mainInputRef?.current?.focus()
+            }, 100)
         }
+    }}  onOpenChange={(e) => {
+        setOpen(e)
     }} modal>
         <PopoverTrigger
             className='command-settings-trigger'
