@@ -13,6 +13,7 @@ import {
 import {useApplications} from "./useApplications";
 import {QuickResult} from "./QuickResult";
 import {useBuiltInActions} from "./useBuiltInActions";
+import {TranslateView} from "./TranslateView";
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -21,8 +22,8 @@ export default function Home() {
     // Load applications and convert to actions
     const {loading, actions: applicationActions} = useApplications();
 
-    // Get built-in actions based on search input
-    const builtInActions = useBuiltInActions(search);
+    // Get built-in actions (static actions like translate)
+    const builtInActions = useBuiltInActions();
 
     // Combine all actions (built-in actions first for priority)
     const allActions = useMemo(() => {
@@ -56,7 +57,10 @@ export default function Home() {
                 {/* Quick result view for calculations and built-in functions */}
                 <QuickResult search={search} />
 
-                {loading ? (
+                {/* Show translate view if translate action is active */}
+                {state.rootActionId === "built-in-translate" ? (
+                    <TranslateView search={search} />
+                ) : loading ? (
                     <div
                         style={{
                             textAlign: "center",

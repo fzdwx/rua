@@ -2,71 +2,26 @@ import {useMemo} from "react";
 import {Action} from "../command";
 
 /**
- * Detect if text contains Chinese characters
+ * Custom hook to provide built-in actions
+ * These are static actions that don't depend on search input
  */
-function containsChinese(text: string): boolean {
-    return /[\u4e00-\u9fa5]/.test(text);
-}
-
-/**
- * Mock translation function (to be replaced with real API later)
- */
-function translateText(text: string): string {
-    const isChinese = containsChinese(text);
-
-    if (isChinese) {
-        // Mock: Chinese to English
-        return `[EN] ${text}`;
-    } else {
-        // Mock: English to Chinese
-        return `[中文] ${text}`;
-    }
-}
-
-/**
- * Custom hook to generate built-in actions based on search input
- * This hook provides various utility functions like translation, encoding, etc.
- */
-export function useBuiltInActions(search: string): Action[] {
+export function useBuiltInActions(): Action[] {
     return useMemo(() => {
-        if (!search.trim()) {
-            return [];
-        }
-
         const actions: Action[] = [];
-        const trimmedSearch = search.trim();
-        const lowerSearch = trimmedSearch.toLowerCase();
 
-        // Translation action
-        const translationPrefixes = [
-            {prefix: "tr ", display: "tr"},
-            {prefix: "translate ", display: "translate"},
-            {prefix: "翻译 ", display: "翻译"},
-        ];
-
-        for (const {prefix, display} of translationPrefixes) {
-            if (lowerSearch.startsWith(prefix)) {
-                const textToTranslate = trimmedSearch.substring(prefix.length).trim();
-                if (textToTranslate) {
-                    const translated = translateText(textToTranslate);
-                    const isChinese = containsChinese(textToTranslate);
-                    const langPair = isChinese ? "中文 → English" : "English → 中文";
-
-                    actions.push({
-                        id: `translate-${textToTranslate}`,
-                        name: translated,
-                        subtitle: `${display} "${textToTranslate}" (${langPair})`,
-                        keywords: `translate ${textToTranslate}`,
-                        icon: <div style={{fontSize: "20px"}}>🌐</div>,
-                        kind: "built-in-translation",
-                        perform: async () => {
-                            await navigator.clipboard.writeText(translated);
-                        },
-                    });
-                }
-                break;
-            }
-        }
+        // Translation action - enters translation mode
+        actions.push({
+            id: "built-in-translate",
+            name: "Translate",
+            subtitle: "Translate text between Chinese and English",
+            keywords: "translate 翻译 tr",
+            icon: <div style={{fontSize: "20px"}}>🌐</div>,
+            kind: "built-in",
+            perform: async () => {
+                // This will be handled by setting rootActionId
+                // The actual translation view will be shown in Home component
+            },
+        });
 
         // TODO: Add more built-in actions here
         // - Base64 encode/decode
@@ -77,5 +32,5 @@ export function useBuiltInActions(search: string): Action[] {
         // etc.
 
         return actions;
-    }, [search]);
+    }, []);
 }
