@@ -2,7 +2,11 @@ import {Action, ActionImpl, Input, RenderItem, ResultsRender, useActionStore, us
 import * as React from "react";
 import {useEffect, useState} from "react";
 import {useKeyPress} from "ahooks";
-import * as Popover from "@radix-ui/react-popover";
+import {
+    Popover,
+    PopoverTrigger,
+    PopoverPanel,
+} from '@/components/animate-ui/components/base/popover';
 import {Icon} from "@iconify/react";
 
 export const Footer: React.FC<{
@@ -28,7 +32,7 @@ export const Footer: React.FC<{
         <div className='command-footer-icon'>
             {icon}
         </div>
-        <div style={{ marginRight: 'auto' }}>
+        <div style={{marginRight: 'auto'}}>
             {content(current)}
         </div>
 
@@ -133,6 +137,7 @@ const FooterActions: React.FC<{
                 footerInputRef.current?.focus()
             }, 0)
         } else {
+            // onSubCommandHide()
             // // Focus main input when closed
             // setTimeout(() => {
             //     mainInputRef?.current?.focus()
@@ -153,21 +158,23 @@ const FooterActions: React.FC<{
 
     const {results, rootActionId} = useMatches(inputValue, state.actions, state.rootActionId);
 
-    return <Popover.Root open={open} onOpenChange={setOpen} modal>
-        <Popover.Trigger className='command-subcommand-trigger' onClick={changeVisible} aria-expanded={open}>
+    return <Popover open={open} onOpenChange={(e) => {
+        setOpen(e)
+        if (!e) {
+            onSubCommandHide?.()
+            mainInputRef?.current?.focus()
+        }
+    }} modal>
+        <PopoverTrigger className='command-subcommand-trigger' onClick={changeVisible} aria-expanded={open}>
             <span>Actions</span>
             {shortcut.split('.').map((s, i) => <kbd key={i}>{s}</kbd>)}
-        </Popover.Trigger>
-        <Popover.Content
+        </PopoverTrigger>
+
+        <PopoverPanel
             side="top"
             align="end"
             sideOffset={16}
             alignOffset={-52}
-            onCloseAutoFocus={(e) => {
-                e.preventDefault()
-                onSubCommandHide()
-                setInputValue("")
-            }}
         >
             <div className='command-submenu'>
                 <ResultsRender items={results}
@@ -204,8 +211,8 @@ const FooterActions: React.FC<{
                        }}
                 />
             </div>
-        </Popover.Content>
-    </Popover.Root>
+        </PopoverPanel>
+    </Popover>
 }
 
 const FooterSettings: React.FC<{
@@ -217,6 +224,7 @@ const FooterSettings: React.FC<{
           settings,
           onSubCommandHide,
           onSubCommandShow,
+          mainInputRef
       }) => {
     const [open, setOpen] = React.useState(false)
 
@@ -233,8 +241,14 @@ const FooterSettings: React.FC<{
 
     const {results} = useMatches("", state.actions, state.rootActionId);
 
-    return <Popover.Root open={open} onOpenChange={setOpen} modal>
-        <Popover.Trigger
+    return <Popover open={open} onOpenChange={(e) => {
+        setOpen(e)
+        if (!e) {
+            onSubCommandHide?.()
+            mainInputRef?.current?.focus()
+        }
+    }} modal>
+        <PopoverTrigger
             className='command-settings-trigger'
             onClick={changeVisible}
             aria-expanded={open}
@@ -257,19 +271,21 @@ const FooterSettings: React.FC<{
                 e.currentTarget.style.color = 'var(--gray11)';
             }}
         >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px' }}>
-                <Icon icon="tabler:settings" style={{ fontSize: '18px' }} />
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '20px',
+                height: '20px'
+            }}>
+                <Icon icon="tabler:settings" style={{fontSize: '18px'}}/>
             </div>
-        </Popover.Trigger>
-        <Popover.Content
+        </PopoverTrigger>
+        <PopoverPanel
             side="top"
             align="end"
             sideOffset={16}
             alignOffset={0}
-            onCloseAutoFocus={(e) => {
-                e.preventDefault()
-                onSubCommandHide?.()
-            }}
         >
             <div className='command-submenu'>
                 <ResultsRender items={results}
@@ -278,7 +294,8 @@ const FooterSettings: React.FC<{
                                handleKeyEvent={true}
                                setActiveIndex={setActiveIndex}
                                search=""
-                               setSearch={() => {}}
+                               setSearch={() => {
+                               }}
                                setRootActionId={setRootActionId}
                                currentRootActionId={state.rootActionId}
                                activeIndex={state.activeIndex}
@@ -296,7 +313,7 @@ const FooterSettings: React.FC<{
                                }
                 />
             </div>
-        </Popover.Content>
-    </Popover.Root>
+        </PopoverPanel>
+    </Popover>
 }
 
