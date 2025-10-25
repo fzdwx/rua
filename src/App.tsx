@@ -1,7 +1,7 @@
-import CommandPalette from "./components/CommandPalette";
+import Home from "./home/Index";
 
 function App() {
-    return <CommandPalette />;
+    return <Home />;
 }
 
 export default App;
