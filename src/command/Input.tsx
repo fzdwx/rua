@@ -84,12 +84,17 @@ export const Input = ({
             }
         }
 
-        // Tab to switch to query input
-        if (event.key === "Tab" && showQueryInput && !queryFocused) {
-            event.preventDefault();
-            setQueryFocused(true);
-            queryInputRef.current?.focus();
-            queryInputRef.current?.select();
+        // Tab key handling
+        if (event.key === "Tab") {
+            event.preventDefault(); // Always prevent default Tab behavior
+
+            // If query input is shown, switch to it
+            if (showQueryInput && !queryFocused) {
+                setQueryFocused(true);
+                queryInputRef.current?.focus();
+                queryInputRef.current?.select();
+            }
+            // If query input is not shown, do nothing (keep focus on main input)
         }
     };
 
