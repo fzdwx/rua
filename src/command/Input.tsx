@@ -41,7 +41,7 @@ export const Input = ({
 
     const mainInputRef = React.useRef<HTMLInputElement>(null);
     const queryInputRef = React.useRef<HTMLInputElement>(null);
-    const textMeasureRef = React.useRef<HTMLSpanElement>(null);
+    const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
 
     React.useEffect(() => {
         setInputValue(value);
@@ -55,11 +55,26 @@ export const Input = ({
 
     // Measure the width of the input text to position query input
     React.useEffect(() => {
-        if (textMeasureRef.current && mainInputRef.current) {
+        if (mainInputRef.current) {
             const text = inputValue || "";
-            textMeasureRef.current.textContent = text;
-            const width = textMeasureRef.current.offsetWidth;
-            setTextWidth(width);
+            // Create canvas if not exists
+            if (!canvasRef.current) {
+                canvasRef.current = document.createElement('canvas');
+            }
+
+            const canvas = canvasRef.current;
+            const context = canvas.getContext('2d');
+
+            if (context) {
+                const computedStyle = window.getComputedStyle(mainInputRef.current);
+
+                // Set font to match input exactly
+                context.font = `${computedStyle.fontWeight} ${computedStyle.fontSize} ${computedStyle.fontFamily}`;
+
+                // Measure text
+                const metrics = context.measureText(text);
+                setTextWidth(metrics.width);
+            }
         }
     }, [inputValue]);
 
@@ -267,21 +282,6 @@ export const Input = ({
                             }}
                         />
                     </div>
-
-                    {/* Hidden span for measuring text width */}
-                    <span
-                        ref={textMeasureRef}
-                        style={{
-                            position: 'absolute',
-                            visibility: 'hidden',
-                            whiteSpace: 'pre',
-                            fontSize: '16px',
-                            fontFamily: 'inherit',
-                            padding: '0',
-                            pointerEvents: 'none',
-                        }}
-                        aria-hidden="true"
-                    />
                 </>
             )}
             </div>
