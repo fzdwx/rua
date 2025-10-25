@@ -79,6 +79,7 @@ export const Input = ({
     }, [inputValue]);
 
     // Check if active action has query flag
+    // Show query input when an action with query flag is selected in the main list
     const showQueryInput = activeAction?.query && !currentRootActionId;
 
     // Reset query when active action changes

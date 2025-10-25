@@ -8,7 +8,6 @@ interface State {
     actions: ActionTree
     rootActionId: ActionId | null;
     activeIndex: number
-    resultHandleEvent: boolean
 }
 
 export const useActionStore = (actions?: Action[]) => {
@@ -26,7 +25,6 @@ export const useActionStore = (actions?: Action[]) => {
             actions: {...actionsInterface.actions},
             rootActionId: null,
             activeIndex: 0,
-            resultHandleEvent: true
         });
 
     const registerActions = React.useCallback(
@@ -62,14 +60,6 @@ export const useActionStore = (actions?: Action[]) => {
         []
     );
 
-    const setResultHandleEvent = (b: boolean) => {
-        setState((state) => {
-            return {
-                ...state,
-                resultHandleEvent: b,
-            };
-        });
-    }
     //@ts-ignore
     const setActiveIndex = (cb) =>
         setState((state) => ({
@@ -95,7 +85,6 @@ export const useActionStore = (actions?: Action[]) => {
         useRegisterActions,
         setRootActionId,
         setActiveIndex,
-        setResultHandleEvent,
         state
     }
 }

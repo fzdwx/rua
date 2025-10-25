@@ -20,6 +20,7 @@ import {Icon} from "@iconify/react";
 export default function Home() {
     const [search, setSearch] = useState("");
     const [actionLoading, setActionLoading] = useState(false);
+    const [resultHandleEvent, setResultHandleEvent] = useState(true);
     const inputRef = useRef<HTMLInputElement>(null);
     const {theme, toggleTheme} = useTheme();
 
@@ -35,7 +36,7 @@ export default function Home() {
     }, [builtInActions, applicationActions]);
 
     // Initialize action store
-    const {useRegisterActions, setRootActionId, setActiveIndex, setResultHandleEvent, state} = useActionStore();
+    const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
 
     // Register actions when they change
     useRegisterActions(allActions, [allActions]);
@@ -195,7 +196,7 @@ export default function Home() {
                                 setActiveIndex={setActiveIndex}
                                 setRootActionId={setRootActionId}
                                 currentRootActionId={state.rootActionId}
-                                handleKeyEvent={state.resultHandleEvent}
+                                handleKeyEvent={resultHandleEvent}
                             />
                         )}
                     </>
@@ -214,6 +215,13 @@ export default function Home() {
                     )}
                     actions={getFooterActions}
                     mainInputRef={inputRef}
+                    onSubCommandHide={() => {
+                        setResultHandleEvent(true)
+                        inputRef.current?.focus()
+                    }}
+                    onSubCommandShow={() => {
+                        setResultHandleEvent(false)
+                    }}
                 />
             </Background>
         </Container>
