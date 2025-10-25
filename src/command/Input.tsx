@@ -165,63 +165,107 @@ export const Input = ({
     };
 
     return (
-        <div style={{position: 'relative', display: 'flex', alignItems: 'center'}}>
-            {/* Back arrow when inside an action */}
-            {currentRootActionId && (
-                <div
-                    onClick={handleBackClick}
-                    style={{
-                        marginLeft: '12px',
-                        marginRight: '12px',
-                        padding: '6px',
-                        cursor: 'pointer',
-                        color: 'var(--gray11)',
-                        fontSize: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.2s ease',
-                        borderRadius: '6px',
-                        background: 'var(--gray3)',
-                        border: '1px solid var(--gray6)',
-                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+        <div style={{position: 'relative', borderBottom: '1px solid var(--gray6)'}}>
+            <div style={{display: 'flex', alignItems: 'center'}}>
+                {/* Back arrow when inside an action */}
+                {currentRootActionId && (
+                    <div
+                        onClick={handleBackClick}
+                        style={{
+                            marginLeft: '12px',
+                            marginRight: '12px',
+                            padding: '6px',
+                            cursor: 'pointer',
+                            color: 'var(--gray11)',
+                            fontSize: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease',
+                            borderRadius: '6px',
+                            background: 'var(--gray3)',
+                            border: '1px solid var(--gray6)',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = 'var(--gray12)';
+                            e.currentTarget.style.background = 'var(--gray4)';
+                            e.currentTarget.style.borderColor = 'var(--gray7)';
+                            e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = 'var(--gray11)';
+                            e.currentTarget.style.background = 'var(--gray3)';
+                            e.currentTarget.style.borderColor = 'var(--gray6)';
+                            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                        }}
+                    >
+                        <Icon icon="tabler:arrow-left" />
+                    </div>
+                )}
+
+                <div style={{position: 'relative', flex: 1}}>
+                    <input
+                    ref={mainInputRef}
+                    autoFocus
+                    id='command-input'
+                    className='command-input'
+                    autoComplete="off"
+                    role="combobox"
+                    spellCheck="false"
+                    value={inputValue}
+                    placeholder={placeholder}
+                    onChange={(event) => {
+                        setInputValue(event.target.value);
+                        onValueChange?.(event.target.value);
                     }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.color = 'var(--gray12)';
-                        e.currentTarget.style.background = 'var(--gray4)';
-                        e.currentTarget.style.borderColor = 'var(--gray7)';
-                        e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.color = 'var(--gray11)';
-                        e.currentTarget.style.background = 'var(--gray3)';
-                        e.currentTarget.style.borderColor = 'var(--gray6)';
-                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-                    }}
-                >
-                    <Icon icon="tabler:arrow-left" />
+                    onKeyDown={handleMainInputKeyDown}
+                />
+
+                {showQueryInput && (
+                    <>
+                        {/* Query input positioned after the text */}
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: `${16 + textWidth + 16}px`, // 16px input padding + 16px spacing
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            <input
+                                ref={queryInputRef}
+                                className='command-query-input'
+                                autoComplete="off"
+                                spellCheck="false"
+                                value={queryValue}
+                                placeholder="Press Tab"
+                                onChange={(event) => setQueryValue(event.target.value)}
+                                onKeyDown={handleQueryInputKeyDown}
+                                onFocus={() => {
+                                    setQueryFocused(true);
+                                    setResultHandleEvent?.(false); // Disable ResultsRender keyboard handling
+                                }}
+                                onBlur={() => {
+                                    setQueryFocused(false);
+                                    setResultHandleEvent?.(true); // Re-enable ResultsRender keyboard handling
+                                }}
+                                style={{
+                                    pointerEvents: 'auto',
+                                    width: queryValue ? `${Math.max(100, queryValue.length * 8 + 24)}px` : '100px',
+                                    maxWidth: '400px',
+                                }}
+                            />
+                        </div>
+                    </>
+                )}
                 </div>
-            )}
+            </div>
 
-            <div style={{position: 'relative', flex: 1}}>
-                <input
-                ref={mainInputRef}
-                autoFocus
-                id='command-input'
-                className='command-input'
-                autoComplete="off"
-                role="combobox"
-                spellCheck="false"
-                value={inputValue}
-                placeholder={placeholder}
-                onChange={(event) => {
-                    setInputValue(event.target.value);
-                    onValueChange?.(event.target.value);
-                }}
-                onKeyDown={handleMainInputKeyDown}
-            />
-
-            {/* Loading indicator at bottom of input */}
+            {/* Loading indicator at bottom of entire input area */}
             {loading && (
                 <div
                     style={{
@@ -244,48 +288,6 @@ export const Input = ({
                     />
                 </div>
             )}
-
-            {showQueryInput && (
-                <>
-                    {/* Query input positioned after the text */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            left: `${16 + textWidth + 16}px`, // 16px input padding + 16px spacing
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            pointerEvents: 'none',
-                        }}
-                    >
-                        <input
-                            ref={queryInputRef}
-                            className='command-query-input'
-                            autoComplete="off"
-                            spellCheck="false"
-                            value={queryValue}
-                            placeholder="Press Tab"
-                            onChange={(event) => setQueryValue(event.target.value)}
-                            onKeyDown={handleQueryInputKeyDown}
-                            onFocus={() => {
-                                setQueryFocused(true);
-                                setResultHandleEvent?.(false); // Disable ResultsRender keyboard handling
-                            }}
-                            onBlur={() => {
-                                setQueryFocused(false);
-                                setResultHandleEvent?.(true); // Re-enable ResultsRender keyboard handling
-                            }}
-                            style={{
-                                pointerEvents: 'auto',
-                                width: queryValue ? `${Math.max(100, queryValue.length * 8 + 24)}px` : '100px',
-                                maxWidth: '400px',
-                            }}
-                        />
-                    </div>
-                </>
-            )}
-            </div>
         </div>
     );
 };
