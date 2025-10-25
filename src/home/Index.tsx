@@ -39,6 +39,25 @@ export default function Home() {
     // Use the matches hook for search and filtering
     const {results} = useMatches(search, state.actions, state.rootActionId);
 
+    // Get the currently active action
+    const activeAction = useMemo(() => {
+        if (results.length === 0 || state.activeIndex < 0) {
+            return null;
+        }
+        const activeItem = results[state.activeIndex];
+        if (typeof activeItem === "string") {
+            return null;
+        }
+        return activeItem as ActionImpl;
+    }, [results, state.activeIndex]);
+
+    // Handle query submission from Input component
+    const handleQuerySubmit = (query: string, actionId: string) => {
+        // Enter the action and set search to the query
+        setRootActionId(actionId);
+        setSearch(query);
+    };
+
     return (
         <Container>
             <Background>
@@ -48,6 +67,8 @@ export default function Home() {
                     currentRootActionId={state.rootActionId}
                     onCurrentRootActionIdChange={setRootActionId}
                     actions={state.actions}
+                    activeAction={activeAction}
+                    onQuerySubmit={handleQuerySubmit}
                     inputRefSetter={(ref) => {
                         inputRef.current = ref;
                     }}

@@ -25,6 +25,7 @@ export type Action = {
     priority?: Priority;
     item?: any
     kind?: string
+    query?: boolean  // If true, shows a query input box when action is active
 };
 
 export type ActionStore = Record<ActionId, ActionImpl>;

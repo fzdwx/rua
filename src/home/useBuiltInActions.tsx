@@ -17,6 +17,7 @@ export function useBuiltInActions(): Action[] {
             keywords: "translate 翻译 tr",
             icon: <div style={{fontSize: "20px"}}>🌐</div>,
             kind: "built-in",
+            query: true,  // Enable query input for this action
             // No perform function - this makes it enterable (navigable)
         });
 
