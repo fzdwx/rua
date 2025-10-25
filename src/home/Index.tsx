@@ -213,6 +213,7 @@ export default function Home() {
                         </div>
                     )}
                     actions={getFooterActions}
+                    mainInputRef={inputRef}
                 />
             </Background>
         </Container>

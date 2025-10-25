@@ -11,13 +11,15 @@ export const Footer: React.FC<{
     content: (current?: string | ActionImpl | null) => string | React.ReactElement
     onSubCommandHide?: () => void
     onSubCommandShow?: () => void
+    mainInputRef?: React.RefObject<HTMLInputElement | null>
 }> = ({
           current,
           actions,
           icon,
           content,
           onSubCommandShow,
-          onSubCommandHide
+          onSubCommandHide,
+          mainInputRef
       }) => {
     return <div className='command-footer'>
         <div className='command-footer-icon'>
@@ -32,6 +34,7 @@ export const Footer: React.FC<{
             onSubCommandShow={onSubCommandShow}
             actions={actions}
             current={current}
+            mainInputRef={mainInputRef}
         />
     </div>
 }
@@ -41,11 +44,13 @@ const FooterActionRender: React.FC<{
     current: string | ActionImpl | null,
     onSubCommandHide?: () => void
     onSubCommandShow?: () => void
+    mainInputRef?: React.RefObject<HTMLInputElement | null>
 }> = ({
           actions,
           onSubCommandHide,
           onSubCommandShow,
-          current
+          current,
+          mainInputRef
       }) => {
     if (actions.length === 0) {
         return <></>
@@ -66,6 +71,7 @@ const FooterActionRender: React.FC<{
                 }
             }}
             actions={actions}
+            mainInputRef={mainInputRef}
         />
     </>
 }
@@ -83,26 +89,41 @@ const FooterActions: React.FC<{
     initialShortcut?: string // default 'ctrl.k'
     onSubCommandShow: () => void
     onSubCommandHide: () => void
+    mainInputRef?: React.RefObject<HTMLInputElement | null>
 }> = ({
           actions,
           initialOpen,
           initialShortcut,
           onSubCommandShow,
           onSubCommandHide,
-          current
+          current,
+          mainInputRef
       }) => {
     const [open, setOpen] = React.useState(initialOpen || false)
     const [shortcut] = React.useState(initialShortcut || 'ctrl.k')
+    const footerInputRef = React.useRef<HTMLInputElement>(null)
+
     const changeVisible = () => setOpen((o) => !o)
+
     useKeyPress(shortcut, (e) => {
         e.preventDefault()
         changeVisible()
     })
+
     React.useEffect(() => {
         if (open) {
             onSubCommandShow()
+            // Focus footer input when opened
+            setTimeout(() => {
+                footerInputRef.current?.focus()
+            }, 0)
+        } else {
+            // Focus main input when closed
+            setTimeout(() => {
+                mainInputRef?.current?.focus()
+            }, 0)
         }
-    }, [open])
+    }, [open, onSubCommandShow, mainInputRef])
 
     const [currentActions, setCurrentActions] = useState<Action[]>([])
 
@@ -163,6 +184,9 @@ const FooterActions: React.FC<{
                        actions={state.actions}
                        currentRootActionId={state.rootActionId}
                        onCurrentRootActionIdChange={setRootActionId}
+                       inputRefSetter={(ref) => {
+                           footerInputRef.current = ref
+                       }}
                 />
             </div>
         </Popover.Content>
