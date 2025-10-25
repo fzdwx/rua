@@ -159,6 +159,29 @@ button {
   border-bottom: 1px solid var(--gray6);
 }
 
+.command-query-separator {
+  font-size: 12px;
+  color: var(--gray10);
+}
+
+.command-query-input {
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--gray6);
+  border-radius: 4px;
+  background: var(--gray3);
+  color: var(--gray12);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.command-query-input:focus {
+  border-color: var(--gray8);
+  background: var(--gray4);
+}
+
+
+
 .command-container {
   position: fixed;
   display: flex;

@@ -32,9 +32,11 @@ export const Input = ({
     const [inputValue, setInputValue] = React.useState(value);
     const [queryValue, setQueryValue] = React.useState("");
     const [queryFocused, setQueryFocused] = React.useState(false);
+    const [textWidth, setTextWidth] = React.useState(0);
 
     const mainInputRef = React.useRef<HTMLInputElement>(null);
     const queryInputRef = React.useRef<HTMLInputElement>(null);
+    const textMeasureRef = React.useRef<HTMLSpanElement>(null);
 
     React.useEffect(() => {
         setInputValue(value);
@@ -45,6 +47,16 @@ export const Input = ({
             inputRefSetter(mainInputRef.current);
         }
     }, [inputRefSetter]);
+
+    // Measure the width of the input text to position query input
+    React.useEffect(() => {
+        if (textMeasureRef.current && mainInputRef.current) {
+            const text = inputValue || "";
+            textMeasureRef.current.textContent = text;
+            const width = textMeasureRef.current.offsetWidth;
+            setTextWidth(width);
+        }
+    }, [inputValue]);
 
     // Check if active action has query flag
     const showQueryInput = activeAction?.query && !currentRootActionId;
@@ -73,6 +85,7 @@ export const Input = ({
             event.preventDefault();
             setQueryFocused(true);
             queryInputRef.current?.focus();
+            queryInputRef.current?.select();
         }
     };
 
@@ -95,10 +108,17 @@ export const Input = ({
             setQueryValue("");
             mainInputRef.current?.focus();
         }
+
+        // Backspace on empty query returns to main input
+        if (event.key === "Backspace" && !queryValue) {
+            event.preventDefault();
+            setQueryFocused(false);
+            mainInputRef.current?.focus();
+        }
     };
 
     return (
-        <div style={{display: "flex", alignItems: "center", gap: "8px"}}>
+        <div style={{position: 'relative'}}>
             <input
                 ref={mainInputRef}
                 autoFocus
@@ -117,29 +137,57 @@ export const Input = ({
             />
 
             {showQueryInput && (
-                <input
-                    ref={queryInputRef}
-                    className='command-query-input'
-                    autoComplete="off"
-                    spellCheck="false"
-                    value={queryValue}
-                    placeholder={`Enter query for ${activeAction?.name}...`}
-                    onChange={(event) => setQueryValue(event.target.value)}
-                    onKeyDown={handleQueryInputKeyDown}
-                    onFocus={() => setQueryFocused(true)}
-                    onBlur={() => setQueryFocused(false)}
-                    style={{
-                        padding: "4px 8px",
-                        fontSize: "12px",
-                        border: queryFocused ? "1px solid var(--gray8)" : "1px solid var(--gray6)",
-                        borderRadius: "4px",
-                        background: "var(--gray3)",
-                        color: "var(--gray12)",
-                        outline: "none",
-                        minWidth: "200px",
-                        transition: "border-color 0.2s ease",
-                    }}
-                />
+                <>
+                    {/* Query input positioned after the text */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            left: `${16 + textWidth}px`, // 16px is the input padding
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            pointerEvents: 'none',
+                        }}
+                    >
+                        <span className="command-query-separator" style={{pointerEvents: 'auto'}}>
+                            →
+                        </span>
+                        <input
+                            ref={queryInputRef}
+                            className='command-query-input'
+                            autoComplete="off"
+                            spellCheck="false"
+                            value={queryValue}
+                            placeholder="Press Tab"
+                            onChange={(event) => setQueryValue(event.target.value)}
+                            onKeyDown={handleQueryInputKeyDown}
+                            onFocus={() => setQueryFocused(true)}
+                            onBlur={() => setQueryFocused(false)}
+                            style={{
+                                pointerEvents: 'auto',
+                                width: queryValue ? `${Math.max(100, queryValue.length * 8 + 24)}px` : '100px',
+                                maxWidth: '400px',
+                            }}
+                        />
+                    </div>
+
+                    {/* Hidden span for measuring text width */}
+                    <span
+                        ref={textMeasureRef}
+                        style={{
+                            position: 'absolute',
+                            visibility: 'hidden',
+                            whiteSpace: 'pre',
+                            fontSize: '16px',
+                            fontFamily: 'inherit',
+                            padding: '0',
+                            pointerEvents: 'none',
+                        }}
+                        aria-hidden="true"
+                    />
+                </>
             )}
         </div>
     );
