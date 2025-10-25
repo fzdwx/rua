@@ -68,8 +68,12 @@ export const Input = ({
     }, [activeAction?.id]);
 
     const placeholder = React.useMemo((): string => {
+        // Don't show placeholder when query input is visible
+        if (showQueryInput) {
+            return "";
+        }
         return defaultPlaceholder ?? "Type a command or search…";
-    }, [defaultPlaceholder]);
+    }, [defaultPlaceholder, showQueryInput]);
 
     const handleMainInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         // Backspace to go back
