@@ -13,6 +13,7 @@ interface InputProps {
     currentRootActionId: ActionId | null
     activeAction?: ActionImpl | null;  // Currently active action in results
     onQuerySubmit?: (query: string, actionId: ActionId) => void;  // Called when query is submitted
+    setResultHandleEvent?: (enabled: boolean) => void;  // Control whether ResultsRender handles keyboard events
 
     defaultPlaceholder?: string;
     inputRefSetter?: (ref: HTMLInputElement) => void;
@@ -28,6 +29,7 @@ export const Input = ({
                           actions,
                           activeAction,
                           onQuerySubmit,
+                          setResultHandleEvent,
                       }: InputProps) => {
     const [inputValue, setInputValue] = React.useState(value);
     const [queryValue, setQueryValue] = React.useState("");
@@ -110,12 +112,14 @@ export const Input = ({
         // Enter to submit query
         if (event.key === "Enter" && queryValue.trim() && activeAction) {
             event.preventDefault();
+            event.stopPropagation(); // Prevent ResultsRender from handling this event
             if (onQuerySubmit) {
                 onQuerySubmit(queryValue.trim(), activeAction.id);
             }
             setQueryValue("");
             setQueryFocused(false);
             mainInputRef.current?.focus();
+            return;
         }
 
         // Escape to return to main input
@@ -180,8 +184,14 @@ export const Input = ({
                             placeholder="Press Tab"
                             onChange={(event) => setQueryValue(event.target.value)}
                             onKeyDown={handleQueryInputKeyDown}
-                            onFocus={() => setQueryFocused(true)}
-                            onBlur={() => setQueryFocused(false)}
+                            onFocus={() => {
+                                setQueryFocused(true);
+                                setResultHandleEvent?.(false); // Disable ResultsRender keyboard handling
+                            }}
+                            onBlur={() => {
+                                setQueryFocused(false);
+                                setResultHandleEvent?.(true); // Re-enable ResultsRender keyboard handling
+                            }}
                             style={{
                                 pointerEvents: 'auto',
                                 width: queryValue ? `${Math.max(100, queryValue.length * 8 + 24)}px` : '100px',

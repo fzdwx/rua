@@ -31,7 +31,7 @@ export default function Home() {
     }, [builtInActions, applicationActions]);
 
     // Initialize action store
-    const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
+    const {useRegisterActions, setRootActionId, setActiveIndex, setResultHandleEvent, state} = useActionStore();
 
     // Register actions when they change
     useRegisterActions(allActions, [allActions]);
@@ -69,6 +69,7 @@ export default function Home() {
                     actions={state.actions}
                     activeAction={activeAction}
                     onQuerySubmit={handleQuerySubmit}
+                    setResultHandleEvent={setResultHandleEvent}
                     inputRefSetter={(ref) => {
                         inputRef.current = ref;
                     }}
