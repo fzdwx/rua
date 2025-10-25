@@ -1,4 +1,4 @@
-import {useState, useRef} from "react";
+import {useState, useRef, useMemo} from "react";
 import {
     Container,
     Background,
@@ -11,19 +11,28 @@ import {
     ActionImpl,
 } from "../command";
 import {useApplications} from "./useApplications";
+import {useQuickActions} from "./useQuickActions";
 
 export default function Home() {
     const [search, setSearch] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Load applications and convert to actions
-    const {loading, actions} = useApplications();
+    const {loading, actions: applicationActions} = useApplications();
+
+    // Generate quick actions based on search input
+    const quickActions = useQuickActions(search);
+
+    // Combine all actions (quick actions first for priority)
+    const allActions = useMemo(() => {
+        return [...quickActions, ...applicationActions];
+    }, [quickActions, applicationActions]);
 
     // Initialize action store
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
 
     // Register actions when applications change
-    useRegisterActions(actions, [actions]);
+    useRegisterActions(allActions, [allActions]);
 
     // Use the matches hook for search and filtering
     const {results} = useMatches(search, state.actions, state.rootActionId);
