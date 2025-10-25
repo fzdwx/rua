@@ -118,10 +118,10 @@ const FooterActions: React.FC<{
                 footerInputRef.current?.focus()
             }, 0)
         } else {
-            // Focus main input when closed
-            setTimeout(() => {
-                mainInputRef?.current?.focus()
-            }, 0)
+            // // Focus main input when closed
+            // setTimeout(() => {
+            //     mainInputRef?.current?.focus()
+            // }, 0)
         }
     }, [open, onSubCommandShow, mainInputRef])
 
