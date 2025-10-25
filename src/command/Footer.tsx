@@ -136,12 +136,6 @@ const FooterActions: React.FC<{
             setTimeout(() => {
                 footerInputRef.current?.focus()
             }, 0)
-        } else {
-            // onSubCommandHide()
-            // // Focus main input when closed
-            // setTimeout(() => {
-            //     mainInputRef?.current?.focus()
-            // }, 0)
         }
     }, [open, onSubCommandShow, mainInputRef])
 
@@ -260,18 +254,6 @@ const FooterSettings: React.FC<{
             className='command-settings-trigger'
             onClick={changeVisible}
             aria-expanded={open}
-            style={{
-                color: 'var(--gray11)',
-                padding: '0 4px',
-                borderRadius: '6px',
-                height: '28px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                background: 'transparent',
-                cursor: 'pointer',
-                transition: 'color 0.2s ease',
-            }}
             onMouseEnter={(e) => {
                 e.currentTarget.style.color = 'var(--gray12)';
             }}
