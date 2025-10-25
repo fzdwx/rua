@@ -173,6 +173,7 @@ const FooterActions: React.FC<{
             align="end"
             sideOffset={16}
             alignOffset={-52}
+            className="border-none"
         >
             <div className='command-submenu'>
                 <ResultsRender items={results}
@@ -276,6 +277,7 @@ const FooterSettings: React.FC<{
             align="end"
             sideOffset={16}
             alignOffset={0}
+            className="border-none"
         >
             <div className='command-submenu'>
                 <ResultsRender items={results}
