@@ -162,7 +162,7 @@ const FooterActions: React.FC<{
             side="top"
             align="end"
             sideOffset={16}
-            alignOffset={0}
+            alignOffset={-52}
             onCloseAutoFocus={(e) => {
                 e.preventDefault()
                 onSubCommandHide()
