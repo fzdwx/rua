@@ -21,6 +21,7 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
+      - run: echo ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v4
 
       - name: install dependencies (ubuntu only)
