@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Rua",
+        "title": "rua",
         "width": 900,
         "height": 540,
         "center": true,
@@ -27,6 +27,7 @@
     ],
     "security": {
       "csp": null,
+      "capabilities": ["default"],
       "assetProtocol": {
         "enable": true,
         "scope": [
