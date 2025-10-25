@@ -1,4 +1,4 @@
-import {useState, useRef} from "react";
+import {useState, useRef, useMemo} from "react";
 import {
     Container,
     Background,
@@ -12,19 +12,28 @@ import {
 } from "../command";
 import {useApplications} from "./useApplications";
 import {QuickResult} from "./QuickResult";
+import {useBuiltInActions} from "./useBuiltInActions";
 
 export default function Home() {
     const [search, setSearch] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Load applications and convert to actions
-    const {loading, actions} = useApplications();
+    const {loading, actions: applicationActions} = useApplications();
+
+    // Get built-in actions based on search input
+    const builtInActions = useBuiltInActions(search);
+
+    // Combine all actions (built-in actions first for priority)
+    const allActions = useMemo(() => {
+        return [...builtInActions, ...applicationActions];
+    }, [builtInActions, applicationActions]);
 
     // Initialize action store
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
 
-    // Register actions when applications change
-    useRegisterActions(actions, [actions]);
+    // Register actions when they change
+    useRegisterActions(allActions, [allActions]);
 
     // Use the matches hook for search and filtering
     const {results} = useMatches(search, state.actions, state.rootActionId);
