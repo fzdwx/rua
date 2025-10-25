@@ -213,11 +213,7 @@ export default function Home() {
                     current={activeMainAction}
                     icon={<Icon icon="tabler:command" style={{fontSize: "20px"}} />}
                     content={() => (
-                        <div style={{display: "flex", alignItems: "center", gap: "8px"}}>
-                            <span style={{fontSize: "12px", color: "var(--gray11)"}}>
-                                Theme: {theme === "dark" ? "Dark" : "Light"}
-                            </span>
-                        </div>
+                        <div/>
                     )}
                     actions={getFooterActions}
                     settings={getSettingsActions()}

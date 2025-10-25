@@ -27,7 +27,7 @@ export const Footer: React.FC<{
         <div className='command-footer-icon'>
             {icon}
         </div>
-        <div className=''>
+        <div style={{ marginRight: 'auto' }}>
             {content(current)}
         </div>
 
