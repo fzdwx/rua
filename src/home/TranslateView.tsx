@@ -1,4 +1,4 @@
-import {useMemo, useEffect} from "react";
+import * as React from "react";
 
 interface TranslateViewProps {
     search: string;
@@ -13,9 +13,12 @@ function containsChinese(text: string): boolean {
 }
 
 /**
- * Mock translation function (to be replaced with real API later)
+ * Mock translation function with delay (to be replaced with real API later)
  */
-function translateText(text: string): string {
+async function translateText(text: string): Promise<string> {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 600));
+
     const isChinese = containsChinese(text);
 
     if (isChinese) {
@@ -28,34 +31,45 @@ function translateText(text: string): string {
 }
 
 export function TranslateView({search, onLoadingChange}: TranslateViewProps) {
-    // Simulate loading for 2000ms when component mounts or search changes
-    useEffect(() => {
-        onLoadingChange?.(true);
-        const timer = setTimeout(() => {
+    const [translationResult, setTranslationResult] = React.useState<{
+        original: string;
+        translated: string;
+        fromLang: string;
+        toLang: string;
+    } | null>(null);
+
+    // Simulate translation with delay
+    React.useEffect(() => {
+        if (!search.trim()) {
+            setTranslationResult(null);
             onLoadingChange?.(false);
-        }, 2000);
+            return;
+        }
+
+        // Start loading
+        onLoadingChange?.(true);
+
+        const isChinese = containsChinese(search);
+
+        // Call async translation
+        let cancelled = false;
+        translateText(search).then((translated) => {
+            if (!cancelled) {
+                setTranslationResult({
+                    original: search,
+                    translated,
+                    fromLang: isChinese ? "中文" : "English",
+                    toLang: isChinese ? "English" : "中文",
+                });
+                onLoadingChange?.(false);
+            }
+        });
 
         return () => {
-            clearTimeout(timer);
+            cancelled = true;
             onLoadingChange?.(false);
         };
     }, [search, onLoadingChange]);
-
-    const translationResult = useMemo(() => {
-        if (!search.trim()) {
-            return null;
-        }
-
-        const isChinese = containsChinese(search);
-        const translated = translateText(search);
-
-        return {
-            original: search,
-            translated,
-            fromLang: isChinese ? "中文" : "English",
-            toLang: isChinese ? "English" : "中文",
-        };
-    }, [search]);
 
     const handleCopy = async (text: string) => {
         try {
