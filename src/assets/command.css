@@ -255,10 +255,10 @@ button {
   align-items: center;
   width: 100%;
   background: var(--gray1);
-  bottom: 0;
   padding: 8px;
   border-top: 1px solid var(--gray6);
-  border-radius: 0 0 12px 12px
+  border-radius: 0 0 12px 12px;
+  margin-top: auto
 }
 
 .command-footer-icon {
