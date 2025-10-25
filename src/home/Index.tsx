@@ -11,7 +11,6 @@ import {
     ActionImpl,
 } from "../command";
 import {useApplications} from "./useApplications";
-import {useQuickActions} from "./useQuickActions";
 import {QuickResult} from "./QuickResult";
 
 export default function Home() {
@@ -20,9 +19,6 @@ export default function Home() {
 
     // Load applications and convert to actions
     const {loading, actions} = useApplications();
-
-    // Check for quick result based on search input
-    const quickResult = useQuickActions(search);
 
     // Initialize action store
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
@@ -49,7 +45,7 @@ export default function Home() {
                 />
 
                 {/* Quick result view for calculations and built-in functions */}
-                {quickResult && <QuickResult result={quickResult} />}
+                <QuickResult search={search} />
 
                 {loading ? (
                     <div
