@@ -7,18 +7,21 @@ import {
     RenderItem,
     useActionStore,
     useMatches,
-
+    Footer,
     ActionImpl,
 } from "../command";
 import {useApplications} from "./useApplications";
 import {QuickResult} from "./QuickResult";
 import {useBuiltInActions} from "./useBuiltInActions";
 import {TranslateView} from "./TranslateView";
+import {useTheme} from "./useTheme";
+import {Icon} from "@iconify/react";
 
 export default function Home() {
     const [search, setSearch] = useState("");
     const [actionLoading, setActionLoading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+    const {theme, toggleTheme} = useTheme();
 
     // Load applications and convert to actions
     const {loading, actions: applicationActions} = useApplications();
@@ -40,8 +43,8 @@ export default function Home() {
     // Use the matches hook for search and filtering
     const {results} = useMatches(search, state.actions, state.rootActionId);
 
-    // Get the currently active action
-    const activeAction = useMemo(() => {
+    // Get the currently active main action
+    const activeMainAction = useMemo(() => {
         if (results.length === 0 || state.activeIndex < 0) {
             return null;
         }
@@ -64,6 +67,33 @@ export default function Home() {
         setActionLoading(loading);
     }, []);
 
+    // Generate footer actions based on active main action
+    const getFooterActions = useCallback((current: string | ActionImpl | null, changeVisible: () => void) => {
+        const footerActions = [];
+
+        // Always available: Theme toggle
+        footerActions.push({
+            id: "toggle-theme",
+            name: "Toggle Theme",
+            subtitle: `Switch to ${theme === "dark" ? "light" : "dark"} mode`,
+            icon: <Icon icon={theme === "dark" ? "tabler:sun" : "tabler:moon"} style={{fontSize: "20px"}} />,
+            keywords: "theme dark light mode",
+            perform: () => {
+                toggleTheme();
+                changeVisible();
+            },
+        });
+
+        // Add action-specific footer actions if available
+        // Only process if current is an ActionImpl (not string)
+        if (current && typeof current !== "string" && current.footerAction) {
+            const actionSpecificFooterActions = current.footerAction(changeVisible);
+            footerActions.push(...actionSpecificFooterActions);
+        }
+
+        return footerActions;
+    }, [theme, toggleTheme]);
+
     return (
         <Container>
             <Background>
@@ -73,7 +103,7 @@ export default function Home() {
                     currentRootActionId={state.rootActionId}
                     onCurrentRootActionIdChange={setRootActionId}
                     actions={state.actions}
-                    activeAction={activeAction}
+                    activeAction={activeMainAction}
                     onQuerySubmit={handleQuerySubmit}
                     setResultHandleEvent={setResultHandleEvent}
                     loading={actionLoading}
@@ -170,6 +200,20 @@ export default function Home() {
                         )}
                     </>
                 )}
+
+                {/* Footer with theme toggle and dynamic actions */}
+                <Footer
+                    current={activeMainAction}
+                    icon={<Icon icon="tabler:command" style={{fontSize: "20px"}} />}
+                    content={() => (
+                        <div style={{display: "flex", alignItems: "center", gap: "8px"}}>
+                            <span style={{fontSize: "12px", color: "var(--gray11)"}}>
+                                Theme: {theme === "dark" ? "Dark" : "Light"}
+                            </span>
+                        </div>
+                    )}
+                    actions={getFooterActions}
+                />
             </Background>
         </Container>
     );

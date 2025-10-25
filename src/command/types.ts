@@ -26,6 +26,7 @@ export type Action = {
     item?: any
     kind?: string
     query?: boolean  // If true, shows a query input box when action is active
+    footerAction?: (changeVisible: () => void) => Action[]  // Footer actions specific to this main action
 };
 
 export type ActionStore = Record<ActionId, ActionImpl>;
