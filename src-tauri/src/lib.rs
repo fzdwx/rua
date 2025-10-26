@@ -5,6 +5,7 @@ use std::process::Command;
 use std::sync::Mutex;
 use tauri::Manager;
 use walkdir::WalkDir;
+use global_hotkey::{GlobalHotKeyManager, hotkey::{HotKey, Modifiers, Code}, GlobalHotKeyEvent};
 
 lazy_static::lazy_static! {
     static ref ICON_CACHE: Mutex<HashMap<String, Option<String>>> = Mutex::new(HashMap::new());
@@ -296,6 +297,38 @@ pub fn run() {
         .setup(|app| {
             let win = app.get_webview_window("main").unwrap();
             win.eval("window.location.reload()").unwrap();
+
+            // Setup global hotkey for Alt+Space
+            let hotkey_manager = GlobalHotKeyManager::new().unwrap();
+            let hotkey = HotKey::new(Some(Modifiers::ALT), Code::Space);
+
+            hotkey_manager.register(hotkey).unwrap();
+            eprintln!("Global hotkey Alt+Space registered successfully");
+
+            // Clone app handle for use in the thread
+            let app_handle = app.app_handle().clone();
+
+            // Spawn a thread to listen for hotkey events
+            std::thread::spawn(move || {
+                let receiver = GlobalHotKeyEvent::receiver();
+                loop {
+                    if let Ok(event) = receiver.recv() {
+                        eprintln!("Hotkey event received: {:?}", event);
+
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            if window.is_visible().unwrap_or(false) {
+                                eprintln!("Hiding window");
+                                let _ = window.hide();
+                            } else {
+                                eprintln!("Showing window");
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                    }
+                }
+            });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
