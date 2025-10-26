@@ -190,6 +190,20 @@ fn get_applications() -> Vec<Application> {
     applications
 }
 
+#[tauri::command]
+fn refresh_applications_cache() -> Result<String, String> {
+    // Delete the cache file
+    let cache_path = get_cache_path();
+    if cache_path.exists() {
+        fs::remove_file(&cache_path)
+            .map_err(|e| format!("Failed to remove cache: {}", e))?;
+        eprintln!("Cache deleted, will reload on next request");
+        Ok("Cache refreshed successfully".to_string())
+    } else {
+        Ok("No cache to refresh".to_string())
+    }
+}
+
 /// Generate possible icon paths for a given icon name
 fn generate_icon_paths(icon_name: &str) -> Vec<String> {
     vec![
@@ -447,6 +461,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             get_applications,
+            refresh_applications_cache,
             launch_application
         ])
         .run(tauri::generate_context!())
