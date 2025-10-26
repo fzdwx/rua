@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Mutex;
+use std::fs;
+use std::time::SystemTime;
 use tauri::Manager;
 use walkdir::WalkDir;
 use global_hotkey::{GlobalHotKeyManager, hotkey::{HotKey, Modifiers, Code}, GlobalHotKeyEvent};
@@ -22,14 +24,125 @@ pub struct Application {
     terminal: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct AppCache {
+    applications: Vec<Application>,
+    timestamp: u64,
+}
+
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+/// Get the cache file path
+fn get_cache_path() -> PathBuf {
+    let cache_dir = std::env::var("XDG_CACHE_HOME")
+        .unwrap_or_else(|_| format!("{}/.cache", std::env::var("HOME").unwrap_or_default()));
+    let mut path = PathBuf::from(cache_dir);
+    path.push("rua");
+    if !path.exists() {
+        let _ = fs::create_dir_all(&path);
+    }
+    path.push("applications.json");
+    path
+}
+
+/// Get the latest modification time from application directories
+fn get_latest_mtime(app_dirs: &[&str]) -> Option<u64> {
+    let mut latest: Option<u64> = None;
+
+    for dir in app_dirs {
+        let path = PathBuf::from(dir);
+        if !path.exists() {
+            continue;
+        }
+
+        for entry in WalkDir::new(path)
+            .max_depth(2)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "desktop" {
+                    if let Ok(metadata) = entry.metadata() {
+                        if let Ok(modified) = metadata.modified() {
+                            if let Ok(duration) = modified.duration_since(SystemTime::UNIX_EPOCH) {
+                                let mtime = duration.as_secs();
+                                latest = Some(latest.map_or(mtime, |l| l.max(mtime)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    latest
+}
+
+/// Load applications from cache if valid
+fn load_cache() -> Option<Vec<Application>> {
+    let cache_path = get_cache_path();
+    if !cache_path.exists() {
+        eprintln!("Cache file does not exist");
+        return None;
+    }
+
+    let cache_content = fs::read_to_string(&cache_path).ok()?;
+    let cache: AppCache = serde_json::from_str(&cache_content).ok()?;
+
+    // Get current latest mtime
+    let home = &format!(
+        "{}/.local/share/applications",
+        std::env::var("HOME").unwrap_or_default()
+    );
+    let app_dirs = vec![
+        "/usr/share/applications",
+        "/usr/local/share/applications",
+        home.as_str(),
+    ];
+
+    let current_mtime = get_latest_mtime(&app_dirs)?;
+
+    // Check if cache is still valid
+    if cache.timestamp >= current_mtime {
+        eprintln!("Using cached applications (cache: {}, current: {})", cache.timestamp, current_mtime);
+        Some(cache.applications)
+    } else {
+        eprintln!("Cache is outdated (cache: {}, current: {})", cache.timestamp, current_mtime);
+        None
+    }
+}
+
+/// Save applications to cache
+fn save_cache(applications: &[Application], timestamp: u64) {
+    let cache_path = get_cache_path();
+    let cache = AppCache {
+        applications: applications.to_vec(),
+        timestamp,
+    };
+
+    if let Ok(cache_json) = serde_json::to_string(&cache) {
+        if let Err(e) = fs::write(&cache_path, cache_json) {
+            eprintln!("Failed to write cache: {}", e);
+        } else {
+            eprintln!("Cache saved successfully to {:?}", cache_path);
+        }
+    }
+}
+
 #[tauri::command]
 fn get_applications() -> Vec<Application> {
+    // Try to load from cache first
+    if let Some(cached_apps) = load_cache() {
+        return cached_apps;
+    }
+
+    eprintln!("Loading applications from disk...");
+    let start = std::time::Instant::now();
+
     let mut applications = Vec::new();
 
     // Common directories for .desktop files on Linux
@@ -43,7 +156,7 @@ fn get_applications() -> Vec<Application> {
         home,
     ];
 
-    for dir in app_dirs {
+    for dir in &app_dirs {
         let path = PathBuf::from(dir);
         if !path.exists() {
             continue;
@@ -65,6 +178,15 @@ fn get_applications() -> Vec<Application> {
     }
 
     applications.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+    let duration = start.elapsed();
+    eprintln!("Loaded {} applications in {:?}", applications.len(), duration);
+
+    // Save to cache with current timestamp
+    if let Some(timestamp) = get_latest_mtime(&app_dirs.iter().map(|s| *s).collect::<Vec<_>>()) {
+        save_cache(&applications, timestamp);
+    }
+
     applications
 }
 
@@ -216,16 +338,7 @@ fn parse_desktop_file(path: &std::path::Path) -> Result<Application, Box<dyn std
     let terminal = entry.terminal();
 
     // Resolve icon path
-    let icon = entry.icon().and_then(|icon_name| {
-        let resolved = resolve_icon_path(icon_name);
-        // Debug logging
-        if resolved.is_some() {
-            eprintln!("Icon for {}: {} -> {:?}", name, icon_name, resolved);
-        } else {
-            eprintln!("Icon not found for {}: {}", name, icon_name);
-        }
-        resolved
-    });
+    let icon = entry.icon().and_then(|icon_name| resolve_icon_path(icon_name));
 
     Ok(Application {
         name,
