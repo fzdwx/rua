@@ -7,7 +7,10 @@ use std::fs;
 use std::time::SystemTime;
 use tauri::Manager;
 use walkdir::WalkDir;
-use global_hotkey::{GlobalHotKeyManager, hotkey::{HotKey, Modifiers, Code}, GlobalHotKeyEvent};
+use x11rb::connection::Connection;
+use x11rb::protocol::xproto::*;
+use x11rb::protocol::Event as X11Event;
+use x11rb::rust_connection::RustConnection;
 
 lazy_static::lazy_static! {
     static ref ICON_CACHE: Mutex<HashMap<String, Option<String>>> = Mutex::new(HashMap::new());
@@ -425,32 +428,74 @@ pub fn run() {
             let win = app.get_webview_window("main").unwrap();
             win.eval("window.location.reload()").unwrap();
 
-            // Setup global hotkey for Alt+Space
-            let hotkey_manager = GlobalHotKeyManager::new().unwrap();
-            let hotkey = HotKey::new(Some(Modifiers::ALT), Code::Space);
-
-            hotkey_manager.register(hotkey).unwrap();
-            eprintln!("Global hotkey Alt+Space registered successfully");
-
-            // Clone app handle for use in the thread
+            // Setup global hotkey for Alt+Space using X11
             let app_handle = app.app_handle().clone();
 
-            // Spawn a thread to listen for hotkey events
             std::thread::spawn(move || {
-                let receiver = GlobalHotKeyEvent::receiver();
-                loop {
-                    if let Ok(event) = receiver.recv() {
-                        eprintln!("Hotkey event received: {:?}", event);
+                // Connect to X11
+                let (conn, screen_num) = match RustConnection::connect(None) {
+                    Ok(result) => result,
+                    Err(e) => {
+                        eprintln!("Failed to connect to X11: {:?}", e);
+                        return;
+                    }
+                };
 
-                        if let Some(window) = app_handle.get_webview_window("main") {
-                            if window.is_visible().unwrap_or(false) {
-                                eprintln!("Hiding window");
-                                let _ = window.hide();
-                            } else {
-                                eprintln!("Showing window");
-                                let _ = window.show();
-                                let _ = window.set_focus();
+                let screen = &conn.setup().roots[screen_num];
+                let root = screen.root;
+
+                // Space keycode is typically 65
+                let space_keycode = 65;
+
+                // Mod1Mask is Alt
+                let modifiers = ModMask::M1;
+
+                // Grab the key
+                if let Err(e) = grab_key(
+                    &conn,
+                    false,
+                    root,
+                    modifiers,
+                    space_keycode,
+                    GrabMode::ASYNC,
+                    GrabMode::ASYNC,
+                ) {
+                    eprintln!("Failed to grab Alt+Space: {:?}", e);
+                    return;
+                }
+
+                if let Err(e) = conn.flush() {
+                    eprintln!("Failed to flush X11 connection: {:?}", e);
+                    return;
+                }
+
+                eprintln!("Successfully registered Alt+Space global hotkey via X11");
+
+                // Event loop
+                loop {
+                    match conn.wait_for_event() {
+                        Ok(event) => {
+                            match event {
+                                X11Event::KeyPress(_) => {
+                                    eprintln!("Alt+Space pressed!");
+
+                                    if let Some(window) = app_handle.get_webview_window("main") {
+                                        if window.is_visible().unwrap_or(false) {
+                                            eprintln!("Hiding window");
+                                            let _ = window.hide();
+                                        } else {
+                                            eprintln!("Showing window");
+                                            let _ = window.show();
+                                            let _ = window.set_focus();
+                                        }
+                                    }
+                                }
+                                _ => {}
                             }
+                        }
+                        Err(e) => {
+                            eprintln!("X11 event error: {:?}", e);
+                            break;
                         }
                     }
                 }
