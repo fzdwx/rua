@@ -139,7 +139,12 @@ function parseRelativeTime(input: string): Date | null {
     const offsetPattern = /([+-])\s*(\d+)\s*([smhdwMy])/g;
     const matches = [...trimmed.matchAll(offsetPattern)];
 
-    // Must have at least one offset
+    // If it's just "now" with no offsets, return current time
+    if (trimmed === 'now' && matches.length === 0) {
+        return new Date();
+    }
+
+    // Must have at least one offset if not just "now"
     if (matches.length === 0) return null;
 
     // Verify that the entire string is "now" followed by offsets
