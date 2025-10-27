@@ -9,9 +9,9 @@ register('Alt+Space', async (e) => {
         if (b) {
             await currentWindow.hide()
         } else {
+            await currentWindow.center()
             await currentWindow.show()
             await currentWindow.setFocus()
-            await currentWindow.center()
         }
     }
 }).catch(e => {

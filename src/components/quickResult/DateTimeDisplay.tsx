@@ -401,7 +401,16 @@ function getSmartHints(input: string): Array<{category: string, hints: Array<{co
     }
 
     // Timezone conversion hints
-    if (trimmed.includes('to ') || trimmed.includes('in ') || trimmed.endsWith('to') || trimmed.endsWith('in')) {
+    if (
+        trimmed.includes(' to ') ||
+        trimmed.includes(' in ') ||
+        trimmed.endsWith(' to') ||
+        trimmed.endsWith(' in') ||
+        trimmed.match(/\s+to\s+\w*$/i) ||  // "now to" or "now to u"
+        trimmed.match(/\s+in\s+\w*$/i) ||  // "now in" or "now in a"
+        trimmed.match(/\s+t$/i) ||         // "now t"
+        trimmed.match(/\s+i$/i)            // "now i"
+    ) {
         hints.push({
             category: '时区转换',
             hints: [
