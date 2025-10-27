@@ -125,50 +125,67 @@ function parseTimestamp(input: string): Date | null {
 }
 
 /**
- * Parse relative time expressions like "now + 1h", "now - 30m", "now + 2d"
+ * Parse relative time expressions like "now + 1h", "now - 30m", "now +1d +1h -1y"
+ * Supports chained expressions with multiple time offsets
  * Supported units: s (seconds), m (minutes), h (hours), d (days), w (weeks), M (months), y (years)
  */
 function parseRelativeTime(input: string): Date | null {
     const trimmed = input.trim().toLowerCase();
 
-    // Match patterns like "now + 1h", "now - 30m", "now+2d" (with or without spaces)
-    const relativeMatch = trimmed.match(/^now\s*([+-])\s*(\d+)\s*([smhdwMy])$/);
+    // Check if it starts with "now"
+    if (!trimmed.startsWith('now')) return null;
 
-    if (!relativeMatch) return null;
+    // Match all time offset patterns: +/-number followed by unit
+    // Example: "now +1d +1h -30m" will match ["+1d", "+1h", "-30m"]
+    const offsetPattern = /([+-])\s*(\d+)\s*([smhdwMy])/g;
+    const matches = [...trimmed.matchAll(offsetPattern)];
 
-    const [, operator, amountStr, unit] = relativeMatch;
-    const amount = parseInt(amountStr);
-    const multiplier = operator === '+' ? 1 : -1;
+    // Must have at least one offset
+    if (matches.length === 0) return null;
 
-    const now = new Date();
+    // Verify that the entire string is "now" followed by offsets
+    // Reconstruct what the input should look like and compare
+    const reconstructed = 'now' + matches.map(m => m[0]).join('').replace(/\s+/g, '');
+    const normalizedInput = trimmed.replace(/\s+/g, '');
+    if (reconstructed !== normalizedInput) return null;
 
-    switch (unit) {
-        case 's': // seconds
-            now.setSeconds(now.getSeconds() + (amount * multiplier));
-            break;
-        case 'm': // minutes
-            now.setMinutes(now.getMinutes() + (amount * multiplier));
-            break;
-        case 'h': // hours
-            now.setHours(now.getHours() + (amount * multiplier));
-            break;
-        case 'd': // days
-            now.setDate(now.getDate() + (amount * multiplier));
-            break;
-        case 'w': // weeks
-            now.setDate(now.getDate() + (amount * 7 * multiplier));
-            break;
-        case 'M': // months
-            now.setMonth(now.getMonth() + (amount * multiplier));
-            break;
-        case 'y': // years
-            now.setFullYear(now.getFullYear() + (amount * multiplier));
-            break;
-        default:
-            return null;
+    // Start with current time
+    const result = new Date();
+
+    // Apply each offset in order
+    for (const match of matches) {
+        const [, operator, amountStr, unit] = match;
+        const amount = parseInt(amountStr);
+        const multiplier = operator === '+' ? 1 : -1;
+
+        switch (unit) {
+            case 's': // seconds
+                result.setSeconds(result.getSeconds() + (amount * multiplier));
+                break;
+            case 'm': // minutes
+                result.setMinutes(result.getMinutes() + (amount * multiplier));
+                break;
+            case 'h': // hours
+                result.setHours(result.getHours() + (amount * multiplier));
+                break;
+            case 'd': // days
+                result.setDate(result.getDate() + (amount * multiplier));
+                break;
+            case 'w': // weeks
+                result.setDate(result.getDate() + (amount * 7 * multiplier));
+                break;
+            case 'M': // months
+                result.setMonth(result.getMonth() + (amount * multiplier));
+                break;
+            case 'y': // years
+                result.setFullYear(result.getFullYear() + (amount * multiplier));
+                break;
+            default:
+                return null;
+        }
     }
 
-    return now;
+    return result;
 }
 
 /**

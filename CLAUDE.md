@@ -196,5 +196,4 @@ The application uses Tauri's asset protocol to access system icons:
 
 ## Workflow Requirements
 
-1. **Auto-commit new files**: All newly generated files must be added to git automatically
-2. **Clean up unused files**: Remove files that are no longer needed promptly
+1. **Clean up unused files**: Remove files that are no longer needed promptly
