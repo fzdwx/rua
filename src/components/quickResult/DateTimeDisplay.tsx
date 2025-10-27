@@ -193,6 +193,11 @@ function parseRelativeTime(input: string): Date | null {
 function parseDateString(input: string): Date | null {
     const trimmed = input.trim();
 
+    // Don't parse pure numbers with less than 4 digits (avoid false positives like "1", "12", "123")
+    if (/^\d{1,3}$/.test(trimmed)) {
+        return null;
+    }
+
     // Try standard Date parsing
     const date = new Date(trimmed);
 
