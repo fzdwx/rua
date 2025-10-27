@@ -16,23 +16,22 @@ export function QuickResult({search}: QuickResultProps) {
     }
 
     const trimmedSearch = search.trim();
-    const comp = []
+    const comp = [];
+
     // Check if it's a utility function (uuid, random, etc.)
     if (isUtilityFunction(trimmedSearch)) {
-        comp.push(<UtilityDisplay input={trimmedSearch}/>)
+        comp.push(<UtilityDisplay key="utility" input={trimmedSearch}/>);
     }
 
     // Check if it's a date/time function or expression
     if (isBuiltInFunction(trimmedSearch)) {
-        comp.push(<DateTimeDisplay input={trimmedSearch}/>)
+        comp.push(<DateTimeDisplay key="datetime" input={trimmedSearch}/>);
     }
 
     // Check if it's a math expression
     if (isMathExpression(trimmedSearch)) {
-        comp.push(<Calculator expression={trimmedSearch}/>)
+        comp.push(<Calculator key="calculator" expression={trimmedSearch}/>);
     }
 
-    return <div>
-
-    </div>;
+    return comp.length > 0 ? <>{comp}</> : null;
 }
