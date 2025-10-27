@@ -29,6 +29,41 @@ interface FunctionResult {
 }
 
 /**
+ * Normalize timezone name to IANA format
+ * Converts GMT+8, UTC+8 to Etc/GMT-8 (note: sign is reversed for Etc/GMT)
+ */
+function normalizeTimezone(timezone: string): string {
+    const trimmed = timezone.trim();
+
+    // Handle GMT/UTC offset format: GMT+8 -> Etc/GMT-8 (sign reversed!)
+    const offsetMatch = trimmed.match(/^(GMT|UTC)([+-])(\d{1,2})$/i);
+    if (offsetMatch) {
+        const [, , sign, offset] = offsetMatch;
+        // Etc/GMT uses reversed signs: GMT+8 (east) = Etc/GMT-8
+        const reversedSign = sign === '+' ? '-' : '+';
+        return `Etc/GMT${reversedSign}${offset}`;
+    }
+
+    // Common timezone aliases
+    const aliases: Record<string, string> = {
+        'CST': 'Asia/Shanghai',      // China Standard Time
+        'JST': 'Asia/Tokyo',          // Japan Standard Time
+        'KST': 'Asia/Seoul',          // Korea Standard Time
+        'PST': 'America/Los_Angeles', // Pacific Standard Time
+        'EST': 'America/New_York',    // Eastern Standard Time
+        'GMT': 'UTC',
+    };
+
+    const upper = trimmed.toUpperCase();
+    if (aliases[upper]) {
+        return aliases[upper];
+    }
+
+    // Return as-is for IANA format (Asia/Shanghai, etc.)
+    return trimmed;
+}
+
+/**
  * Generate time information from a given date or current time
  */
 function generateTimeInfo(inputDate?: Date, targetTimezone?: string): TimeInfo {
@@ -79,6 +114,7 @@ function generateTimeInfo(inputDate?: Date, targetTimezone?: string): TimeInfo {
     // Add target timezone info if specified
     if (targetTimezone) {
         try {
+            const normalizedTz = normalizeTimezone(targetTimezone);
             const targetDateTime = now.toLocaleString("zh-CN", {
                 year: "numeric",
                 month: "2-digit",
@@ -87,13 +123,13 @@ function generateTimeInfo(inputDate?: Date, targetTimezone?: string): TimeInfo {
                 minute: "2-digit",
                 second: "2-digit",
                 hour12: false,
-                timeZone: targetTimezone
+                timeZone: normalizedTz
             }).replace(/\//g, "-");
 
-            result.targetTimezone = targetTimezone;
+            result.targetTimezone = targetTimezone; // Keep original name for display
             result.targetDateTime = targetDateTime;
         } catch (error) {
-            console.warn(`Invalid timezone: ${targetTimezone}`);
+            console.warn(`Invalid timezone: ${targetTimezone}`, error);
         }
     }
 
@@ -428,8 +464,9 @@ function getSmartHints(input: string): Array<{category: string, hints: Array<{co
             category: '时区转换',
             hints: [
                 { code: 'now to UTC', description: '转换到 UTC' },
-                { code: 'now +1h to GMT+8', description: '转换到 GMT+8' },
-                { code: '1635724800 in Asia/Shanghai', description: '时间戳转时区' }
+                { code: 'now +1h to GMT+8', description: '转换到东八区' },
+                { code: 'now to Asia/Shanghai', description: 'IANA 时区格式' },
+                { code: 'now to CST', description: '中国标准时间' }
             ]
         });
     }
