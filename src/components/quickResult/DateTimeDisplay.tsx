@@ -13,6 +13,13 @@ interface TimeInfo {
     date: string;
     time: string;
     timezone: string;
+    targetTimezone?: string; // For timezone conversion
+    targetDateTime?: string; // DateTime in target timezone
+}
+
+interface ParseResult {
+    date: Date;
+    targetTimezone?: string;
 }
 
 interface FunctionResult {
@@ -25,7 +32,7 @@ interface FunctionResult {
 /**
  * Generate time information from a given date or current time
  */
-function generateTimeInfo(inputDate?: Date): TimeInfo {
+function generateTimeInfo(inputDate?: Date, targetTimezone?: string): TimeInfo {
     const now = inputDate || new Date();
 
     // Format date time
@@ -61,7 +68,7 @@ function generateTimeInfo(inputDate?: Date): TimeInfo {
     // Get timezone
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    return {
+    const result: TimeInfo = {
         dateTime,
         timestampMs,
         timestampS,
@@ -69,6 +76,29 @@ function generateTimeInfo(inputDate?: Date): TimeInfo {
         time,
         timezone
     };
+
+    // Add target timezone info if specified
+    if (targetTimezone) {
+        try {
+            const targetDateTime = now.toLocaleString("zh-CN", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: false,
+                timeZone: targetTimezone
+            }).replace(/\//g, "-");
+
+            result.targetTimezone = targetTimezone;
+            result.targetDateTime = targetDateTime;
+        } catch (error) {
+            console.warn(`Invalid timezone: ${targetTimezone}`);
+        }
+    }
+
+    return result;
 }
 
 /**
@@ -92,6 +122,53 @@ function parseTimestamp(input: string): Date | null {
     }
 
     return null;
+}
+
+/**
+ * Parse relative time expressions like "now + 1h", "now - 30m", "now + 2d"
+ * Supported units: s (seconds), m (minutes), h (hours), d (days), w (weeks), M (months), y (years)
+ */
+function parseRelativeTime(input: string): Date | null {
+    const trimmed = input.trim().toLowerCase();
+
+    // Match patterns like "now + 1h", "now - 30m", "now+2d" (with or without spaces)
+    const relativeMatch = trimmed.match(/^now\s*([+-])\s*(\d+)\s*([smhdwMy])$/);
+
+    if (!relativeMatch) return null;
+
+    const [, operator, amountStr, unit] = relativeMatch;
+    const amount = parseInt(amountStr);
+    const multiplier = operator === '+' ? 1 : -1;
+
+    const now = new Date();
+
+    switch (unit) {
+        case 's': // seconds
+            now.setSeconds(now.getSeconds() + (amount * multiplier));
+            break;
+        case 'm': // minutes
+            now.setMinutes(now.getMinutes() + (amount * multiplier));
+            break;
+        case 'h': // hours
+            now.setHours(now.getHours() + (amount * multiplier));
+            break;
+        case 'd': // days
+            now.setDate(now.getDate() + (amount * multiplier));
+            break;
+        case 'w': // weeks
+            now.setDate(now.getDate() + (amount * 7 * multiplier));
+            break;
+        case 'M': // months
+            now.setMonth(now.getMonth() + (amount * multiplier));
+            break;
+        case 'y': // years
+            now.setFullYear(now.getFullYear() + (amount * multiplier));
+            break;
+        default:
+            return null;
+    }
+
+    return now;
 }
 
 /**
@@ -122,10 +199,51 @@ function parseDateString(input: string): Date | null {
 }
 
 /**
- * Parse input as timestamp or date
+ * Parse input as timestamp, date, or relative time
  */
-function parseInput(input: string): Date | null {
-    // Try timestamp first
+function parseInput(input: string): ParseResult | null {
+    const trimmed = input.trim();
+
+    // Check for timezone conversion patterns
+    // Supports: "timestamp to timezone", "date in timezone", "now + 1h to timezone"
+    const timezonePatterns = [
+        /^(.+?)\s+(?:to|in)\s+([A-Za-z_]+(?:\/[A-Za-z_]+)?)$/i,
+    ];
+
+    for (const pattern of timezonePatterns) {
+        const match = trimmed.match(pattern);
+        if (match) {
+            const [, dateInput, timezone] = match;
+            const parsedDate = parseInputWithoutTimezone(dateInput.trim());
+            if (parsedDate) {
+                return {
+                    date: parsedDate,
+                    targetTimezone: timezone
+                };
+            }
+        }
+    }
+
+    // No timezone specified, parse as regular date
+    const parsedDate = parseInputWithoutTimezone(trimmed);
+    if (parsedDate) {
+        return {
+            date: parsedDate
+        };
+    }
+
+    return null;
+}
+
+/**
+ * Parse input without timezone component
+ */
+function parseInputWithoutTimezone(input: string): Date | null {
+    // Try relative time first (now + 1h, etc.)
+    const relativeTime = parseRelativeTime(input);
+    if (relativeTime) return relativeTime;
+
+    // Try timestamp
     const timestamp = parseTimestamp(input);
     if (timestamp) return timestamp;
 
@@ -235,13 +353,13 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
             }
         }
 
-        // Try to parse as timestamp or date
-        const parsedDate = parseInput(trimmedInput);
-        if (parsedDate) {
+        // Try to parse as timestamp, date, or relative time
+        const parsed = parseInput(trimmedInput);
+        if (parsed) {
             return {
                 type: "detailed",
                 icon: "🕐",
-                timeInfo: generateTimeInfo(parsedDate)
+                timeInfo: generateTimeInfo(parsed.date, parsed.targetTimezone)
             } as FunctionResult;
         }
 
@@ -380,6 +498,15 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
                 value={info.timezone}
                 onClick={(e) => handleCopyItem(info.timezone, e)}
             />
+
+            {/* Row 5 (optional): 目标时区时间 (full width) - only shown when timezone conversion is requested */}
+            {info.targetTimezone && info.targetDateTime && (
+                <TimeCard
+                    label={`目标时区 (${info.targetTimezone})`}
+                    value={info.targetDateTime}
+                    onClick={(e) => handleCopyItem(info.targetDateTime!, e)}
+                />
+            )}
         </div>
     );
 }
