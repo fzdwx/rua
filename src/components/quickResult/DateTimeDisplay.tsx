@@ -287,19 +287,19 @@ function isPartialDateTimeExpression(input: string): boolean {
     // "now to", "now +1h to", "now +1h t", "1635724800 in", etc.
     if (
         /\s+(?:to|in|t|i)\s*$/.test(trimmed) &&
-        (trimmed.startsWith('now') || /^\d/.test(trimmed))
+        (trimmed.startsWith('now') || /^\d{4,}/.test(trimmed)) // At least 4 digits
     ) {
         return true;
     }
 
-    // Partial timestamp (1-9 digits that could be building up to a valid timestamp)
-    if (/^\d{1,9}$/.test(trimmed)) {
+    // Partial timestamp (4-9 digits that could be building up to a valid timestamp)
+    if (/^\d{4,9}$/.test(trimmed)) {
         return true;
     }
 
     // Partial date strings that look like they're being typed
-    // e.g., "202", "2023-", "2023-1", "2023年"
-    if (/^\d{1,4}(-\d{0,2}(-\d{0,2})?)?$/.test(trimmed) || /^\d{4}年(\d{1,2}月?(\d{1,2}日?)?)?$/.test(trimmed)) {
+    // e.g., "2023", "2023-", "2023-1", "2023年"
+    if (/^\d{4}(-\d{0,2}(-\d{0,2})?)?$/.test(trimmed) || /^\d{4}年(\d{1,2}月?(\d{1,2}日?)?)?$/.test(trimmed)) {
         return true;
     }
 
@@ -411,7 +411,7 @@ function getSmartHints(input: string): Array<{category: string, hints: Array<{co
          trimmed.endsWith(' to') || trimmed.endsWith(' in') ||
          trimmed.match(/\s+to\s+\w*$/i) || trimmed.match(/\s+in\s+\w*$/i) ||
          trimmed.match(/\s+t$/i) || trimmed.match(/\s+i$/i)) &&
-        (trimmed.startsWith('now') || trimmed.match(/^\d/)) // Must start with 'now' or a digit
+        (trimmed.startsWith('now') || trimmed.match(/^\d{4,}/)) // Must start with 'now' or at least 4 digits
     ) {
         hints.push({
             category: '时区转换',
@@ -423,8 +423,8 @@ function getSmartHints(input: string): Array<{category: string, hints: Array<{co
         });
     }
 
-    // Timestamp hints
-    if (trimmed.match(/^\d{1,9}$/)) {
+    // Timestamp hints (at least 4 digits)
+    if (trimmed.match(/^\d{4,9}$/)) {
         hints.push({
             category: '时间戳',
             hints: [
@@ -434,8 +434,8 @@ function getSmartHints(input: string): Array<{category: string, hints: Array<{co
         });
     }
 
-    // Date string hints
-    if (trimmed.match(/^\d{1,4}/) && !trimmed.match(/^\d{10,13}$/)) {
+    // Date string hints (starts with 4 digits but not a complete timestamp)
+    if (trimmed.match(/^\d{4}/) && !trimmed.match(/^\d{10,13}$/)) {
         hints.push({
             category: '日期字符串',
             hints: [
