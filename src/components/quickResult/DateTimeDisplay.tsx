@@ -335,6 +335,7 @@ export function isBuiltInFunction(input: string): boolean {
 export function DateTimeDisplay({input}: DateTimeDisplayProps) {
     const [copiedItem, setCopiedItem] = useState<string | null>(null);
     const [timeInfo, setTimeInfo] = useState<TimeInfo | null>(null);
+    const [showHelp, setShowHelp] = useState(false);
 
     const trimmedInput = input.trim();
     const normalized = normalizeFunctionName(trimmedInput.toLowerCase());
@@ -524,6 +525,73 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
                     onClick={(e) => handleCopyItem(info.targetDateTime!, e)}
                 />
             )}
+
+            {/* Syntax Help Section */}
+            <div className="mt-2 border border-[var(--gray6)] rounded-md overflow-hidden">
+                <button
+                    onClick={() => setShowHelp(!showHelp)}
+                    className="w-full px-3 py-2 bg-[var(--gray2)] hover:bg-[var(--gray3)] transition-colors duration-150 flex items-center justify-between text-[12px] text-[var(--gray11)]"
+                >
+                    <span>💡 语法提示</span>
+                    <span className="text-[10px]">{showHelp ? '▲' : '▼'}</span>
+                </button>
+
+                {showHelp && (
+                    <div className="px-3 py-3 bg-[var(--gray1)] text-[11px] text-[var(--gray11)] space-y-3">
+                        {/* Built-in Functions */}
+                        <div>
+                            <div className="font-semibold text-[var(--gray12)] mb-1">内置函数</div>
+                            <div className="space-y-1 pl-2">
+                                <div><code className="text-[var(--blue11)]">now()</code> - 显示当前时间</div>
+                                <div><code className="text-[var(--blue11)]">uuid()</code> - 生成 UUID</div>
+                                <div><code className="text-[var(--blue11)]">random()</code> - 生成随机数</div>
+                            </div>
+                        </div>
+
+                        {/* Timestamp */}
+                        <div>
+                            <div className="font-semibold text-[var(--gray12)] mb-1">时间戳</div>
+                            <div className="space-y-1 pl-2">
+                                <div><code className="text-[var(--blue11)]">1635724800</code> - 10位秒级时间戳</div>
+                                <div><code className="text-[var(--blue11)]">1635724800000</code> - 13位毫秒时间戳</div>
+                            </div>
+                        </div>
+
+                        {/* Date Strings */}
+                        <div>
+                            <div className="font-semibold text-[var(--gray12)] mb-1">日期字符串</div>
+                            <div className="space-y-1 pl-2">
+                                <div><code className="text-[var(--blue11)]">2023-10-31</code> - ISO 8601 格式</div>
+                                <div><code className="text-[var(--blue11)]">2023年10月31日</code> - 中文日期格式</div>
+                            </div>
+                        </div>
+
+                        {/* Relative Time */}
+                        <div>
+                            <div className="font-semibold text-[var(--gray12)] mb-1">相对时间</div>
+                            <div className="space-y-1 pl-2">
+                                <div><code className="text-[var(--blue11)]">now +1h</code> - 1小时后</div>
+                                <div><code className="text-[var(--blue11)]">now -30m</code> - 30分钟前</div>
+                                <div><code className="text-[var(--blue11)]">now +1d +2h</code> - 1天2小时后</div>
+                                <div><code className="text-[var(--blue11)]">now +1y -1M +10d</code> - 复杂组合</div>
+                                <div className="text-[var(--gray10)] text-[10px] mt-1">
+                                    单位: s(秒) m(分) h(时) d(天) w(周) M(月) y(年)
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Timezone Conversion */}
+                        <div>
+                            <div className="font-semibold text-[var(--gray12)] mb-1">时区转换</div>
+                            <div className="space-y-1 pl-2">
+                                <div><code className="text-[var(--blue11)]">now to UTC</code> - 转换到 UTC</div>
+                                <div><code className="text-[var(--blue11)]">1635724800 in Asia/Shanghai</code> - 时间戳转时区</div>
+                                <div><code className="text-[var(--blue11)]">now +1d to America/New_York</code> - 组合使用</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
