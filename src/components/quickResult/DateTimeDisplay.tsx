@@ -23,9 +23,8 @@ interface ParseResult {
 }
 
 interface FunctionResult {
-    type: "simple" | "detailed";
-    primary?: string;
-    timeInfo?: TimeInfo;
+    type: "detailed";
+    timeInfo: TimeInfo;
     icon: string;
 }
 
@@ -311,7 +310,7 @@ export function isParseableDateTime(input: string): boolean {
 }
 
 /**
- * Built-in utility functions
+ * Built-in datetime functions
  */
 const builtInFunctions: Record<string, () => FunctionResult> = {
     "now()": () => {
@@ -319,20 +318,6 @@ const builtInFunctions: Record<string, () => FunctionResult> = {
             type: "detailed",
             icon: "📅",
             timeInfo: generateTimeInfo()
-        };
-    },
-    "uuid()": () => {
-        return {
-            type: "simple",
-            icon: "🔑",
-            primary: crypto.randomUUID()
-        };
-    },
-    "random()": () => {
-        return {
-            type: "simple",
-            icon: "🎲",
-            primary: Math.random().toString()
         };
     },
 };
@@ -350,7 +335,7 @@ function normalizeFunctionName(input: string): string {
 }
 
 /**
- * Check if input matches a built-in function or parseable datetime
+ * Check if input matches a datetime function or parseable datetime
  */
 export function isBuiltInFunction(input: string): boolean {
     const normalized = normalizeFunctionName(input.toLowerCase());
@@ -451,37 +436,7 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
         }
     };
 
-    // Simple type display
-    if (result.type === "simple") {
-        const handleCopy = async () => {
-            try {
-                await navigator.clipboard.writeText(result.primary!);
-            } catch (error) {
-                console.error("Failed to copy to clipboard:", error);
-            }
-        };
-
-        return (
-            <div
-                onClick={handleCopy}
-                className="mx-3 my-2 px-4 py-3 bg-[var(--gray3)] border border-[var(--gray6)] rounded-lg cursor-pointer transition-all duration-200 hover:bg-[var(--gray4)] hover:border-[var(--gray7)]"
-            >
-                <div className="flex items-center gap-3">
-                    <div className="text-2xl">{result.icon}</div>
-                    <div className="flex-1">
-                        <div className="text-xl font-semibold text-[var(--gray12)]">
-                            {result.primary}
-                        </div>
-                    </div>
-                    <div className="text-[11px] text-[var(--gray10)] px-2 py-1 bg-[var(--gray5)] rounded">
-                        Click to copy
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // Detailed type display (for now function)
+    // All datetime results should have timeInfo
     if (!result.timeInfo) return null;
 
     const info = result.timeInfo;
@@ -590,9 +545,7 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
                         <div>
                             <div className="font-semibold text-[var(--gray12)] mb-1">内置函数</div>
                             <div className="space-y-1 pl-2">
-                                <div><code className="text-[var(--blue11)]">now()</code> - 显示当前时间</div>
-                                <div><code className="text-[var(--blue11)]">uuid()</code> - 生成 UUID</div>
-                                <div><code className="text-[var(--blue11)]">random()</code> - 生成随机数</div>
+                                <div><code className="text-[var(--blue11)]">now()</code> - 显示当前时间（实时更新）</div>
                             </div>
                         </div>
 

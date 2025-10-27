@@ -1,12 +1,13 @@
 import {Calculator, isMathExpression} from "./Calculator";
 import {DateTimeDisplay, isBuiltInFunction} from "./DateTimeDisplay";
+import {UtilityDisplay, isUtilityFunction} from "./UtilityDisplay";
 
 interface QuickResultProps {
     search: string;
 }
 
 /**
- * QuickResult component that displays calculator or date/time results
+ * QuickResult component that displays calculator, utility, or date/time results
  * based on the input type
  */
 export function QuickResult({search}: QuickResultProps) {
@@ -16,7 +17,12 @@ export function QuickResult({search}: QuickResultProps) {
 
     const trimmedSearch = search.trim();
 
-    // Check if it's a built-in function (date/time, uuid, etc.)
+    // Check if it's a utility function (uuid, random, etc.)
+    if (isUtilityFunction(trimmedSearch)) {
+        return <UtilityDisplay input={trimmedSearch}/>;
+    }
+
+    // Check if it's a date/time function or expression
     if (isBuiltInFunction(trimmedSearch)) {
         return <DateTimeDisplay input={trimmedSearch}/>;
     }
