@@ -1,16 +1,12 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Mutex;
-use std::fs;
 use std::time::SystemTime;
 use tauri::Manager;
 use walkdir::WalkDir;
-use x11rb::connection::Connection;
-use x11rb::protocol::xproto::*;
-use x11rb::protocol::Event as X11Event;
-use x11rb::rust_connection::RustConnection;
 
 lazy_static::lazy_static! {
     static ref ICON_CACHE: Mutex<HashMap<String, Option<String>>> = Mutex::new(HashMap::new());
@@ -111,10 +107,16 @@ fn load_cache() -> Option<Vec<Application>> {
 
     // Check if cache is still valid
     if cache.timestamp >= current_mtime {
-        eprintln!("Using cached applications (cache: {}, current: {})", cache.timestamp, current_mtime);
+        eprintln!(
+            "Using cached applications (cache: {}, current: {})",
+            cache.timestamp, current_mtime
+        );
         Some(cache.applications)
     } else {
-        eprintln!("Cache is outdated (cache: {}, current: {})", cache.timestamp, current_mtime);
+        eprintln!(
+            "Cache is outdated (cache: {}, current: {})",
+            cache.timestamp, current_mtime
+        );
         None
     }
 }
@@ -183,7 +185,11 @@ fn get_applications() -> Vec<Application> {
     applications.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
     let duration = start.elapsed();
-    eprintln!("Loaded {} applications in {:?}", applications.len(), duration);
+    eprintln!(
+        "Loaded {} applications in {:?}",
+        applications.len(),
+        duration
+    );
 
     // Save to cache with current timestamp
     if let Some(timestamp) = get_latest_mtime(&app_dirs.iter().map(|s| *s).collect::<Vec<_>>()) {
@@ -198,8 +204,7 @@ fn refresh_applications_cache() -> Result<String, String> {
     // Delete the cache file
     let cache_path = get_cache_path();
     if cache_path.exists() {
-        fs::remove_file(&cache_path)
-            .map_err(|e| format!("Failed to remove cache: {}", e))?;
+        fs::remove_file(&cache_path).map_err(|e| format!("Failed to remove cache: {}", e))?;
         eprintln!("Cache deleted, will reload on next request");
         Ok("Cache refreshed successfully".to_string())
     } else {
@@ -355,7 +360,9 @@ fn parse_desktop_file(path: &std::path::Path) -> Result<Application, Box<dyn std
     let terminal = entry.terminal();
 
     // Resolve icon path
-    let icon = entry.icon().and_then(|icon_name| resolve_icon_path(icon_name));
+    let icon = entry
+        .icon()
+        .and_then(|icon_name| resolve_icon_path(icon_name));
 
     Ok(Application {
         name,
@@ -383,7 +390,7 @@ fn launch_application(exec: String, terminal: bool) -> Result<String, String> {
 
         // Build command based on terminal emulator
         let (cmd, args) = match terminal_emulator.as_str() {
-            "wezterm"=> ("wezterm", vec!["-e", &cleaned_exec]),
+            "wezterm" => ("wezterm", vec!["-e", &cleaned_exec]),
             "konsole" => ("konsole", vec!["-e", &cleaned_exec]),
             "gnome-terminal" => ("gnome-terminal", vec!["--", "sh", "-c", &cleaned_exec]),
             "alacritty" => ("alacritty", vec!["-e", "sh", "-c", &cleaned_exec]),
@@ -427,79 +434,8 @@ pub fn run() {
         .setup(|app| {
             let win = app.get_webview_window("main").unwrap();
             win.eval("window.location.reload()").unwrap();
-
-            // Setup global hotkey for Alt+Space using X11
-            let app_handle = app.app_handle().clone();
-
-            std::thread::spawn(move || {
-                // Connect to X11
-                let (conn, screen_num) = match RustConnection::connect(None) {
-                    Ok(result) => result,
-                    Err(e) => {
-                        eprintln!("Failed to connect to X11: {:?}", e);
-                        return;
-                    }
-                };
-
-                let screen = &conn.setup().roots[screen_num];
-                let root = screen.root;
-
-                // Space keycode is typically 65
-                let space_keycode = 65;
-
-                // Mod1Mask is Alt
-                let modifiers = ModMask::M1;
-
-                // Grab the key
-                if let Err(e) = grab_key(
-                    &conn,
-                    false,
-                    root,
-                    modifiers,
-                    space_keycode,
-                    GrabMode::ASYNC,
-                    GrabMode::ASYNC,
-                ) {
-                    eprintln!("Failed to grab Alt+Space: {:?}", e);
-                    return;
-                }
-
-                if let Err(e) = conn.flush() {
-                    eprintln!("Failed to flush X11 connection: {:?}", e);
-                    return;
-                }
-
-                eprintln!("Successfully registered Alt+Space global hotkey via X11");
-
-                // Event loop
-                loop {
-                    match conn.wait_for_event() {
-                        Ok(event) => {
-                            match event {
-                                X11Event::KeyPress(_) => {
-                                    eprintln!("Alt+Space pressed!");
-
-                                    if let Some(window) = app_handle.get_webview_window("main") {
-                                        if window.is_visible().unwrap_or(false) {
-                                            eprintln!("Hiding window");
-                                            let _ = window.hide();
-                                        } else {
-                                            eprintln!("Showing window");
-                                            let _ = window.show();
-                                            let _ = window.set_focus();
-                                        }
-                                    }
-                                }
-                                _ => {}
-                            }
-                        }
-                        Err(e) => {
-                            eprintln!("X11 event error: {:?}", e);
-                            break;
-                        }
-                    }
-                }
-            });
+            #[cfg(desktop)]
+            app.handle().plugin(tauri_plugin_global_shortcut::Builder::new().build());
 
             Ok(())
         })
