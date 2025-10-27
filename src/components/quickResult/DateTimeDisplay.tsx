@@ -283,8 +283,12 @@ function isPartialDateTimeExpression(input: string): boolean {
         return true;
     }
 
-    // Incomplete timezone conversion: "now to", "now + 1h to", "1635724800 in", etc.
-    if (/^.+\s+(?:to|in)\s*$/.test(trimmed)) {
+    // Incomplete timezone conversion: must start with valid datetime expression
+    // "now to", "now +1h to", "now +1h t", "1635724800 in", etc.
+    if (
+        /\s+(?:to|in|t|i)\s*$/.test(trimmed) &&
+        (trimmed.startsWith('now') || /^\d/.test(trimmed))
+    ) {
         return true;
     }
 
@@ -401,15 +405,13 @@ function getSmartHints(input: string): Array<{category: string, hints: Array<{co
     }
 
     // Timezone conversion hints
+    // Only show if the input starts with a valid datetime expression
     if (
-        trimmed.includes(' to ') ||
-        trimmed.includes(' in ') ||
-        trimmed.endsWith(' to') ||
-        trimmed.endsWith(' in') ||
-        trimmed.match(/\s+to\s+\w*$/i) ||  // "now to" or "now to u"
-        trimmed.match(/\s+in\s+\w*$/i) ||  // "now in" or "now in a"
-        trimmed.match(/\s+t$/i) ||         // "now t"
-        trimmed.match(/\s+i$/i)            // "now i"
+        (trimmed.includes(' to ') || trimmed.includes(' in ') ||
+         trimmed.endsWith(' to') || trimmed.endsWith(' in') ||
+         trimmed.match(/\s+to\s+\w*$/i) || trimmed.match(/\s+in\s+\w*$/i) ||
+         trimmed.match(/\s+t$/i) || trimmed.match(/\s+i$/i)) &&
+        (trimmed.startsWith('now') || trimmed.match(/^\d/)) // Must start with 'now' or a digit
     ) {
         hints.push({
             category: '时区转换',
