@@ -232,8 +232,9 @@ function parseInput(input: string): ParseResult | null {
 
     // Check for timezone conversion patterns
     // Supports: "timestamp to timezone", "date in timezone", "now + 1h to timezone"
+    // Timezone formats: Asia/Shanghai, UTC, GMT+8, UTC-5, etc.
     const timezonePatterns = [
-        /^(.+?)\s+(?:to|in)\s+([A-Za-z_]+(?:\/[A-Za-z_]+)?)$/i,
+        /^(.+?)\s+(?:to|in)\s+([A-Za-z0-9_+\-/:]+)$/i,
     ];
 
     for (const pattern of timezonePatterns) {
@@ -427,8 +428,8 @@ function getSmartHints(input: string): Array<{category: string, hints: Array<{co
             category: '时区转换',
             hints: [
                 { code: 'now to UTC', description: '转换到 UTC' },
-                { code: '1635724800 in Asia/Shanghai', description: '时间戳转时区' },
-                { code: 'now +1d to America/New_York', description: '组合使用' }
+                { code: 'now +1h to GMT+8', description: '转换到 GMT+8' },
+                { code: '1635724800 in Asia/Shanghai', description: '时间戳转时区' }
             ]
         });
     }
