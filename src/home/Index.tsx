@@ -1,15 +1,15 @@
-import {useState, useRef, useMemo, useCallback} from "react";
+import {useCallback, useMemo, useRef, useState} from "react";
 import {
-    Container,
+    ActionImpl,
     Background,
+    Container,
+    Footer,
     Input,
-    ResultsRender,
     RenderItem,
+    ResultsRender,
     useActionStore,
     useMatches,
-    Footer,
-    ActionImpl,
-} from "../command";
+} from "@/command";
 import {useApplications} from "./useApplications";
 import {QuickResult} from "./QuickResult";
 import {useBuiltInActions} from "./useBuiltInActions";
@@ -89,7 +89,7 @@ export default function Home() {
                 id: "toggle-theme",
                 name: "Toggle Theme",
                 subtitle: `Switch to ${theme === "dark" ? "light" : "dark"} mode`,
-                icon: <Icon icon={theme === "dark" ? "tabler:sun" : "tabler:moon"} style={{fontSize: "20px"}} />,
+                icon: <Icon icon={theme === "dark" ? "tabler:sun" : "tabler:moon"} style={{fontSize: "20px"}}/>,
                 keywords: "theme dark light mode",
                 perform: () => {
                     toggleTheme();
@@ -118,14 +118,14 @@ export default function Home() {
                 />
 
                 {/* Main content area with flex: 1 to prevent footer from being squeezed */}
-                <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                <div style={{flex: 1, overflow: "hidden", display: "flex", flexDirection: "column"}}>
                     {/* Show translate view if translate action is active */}
                     {state.rootActionId === "built-in-translate" ? (
-                        <TranslateView search={search} onLoadingChange={handleActionLoadingChange} />
+                        <TranslateView search={search} onLoadingChange={handleActionLoadingChange}/>
                     ) : (
                         <>
                             {/* Quick result view for calculations and built-in functions */}
-                            <QuickResult search={search} />
+                            <QuickResult search={search}/>
 
                             {loading ? (
                                 <div
@@ -211,7 +211,7 @@ export default function Home() {
                 {/* Footer with theme toggle and dynamic actions */}
                 <Footer
                     current={activeMainAction}
-                    icon={<Icon icon="tabler:command" style={{fontSize: "20px"}} />}
+                    icon={<Icon icon="tabler:command" style={{fontSize: "20px"}}/>}
                     content={() => (
                         <div/>
                     )}

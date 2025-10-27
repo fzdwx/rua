@@ -6,11 +6,12 @@ register('Alt+Space', async (e) => {
     if (e.state == 'Released') {
         let currentWindow = getCurrentWindow();
         let b = await currentWindow.isVisible();
-        console.log(b)
         if (b) {
             await currentWindow.hide()
         } else {
             await currentWindow.show()
+            await currentWindow.setFocus()
+            await currentWindow.center()
         }
     }
 }).catch(e => {
@@ -18,7 +19,7 @@ register('Alt+Space', async (e) => {
 });
 
 function App() {
-    return <Home />;
+    return <Home/>;
 }
 
 export default App;
