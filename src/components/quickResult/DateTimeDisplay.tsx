@@ -349,13 +349,103 @@ export function isBuiltInFunction(input: string): boolean {
     return isParseableDateTime(input);
 }
 
+/**
+ * Get smart hints based on current input
+ */
+function getSmartHints(input: string): Array<{category: string, hints: Array<{code: string, description: string}>}> {
+    const trimmed = input.trim().toLowerCase();
+    const hints: Array<{category: string, hints: Array<{code: string, description: string}>}> = [];
+
+    // Now function hints
+    if (trimmed === '' || trimmed === 'n' || trimmed === 'no' || trimmed === 'now') {
+        hints.push({
+            category: '内置函数',
+            hints: [
+                { code: 'now()', description: '显示当前时间（实时更新）' }
+            ]
+        });
+    }
+
+    // Relative time hints
+    if (trimmed.startsWith('now') && (trimmed.includes('+') || trimmed.includes('-') || trimmed.match(/^now\s*$/))) {
+        const relativeHints: Array<{code: string, description: string}> = [];
+
+        if (!trimmed.match(/^now\s+[+-]\s*\d+\s*[smhdwMy]\s*$/)) {
+            relativeHints.push({ code: 'now +1h', description: '1小时后' });
+            relativeHints.push({ code: 'now -30m', description: '30分钟前' });
+            relativeHints.push({ code: 'now +1d +2h', description: '1天2小时后（可连续）' });
+        }
+
+        if (relativeHints.length > 0) {
+            hints.push({
+                category: '相对时间',
+                hints: relativeHints
+            });
+        }
+
+        // Show unit reference if typing offset
+        if (trimmed.match(/^now\s+[+-]\s*\d*[a-z]?$/i)) {
+            hints.push({
+                category: '时间单位',
+                hints: [
+                    { code: 's', description: '秒' },
+                    { code: 'm', description: '分钟' },
+                    { code: 'h', description: '小时' },
+                    { code: 'd', description: '天' },
+                    { code: 'w', description: '周' },
+                    { code: 'M', description: '月' },
+                    { code: 'y', description: '年' }
+                ]
+            });
+        }
+    }
+
+    // Timezone conversion hints
+    if (trimmed.includes('to ') || trimmed.includes('in ') || trimmed.endsWith('to') || trimmed.endsWith('in')) {
+        hints.push({
+            category: '时区转换',
+            hints: [
+                { code: 'now to UTC', description: '转换到 UTC' },
+                { code: '1635724800 in Asia/Shanghai', description: '时间戳转时区' },
+                { code: 'now +1d to America/New_York', description: '组合使用' }
+            ]
+        });
+    }
+
+    // Timestamp hints
+    if (trimmed.match(/^\d{1,9}$/)) {
+        hints.push({
+            category: '时间戳',
+            hints: [
+                { code: '1635724800', description: '10位秒级时间戳' },
+                { code: '1635724800000', description: '13位毫秒时间戳' }
+            ]
+        });
+    }
+
+    // Date string hints
+    if (trimmed.match(/^\d{1,4}/) && !trimmed.match(/^\d{10,13}$/)) {
+        hints.push({
+            category: '日期字符串',
+            hints: [
+                { code: '2023-10-31', description: 'ISO 8601 格式' },
+                { code: '2023年10月31日', description: '中文日期格式' }
+            ]
+        });
+    }
+
+    return hints;
+}
+
 export function DateTimeDisplay({input}: DateTimeDisplayProps) {
     const [copiedItem, setCopiedItem] = useState<string | null>(null);
     const [timeInfo, setTimeInfo] = useState<TimeInfo | null>(null);
-    const [showHelp, setShowHelp] = useState(false);
 
     const trimmedInput = input.trim();
     const normalized = normalizeFunctionName(trimmedInput.toLowerCase());
+
+    // Get smart hints based on input
+    const smartHints = getSmartHints(trimmedInput);
 
     // Check if this is the now function
     const isNowFunction = normalized === "now()";
@@ -374,12 +464,6 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
 
         return () => clearInterval(interval);
     }, [isNowFunction]);
-
-    // Auto-expand help for partial expressions
-    useEffect(() => {
-        const isPartial = isPartialDateTimeExpression(trimmedInput) && !parseInput(trimmedInput);
-        setShowHelp(isPartial);
-    }, [trimmedInput]);
 
     const result = useMemo(() => {
         // Check for built-in functions
@@ -529,70 +613,33 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
                 />
             )}
 
-            {/* Syntax Help Section */}
-            <div className="mt-2 border border-[var(--gray6)] rounded-md overflow-hidden">
-                <button
-                    onClick={() => setShowHelp(!showHelp)}
-                    className="w-full px-3 py-2 bg-[var(--gray2)] hover:bg-[var(--gray3)] transition-colors duration-150 flex items-center justify-between text-[12px] text-[var(--gray11)]"
-                >
-                    <span>💡 语法提示</span>
-                    <span className="text-[10px]">{showHelp ? '▲' : '▼'}</span>
-                </button>
-
-                {showHelp && (
-                    <div className="px-3 py-3 bg-[var(--gray1)] text-[11px] text-[var(--gray11)] space-y-3">
-                        {/* Built-in Functions */}
-                        <div>
-                            <div className="font-semibold text-[var(--gray12)] mb-1">内置函数</div>
-                            <div className="space-y-1 pl-2">
-                                <div><code className="text-[var(--blue11)]">now()</code> - 显示当前时间（实时更新）</div>
-                            </div>
-                        </div>
-
-                        {/* Timestamp */}
-                        <div>
-                            <div className="font-semibold text-[var(--gray12)] mb-1">时间戳</div>
-                            <div className="space-y-1 pl-2">
-                                <div><code className="text-[var(--blue11)]">1635724800</code> - 10位秒级时间戳</div>
-                                <div><code className="text-[var(--blue11)]">1635724800000</code> - 13位毫秒时间戳</div>
-                            </div>
-                        </div>
-
-                        {/* Date Strings */}
-                        <div>
-                            <div className="font-semibold text-[var(--gray12)] mb-1">日期字符串</div>
-                            <div className="space-y-1 pl-2">
-                                <div><code className="text-[var(--blue11)]">2023-10-31</code> - ISO 8601 格式</div>
-                                <div><code className="text-[var(--blue11)]">2023年10月31日</code> - 中文日期格式</div>
-                            </div>
-                        </div>
-
-                        {/* Relative Time */}
-                        <div>
-                            <div className="font-semibold text-[var(--gray12)] mb-1">相对时间</div>
-                            <div className="space-y-1 pl-2">
-                                <div><code className="text-[var(--blue11)]">now +1h</code> - 1小时后</div>
-                                <div><code className="text-[var(--blue11)]">now -30m</code> - 30分钟前</div>
-                                <div><code className="text-[var(--blue11)]">now +1d +2h</code> - 1天2小时后</div>
-                                <div><code className="text-[var(--blue11)]">now +1y -1M +10d</code> - 复杂组合</div>
-                                <div className="text-[var(--gray10)] text-[10px] mt-1">
-                                    单位: s(秒) m(分) h(时) d(天) w(周) M(月) y(年)
+            {/* Smart Hints Section */}
+            {smartHints.length > 0 && (
+                <div className="mt-2 border border-[var(--blue6)] bg-[var(--blue2)] rounded-md p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[13px] font-semibold text-[var(--blue11)]">💡 相关提示</span>
+                    </div>
+                    <div className="space-y-3">
+                        {smartHints.map((section, idx) => (
+                            <div key={idx}>
+                                <div className="text-[11px] font-semibold text-[var(--gray12)] mb-1">
+                                    {section.category}
+                                </div>
+                                <div className="space-y-1 pl-2">
+                                    {section.hints.map((hint, hintIdx) => (
+                                        <div key={hintIdx} className="text-[11px] text-[var(--gray11)]">
+                                            <code className="text-[var(--blue11)] bg-[var(--blue3)] px-1 py-0.5 rounded">
+                                                {hint.code}
+                                            </code>
+                                            {' '}- {hint.description}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Timezone Conversion */}
-                        <div>
-                            <div className="font-semibold text-[var(--gray12)] mb-1">时区转换</div>
-                            <div className="space-y-1 pl-2">
-                                <div><code className="text-[var(--blue11)]">now to UTC</code> - 转换到 UTC</div>
-                                <div><code className="text-[var(--blue11)]">1635724800 in Asia/Shanghai</code> - 时间戳转时区</div>
-                                <div><code className="text-[var(--blue11)]">now +1d to America/New_York</code> - 组合使用</div>
-                            </div>
-                        </div>
+                        ))}
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

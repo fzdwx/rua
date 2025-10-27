@@ -19,8 +19,8 @@ interface RandConfig {
     max?: number;        // For rand min,max
 }
 
-// Default max value when only min is specified
-const DEFAULT_RAND_MAX = 100;
+// Default max value when only min is specified (effectively unlimited)
+const DEFAULT_RAND_MAX = 10000;
 
 /**
  * Parse rand expression to extract configuration
@@ -163,12 +163,69 @@ export function isUtilityFunction(input: string): boolean {
     return false;
 }
 
+/**
+ * Get smart hints based on current input
+ */
+function getSmartHints(input: string): Array<{category: string, hints: Array<{code: string, description: string}>}> {
+    const trimmed = input.trim().toLowerCase();
+    const hints: Array<{category: string, hints: Array<{code: string, description: string}>}> = [];
+
+    // UUID hints
+    if (trimmed.startsWith('u') || trimmed === '' || trimmed.startsWith('uuid')) {
+        hints.push({
+            category: 'UUID 生成',
+            hints: [
+                { code: 'uuid()', description: '生成 UUID v4' }
+            ]
+        });
+    }
+
+    // Random hints
+    if (trimmed.startsWith('r') || trimmed === '' || trimmed.startsWith('rand') || trimmed.startsWith('random')) {
+        const randHints: Array<{code: string, description: string}> = [];
+
+        // Basic rand
+        if (trimmed === '' || trimmed === 'r' || trimmed === 'ra' || trimmed === 'ran' || trimmed === 'rand' || trimmed === 'random') {
+            randHints.push({ code: 'rand', description: '生成 0-1 之间的随机数' });
+            randHints.push({ code: 'random()', description: '生成 0-1 之间的随机数' });
+        }
+
+        // Multiplication syntax
+        if (trimmed === 'rand' || trimmed.includes('*') || trimmed.match(/^rand\s+\*?$/)) {
+            randHints.push({ code: 'rand * 100', description: '生成 0-100 的随机数（乘法）' });
+        }
+
+        // Single number or range syntax
+        if (trimmed.match(/^rand\s+\d*$/) || trimmed.match(/^rand\s+\d+,?$/)) {
+            randHints.push({ code: 'rand 1', description: '从 1 开始到 10000（大范围）' });
+            randHints.push({ code: 'rand 1,', description: '从 1 开始到 10000（大范围）' });
+        }
+
+        // Range syntax
+        if (trimmed.match(/^rand\s+\d+,\s*\d*$/) || trimmed === 'rand') {
+            randHints.push({ code: 'rand 1,100', description: '生成 1-100 之间的随机数' });
+            randHints.push({ code: 'rand 0.5,10.5', description: '支持小数范围' });
+        }
+
+        if (randHints.length > 0) {
+            hints.push({
+                category: '随机数生成',
+                hints: randHints
+            });
+        }
+    }
+
+    return hints;
+}
+
 export function UtilityDisplay({input}: UtilityDisplayProps) {
     const [copiedItem, setCopiedItem] = useState<string | null>(null);
-    const [showHelp, setShowHelp] = useState(false);
 
     const trimmedInput = input.trim();
     const normalized = normalizeFunctionName(trimmedInput.toLowerCase());
+
+    // Get smart hints based on input
+    const smartHints = getSmartHints(trimmedInput);
 
     // Check for utility functions
     let result: UtilityResult | null = null;
@@ -238,40 +295,33 @@ export function UtilityDisplay({input}: UtilityDisplayProps) {
                     </div>
                 </div>
 
-                {/* Syntax Help Section */}
-                <div className="mt-2 border border-[var(--gray6)] rounded-md overflow-hidden">
-                    <button
-                        onClick={() => setShowHelp(!showHelp)}
-                        className="w-full px-3 py-2 bg-[var(--gray2)] hover:bg-[var(--gray3)] transition-colors duration-150 flex items-center justify-between text-[12px] text-[var(--gray11)]"
-                    >
-                        <span>💡 语法提示</span>
-                        <span className="text-[10px]">{showHelp ? '▲' : '▼'}</span>
-                    </button>
-
-                    {showHelp && (
-                        <div className="px-3 py-3 bg-[var(--gray1)] text-[11px] text-[var(--gray11)] space-y-3">
-                            {/* UUID */}
-                            <div>
-                                <div className="font-semibold text-[var(--gray12)] mb-1">UUID 生成</div>
-                                <div className="space-y-1 pl-2">
-                                    <div><code className="text-[var(--blue11)]">uuid()</code> - 生成 UUID v4</div>
-                                </div>
-                            </div>
-
-                            {/* Random */}
-                            <div>
-                                <div className="font-semibold text-[var(--gray12)] mb-1">随机数生成</div>
-                                <div className="space-y-1 pl-2">
-                                    <div><code className="text-[var(--blue11)]">rand</code> 或 <code className="text-[var(--blue11)]">random()</code> - 生成 0-1 之间的随机数</div>
-                                    <div><code className="text-[var(--blue11)]">rand * 100</code> - 生成随机数并乘以 100</div>
-                                    <div><code className="text-[var(--blue11)]">rand 1</code> 或 <code className="text-[var(--blue11)]">rand 1,</code> - 从 1 到 100（默认）</div>
-                                    <div><code className="text-[var(--blue11)]">rand 1,50</code> - 生成 1 到 50 之间的随机数</div>
-                                    <div><code className="text-[var(--blue11)]">rand 0.5,10.5</code> - 支持小数范围</div>
-                                </div>
-                            </div>
+                {/* Smart Hints Section */}
+                {smartHints.length > 0 && (
+                    <div className="mt-2 border border-[var(--blue6)] bg-[var(--blue2)] rounded-md p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[13px] font-semibold text-[var(--blue11)]">💡 相关提示</span>
                         </div>
-                    )}
-                </div>
+                        <div className="space-y-3">
+                            {smartHints.map((section, idx) => (
+                                <div key={idx}>
+                                    <div className="text-[11px] font-semibold text-[var(--gray12)] mb-1">
+                                        {section.category}
+                                    </div>
+                                    <div className="space-y-1 pl-2">
+                                        {section.hints.map((hint, hintIdx) => (
+                                            <div key={hintIdx} className="text-[11px] text-[var(--gray11)]">
+                                                <code className="text-[var(--blue11)] bg-[var(--blue3)] px-1 py-0.5 rounded">
+                                                    {hint.code}
+                                                </code>
+                                                {' '}- {hint.description}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );
