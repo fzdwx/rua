@@ -171,6 +171,7 @@ src-tauri/src/
 3. **Active Index**: Currently highlighted item in results
 4. **Footer Actions**: Context-sensitive actions that change based on active main action
 5. **Result Handling**: Use `setResultHandleEvent` to enable/disable keyboard handling
+6. 前端样式使用 tailwindcss
 
 ## Window Management & Global Shortcuts
 

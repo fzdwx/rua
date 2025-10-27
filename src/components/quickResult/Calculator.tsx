@@ -1,7 +1,7 @@
 import {useMemo} from "react";
 
-interface QuickResultProps {
-    search: string;
+interface CalculatorProps {
+    expression: string;
 }
 
 /**
@@ -38,106 +38,37 @@ function evaluateMathExpression(expr: string): number | null {
 /**
  * Check if input looks like a math expression
  */
-function isMathExpression(input: string): boolean {
+export function isMathExpression(input: string): boolean {
     // Must contain at least one operator and one digit
     return /\d/.test(input) && /[+\-*/%^]/.test(input);
 }
 
-/**
- * Built-in functions
- */
-const builtInFunctions: Record<string, () => string> = {
-    "now()": () => {
-        const now = new Date();
-        return now.toLocaleTimeString("zh-CN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false
-        });
-    },
-    "date()": () => {
-        const now = new Date();
-        return now.toLocaleDateString("zh-CN", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit"
-        });
-    },
-    "datetime()": () => {
-        const now = new Date();
-        return now.toLocaleString("zh-CN", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false
-        });
-    },
-    "timestamp()": () => {
-        return Date.now().toString();
-    },
-    "uuid()": () => {
-        return crypto.randomUUID();
-    },
-    "random()": () => {
-        return Math.random().toString();
-    },
-};
-
-export function QuickResult({search}: QuickResultProps) {
-    // Check if search input matches any quick result pattern
-    const quickResult = useMemo(() => {
-        if (!search.trim()) {
+export function Calculator({expression}: CalculatorProps) {
+    const result = useMemo(() => {
+        if (!isMathExpression(expression)) {
             return null;
         }
 
-        const trimmedSearch = search.trim();
-        const lowerSearch = trimmedSearch.toLowerCase();
-
-        // Check for built-in functions
-        for (const [funcName, funcImpl] of Object.entries(builtInFunctions)) {
-            if (lowerSearch === funcName.toLowerCase()) {
-                return {
-                    type: "function" as const,
-                    expression: funcName,
-                    result: funcImpl(),
-                    icon: "⚡",
-                };
-            }
+        const calculatedResult = evaluateMathExpression(expression);
+        if (calculatedResult === null) {
+            return null;
         }
 
-        // Check for math expression
-        if (isMathExpression(trimmedSearch)) {
-            const result = evaluateMathExpression(trimmedSearch);
-            if (result !== null) {
-                // Format the result
-                const formattedResult = Number.isInteger(result)
-                    ? result.toString()
-                    : result.toFixed(6).replace(/\.?0+$/, "");
+        // Format the result
+        const formattedResult = Number.isInteger(calculatedResult)
+            ? calculatedResult.toString()
+            : calculatedResult.toFixed(6).replace(/\.?0+$/, "");
 
-                return {
-                    type: "calculation" as const,
-                    expression: trimmedSearch,
-                    result: formattedResult,
-                    icon: "🔢",
-                };
-            }
-        }
+        return formattedResult;
+    }, [expression]);
 
-        return null;
-    }, [search]);
-
-    // Don't render if no quick result
-    if (!quickResult) {
+    if (!result) {
         return null;
     }
 
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(quickResult.result);
+            await navigator.clipboard.writeText(result);
         } catch (error) {
             console.error("Failed to copy to clipboard:", error);
         }
@@ -171,7 +102,7 @@ export function QuickResult({search}: QuickResultProps) {
                     gap: "12px",
                 }}
             >
-                <div style={{fontSize: "24px"}}>{quickResult.icon}</div>
+                <div style={{fontSize: "24px"}}>🔢</div>
                 <div style={{flex: 1}}>
                     <div
                         style={{
@@ -181,7 +112,7 @@ export function QuickResult({search}: QuickResultProps) {
                             marginBottom: "4px",
                         }}
                     >
-                        {quickResult.result}
+                        {result}
                     </div>
                     <div
                         style={{
@@ -189,9 +120,7 @@ export function QuickResult({search}: QuickResultProps) {
                             color: "var(--gray11)",
                         }}
                     >
-                        {quickResult.type === "calculation"
-                            ? `= ${quickResult.expression}`
-                            : quickResult.expression}
+                        = {expression}
                     </div>
                 </div>
                 <div
@@ -209,4 +138,3 @@ export function QuickResult({search}: QuickResultProps) {
         </div>
     );
 }
-
