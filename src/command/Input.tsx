@@ -273,7 +273,7 @@ export const Input = ({
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        height: '2px',
+                        height: '1px',
                         background: 'var(--gray6)',
                         overflow: 'hidden',
                     }}

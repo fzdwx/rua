@@ -1,4 +1,4 @@
-import {useCallback, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {
     ActionImpl,
     Background,
@@ -16,6 +16,7 @@ import {useBuiltInActions} from "./useBuiltInActions";
 import {TranslateView} from "./TranslateView";
 import {useTheme} from "./useTheme";
 import {Icon} from "@iconify/react";
+import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -23,6 +24,18 @@ export default function Home() {
     const [resultHandleEvent, setResultHandleEvent] = useState(true);
     const inputRef = useRef<HTMLInputElement>(null);
     const {theme, toggleTheme} = useTheme();
+
+    useEffect(() => {
+        let unlisten: (() => void) | undefined;
+        getCurrentWebviewWindow().listen('tauri://focus', () => {
+            inputRef.current?.focus();
+        }).then(unlistenFn => {
+            unlisten = unlistenFn;
+        });
+        return () => {
+            unlisten?.();
+        };
+    }, []);
 
     // Load applications and convert to actions
     const {loading, actions: applicationActions} = useApplications();
@@ -105,7 +118,10 @@ export default function Home() {
                     value={search}
                     onValueChange={setSearch}
                     currentRootActionId={state.rootActionId}
-                    onCurrentRootActionIdChange={setRootActionId}
+                    onCurrentRootActionIdChange={(id) => {
+                        setRootActionId(id)
+                        inputRef.current?.focus();
+                    }}
                     actions={state.actions}
                     activeAction={activeMainAction}
                     onQuerySubmit={handleQuerySubmit}
