@@ -272,10 +272,42 @@ function parseInputWithoutTimezone(input: string): Date | null {
 }
 
 /**
+ * Check if input is a partial/incomplete datetime expression that should still trigger display
+ * This provides error tolerance for incomplete inputs
+ */
+function isPartialDateTimeExpression(input: string): boolean {
+    const trimmed = input.trim().toLowerCase();
+
+    // Incomplete relative time: "now", "now +", "now -", "now +1", "now +1d +", etc.
+    // Match "now" optionally followed by incomplete offset patterns
+    if (/^now(\s+([+-]\s*(\d+\s*([smhdwMy]\s*)?)?)?)*([+-]\s*)?$/.test(trimmed)) {
+        return true;
+    }
+
+    // Incomplete timezone conversion: "now to", "now + 1h to", "1635724800 in", etc.
+    if (/^.+\s+(?:to|in)\s*$/.test(trimmed)) {
+        return true;
+    }
+
+    // Partial timestamp (1-9 digits that could be building up to a valid timestamp)
+    if (/^\d{1,9}$/.test(trimmed)) {
+        return true;
+    }
+
+    // Partial date strings that look like they're being typed
+    // e.g., "202", "2023-", "2023-1", "2023年"
+    if (/^\d{1,4}(-\d{0,2}(-\d{0,2})?)?$/.test(trimmed) || /^\d{4}年(\d{1,2}月?(\d{1,2}日?)?)?$/.test(trimmed)) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
  * Check if input is a parseable timestamp or date
  */
 export function isParseableDateTime(input: string): boolean {
-    return parseInput(input) !== null;
+    return parseInput(input) !== null || isPartialDateTimeExpression(input);
 }
 
 /**
@@ -358,6 +390,12 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
         return () => clearInterval(interval);
     }, [isNowFunction]);
 
+    // Auto-expand help for partial expressions
+    useEffect(() => {
+        const isPartial = isPartialDateTimeExpression(trimmedInput) && !parseInput(trimmedInput);
+        setShowHelp(isPartial);
+    }, [trimmedInput]);
+
     const result = useMemo(() => {
         // Check for built-in functions
         for (const [funcName, funcImpl] of Object.entries(builtInFunctions)) {
@@ -378,6 +416,16 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
                 type: "detailed",
                 icon: "🕐",
                 timeInfo: generateTimeInfo(parsed.date, parsed.targetTimezone)
+            } as FunctionResult;
+        }
+
+        // Check if it's a partial/incomplete expression
+        // If so, show current time as fallback with help expanded
+        if (isPartialDateTimeExpression(trimmedInput)) {
+            return {
+                type: "detailed",
+                icon: "⏰",
+                timeInfo: generateTimeInfo() // Show current time as default
             } as FunctionResult;
         }
 
