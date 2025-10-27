@@ -23,10 +23,10 @@ interface FunctionResult {
 }
 
 /**
- * Generate time information
+ * Generate time information from a given date or current time
  */
-function generateTimeInfo(): TimeInfo {
-    const now = new Date();
+function generateTimeInfo(inputDate?: Date): TimeInfo {
+    const now = inputDate || new Date();
 
     // Format date time
     const dateTime = now.toLocaleString("zh-CN", {
@@ -40,8 +40,8 @@ function generateTimeInfo(): TimeInfo {
     }).replace(/\//g, "-");
 
     // Get timestamps
-    const timestampMs = Date.now().toString();
-    const timestampS = Math.floor(Date.now() / 1000).toString();
+    const timestampMs = now.getTime().toString();
+    const timestampS = Math.floor(now.getTime() / 1000).toString();
 
     // Get date only
     const date = now.toLocaleDateString("zh-CN", {
@@ -69,6 +69,78 @@ function generateTimeInfo(): TimeInfo {
         time,
         timezone
     };
+}
+
+/**
+ * Try to parse timestamp (seconds or milliseconds)
+ */
+function parseTimestamp(input: string): Date | null {
+    const trimmed = input.trim();
+    const num = Number(trimmed);
+
+    // Check if it's a valid number
+    if (isNaN(num)) return null;
+
+    // 10-digit timestamp (seconds) - range: 1970-2286
+    if (/^\d{10}$/.test(trimmed)) {
+        return new Date(num * 1000);
+    }
+
+    // 13-digit timestamp (milliseconds) - range: 1970-2286
+    if (/^\d{13}$/.test(trimmed)) {
+        return new Date(num);
+    }
+
+    return null;
+}
+
+/**
+ * Try to parse date string
+ */
+function parseDateString(input: string): Date | null {
+    const trimmed = input.trim();
+
+    // Try standard Date parsing
+    const date = new Date(trimmed);
+
+    // Check if it's a valid date
+    if (!isNaN(date.getTime())) {
+        return date;
+    }
+
+    // Try parsing Chinese date format like "2023年10月31日"
+    const chineseMatch = trimmed.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日?/);
+    if (chineseMatch) {
+        const [, year, month, day] = chineseMatch;
+        const parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        if (!isNaN(parsed.getTime())) {
+            return parsed;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Parse input as timestamp or date
+ */
+function parseInput(input: string): Date | null {
+    // Try timestamp first
+    const timestamp = parseTimestamp(input);
+    if (timestamp) return timestamp;
+
+    // Try date string
+    const dateStr = parseDateString(input);
+    if (dateStr) return dateStr;
+
+    return null;
+}
+
+/**
+ * Check if input is a parseable timestamp or date
+ */
+export function isParseableDateTime(input: string): boolean {
+    return parseInput(input) !== null;
 }
 
 /**
@@ -111,13 +183,18 @@ function normalizeFunctionName(input: string): string {
 }
 
 /**
- * Check if input matches a built-in function
+ * Check if input matches a built-in function or parseable datetime
  */
 export function isBuiltInFunction(input: string): boolean {
     const normalized = normalizeFunctionName(input.toLowerCase());
-    return Object.keys(builtInFunctions).some(
+    const hasBuiltInFunc = Object.keys(builtInFunctions).some(
         funcName => funcName.toLowerCase() === normalized
     );
+
+    if (hasBuiltInFunc) return true;
+
+    // Also check if it's a parseable datetime
+    return isParseableDateTime(input);
 }
 
 export function DateTimeDisplay({input}: DateTimeDisplayProps) {
@@ -158,8 +235,18 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
             }
         }
 
+        // Try to parse as timestamp or date
+        const parsedDate = parseInput(trimmedInput);
+        if (parsedDate) {
+            return {
+                type: "detailed",
+                icon: "🕐",
+                timeInfo: generateTimeInfo(parsedDate)
+            } as FunctionResult;
+        }
+
         return null;
-    }, [normalized, timeInfo]);
+    }, [normalized, timeInfo, trimmedInput]);
 
     if (!result) {
         return null;
