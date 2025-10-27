@@ -10,11 +10,11 @@ import {
     useActionStore,
     useMatches,
 } from "@/command";
-import {useApplications} from "./useApplications";
-import {QuickResult} from "./QuickResult";
-import {useBuiltInActions} from "./useBuiltInActions";
-import {TranslateView} from "./TranslateView";
-import {useTheme} from "./useTheme";
+import {useApplications} from "@/hooks/useApplications";
+import {QuickResult} from "@/components/QuickResult";
+import {useBuiltInActions} from "@/hooks/useBuiltInActions";
+import {TranslateView} from "@/components/TranslateView";
+import {useTheme} from "@/hooks/useTheme";
 import {Icon} from "@iconify/react";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 

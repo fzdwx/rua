@@ -1,5 +1,5 @@
 import {useMemo} from "react";
-import {Action} from "../command";
+import {Action} from "@/command";
 import {Icon} from "@iconify/react";
 
 /**

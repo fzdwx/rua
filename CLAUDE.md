@@ -18,12 +18,16 @@ Rua is a Tauri-based application launcher for Linux, built with React, TypeScrip
 
 ```bash
 # Development
-pnpm dev                    # Start Vite dev server
+pnpm dev                    # Start Vite dev server (runs on http://localhost:1421)
 pnpm tauri dev             # Start Tauri app in dev mode
 
 # Build
 pnpm build                 # Build frontend (TypeScript check + Vite build)
 pnpm tauri build          # Build Tauri application
+just build                 # Alternative: Build using justfile
+
+# Version Management
+just bump <version>        # Bump version number (runs bump-version.sh)
 
 # Preview
 pnpm preview              # Preview production build
@@ -82,6 +86,13 @@ Located in `src-tauri/src/lib.rs`:
 3. **Tauri Commands**:
    - `get_applications()` - Returns all desktop applications
    - `launch_application(exec, terminal)` - Launches app and hides window
+   - `refresh_applications_cache()` - Clears cached application data, forcing reload on next request
+
+4. **Application Caching**:
+   - Desktop applications are cached in `$XDG_CACHE_HOME/rua/applications.json` (defaults to `~/.cache/rua/`)
+   - Cache is invalidated automatically when `.desktop` files are modified
+   - Cache includes timestamp-based validation against file modification times
+   - Icon paths are cached in-memory using `lazy_static` for performance
 
 ### Key Components
 
@@ -113,13 +124,13 @@ Actions follow this interface (`src/command/types.ts`):
 
 ### Built-in Actions
 
-Defined in `src/home/useBuiltInActions.tsx`:
+Defined in `src/hooks/useBuiltInActions.tsx`:
 - **Translate**: Multi-language translation with language selection
 - **Theme Toggle**: Available via footer on any screen
 
 ### Application Actions
 
-Generated from system `.desktop` files via `src/home/useApplications.tsx`:
+Generated from system `.desktop` files via `src/hooks/useApplications.tsx`:
 - Loaded via Tauri command `get_applications()`
 - Icons converted using `convertFileSrc()` for Tauri asset protocol
 - Launch triggers window hide after execution
@@ -137,13 +148,15 @@ src/
 │   ├── ResultsRender.tsx
 │   ├── RenderItem.tsx
 │   └── Footer.tsx
-├── home/             # Main application views
-│   ├── Index.tsx     # Main component
-│   ├── useApplications.tsx
-│   ├── useBuiltInActions.tsx
-│   ├── useTheme.tsx
+├── components/        # Reusable UI components
 │   ├── QuickResult.tsx
 │   └── TranslateView.tsx
+├── hooks/            # Custom React hooks
+│   ├── useApplications.tsx
+│   ├── useBuiltInActions.tsx
+│   └── useTheme.tsx
+├── home/             # Main application views
+│   └── Index.tsx     # Main component
 └── assets/           # CSS and static files
 
 src-tauri/src/
@@ -158,6 +171,27 @@ src-tauri/src/
 3. **Active Index**: Currently highlighted item in results
 4. **Footer Actions**: Context-sensitive actions that change based on active main action
 5. **Result Handling**: Use `setResultHandleEvent` to enable/disable keyboard handling
+
+## Window Management & Global Shortcuts
+
+The application registers a global hotkey (`Alt+Space`) in `src/App.tsx`:
+- Toggles window visibility when pressed and released
+- When showing window: automatically centers, focuses, and makes visible
+- When hiding window: simply hides without destroying
+- Window configuration (`src-tauri/tauri.conf.json`):
+  - Size: 900x540px
+  - Decorations: disabled (custom frameless window)
+  - Transparent background supported
+  - Always on top, skips taskbar
+  - Vite dev server: `http://localhost:1421`
+
+## Tauri Asset Protocol
+
+The application uses Tauri's asset protocol to access system icons:
+- Enabled in `src-tauri/tauri.conf.json` under `security.assetProtocol`
+- Scoped to: `$HOME/.local/share/**` and `/usr/share/**`
+- Required permissions defined in `src-tauri/capabilities/default.json`
+- Icons are converted using `convertFileSrc()` from `@tauri-apps/api/core`
 
 ## Workflow Requirements
 

@@ -1,7 +1,7 @@
 import {useState, useEffect, useMemo, useCallback} from "react";
 import {invoke} from "@tauri-apps/api/core";
 import {convertFileSrc} from "@tauri-apps/api/core";
-import {Action} from "../command";
+import {Action} from "@/command";
 
 export interface Application {
     name: string;
