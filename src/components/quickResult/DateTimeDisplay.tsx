@@ -1,4 +1,6 @@
-import {useMemo, useState, useEffect} from "react";
+import React, {useMemo, useState, useEffect} from "react";
+import { toast } from "sonner"
+import {Toaster} from "@/components/ui/sonner.tsx";
 
 interface DateTimeDisplayProps {
     input: string;
@@ -150,7 +152,7 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
                 const funcResult = funcImpl();
                 // For now function, use the state-managed timeInfo
                 if (funcName === "now()" && timeInfo) {
-                    return { ...funcResult, timeInfo };
+                    return {...funcResult, timeInfo};
                 }
                 return funcResult;
             }
@@ -169,6 +171,9 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
         try {
             await navigator.clipboard.writeText(value);
             setCopiedItem(value);
+            toast.success(<div>
+                Copied <span className="clip_hight">{value}</span> to Clipboard Success
+            </div>)
             setTimeout(() => setCopiedItem(null), 1000);
         } catch (error) {
             console.error("Failed to copy to clipboard:", error);
@@ -188,52 +193,16 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
         return (
             <div
                 onClick={handleCopy}
-                style={{
-                    padding: "12px 16px",
-                    margin: "8px 12px",
-                    background: "var(--gray3)",
-                    border: "1px solid var(--gray6)",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "var(--gray4)";
-                    e.currentTarget.style.borderColor = "var(--gray7)";
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "var(--gray3)";
-                    e.currentTarget.style.borderColor = "var(--gray6)";
-                }}
+                className="mx-3 my-2 px-4 py-3 bg-[var(--gray3)] border border-[var(--gray6)] rounded-lg cursor-pointer transition-all duration-200 hover:bg-[var(--gray4)] hover:border-[var(--gray7)]"
             >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                    }}
-                >
-                    <div style={{fontSize: "24px"}}>{result.icon}</div>
-                    <div style={{flex: 1}}>
-                        <div
-                            style={{
-                                fontSize: "20px",
-                                fontWeight: "600",
-                                color: "var(--gray12)",
-                            }}
-                        >
+                <div className="flex items-center gap-3">
+                    <div className="text-2xl">{result.icon}</div>
+                    <div className="flex-1">
+                        <div className="text-xl font-semibold text-[var(--gray12)]">
                             {result.primary}
                         </div>
                     </div>
-                    <div
-                        style={{
-                            fontSize: "11px",
-                            color: "var(--gray10)",
-                            padding: "4px 8px",
-                            background: "var(--gray5)",
-                            borderRadius: "4px",
-                        }}
-                    >
+                    <div className="text-[11px] text-[var(--gray10)] px-2 py-1 bg-[var(--gray5)] rounded">
                         Click to copy
                     </div>
                 </div>
@@ -248,88 +217,41 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
 
     // Reusable card component
     const TimeCard = ({
-        label,
-        value,
-        onClick
-    }: {
+                          label,
+                          value,
+                          onClick
+                      }: {
         label: string;
         value: string;
         onClick: (e: React.MouseEvent) => void;
     }) => (
         <div
             onClick={onClick}
-            style={{
-                padding: "10px 12px",
-                background: "var(--gray2)",
-                border: "1px solid var(--gray6)",
-                borderRadius: "6px",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                position: "relative",
-            }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--gray3)";
-                e.currentTarget.style.borderColor = "var(--gray7)";
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.background = "var(--gray2)";
-                e.currentTarget.style.borderColor = "var(--gray6)";
-            }}
+            className="relative p-3 bg-[var(--gray2)] border border-[var(--gray6)] rounded-md cursor-pointer transition-all duration-150 hover:bg-[var(--gray3)] hover:border-[var(--gray7)]"
         >
             {/* Copy icon in top-right corner */}
             <div
-                style={{
-                    position: "absolute",
-                    top: "8px",
-                    right: "8px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "20px",
-                    height: "20px",
-                    fontSize: "14px",
-                    color: copiedItem === value ? "var(--green11)" : "var(--gray10)",
-                    transition: "color 0.2s ease",
-                }}
-            >
+                className={`absolute top-2 right-2 flex items-center justify-center w-5 h-5 text-sm transition-colors duration-200 ${
+                    copiedItem === value ? 'text-[var(--green11)]' : 'text-[var(--gray10)]'
+                }`}>
                 {copiedItem === value ? "✓" : "📋"}
             </div>
 
             {/* Label */}
-            <div
-                style={{
-                    fontSize: "11px",
-                    color: "var(--gray11)",
-                    marginBottom: "4px",
-                }}
-            >
+            <div className="text-[11px] text-[var(--gray11)] mb-1">
                 {label}
             </div>
 
             {/* Value */}
-            <div
-                style={{
-                    fontSize: "15px",
-                    fontWeight: "500",
-                    color: "var(--gray12)",
-                    wordBreak: "break-all",
-                    paddingRight: "24px",
-                }}
-            >
+            <div className="text-[15px] font-medium text-[var(--gray12)] break-all pr-6">
                 {value}
             </div>
         </div>
     );
 
     return (
-        <div
-            style={{
-                margin: "12px 12px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-            }}
-        >
+        <div className="mx-3 my-3 flex flex-col gap-2">
+            <Toaster position="bottom-center"/>
             {/* Row 1: 当前时间 (full width) */}
             <TimeCard
                 label="当前时间"
@@ -338,13 +260,7 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
             />
 
             {/* Row 2: 时间戳 (ms) | Unix时间戳 (s) (two columns) */}
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "8px",
-                }}
-            >
+            <div className="grid grid-cols-2 gap-2">
                 <TimeCard
                     label="时间戳 (ms)"
                     value={info.timestampMs}
@@ -358,13 +274,7 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
             </div>
 
             {/* Row 3: 日期 | 时间 (two columns) */}
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "8px",
-                }}
-            >
+            <div className="grid grid-cols-2 gap-2">
                 <TimeCard
                     label="日期"
                     value={info.date}

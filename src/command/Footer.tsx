@@ -8,6 +8,7 @@ import {
     PopoverPanel,
 } from '@/components/animate-ui/components/base/popover';
 import {Icon} from "@iconify/react";
+import { Kbd } from "@/components/ui/kbd"
 
 export const Footer: React.FC<{
     current: string | ActionImpl | null,
@@ -165,7 +166,7 @@ const FooterActions: React.FC<{
     }} modal>
         <PopoverTrigger className='command-subcommand-trigger' onClick={changeVisible} aria-expanded={open}>
             <span>Actions</span>
-            {shortcut.split('.').map((s, i) => <kbd key={i}>{s}</kbd>)}
+            {shortcut.split('.').map((s, i) => <Kbd key={i}>{s}</Kbd>)}
         </PopoverTrigger>
 
         <PopoverPanel

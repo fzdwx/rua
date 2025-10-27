@@ -144,3 +144,7 @@ body {
     @apply bg-background text-foreground;
     }
 }
+
+.clip_hight {
+    @apply underline text-primary;
+}
