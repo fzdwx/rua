@@ -19,11 +19,16 @@ interface RandConfig {
     max?: number;        // For rand min,max
 }
 
+// Default max value when only min is specified
+const DEFAULT_RAND_MAX = 100;
+
 /**
  * Parse rand expression to extract configuration
  * Supports:
  * - rand * N (multiply by N)
- * - rand min,max (range)
+ * - rand min,max (range from min to max)
+ * - rand N, (from N to default max)
+ * - rand N (from N to default max)
  * - rand (basic 0-1)
  */
 function parseRandExpression(input: string): RandConfig | null {
@@ -45,6 +50,20 @@ function parseRandExpression(input: string): RandConfig | null {
         if (min < max) {
             return { min, max };
         }
+    }
+
+    // Match "rand N," (from N to default max)
+    const singleRangeMatch = trimmed.match(/^rand\s+(\d+(?:\.\d+)?)\s*,\s*$/);
+    if (singleRangeMatch) {
+        const min = parseFloat(singleRangeMatch[1]);
+        return { min, max: DEFAULT_RAND_MAX };
+    }
+
+    // Match "rand N" (from N to default max)
+    const singleNumberMatch = trimmed.match(/^rand\s+(\d+(?:\.\d+)?)$/);
+    if (singleNumberMatch) {
+        const min = parseFloat(singleNumberMatch[1]);
+        return { min, max: DEFAULT_RAND_MAX };
     }
 
     // Check if it's just "rand" or "rand()"
@@ -245,7 +264,8 @@ export function UtilityDisplay({input}: UtilityDisplayProps) {
                                 <div className="space-y-1 pl-2">
                                     <div><code className="text-[var(--blue11)]">rand</code> 或 <code className="text-[var(--blue11)]">random()</code> - 生成 0-1 之间的随机数</div>
                                     <div><code className="text-[var(--blue11)]">rand * 100</code> - 生成随机数并乘以 100</div>
-                                    <div><code className="text-[var(--blue11)]">rand 1,100</code> - 生成 1 到 100 之间的随机数</div>
+                                    <div><code className="text-[var(--blue11)]">rand 1</code> 或 <code className="text-[var(--blue11)]">rand 1,</code> - 从 1 到 100（默认）</div>
+                                    <div><code className="text-[var(--blue11)]">rand 1,50</code> - 生成 1 到 50 之间的随机数</div>
                                     <div><code className="text-[var(--blue11)]">rand 0.5,10.5</code> - 支持小数范围</div>
                                 </div>
                             </div>
