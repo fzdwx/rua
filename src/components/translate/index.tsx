@@ -1,6 +1,5 @@
 import * as React from "react";
 import {translate, Language} from "./google.tsx";
-import {Icon} from "@iconify/react";
 import {Action, ActionId} from "@/command";
 
 interface TranslateViewProps {
@@ -33,12 +32,14 @@ async function translateText(text: string): Promise<string | any> {
         throw error;
     }
 }
+
 export const translateId = "built-in-translate";
-export function getTranslateAction(getUsageCount: (actionId: ActionId) => number, incrementUsage: (actionId: ActionId) => void):Action{
+
+export function getTranslateAction(getUsageCount: (actionId: ActionId) => number, incrementUsage: (actionId: ActionId) => void): Action {
     const translateUsageCount = getUsageCount(translateId);
-    return  {
+    return {
         id: translateId,
-            name: "Translate",
+        name: "Translate",
         subtitle: "Translate text between Chinese and English",
         keywords: "translate 翻译 tr",
         icon: <div style={{fontSize: "20px"}}>🌐</div>,
@@ -47,34 +48,34 @@ export function getTranslateAction(getUsageCount: (actionId: ActionId) => number
         usageCount: translateUsageCount,
         badge: "Command",
         // Footer actions specific to translate
-        footerAction: (changeVisible) => [
-        {
-            id: "translate-settings",
-            name: "Translation Settings",
-            subtitle: "Configure translation preferences",
-            icon: <Icon icon="tabler:settings" style={{fontSize: "20px"}} />,
-            keywords: "settings config translation",
-            perform: () => {
-                incrementUsage("translate-settings");
-                changeVisible();
-            },
-        },
-        {
-            id: "translate-history",
-            name: "Translation History",
-            subtitle: "View recent translations",
-            icon: <Icon icon="tabler:history" style={{fontSize: "20px"}} />,
-            keywords: "history recent translations",
-            perform: () => {
-                incrementUsage("translate-history");
-                changeVisible();
-            },
-        },
-    ],
+        // footerAction: (changeVisible) => [
+        // {
+        //     id: "translate-settings",
+        //     name: "Translation Settings",
+        //     subtitle: "Configure translation preferences",
+        //     icon: <Icon icon="tabler:settings" style={{fontSize: "20px"}} />,
+        //     keywords: "settings config translation",
+        //     perform: () => {
+        //         incrementUsage("translate-settings");
+        //         changeVisible();
+        //     },
+        // },
+        // {
+        //     id: "translate-history",
+        //     name: "Translation History",
+        //     subtitle: "View recent translations",
+        //     icon: <Icon icon="tabler:history" style={{fontSize: "20px"}} />,
+        //     keywords: "history recent translations",
+        //     perform: () => {
+        //         incrementUsage("translate-history");
+        //         changeVisible();
+        //     },
+        // },
+        // ],
         // Track usage when entering translate mode
         perform: () => {
-        incrementUsage(translateId);
-    },
+            incrementUsage(translateId);
+        },
     }
 }
 
