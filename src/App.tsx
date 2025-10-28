@@ -19,10 +19,18 @@ register('Alt+Space', async (e) => {
     console.log(e)
 });
 
+function AppContent() {
+    return (
+        <>
+            <Home/>
+        </>
+    );
+}
+
 function App() {
     return (
         <ActionUsageProvider>
-            <Home/>
+            <AppContent/>
         </ActionUsageProvider>
     );
 }

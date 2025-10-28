@@ -1,4 +1,5 @@
 import * as React from "react";
+import {translate, Language} from "./translate/google";
 
 interface TranslateViewProps {
     search: string;
@@ -13,20 +14,21 @@ function containsChinese(text: string): boolean {
 }
 
 /**
- * Mock translation function with delay (to be replaced with real API later)
+ * Translate text using Google Translate API with optional proxy
  */
-async function translateText(text: string): Promise<string> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 600));
-
+async function translateText(text: string): Promise<string | any> {
     const isChinese = containsChinese(text);
 
-    if (isChinese) {
-        // Mock: Chinese to English
-        return `[EN] ${text}`;
-    } else {
-        // Mock: English to Chinese
-        return `[中文] ${text}`;
+    // Determine source and target languages
+    const from = isChinese ? Language.zh_cn : Language.en;
+    const to = isChinese ? Language.en : Language.zh_cn;
+
+    try {
+        const result = await translate(text, from, to);
+        return result;
+    } catch (error) {
+        console.error("Translation error:", error);
+        throw error;
     }
 }
 
@@ -36,9 +38,10 @@ export function TranslateView({search, onLoadingChange}: TranslateViewProps) {
         translated: string;
         fromLang: string;
         toLang: string;
+        error?: string;
     } | null>(null);
 
-    // Simulate translation with delay
+    // Translate with Google Translate API
     React.useEffect(() => {
         if (!search.trim()) {
             setTranslationResult(null);
@@ -53,17 +56,46 @@ export function TranslateView({search, onLoadingChange}: TranslateViewProps) {
 
         // Call async translation
         let cancelled = false;
-        translateText(search).then((translated) => {
-            if (!cancelled) {
-                setTranslationResult({
-                    original: search,
-                    translated,
-                    fromLang: isChinese ? "中文" : "English",
-                    toLang: isChinese ? "English" : "中文",
-                });
-                onLoadingChange?.(false);
-            }
-        });
+        translateText(search)
+            .then((result) => {
+                if (!cancelled) {
+                    // Handle different result types
+                    let translated: string;
+
+                    if (typeof result === 'string') {
+                        // Simple translation mode
+                        translated = result;
+                    } else if (result.explanations) {
+                        // Dictionary mode - format the explanations
+                        translated = result.explanations
+                            .map((exp: any) => `${exp.trait}: ${exp.explains.join(', ')}`)
+                            .join('\n');
+                    } else {
+                        translated = String(result);
+                    }
+
+                    setTranslationResult({
+                        original: search,
+                        translated,
+                        fromLang: isChinese ? "中文" : "English",
+                        toLang: isChinese ? "English" : "中文",
+                    });
+                    onLoadingChange?.(false);
+                }
+            })
+            .catch((error) => {
+                if (!cancelled) {
+                    console.error("Translation failed:", error);
+                    setTranslationResult({
+                        original: search,
+                        translated: "",
+                        fromLang: isChinese ? "中文" : "English",
+                        toLang: isChinese ? "English" : "中文",
+                        error: "Translation failed. Please try again.",
+                    });
+                    onLoadingChange?.(false);
+                }
+            });
 
         return () => {
             cancelled = true;
@@ -81,32 +113,51 @@ export function TranslateView({search, onLoadingChange}: TranslateViewProps) {
 
     if (!translationResult) {
         return (
-            <div
-                style={{
-                    padding: "40px 20px",
-                    textAlign: "center",
-                    color: "var(--gray11)",
-                    fontSize: "14px",
-                }}
-            >
+            <div className="py-10 px-5 text-center text-sm" style={{color: 'var(--gray11)'}}>
                 Type something to translate...
             </div>
         );
     }
 
+    // Show error if translation failed
+    if (translationResult.error) {
+        return (
+            <div className="p-3">
+                <div
+                    className="p-4 my-2 rounded-lg border"
+                    style={{
+                        background: 'var(--gray3)',
+                        borderColor: 'var(--gray6)',
+                    }}
+                >
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="text-2xl">⚠️</div>
+                        <div className="text-xs" style={{color: 'var(--gray11)'}}>
+                            Translation Error
+                        </div>
+                    </div>
+
+                    <div className="text-sm font-semibold mb-2" style={{color: 'var(--gray12)'}}>
+                        {translationResult.error}
+                    </div>
+
+                    <div className="text-[13px] mt-2" style={{color: 'var(--gray11)'}}>
+                        Original: {translationResult.original}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div style={{padding: "12px"}}>
+        <div className="p-3">
             {/* Translation result card */}
             <div
                 onClick={() => handleCopy(translationResult.translated)}
+                className="p-4 my-2 rounded-lg border cursor-pointer transition-all duration-200"
                 style={{
-                    padding: "16px",
-                    margin: "8px 0",
-                    background: "var(--gray3)",
-                    border: "1px solid var(--gray6)",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
+                    background: 'var(--gray3)',
+                    borderColor: 'var(--gray6)',
                 }}
                 onMouseEnter={(e) => {
                     e.currentTarget.style.background = "var(--gray4)";
@@ -117,50 +168,29 @@ export function TranslateView({search, onLoadingChange}: TranslateViewProps) {
                     e.currentTarget.style.borderColor = "var(--gray6)";
                 }}
             >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                        marginBottom: "12px",
-                    }}
-                >
-                    <div style={{fontSize: "24px"}}>🌐</div>
-                    <div style={{fontSize: "12px", color: "var(--gray11)"}}>
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="text-2xl">🌐</div>
+                    <div className="text-xs" style={{color: 'var(--gray11)'}}>
                         {translationResult.fromLang} → {translationResult.toLang}
                     </div>
                 </div>
 
                 <div
-                    style={{
-                        fontSize: "18px",
-                        fontWeight: "600",
-                        color: "var(--gray12)",
-                        marginBottom: "8px",
-                    }}
+                    className="text-lg font-semibold mb-2 whitespace-pre-wrap"
+                    style={{color: 'var(--gray12)'}}
                 >
                     {translationResult.translated}
                 </div>
 
-                <div
-                    style={{
-                        fontSize: "13px",
-                        color: "var(--gray11)",
-                        marginTop: "8px",
-                    }}
-                >
+                <div className="text-[13px] mt-2" style={{color: 'var(--gray11)'}}>
                     Original: {translationResult.original}
                 </div>
 
                 <div
+                    className="text-[11px] mt-3 px-2 py-1 rounded inline-block"
                     style={{
-                        fontSize: "11px",
-                        color: "var(--gray10)",
-                        marginTop: "12px",
-                        padding: "4px 8px",
-                        background: "var(--gray5)",
-                        borderRadius: "4px",
-                        display: "inline-block",
+                        color: 'var(--gray10)',
+                        background: 'var(--gray5)',
                     }}
                 >
                     Click to copy translation

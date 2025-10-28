@@ -20,6 +20,14 @@
     "core:window:allow-set-title",
     "global-shortcut:allow-is-registered",
     "global-shortcut:allow-register",
-    "global-shortcut:allow-unregister"
+    "global-shortcut:allow-unregister",
+    "http:allow-fetch",
+    "http:allow-fetch-cancel",
+    "http:allow-fetch-read-body",
+    "http:allow-fetch-send",
+    {
+      "identifier": "http:default",
+      "allow": [{ "url": "http://**" },{"url": "https://**"}]
+    }
   ]
 }
