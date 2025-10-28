@@ -2,6 +2,7 @@ import {useState, useEffect, useMemo, useCallback} from "react";
 import {invoke} from "@tauri-apps/api/core";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {Action} from "@/command";
+import {useActionUsage} from "@/hooks/useActionUsage";
 
 export interface Application {
     name: string;
@@ -49,6 +50,7 @@ async function launchApplication(app: Application): Promise<void> {
 export function useApplications() {
     const [loading, setLoading] = useState(true);
     const [applications, setApplications] = useState<Application[]>([]);
+    const { getUsageCount, incrementUsage } = useActionUsage();
 
     // Load applications on mount
     useEffect(() => {
@@ -67,9 +69,10 @@ export function useApplications() {
     }, []);
 
     // Launch application callback
-    const handleLaunchApplication = useCallback(async (app: Application) => {
+    const handleLaunchApplication = useCallback(async (app: Application, actionId: string) => {
+        incrementUsage(actionId);
         await launchApplication(app);
-    }, []);
+    }, [incrementUsage]);
 
     // Convert applications to actions
     const actions: Action[] = useMemo(
@@ -82,8 +85,11 @@ export function useApplications() {
                     iconSrc = convertFileSrc(filePath);
                 }
 
+                const actionId = app.path;
+                const usageCount = getUsageCount(actionId);
+
                 return {
-                    id: app.path,
+                    id: actionId,
                     name: app.name,
                     subtitle: app.description,
                     keywords: app.description,
@@ -102,12 +108,13 @@ export function useApplications() {
                     ),
                     item: app,
                     kind: "application",
+                    usageCount,
                     perform: async () => {
-                        await handleLaunchApplication(app);
+                        await handleLaunchApplication(app, actionId);
                     },
                 };
             }),
-        [applications, handleLaunchApplication]
+        [applications, handleLaunchApplication, getUsageCount]
     );
 
     return {

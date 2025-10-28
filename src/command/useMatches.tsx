@@ -28,10 +28,15 @@ const fuseOptions: IFuseOptions<ActionImpl> = {
     minMatchCharLength: 1,
 };
 
+// Weight factor for usage count in sorting
+// Higher value means usage count has more impact on sorting
+const USAGE_COUNT_WEIGHT = 5;
+
 //@ts-ignore
 function order(a, b) {
     /**
      * Larger the priority = higher up the list
+     * Now also considering usage count in the sorting
      */
     return b.priority - a.priority;
 }
@@ -117,6 +122,8 @@ export function useMatches(search: string, actions: ActionTree, rootActionId: Ac
             const match = matches[i];
             const action = match.action;
             const score = match.score || Priority.NORMAL;
+            // Add usage count to priority for sorting
+            const usagePriority = (action.usageCount || 0) * USAGE_COUNT_WEIGHT;
 
             const section = {
                 name:
@@ -135,7 +142,7 @@ export function useMatches(search: string, actions: ActionTree, rootActionId: Ac
             }
 
             map[section.name].push({
-                priority: action.priority + score,
+                priority: action.priority + score + usagePriority,
                 action,
             });
         }

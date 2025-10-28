@@ -1,24 +1,31 @@
 import {useMemo} from "react";
 import {Action} from "@/command";
 import {Icon} from "@iconify/react";
+import {useActionUsage} from "@/hooks/useActionUsage";
 
 /**
  * Custom hook to provide built-in actions
  * These are static actions that don't depend on search input
  */
 export function useBuiltInActions(): Action[] {
+    const { getUsageCount, incrementUsage } = useActionUsage();
+
     return useMemo(() => {
         const actions: Action[] = [];
 
+        const translateId = "built-in-translate";
+        const translateUsageCount = getUsageCount(translateId);
+
         // Translation action - enters translation mode
         actions.push({
-            id: "built-in-translate",
+            id: translateId,
             name: "Translate",
             subtitle: "Translate text between Chinese and English",
             keywords: "translate 翻译 tr",
             icon: <div style={{fontSize: "20px"}}>🌐</div>,
             kind: "built-in",
             query: true,  // Enable query input for this action
+            usageCount: translateUsageCount,
             // Footer actions specific to translate
             footerAction: (changeVisible) => [
                 {
@@ -28,6 +35,7 @@ export function useBuiltInActions(): Action[] {
                     icon: <Icon icon="tabler:settings" style={{fontSize: "20px"}} />,
                     keywords: "settings config translation",
                     perform: () => {
+                        incrementUsage("translate-settings");
                         console.log("Open translation settings");
                         changeVisible();
                     },
@@ -39,12 +47,16 @@ export function useBuiltInActions(): Action[] {
                     icon: <Icon icon="tabler:history" style={{fontSize: "20px"}} />,
                     keywords: "history recent translations",
                     perform: () => {
+                        incrementUsage("translate-history");
                         console.log("Open translation history");
                         changeVisible();
                     },
                 },
             ],
-            // No perform function - this makes it enterable (navigable)
+            // Track usage when entering translate mode
+            perform: () => {
+                incrementUsage(translateId);
+            },
         });
 
         // TODO: Add more built-in actions here
@@ -56,5 +68,5 @@ export function useBuiltInActions(): Action[] {
         // etc.
 
         return actions;
-    }, []);
+    }, [getUsageCount, incrementUsage]);
 }

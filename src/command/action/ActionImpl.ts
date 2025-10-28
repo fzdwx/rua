@@ -32,6 +32,7 @@ export class ActionImpl implements Action {
     kind?: Action["kind"];
     query?: Action["query"];
     footerAction?: Action["footerAction"];
+    usageCount?: Action["usageCount"];
     /**
      * @deprecated use action.command.perform
      */
