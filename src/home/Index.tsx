@@ -13,11 +13,11 @@ import {
 import {useApplications} from "@/hooks/useApplications";
 import {QuickResult} from "@/components/quickResult";
 import {useBuiltInActions} from "@/hooks/useBuiltInActions";
-import {TranslateView} from "@/components/TranslateView";
 import {useTheme} from "@/hooks/useTheme";
 import {Icon} from "@iconify/react";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useActionUsage} from "@/hooks/useActionUsage";
+import {TranslateView} from "@/components/translate";
 
 export default function Home() {
     const [search, setSearch] = useState("");

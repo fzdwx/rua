@@ -101,7 +101,7 @@ Located in `src-tauri/src/lib.rs`:
 - **RenderItem** (`src/command/RenderItem.tsx`): Individual action item renderer
 - **Footer** (`src/command/Footer.tsx`): Context-aware footer with dynamic actions
 - **QuickResult** (`src/home/QuickResult.tsx`): Displays quick calculations/results
-- **TranslateView** (`src/home/TranslateView.tsx`): Custom view for translation action
+- **Index** (`src/home/index.tsx`): Custom view for translation action
 
 ### Action Types
 
@@ -150,7 +150,7 @@ src/
 │   └── Footer.tsx
 ├── components/        # Reusable UI components
 │   ├── QuickResult.tsx
-│   └── TranslateView.tsx
+│   └── Index.tsx
 ├── hooks/            # Custom React hooks
 │   ├── useApplications.tsx
 │   ├── useBuiltInActions.tsx

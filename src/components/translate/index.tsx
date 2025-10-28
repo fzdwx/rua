@@ -1,5 +1,5 @@
 import * as React from "react";
-import {translate, Language} from "./translate/google";
+import {translate, Language} from "./google.tsx";
 
 interface TranslateViewProps {
     search: string;
