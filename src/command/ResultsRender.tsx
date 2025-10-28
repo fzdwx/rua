@@ -133,9 +133,22 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
     const execute = React.useCallback(
         (item: RenderParams["item"]) => {
             if (typeof item === "string") return;
-            if (item.command) {
+
+            // For actions with query flag, we need to navigate into them
+            // but also track usage if they have a perform function
+            if (item.query) {
+                // Track usage if perform exists
+                if (item.command) {
+                    item.command.perform(item);
+                }
+                // Navigate into the action
+                props.setSearch("");
+                props.setRootActionId(item.id);
+            } else if (item.command) {
+                // Regular actions with command - just perform
                 item.command.perform(item);
             } else {
+                // Actions without command or query - just navigate
                 props.setSearch("");
                 props.setRootActionId(item.id);
             }

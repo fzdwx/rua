@@ -17,6 +17,7 @@ import {TranslateView} from "@/components/TranslateView";
 import {useTheme} from "@/hooks/useTheme";
 import {Icon} from "@iconify/react";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
+import {useActionUsage} from "@/hooks/useActionUsage";
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -24,6 +25,7 @@ export default function Home() {
     const [resultHandleEvent, setResultHandleEvent] = useState(true);
     const inputRef = useRef<HTMLInputElement>(null);
     const {theme, toggleTheme} = useTheme();
+    const {incrementUsage} = useActionUsage();
 
     useEffect(() => {
         let unlisten: (() => void) | undefined;
@@ -71,6 +73,8 @@ export default function Home() {
 
     // Handle query submission from Input component
     const handleQuerySubmit = (query: string, actionId: string) => {
+        // Track usage when entering action via query submission
+        incrementUsage(actionId);
         // Enter the action and set search to the query
         setRootActionId(actionId);
         setSearch(query);
