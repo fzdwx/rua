@@ -18,6 +18,8 @@ import {Icon} from "@iconify/react";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useActionUsage} from "@/hooks/useActionUsage";
 import {translateId, TranslateView} from "@/components/translate";
+import {quickLinkCreatorId, quickLinkViewPrefix, QuickLinkCreator, QuickLinkView} from "@/components/quick-link";
+import {QuickLink} from "@/hooks/useQuickLinks";
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -142,6 +144,17 @@ export default function Home() {
                     {/* Show translate view if translate action is active */}
                     {state.rootActionId === translateId ? (
                         <TranslateView search={search} onLoadingChange={handleActionLoadingChange}/>
+                    ) : state.rootActionId === quickLinkCreatorId ? (
+                        <QuickLinkCreator onLoadingChange={handleActionLoadingChange}/>
+                    ) : state.rootActionId?.startsWith(quickLinkViewPrefix) ? (
+                        // Show QuickLinkView if a quick link action is active
+                        activeMainAction && (activeMainAction as any).item ? (
+                            <QuickLinkView
+                                quickLink={(activeMainAction as any).item as QuickLink}
+                                search={search}
+                                onLoadingChange={handleActionLoadingChange}
+                            />
+                        ) : null
                     ) : (
                         <>
                             {/* Quick result view for calculations and built-in functions */}

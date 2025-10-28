@@ -2,6 +2,8 @@ import {useMemo} from "react";
 import {Action} from "@/command";
 import {useActionUsage} from "@/hooks/useActionUsage";
 import {getTranslateAction} from "@/components/translate";
+import {getQuickLinkActions} from "@/components/quick-link";
+import {useQuickLinks} from "@/hooks/useQuickLinks";
 
 /**
  * Custom hook to provide built-in actions
@@ -9,12 +11,16 @@ import {getTranslateAction} from "@/components/translate";
  */
 export function useBuiltInActions(): Action[] {
     const {getUsageCount, incrementUsage} = useActionUsage();
+    const {quickLinks} = useQuickLinks();
 
     return useMemo(() => {
         const actions: Action[] = [];
 
         // Translation action - enters translation mode
         actions.push(getTranslateAction(getUsageCount, incrementUsage));
+
+        // Quick link actions - creator and user-created quick links
+        actions.push(...getQuickLinkActions(quickLinks, getUsageCount, incrementUsage));
 
         // TODO: Add more built-in actions here
         // - Base64 encode/decode
@@ -25,5 +31,5 @@ export function useBuiltInActions(): Action[] {
         // etc.
 
         return actions;
-    }, [getUsageCount, incrementUsage]);
+    }, [getUsageCount, incrementUsage, quickLinks]);
 }
