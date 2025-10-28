@@ -1,6 +1,7 @@
 import Home from "./home/Index";
 import {register} from '@tauri-apps/plugin-global-shortcut';
 import {getCurrentWindow} from "@tauri-apps/api/window";
+import {ActionUsageProvider} from "@/hooks/useActionUsage";
 
 register('Alt+Space', async (e) => {
     if (e.state == 'Released') {
@@ -19,7 +20,11 @@ register('Alt+Space', async (e) => {
 });
 
 function App() {
-    return <Home/>;
+    return (
+        <ActionUsageProvider>
+            <Home/>
+        </ActionUsageProvider>
+    );
 }
 
 export default App;
