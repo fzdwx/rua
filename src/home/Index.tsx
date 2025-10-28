@@ -11,13 +11,13 @@ import {
     useMatches,
 } from "@/command";
 import {useApplications} from "@/hooks/useApplications";
-import {QuickResult} from "@/components/quickResult";
+import {QuickResult} from "@/components/quick-result";
 import {useBuiltInActions} from "@/hooks/useBuiltInActions";
 import {useTheme} from "@/hooks/useTheme";
 import {Icon} from "@iconify/react";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useActionUsage} from "@/hooks/useActionUsage";
-import {TranslateView} from "@/components/translate";
+import {translateId, TranslateView} from "@/components/translate";
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -140,7 +140,7 @@ export default function Home() {
                 {/* Main content area with flex: 1 to prevent footer from being squeezed */}
                 <div style={{flex: 1, overflow: "hidden", display: "flex", flexDirection: "column"}}>
                     {/* Show translate view if translate action is active */}
-                    {state.rootActionId === "built-in-translate" ? (
+                    {state.rootActionId === translateId ? (
                         <TranslateView search={search} onLoadingChange={handleActionLoadingChange}/>
                     ) : (
                         <>
