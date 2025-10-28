@@ -33,6 +33,7 @@ export class ActionImpl implements Action {
     query?: Action["query"];
     footerAction?: Action["footerAction"];
     usageCount?: Action["usageCount"];
+    badge?: Action["badge"];
     /**
      * @deprecated use action.command.perform
      */

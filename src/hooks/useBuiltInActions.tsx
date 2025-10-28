@@ -26,6 +26,7 @@ export function useBuiltInActions(): Action[] {
             kind: "built-in",
             query: true,  // Enable query input for this action
             usageCount: translateUsageCount,
+            badge: "Command",
             // Footer actions specific to translate
             footerAction: (changeVisible) => [
                 {

@@ -1,6 +1,5 @@
-import {useState, useEffect, useMemo, useCallback} from "react";
-import {invoke} from "@tauri-apps/api/core";
-import {convertFileSrc} from "@tauri-apps/api/core";
+import {useCallback, useEffect, useMemo, useState} from "react";
+import {convertFileSrc, invoke} from "@tauri-apps/api/core";
 import {Action} from "@/command";
 import {useActionUsage} from "@/hooks/useActionUsage";
 
@@ -50,7 +49,7 @@ async function launchApplication(app: Application): Promise<void> {
 export function useApplications() {
     const [loading, setLoading] = useState(true);
     const [applications, setApplications] = useState<Application[]>([]);
-    const { getUsageCount, incrementUsage } = useActionUsage();
+    const {getUsageCount, incrementUsage} = useActionUsage();
 
     // Load applications on mount
     useEffect(() => {
@@ -109,6 +108,7 @@ export function useApplications() {
                     item: app,
                     kind: "application",
                     usageCount,
+                    badge: "Application",
                     perform: async () => {
                         await handleLaunchApplication(app, actionId);
                     },

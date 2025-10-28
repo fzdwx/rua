@@ -1,6 +1,7 @@
 import React from "react";
 import {ActionImpl} from "./action";
 import {ActionId} from "./types";
+import {Kbd} from "@/components/ui/kbd.tsx";
 
 const RenderItem = React.forwardRef(
     (
@@ -35,64 +36,57 @@ const RenderItem = React.forwardRef(
                 ref={ref}
                 className={active ? 'command-item-active' : 'command-item'}
             >
-                <div
-                    style={{
-                        display: 'flex',
-                        gap: '8px',
-                        alignItems: 'center',
-                        fontSize: 14,
-                    }}
-                >
+                <div className="flex gap-2 items-center text-sm">
                     {action.icon && action.icon}
-                    <div style={{display: 'flex', flexDirection: 'column'}}>
+                    <div className="flex flex-col">
                         <div>
                             {ancestors?.length > 0 &&
                                 ancestors.map((ancestor: any) => (
                                     <React.Fragment key={ancestor.id}>
-                    <span
-                        style={{
-                            opacity: 0.5,
-                            marginRight: 8,
-                        }}
-                    >
-                      {ancestor.name}
-                    </span>
-                                        <span
-                                            style={{
-                                                marginRight: 8,
-                                            }}
-                                        >
-                      &rsaquo;
-                    </span>
+                                        <span className="opacity-50 mr-2">
+                                            {ancestor.name}
+                                        </span>
+                                        <span className="mr-2">
+                                            &rsaquo;
+                                        </span>
                                     </React.Fragment>
                                 ))}
                             <span>{action.name}</span>
                         </div>
                         {action.subtitle && (
-                            <span style={{fontSize: 9, color: 'var(--gray11)'}}>{action.subtitle}</span>
+                            <span className="text-[9px]" style={{color: 'var(--gray11)'}}>
+                                {action.subtitle}
+                            </span>
                         )}
                     </div>
                 </div>
-                {action.shortcut?.length ? (
-                    <div
-                        aria-hidden
-                        style={{display: 'grid', gridAutoFlow: 'column', gap: '4px'}}
-                    >
-                        {action.shortcut.map((sc: any) => (
-                            <kbd
-                                key={sc}
-                                style={{
-                                    padding: '4px 6px',
-                                    background: 'var(--hover2)',
-                                    borderRadius: '4px',
-                                    fontSize: 14,
-                                }}
-                            >
-                                {sc}
-                            </kbd>
-                        ))}
-                    </div>
-                ) : null}
+                <div className="flex items-center gap-2">
+                    {/* Badge for action type */}
+                    {action.badge && (
+                        <span
+                            className="text-[12px] px-2 py-0.5 rounded whitespace-nowrap"
+                            style={{
+                                color: 'var(--gray11)',
+                            }}
+                        >
+                            {action.badge}
+                        </span>
+                    )}
+                    {/* Shortcut keys */}
+                    {action.shortcut?.length ? (
+                        <div className="grid grid-flow-col gap-1" aria-hidden>
+                            {action.shortcut.map((sc: any) => (
+                                <Kbd
+                                    key={sc}
+                                    className="px-1.5 py-1 rounded text-sm"
+                                    style={{background: 'var(--hover2)'}}
+                                >
+                                    {sc}
+                                </Kbd>
+                            ))}
+                        </div>
+                    ) : null}
+                </div>
             </div>
         );
     },

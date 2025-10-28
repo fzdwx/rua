@@ -28,6 +28,7 @@ export type Action = {
     query?: boolean  // If true, shows a query input box when action is active
     footerAction?: (changeVisible: () => void) => Action[]  // Footer actions specific to this main action
     usageCount?: number  // Number of times this action has been used
+    badge?: string  // Badge text to display on the right side of the action
 };
 
 export type ActionStore = Record<ActionId, ActionImpl>;
