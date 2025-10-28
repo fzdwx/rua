@@ -1,9 +1,10 @@
 import * as React from "react";
-import {Action, ActionId} from "@/command";
+import {Action, ActionId, ActionImpl, useActionStore} from "@/command";
 import {useQuickLinks, QuickLink} from "@/hooks/useQuickLinks";
 import {openUrl} from "@tauri-apps/plugin-opener";
 import {Icon} from "@iconify/react";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
+import {useMemo} from "react";
 
 export const quickLinkCreatorId = "built-in-quickLinkCreator";
 export const quickLinkViewPrefix = "quick-link-view-";
@@ -14,8 +15,8 @@ export const quickLinkViewPrefix = "quick-link-view-";
 export function getQuickLinkActions(
     quickLinks: QuickLink[],
     getUsageCount: (actionId: ActionId) => number,
-    incrementUsage: (actionId: ActionId) => void
-): Action[] {
+    incrementUsage: (actionId: ActionId) => void,
+    setRootActionId: (rootActionId: (ActionId | null)) => void): Action[] {
     const actions: Action[] = [];
 
     // Add quick link creator action
@@ -24,7 +25,7 @@ export function getQuickLinkActions(
         id: quickLinkCreatorId,
         name: "创建快捷指令",
         subtitle: "创建和管理快捷指令",
-        icon: <Icon icon="tabler:link-plus" style={{fontSize: "20px"}} />,
+        icon: <Icon icon="tabler:link-plus" style={{fontSize: "20px"}}/>,
         keywords: "create quick link 创建 快捷 指令 链接 管理",
         kind: "built-in",
         query: false,
@@ -46,7 +47,7 @@ export function getQuickLinkActions(
             icon: link.icon ? (
                 <div style={{fontSize: "20px"}}>{link.icon}</div>
             ) : (
-                <Icon icon="tabler:link" style={{fontSize: "20px"}} />
+                <Icon icon="tabler:link" style={{fontSize: "20px"}}/>
             ),
             keywords: link.keywords || "",
             kind: "quick-link",
@@ -54,6 +55,7 @@ export function getQuickLinkActions(
             usageCount,
             badge: "Quick Link",
             perform: () => {
+                setRootActionId(actionId)
                 incrementUsage(actionId);
             },
             item: link, // Pass the link data to the view
@@ -241,14 +243,14 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
                                             className="p-2 rounded hover:bg-gray-4"
                                             style={{color: "var(--gray11)"}}
                                         >
-                                            <Icon icon="tabler:edit" style={{fontSize: "16px"}} />
+                                            <Icon icon="tabler:edit" style={{fontSize: "16px"}}/>
                                         </button>
                                         <button
                                             onClick={() => handleDelete(link.id)}
                                             className="p-2 rounded hover:bg-gray-4"
                                             style={{color: "var(--red11)"}}
                                         >
-                                            <Icon icon="tabler:trash" style={{fontSize: "16px"}} />
+                                            <Icon icon="tabler:trash" style={{fontSize: "16px"}}/>
                                         </button>
                                     </div>
                                 </div>
@@ -271,7 +273,7 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
                             e.currentTarget.style.background = "var(--accent9)";
                         }}
                     >
-                        <Icon icon="tabler:plus" style={{fontSize: "16px", display: "inline", marginRight: "4px"}} />
+                        <Icon icon="tabler:plus" style={{fontSize: "16px", display: "inline", marginRight: "4px"}}/>
                         创建新快捷指令
                     </button>
                 </>
@@ -443,137 +445,140 @@ interface QuickLinkViewProps {
  * QuickLinkView component - for executing quick link with optional parameters
  */
 export function QuickLinkView({quickLink, search, onLoadingChange}: QuickLinkViewProps) {
-    const [finalUrl, setFinalUrl] = React.useState(quickLink.url);
-    const [isLoading, setIsLoading] = React.useState(false);
-
-    // Update URL when search changes (in case there are parameters)
-    React.useEffect(() => {
-        // If search is not empty and URL contains placeholders, replace them
-        if (search.trim()) {
-            // Simple parameter replacement: {query} or {0}, {1}, etc.
-            let url = quickLink.url;
-
-            // Replace {query} with the search text
-            url = url.replace(/\{query\}/g, encodeURIComponent(search));
-
-            // Replace {0}, {1}, etc. with space-separated parts
-            const parts = search.split(/\s+/);
-            parts.forEach((part, index) => {
-                url = url.replace(new RegExp(`\\{${index}\\}`, 'g'), encodeURIComponent(part));
-            });
-
-            setFinalUrl(url);
-        } else {
-            setFinalUrl(quickLink.url);
-        }
-    }, [search, quickLink.url]);
-
-    const handleOpen = async () => {
-        setIsLoading(true);
-        onLoadingChange?.(true);
-
-        try {
-            await openUrl(finalUrl);
-            // Hide window after opening link
-            await getCurrentWebviewWindow().hide();
-        } catch (error) {
-            console.error("Failed to open link:", error);
-        } finally {
-            setIsLoading(false);
-            onLoadingChange?.(false);
-        }
-    };
-
-    // Auto-open if URL doesn't contain placeholders and no search input
-    React.useEffect(() => {
-        const hasPlaceholders = /\{(query|\d+)\}/.test(quickLink.url);
-        if (!hasPlaceholders && !search.trim()) {
-            handleOpen();
-        }
-    }, []); // Only run once on mount
-
-    const hasPlaceholders = /\{(query|\d+)\}/.test(quickLink.url);
-
-    return (
-        <div className="p-4">
-            <div className="mb-4">
-                <div className="flex items-center gap-3 mb-2">
-                    <div style={{fontSize: "24px"}}>
-                        {quickLink.icon || "🔗"}
-                    </div>
-                    <div>
-                        <div className="text-lg font-semibold" style={{color: "var(--gray12)"}}>
-                            {quickLink.name}
-                        </div>
-                        {quickLink.subtitle && (
-                            <div className="text-sm" style={{color: "var(--gray11)"}}>
-                                {quickLink.subtitle}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Show URL preview */}
-            <div
-                className="mb-4 p-3 rounded-lg border"
-                style={{
-                    background: "var(--gray3)",
-                    borderColor: "var(--gray6)",
-                }}
-            >
-                <div className="text-xs mb-1" style={{color: "var(--gray11)"}}>
-                    将要打开的链接:
-                </div>
-                <div
-                    className="text-sm font-mono break-all"
-                    style={{color: "var(--gray12)"}}
-                >
-                    {finalUrl}
-                </div>
-            </div>
-
-            {hasPlaceholders && (
-                <div
-                    className="mb-4 p-3 rounded-lg border"
-                    style={{
-                        background: "var(--blue3)",
-                        borderColor: "var(--blue6)",
-                        color: "var(--blue11)",
-                    }}
-                >
-                    <div className="text-sm">
-                        💡 提示: 在搜索框中输入参数，系统会自动替换链接中的占位符
-                    </div>
-                    <div className="text-xs mt-1" style={{opacity: 0.8}}>
-                        支持的占位符: {"{query}"} (完整输入), {"{0}"} {"{1}"} (空格分隔的参数)
-                    </div>
-                </div>
-            )}
-
-            {/* Open button */}
-            <button
-                onClick={handleOpen}
-                disabled={isLoading}
-                className="w-full px-4 py-2 rounded-md font-medium"
-                style={{
-                    background: isLoading ? "var(--gray6)" : "var(--accent9)",
-                    color: "white",
-                    cursor: isLoading ? "not-allowed" : "pointer",
-                }}
-                onMouseEnter={(e) => {
-                    if (!isLoading) {
-                        e.currentTarget.style.background = "var(--accent10)";
-                    }
-                }}
-                onMouseLeave={(e) => {
-                    if (!isLoading) {
-                        e.currentTarget.style.background = "var(--accent9)";
-                    }
-                }}
-            >
-                {isLoading ? "打开中..." : "打开链接"}
-            </button>
-        </div>
-    );
+    console.log(quickLink)
+    return <div>test</div>
+    // const [finalUrl, setFinalUrl] = React.useState(quickLink.url);
+    // const [isLoading, setIsLoading] = React.useState(false);
+    //
+    // // Update URL when search changes (in case there are parameters)
+    // React.useEffect(() => {
+    //     // If search is not empty and URL contains placeholders, replace them
+    //     if (search.trim()) {
+    //         // Simple parameter replacement: {query} or {0}, {1}, etc.
+    //         let url = quickLink.url;
+    //
+    //         // Replace {query} with the search text
+    //         url = url.replace(/\{query\}/g, encodeURIComponent(search));
+    //
+    //         // Replace {0}, {1}, etc. with space-separated parts
+    //         const parts = search.split(/\s+/);
+    //         parts.forEach((part, index) => {
+    //             url = url.replace(new RegExp(`\\{${index}\\}`, 'g'), encodeURIComponent(part));
+    //         });
+    //
+    //         setFinalUrl(url);
+    //     } else {
+    //         setFinalUrl(quickLink.url);
+    //     }
+    // }, [search, quickLink.url]);
+    //
+    // const handleOpen = async () => {
+    //     setIsLoading(true);
+    //     onLoadingChange?.(true);
+    //
+    //     try {
+    //         await openUrl(finalUrl);
+    //         // Hide window after opening link
+    //         await getCurrentWebviewWindow().hide();
+    //     } catch (error) {
+    //         console.error("Failed to open link:", error);
+    //     } finally {
+    //         setIsLoading(false);
+    //         onLoadingChange?.(false);
+    //     }
+    // };
+    //
+    // // Auto-open if URL doesn't contain placeholders and no search input
+    // React.useEffect(() => {
+    //     const hasPlaceholders = /\{(query|\d+)\}/.test(quickLink.url);
+    //     if (!hasPlaceholders && !search.trim()) {
+    //         handleOpen();
+    //     }
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, []); // Only run once on mount
+    //
+    // const hasPlaceholders = /\{(query|\d+)\}/.test(quickLink.url);
+    //
+    // return (
+    //     <div className="p-4">
+    //         <div className="mb-4">
+    //             <div className="flex items-center gap-3 mb-2">
+    //                 <div style={{fontSize: "24px"}}>
+    //                     {quickLink.icon || "🔗"}
+    //                 </div>
+    //                 <div>
+    //                     <div className="text-lg font-semibold" style={{color: "var(--gray12)"}}>
+    //                         {quickLink.name}
+    //                     </div>
+    //                     {quickLink.subtitle && (
+    //                         <div className="text-sm" style={{color: "var(--gray11)"}}>
+    //                             {quickLink.subtitle}
+    //                         </div>
+    //                     )}
+    //                 </div>
+    //             </div>
+    //         </div>
+    //
+    //         {/* Show URL preview */}
+    //         <div
+    //             className="mb-4 p-3 rounded-lg border"
+    //             style={{
+    //                 background: "var(--gray3)",
+    //                 borderColor: "var(--gray6)",
+    //             }}
+    //         >
+    //             <div className="text-xs mb-1" style={{color: "var(--gray11)"}}>
+    //                 将要打开的链接:
+    //             </div>
+    //             <div
+    //                 className="text-sm font-mono break-all"
+    //                 style={{color: "var(--gray12)"}}
+    //             >
+    //                 {finalUrl}
+    //             </div>
+    //         </div>
+    //
+    //         {hasPlaceholders && (
+    //             <div
+    //                 className="mb-4 p-3 rounded-lg border"
+    //                 style={{
+    //                     background: "var(--blue3)",
+    //                     borderColor: "var(--blue6)",
+    //                     color: "var(--blue11)",
+    //                 }}
+    //             >
+    //                 <div className="text-sm">
+    //                     💡 提示: 在搜索框中输入参数，系统会自动替换链接中的占位符
+    //                 </div>
+    //                 <div className="text-xs mt-1" style={{opacity: 0.8}}>
+    //                     支持的占位符: {"{query}"} (完整输入), {"{0}"} {"{1}"} (空格分隔的参数)
+    //                 </div>
+    //             </div>
+    //         )}
+    //
+    //         {/* Open button */}
+    //         <button
+    //             onClick={handleOpen}
+    //             disabled={isLoading}
+    //             className="w-full px-4 py-2 rounded-md font-medium"
+    //             style={{
+    //                 background: isLoading ? "var(--gray6)" : "var(--accent9)",
+    //                 color: "white",
+    //                 cursor: isLoading ? "not-allowed" : "pointer",
+    //             }}
+    //             onMouseEnter={(e) => {
+    //                 if (!isLoading) {
+    //                     e.currentTarget.style.background = "var(--accent10)";
+    //                 }
+    //             }}
+    //             onMouseLeave={(e) => {
+    //                 if (!isLoading) {
+    //                     e.currentTarget.style.background = "var(--accent9)";
+    //                 }
+    //             }}
+    //         >
+    //             {isLoading ? "打开中..." : "打开链接"}
+    //         </button>
+    //     </div>
+    // );
 }

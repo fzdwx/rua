@@ -19,7 +19,6 @@ import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useActionUsage} from "@/hooks/useActionUsage";
 import {translateId, TranslateView} from "@/components/translate";
 import {quickLinkCreatorId, quickLinkViewPrefix, QuickLinkCreator, QuickLinkView} from "@/components/quick-link";
-import {QuickLink} from "@/hooks/useQuickLinks";
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -40,20 +39,19 @@ export default function Home() {
             unlisten?.();
         };
     }, []);
+    // Initialize action store
+    const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
 
     // Load applications and convert to actions
     const {loading, actions: applicationActions} = useApplications();
 
     // Get built-in actions (static actions like translate)
-    const builtInActions = useBuiltInActions();
+    const builtInActions = useBuiltInActions(setRootActionId);
 
     // Combine all actions (built-in actions first for priority)
     const allActions = useMemo(() => {
         return [...builtInActions, ...applicationActions];
     }, [builtInActions, applicationActions]);
-
-    // Initialize action store
-    const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
 
     // Register actions when they change
     useRegisterActions(allActions, [allActions]);
@@ -72,6 +70,19 @@ export default function Home() {
         }
         return activeItem as ActionImpl;
     }, [results, state.activeIndex]);
+
+    const currentRootAction = useMemo(() => {
+        // let actions = state.actions;
+        if (state.rootActionId === null) {
+            return null
+        }
+        let actions  = allActions.filter(v=>{
+            return v.id === state.rootActionId;
+
+        })
+        return actions[0] as ActionImpl;
+    }, [allActions, state.rootActionId]);
+
 
     // Handle query submission from Input component
     const handleQuerySubmit = (query: string, actionId: string) => {
@@ -147,14 +158,12 @@ export default function Home() {
                     ) : state.rootActionId === quickLinkCreatorId ? (
                         <QuickLinkCreator onLoadingChange={handleActionLoadingChange}/>
                     ) : state.rootActionId?.startsWith(quickLinkViewPrefix) ? (
-                        // Show QuickLinkView if a quick link action is active
-                        activeMainAction && (activeMainAction as any).item ? (
-                            <QuickLinkView
-                                quickLink={(activeMainAction as any).item as QuickLink}
-                                search={search}
-                                onLoadingChange={handleActionLoadingChange}
-                            />
-                        ) : null
+                        <QuickLinkView
+                            quickLink={currentRootAction?.item}
+                            search={search}
+                            onLoadingChange={handleActionLoadingChange}
+                        />
+
                     ) : (
                         <>
                             {/* Quick result view for calculations and built-in functions */}

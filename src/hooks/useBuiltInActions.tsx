@@ -1,5 +1,5 @@
 import {useMemo} from "react";
-import {Action} from "@/command";
+import {Action, ActionId} from "@/command";
 import {useActionUsage} from "@/hooks/useActionUsage";
 import {getTranslateAction} from "@/components/translate";
 import {getQuickLinkActions} from "@/components/quick-link";
@@ -9,7 +9,7 @@ import {useQuickLinks} from "@/hooks/useQuickLinks";
  * Custom hook to provide built-in actions
  * These are static actions that don't depend on search input
  */
-export function useBuiltInActions(): Action[] {
+export function useBuiltInActions(setRootActionId: (rootActionId: (ActionId | null)) => void): Action[] {
     const {getUsageCount, incrementUsage} = useActionUsage();
     const {quickLinks} = useQuickLinks();
 
@@ -20,7 +20,7 @@ export function useBuiltInActions(): Action[] {
         actions.push(getTranslateAction(getUsageCount, incrementUsage));
 
         // Quick link actions - creator and user-created quick links
-        actions.push(...getQuickLinkActions(quickLinks, getUsageCount, incrementUsage));
+        actions.push(...getQuickLinkActions(quickLinks, getUsageCount, incrementUsage,setRootActionId));
 
         // TODO: Add more built-in actions here
         // - Base64 encode/decode
