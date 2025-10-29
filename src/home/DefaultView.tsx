@@ -12,7 +12,6 @@ interface DefaultViewProps {
     resultHandleEvent: boolean;
     inputRef: RefObject<HTMLInputElement | null>;
     theme: string;
-    disableFooterTabFocus?: boolean;
     setSearch: (search: string) => void;
     setActiveIndex: (index: number | ((prev: number) => number)) => void;
     setRootActionId: (id: string | null) => void;
@@ -32,7 +31,6 @@ export function DefaultView({
                                 activeMainAction,
                                 resultHandleEvent,
                                 inputRef,
-                                disableFooterTabFocus,
                                 setSearch,
                                 setActiveIndex,
                                 setRootActionId,
@@ -104,7 +102,6 @@ export function DefaultView({
                 actions={getFooterActions}
                 settings={getSettingsActions()}
                 mainInputRef={inputRef}
-                disableTabFocus={disableFooterTabFocus}
                 onSubCommandHide={() => {
                     setResultHandleEvent(true)
                     inputRef.current?.focus()

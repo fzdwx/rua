@@ -19,6 +19,7 @@ export const Footer: React.FC<{
     onSubCommandShow?: () => void
     mainInputRef?: React.RefObject<HTMLInputElement | null>
     settings?: Action[]  // Settings actions for settings menu
+    rightElement?: React.ReactElement  // Custom element to display on the right side
 }> = ({
           current,
           actions,
@@ -27,7 +28,8 @@ export const Footer: React.FC<{
           onSubCommandShow,
           onSubCommandHide,
           mainInputRef,
-          settings
+          settings,
+          rightElement
       }) => {
     return <div className='command-footer'>
         <div className='command-footer-icon'>
@@ -36,6 +38,12 @@ export const Footer: React.FC<{
         <div style={{marginRight: 'auto'}}>
             {content(current)}
         </div>
+
+        {rightElement && (
+            <>
+                {rightElement}
+            </>
+        )}
 
         <FooterActionRender
             onSubCommandHide={onSubCommandHide}

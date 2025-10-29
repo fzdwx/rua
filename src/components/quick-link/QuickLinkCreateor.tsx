@@ -1,6 +1,8 @@
 import * as React from "react";
 import {useQuickLinks} from "@/hooks/useQuickLinks";
 import {Footer} from "@/command";
+import {Icon} from "@iconify/react";
+import {useKeyPress} from "ahooks";
 
 interface QuickLinkCreatorProps {
     onLoadingChange?: (loading: boolean) => void;
@@ -26,6 +28,12 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
     React.useEffect(() => {
         nameInputRef.current?.focus();
     }, []);
+
+    // Add Ctrl+Enter shortcut
+    useKeyPress('ctrl.enter', (e) => {
+        e.preventDefault();
+        handleSubmit();
+    });
 
     // Reset form
     const resetForm = () => {
@@ -189,28 +197,29 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
                             用空格分隔多个关键词
                         </p>
                     </div>
-
-                    {/* Submit button */}
-                    <button
-                        onClick={handleSubmit}
-                        disabled={!name.trim() || !url.trim()}
-                        className="w-full px-4 py-2 rounded-md font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{
-                            background: "var(--blue9)",
-                            color: "white",
-                        }}
-                    >
-                        {editingId ? "更新快捷指令" : "创建快捷指令"}
-                    </button>
                 </div>
             </div>
 
             <Footer
                 current={null}
-                icon={""}
+                icon={<Icon icon="tabler:link-plus" style={{fontSize: "20px"}}/>}
                 actions={() => []}
                 content={() => <div/>}
-                disableTabFocus={true}
+                rightElement={ <button
+                    onClick={handleSubmit}
+                    disabled={!name.trim() || !url.trim()}
+                    tabIndex={0}
+                    className="px-4 py-1.5 rounded-md font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    style={{
+                        background: !name.trim() || !url.trim() ? "var(--gray7)" : "var(--blue9)",
+                        color: !name.trim() || !url.trim() ? "var(--gray11)" : "white",
+                        fontSize: "13px",
+                    }}
+                >
+                    <span>{editingId ? "更新快捷指令" : "创建快捷指令"}</span>
+                    <span className="text-xs opacity-70" style={{fontSize: "11px"}}>⌃↵</span>
+                </button>
+                }
             />
         </>
     );
