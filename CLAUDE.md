@@ -10,9 +10,10 @@ Rua is a Tauri-based application launcher for Linux, built with React, TypeScrip
 
 - **Frontend**: React 19, TypeScript, Vite
 - **Backend**: Tauri v2, Rust
-- **Styling**: UnoCSS, Radix UI Themes
-- **State Management**: Custom hooks with Zustand-like patterns
+- **Styling**: Tailwind CSS (v4), @iconify/react for icons
+- **State Management**: React Context API for global state
 - **Search**: Fuse.js for fuzzy matching
+- **HTTP**: Tauri plugin-http, reqwest (Rust) for proxy support
 
 ## Development Commands
 
@@ -21,10 +22,12 @@ Rua is a Tauri-based application launcher for Linux, built with React, TypeScrip
 pnpm dev                    # Start Vite dev server (runs on http://localhost:1421)
 pnpm tauri dev             # Start Tauri app in dev mode
 
-# Build
+# Type Checking & Build
+pnpm exec tsc --noEmit     # Check TypeScript without emitting files
 pnpm build                 # Build frontend (TypeScript check + Vite build)
 pnpm tauri build          # Build Tauri application
 just build                 # Alternative: Build using justfile
+cargo check --manifest-path src-tauri/Cargo.toml  # Check Rust compilation
 
 # Version Management
 just bump <version>        # Bump version number (runs bump-version.sh)
