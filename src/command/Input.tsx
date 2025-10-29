@@ -16,6 +16,7 @@ interface InputProps {
     onQuerySubmit?: (query: string, actionId: ActionId) => void;  // Called when query is submitted
     setResultHandleEvent?: (enabled: boolean) => void;  // Control whether ResultsRender handles keyboard events
     loading?: boolean;  // Show loading indicator in input
+    disableTabFocus?: boolean;  // Remove search box from tab order
 
     defaultPlaceholder?: string;
     inputRefSetter?: (ref: HTMLInputElement) => void;
@@ -33,6 +34,7 @@ export const Input = ({
                           onQuerySubmit,
                           setResultHandleEvent,
                           loading,
+                          disableTabFocus,
                       }: InputProps) => {
     const [inputValue, setInputValue] = React.useState(value);
     const [queryValue, setQueryValue] = React.useState("");
@@ -215,6 +217,8 @@ export const Input = ({
                     spellCheck="false"
                     value={inputValue}
                     placeholder={placeholder}
+                    disabled={disableTabFocus}
+                    tabIndex={disableTabFocus ? -1 : 0}
                     onChange={(event) => {
                         setInputValue(event.target.value);
                         onValueChange?.(event.target.value);

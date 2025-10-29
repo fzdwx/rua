@@ -29,6 +29,7 @@ export function getQuickLinkActions(
         query: false,
         usageCount: creatorUsageCount,
         badge: "Quick Link",
+        disableSearchFocus: true, // Prevent auto-focus to search box when this action is active
         perform: () => {
             setRootActionId(quickLinkCreatorId)
             incrementUsage(quickLinkCreatorId);

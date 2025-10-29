@@ -25,17 +25,6 @@ export default function Home() {
     const {theme, toggleTheme} = useTheme();
     const {incrementUsage} = useActionUsage();
 
-    useEffect(() => {
-        let unlisten: (() => void) | undefined;
-        getCurrentWebviewWindow().listen('tauri://focus', () => {
-            inputRef.current?.focus();
-        }).then(unlistenFn => {
-            unlisten = unlistenFn;
-        });
-        return () => {
-            unlisten?.();
-        };
-    }, []);
     // Initialize action store
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
 
@@ -49,6 +38,25 @@ export default function Home() {
     const allActions = useMemo(() => {
         return [...builtInActions, ...applicationActions];
     }, [builtInActions, applicationActions]);
+
+    // Handle window focus - respect disableSearchFocus flag
+    useEffect(() => {
+        let unlisten: (() => void) | undefined;
+        getCurrentWebviewWindow().listen('tauri://focus', () => {
+            // Check if current root action has disableSearchFocus flag
+            const currentAction = allActions.find(a => a.id === state.rootActionId);
+            const shouldFocusSearch = !currentAction?.disableSearchFocus;
+
+            if (shouldFocusSearch) {
+                inputRef.current?.focus();
+            }
+        }).then(unlistenFn => {
+            unlisten = unlistenFn;
+        });
+        return () => {
+            unlisten?.();
+        };
+    }, [state.rootActionId, allActions]);
 
     // Register actions when they change
     useRegisterActions(allActions, [allActions]);
@@ -134,13 +142,23 @@ export default function Home() {
                     currentRootActionId={state.rootActionId}
                     onCurrentRootActionIdChange={(id) => {
                         setRootActionId(id)
-                        inputRef.current?.focus();
+                        // Only focus search box if we're returning to main view (id is null)
+                        // or if the target action doesn't have disableSearchFocus
+                        if (id === null) {
+                            inputRef.current?.focus();
+                        } else {
+                            const targetAction = allActions.find(a => a.id === id);
+                            if (!targetAction?.disableSearchFocus) {
+                                inputRef.current?.focus();
+                            }
+                        }
                     }}
                     actions={state.actions}
                     activeAction={activeMainAction}
                     onQuerySubmit={handleQuerySubmit}
                     setResultHandleEvent={setResultHandleEvent}
                     loading={actionLoading}
+                    disableTabFocus={currentRootAction?.disableSearchFocus ?? false}
                     inputRefSetter={(ref) => {
                         inputRef.current = ref;
                     }}
