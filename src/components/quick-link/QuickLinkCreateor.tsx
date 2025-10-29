@@ -189,14 +189,28 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
                             用空格分隔多个关键词
                         </p>
                     </div>
+
+                    {/* Submit button */}
+                    <button
+                        onClick={handleSubmit}
+                        disabled={!name.trim() || !url.trim()}
+                        className="w-full px-4 py-2 rounded-md font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                            background: "var(--blue9)",
+                            color: "white",
+                        }}
+                    >
+                        {editingId ? "更新快捷指令" : "创建快捷指令"}
+                    </button>
                 </div>
             </div>
 
             <Footer
-                actions={[]}
-                content={() => (
-                    <div>123123</div>
-                )}
+                current={null}
+                icon={""}
+                actions={() => []}
+                content={() => <div/>}
+                disableTabFocus={true}
             />
         </>
     );

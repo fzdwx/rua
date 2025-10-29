@@ -188,6 +188,7 @@ export default function Home() {
                             resultHandleEvent={resultHandleEvent}
                             inputRef={inputRef}
                             theme={theme}
+                            disableFooterTabFocus={currentRootAction?.disableSearchFocus ?? false}
                             setSearch={setSearch}
                             setActiveIndex={setActiveIndex}
                             setRootActionId={setRootActionId}
