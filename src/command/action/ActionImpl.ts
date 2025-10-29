@@ -34,6 +34,7 @@ export class ActionImpl implements Action {
     footerAction?: Action["footerAction"];
     usageCount?: Action["usageCount"];
     badge?: Action["badge"];
+    disableSearchFocus?: Action["disableSearchFocus"];
     /**
      * @deprecated use action.command.perform
      */

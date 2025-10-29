@@ -11,7 +11,7 @@ interface QuickLinkViewProps {
 /**
  * QuickLinkView component - for executing quick link with optional parameters
  */
-export function QuickLinkView({quickLink, search, onLoadingChange}: QuickLinkViewProps) {
+export function QuickLinkView({quickLink, search: _search, onLoadingChange: _onLoadingChange}: QuickLinkViewProps) {
     console.log(quickLink)
     return <div>test</div>
     // const [finalUrl, setFinalUrl] = React.useState(quickLink.url);

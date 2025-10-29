@@ -3,15 +3,11 @@ import {
     ActionImpl,
     Background,
     Container,
-    Footer,
     Input,
-    RenderItem,
-    ResultsRender,
     useActionStore,
     useMatches,
 } from "@/command";
 import {useApplications} from "@/hooks/useApplications";
-import {QuickResult} from "@/components/quick-result";
 import {useBuiltInActions} from "@/hooks/useBuiltInActions";
 import {useTheme} from "@/hooks/useTheme";
 import {Icon} from "@iconify/react";
@@ -19,6 +15,7 @@ import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useActionUsage} from "@/hooks/useActionUsage";
 import {translateId, TranslateView} from "@/components/translate";
 import {quickLinkCreatorId, quickLinkViewPrefix, QuickLinkCreator, QuickLinkView} from "@/components/quick-link";
+import {DefaultView} from "./DefaultView";
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -43,7 +40,7 @@ export default function Home() {
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
 
     // Load applications and convert to actions
-    const {loading, actions: applicationActions} = useApplications();
+    const { actions: applicationActions} = useApplications();
 
     // Get built-in actions (static actions like translate)
     const builtInActions = useBuiltInActions(setRootActionId);
@@ -163,111 +160,25 @@ export default function Home() {
                             search={search}
                             onLoadingChange={handleActionLoadingChange}
                         />
-
                     ) : (
-                        <>
-                            {/* Quick result view for calculations and built-in functions */}
-                            <QuickResult search={search}/>
-
-                            {loading ? (
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        justifyContent: "center",
-                                        alignItems: "center",
-                                        padding: "40px 20px",
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            width: "40px",
-                                            height: "4px",
-                                            background: "var(--gray6)",
-                                            borderRadius: "2px",
-                                            overflow: "hidden",
-                                            position: "relative",
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                width: "50%",
-                                                height: "100%",
-                                                background: "var(--primary)",
-                                                borderRadius: "2px",
-                                                animation: "loading 1.5s ease-in-out infinite",
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            ) : results.length === 0 ? (
-                                <div
-                                    style={{
-                                        textAlign: "center",
-                                        padding: "40px 20px",
-                                        color: "var(--gray11)",
-                                        fontSize: "14px",
-                                    }}
-                                >
-                                    No applications found
-                                </div>
-                            ) : (
-                                <ResultsRender
-                                    items={results}
-                                    onRender={({item, active}) => {
-                                        if (typeof item === "string") {
-                                            return (
-                                                <div
-                                                    style={{
-                                                        padding: "8px 16px",
-                                                        fontSize: "12px",
-                                                        color: "var(--gray11)",
-                                                        fontWeight: "bold",
-                                                    }}
-                                                >
-                                                    {item}
-                                                </div>
-                                            );
-                                        }
-                                        return (
-                                            <RenderItem
-                                                action={item as ActionImpl}
-                                                active={active}
-                                                currentRootActionId={state.rootActionId || ""}
-                                            />
-                                        );
-                                    }}
-                                    height="auto"
-                                    search={search}
-                                    setSearch={setSearch}
-                                    activeIndex={state.activeIndex}
-                                    setActiveIndex={setActiveIndex}
-                                    setRootActionId={setRootActionId}
-                                    currentRootActionId={state.rootActionId}
-                                    handleKeyEvent={resultHandleEvent}
-                                />
-                            )}
-                        </>
+                        <DefaultView
+                            search={search}
+                            results={results}
+                            activeIndex={state.activeIndex}
+                            rootActionId={state.rootActionId}
+                            activeMainAction={activeMainAction}
+                            resultHandleEvent={resultHandleEvent}
+                            inputRef={inputRef}
+                            theme={theme}
+                            setSearch={setSearch}
+                            setActiveIndex={setActiveIndex}
+                            setRootActionId={setRootActionId}
+                            setResultHandleEvent={setResultHandleEvent}
+                            getFooterActions={getFooterActions}
+                            getSettingsActions={getSettingsActions}
+                        />
                     )}
                 </div>
-
-                {/* Footer with theme toggle and dynamic actions */}
-                <Footer
-                    current={activeMainAction}
-                    icon={<Icon icon="tabler:command" style={{fontSize: "20px"}}/>}
-                    content={() => (
-                        <div/>
-                    )}
-                    actions={getFooterActions}
-                    settings={getSettingsActions()}
-                    mainInputRef={inputRef}
-                    onSubCommandHide={() => {
-                        setResultHandleEvent(true)
-                        inputRef.current?.focus()
-                    }}
-                    onSubCommandShow={() => {
-                        setResultHandleEvent(false)
-                    }}
-                />
             </Background>
         </Container>
     );

@@ -29,6 +29,7 @@ export type Action = {
     footerAction?: (changeVisible: () => void) => Action[]  // Footer actions specific to this main action
     usageCount?: number  // Number of times this action has been used
     badge?: string  // Badge text to display on the right side of the action
+    disableSearchFocus?: boolean  // If true, prevents automatic focus to search box when this action is active
 };
 
 export type ActionStore = Record<ActionId, ActionImpl>;
