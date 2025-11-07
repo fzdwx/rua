@@ -3,6 +3,8 @@ import {useQuickLinks} from "@/hooks/useQuickLinks";
 import {Footer} from "@/command";
 import {Icon} from "@iconify/react";
 import {useKeyPress} from "ahooks";
+import {Label} from "@/components/ui/label.tsx";
+import {Input} from "@/components/ui/input.tsx";
 
 interface QuickLinkCreatorProps {
     onLoadingChange?: (loading: boolean) => void;
@@ -91,16 +93,15 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
 
     return (
         <>
-            <div className="max-w-2xl mx-auto space-y-6">
+            <div className="w-[600px] mx-auto space-y-6 m-4">
                 {/* Form */}
-                <div className="rounded-lg border p-5 space-y-4"
-                     style={{background: 'var(--gray2)', borderColor: 'var(--gray6)'}}>
+                <div className="rounded-lg border p-5 space-y-4">
                     {/* Name input */}
                     <div>
-                        <label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
+                        <Label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
                             名称 <span style={{color: 'var(--red9)'}}>*</span>
-                        </label>
-                        <input
+                        </Label>
+                        <Input
                             ref={nameInputRef}
                             type="text"
                             value={name}
@@ -117,10 +118,10 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
 
                     {/* URL input */}
                     <div>
-                        <label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
+                        <Label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
                             链接地址 <span style={{color: 'var(--red9)'}}>*</span>
-                        </label>
-                        <input
+                        </Label>
+                        <Input
                             type="text"
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
@@ -138,10 +139,10 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
                     <div className="grid grid-cols-2 gap-4">
                         {/* Icon input */}
                         <div>
-                            <label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
+                            <Label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
                                 图标（Emoji）
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                                 type="text"
                                 value={icon}
                                 onChange={(e) => setIcon(e.target.value)}
@@ -158,10 +159,10 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
 
                         {/* Subtitle input */}
                         <div>
-                            <label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
+                            <Label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
                                 描述
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                                 type="text"
                                 value={subtitle}
                                 onChange={(e) => setSubtitle(e.target.value)}
@@ -178,10 +179,10 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
 
                     {/* Keywords input */}
                     <div>
-                        <label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
+                        <Label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
                             关键词（用于搜索）
-                        </label>
-                        <input
+                        </Label>
+                        <Input
                             type="text"
                             value={keywords}
                             onChange={(e) => setKeywords(e.target.value)}
@@ -205,7 +206,7 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
                 icon={<Icon icon="tabler:link-plus" style={{fontSize: "20px"}}/>}
                 actions={() => []}
                 content={() => <div/>}
-                rightElement={ <button
+                rightElement={<button
                     onClick={handleSubmit}
                     disabled={!name.trim() || !url.trim()}
                     tabIndex={0}
