@@ -17,6 +17,7 @@ interface InputProps {
     setResultHandleEvent?: (enabled: boolean) => void;  // Control whether ResultsRender handles keyboard events
     loading?: boolean;  // Show loading indicator in input
     disableTabFocus?: boolean;  // Remove search box from tab order
+    focusQueryInput?: boolean;  // Signal to focus query input
 
     defaultPlaceholder?: string;
     inputRefSetter?: (ref: HTMLInputElement) => void;
@@ -35,6 +36,7 @@ export const Input = ({
                           setResultHandleEvent,
                           loading,
                           disableTabFocus,
+                          focusQueryInput,
                       }: InputProps) => {
     const [inputValue, setInputValue] = React.useState(value);
     const [queryValue, setQueryValue] = React.useState("");
@@ -90,6 +92,17 @@ export const Input = ({
         setQueryFocused(false);
     }, [activeAction?.id]);
 
+    // Focus query input when requested
+    React.useEffect(() => {
+        if (focusQueryInput && showQueryInput && !queryFocused) {
+            setQueryFocused(true);
+            // Use timeout to ensure the query input is rendered
+            setTimeout(() => {
+                queryInputRef.current?.focus();
+            }, 0);
+        }
+    }, [focusQueryInput, showQueryInput, queryFocused]);
+
     const placeholder = React.useMemo((): string => {
         // Don't show placeholder when query input is visible or inside an action
         if (showQueryInput || currentRootActionId) {
@@ -130,8 +143,8 @@ export const Input = ({
             return;
         }
 
-        // Enter to submit query
-        if (event.key === "Enter" && queryValue.trim() && activeAction) {
+        // Enter to submit query (allow empty query)
+        if (event.key === "Enter" && activeAction) {
             event.preventDefault();
             event.stopPropagation(); // Prevent ResultsRender from handling this event
             if (onQuerySubmit) {

@@ -21,6 +21,7 @@ export default function Home() {
     const [search, setSearch] = useState("");
     const [actionLoading, setActionLoading] = useState(false);
     const [resultHandleEvent, setResultHandleEvent] = useState(true);
+    const [focusQueryInput, setFocusQueryInput] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const {theme, toggleTheme} = useTheme();
     const {incrementUsage} = useActionUsage();
@@ -103,6 +104,15 @@ export default function Home() {
         setActionLoading(loading);
     }, []);
 
+    // Handle query action Enter key press
+    const handleQueryActionEnter = useCallback(() => {
+        setFocusQueryInput(true);
+        // Reset the flag after a short delay to allow re-triggering
+        setTimeout(() => {
+            setFocusQueryInput(false);
+        }, 100);
+    }, []);
+
     // Generate footer actions based on active main action
     const getFooterActions = useCallback((current: string | ActionImpl | null, changeVisible: () => void) => {
         const footerActions = [];
@@ -159,6 +169,7 @@ export default function Home() {
                     setResultHandleEvent={setResultHandleEvent}
                     loading={actionLoading}
                     disableTabFocus={currentRootAction?.disableSearchFocus ?? false}
+                    focusQueryInput={focusQueryInput}
                     inputRefSetter={(ref) => {
                         inputRef.current = ref;
                     }}
@@ -177,6 +188,11 @@ export default function Home() {
                             quickLink={currentRootAction?.item}
                             search={search}
                             onLoadingChange={handleActionLoadingChange}
+                            onReturn={() => {
+                                // Return to main view after opening link
+                                setRootActionId(null);
+                                setSearch("");
+                            }}
                         />
                     ) : (
                         <DefaultView
@@ -194,6 +210,7 @@ export default function Home() {
                             setResultHandleEvent={setResultHandleEvent}
                             getFooterActions={getFooterActions}
                             getSettingsActions={getSettingsActions}
+                            onQueryActionEnter={handleQueryActionEnter}
                         />
                     )}
                 </div>

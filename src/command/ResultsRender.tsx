@@ -30,6 +30,7 @@ interface ResultsRenderProps {
     setActiveIndex: (cb: number | ((currIndex: number) => number)) => void;
     setRootActionId: (rootActionId: ActionId) => void;
     currentRootActionId: ActionId | null;
+    onQueryActionEnter?: () => void; // Called when Enter is pressed on a query action
 }
 
 export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
@@ -92,11 +93,16 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
             } else if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
-                // storing the active dom element in a ref prevents us from
-                // having to calculate the current action to perform based
-                // on the `activeIndex`, which we would have needed to add
-                // as part of the dependencies array.
-                activeRef.current?.click();
+
+                // Check if the current active item is a query action
+                const activeItem = itemsRef.current[props.activeIndex];
+                if (activeItem && typeof activeItem !== "string" && activeItem.query) {
+                    // For query actions, trigger the callback to focus query input
+                    props.onQueryActionEnter?.();
+                } else {
+                    // For non-query actions, execute normally
+                    activeRef.current?.click();
+                }
             }
         };
         window.addEventListener("keydown", handler, {capture: true});
@@ -134,17 +140,17 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
         (item: RenderParams["item"]) => {
             if (typeof item === "string") return;
 
-            // For actions with query flag, we need to navigate into them
-            // but also track usage if they have a perform function
+            // For actions with query flag:
+            // - Don't enter the view immediately
+            // - Let the action stay selected so Input component shows query input
+            // - User will submit via the query input, which calls onQuerySubmit
             if (item.query) {
-                // Track usage if perform exists
-                if (item.command) {
-                    item.command.perform(item);
-                }
-                // Navigate into the action
-                props.setSearch("");
-                props.setRootActionId(item.id);
-            } else if (item.command) {
+                // Do nothing - just keep the action selected
+                // Input component will show query input box automatically
+                return;
+            }
+
+            if (item.command) {
                 // Regular actions with command - just perform
                 item.command.perform(item);
             } else {

@@ -18,6 +18,7 @@ interface DefaultViewProps {
     setResultHandleEvent: (value: boolean) => void;
     getFooterActions: (current: string | ActionImpl | null, changeVisible: () => void) => any[];
     getSettingsActions: () => any[];
+    onQueryActionEnter?: () => void; // Called when Enter is pressed on a query action
 }
 
 /**
@@ -37,6 +38,7 @@ export function DefaultView({
                                 setResultHandleEvent,
                                 getFooterActions,
                                 getSettingsActions,
+                                onQueryActionEnter,
                             }: DefaultViewProps) {
     return (
         <>
@@ -89,6 +91,7 @@ export function DefaultView({
                         setRootActionId={setRootActionId}
                         currentRootActionId={rootActionId}
                         handleKeyEvent={resultHandleEvent}
+                        onQueryActionEnter={onQueryActionEnter}
                     />
                 )}
 

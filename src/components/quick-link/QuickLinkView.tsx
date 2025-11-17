@@ -8,12 +8,13 @@ interface QuickLinkViewProps {
     quickLink: QuickLink;
     search: string;
     onLoadingChange?: (loading: boolean) => void;
+    onReturn?: () => void; // Called after successfully opening link
 }
 
 /**
  * QuickLinkView component - for executing quick link with optional parameters
  */
-export function QuickLinkView({quickLink, search, onLoadingChange}: QuickLinkViewProps) {
+export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: QuickLinkViewProps) {
     const [finalUrl, setFinalUrl] = React.useState(quickLink.url);
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -55,26 +56,34 @@ export function QuickLinkView({quickLink, search, onLoadingChange}: QuickLinkVie
         onLoadingChange?.(true);
 
         try {
-            await openUrl(finalUrl);
-            // Hide window after opening link
+            // Hide window immediately before opening link
             await getCurrentWebviewWindow().hide();
+            // Open the URL
+            await openUrl(finalUrl);
+            // Return to previous view after successfully opening
+            onReturn?.();
         } catch (error) {
             console.error("Failed to open link:", error);
             setError("无法打开链接，请检查 URL 格式");
+            // Show window again if opening failed
+            await getCurrentWebviewWindow().show();
         } finally {
             setIsLoading(false);
             onLoadingChange?.(false);
         }
     };
 
-    // Auto-open if URL doesn't contain placeholders and no search input
+    // Auto-open when URL is ready (all variables resolved)
     React.useEffect(() => {
-        const hasPlaceholders = /\{(query|selection)\}/.test(quickLink.url);
-        if (!hasPlaceholders && !search.trim()) {
+        // Wait for URL processing to complete
+        const hasUnresolvedPlaceholders = /\{(query|selection)\}/.test(finalUrl);
+
+        // Auto-open if there are no unresolved placeholders
+        if (!hasUnresolvedPlaceholders && finalUrl) {
             handleOpen();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Only run once on mount
+    }, [finalUrl]); // Trigger when finalUrl changes
 
     const hasPlaceholders = /\{(query|selection)\}/.test(quickLink.url);
     const hasUnresolvedPlaceholders = /\{(query|selection)\}/.test(finalUrl);
