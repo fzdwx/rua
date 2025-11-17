@@ -40,6 +40,10 @@ export function getQuickLinkActions(
     quickLinks.forEach((link) => {
         const actionId = `${quickLinkViewPrefix}${link.id}`;
         const usageCount = getUsageCount(actionId);
+
+        // Check if the URL contains {query} variable to enable query mode
+        const hasQueryVariable = link.url.includes('{query}');
+
         actions.push({
             id: actionId,
             name: link.name,
@@ -51,7 +55,7 @@ export function getQuickLinkActions(
             ),
             keywords: link.keywords || "",
             kind: "quick-link",
-            query: false, // Enable query mode to allow input
+            query: hasQueryVariable, // Enable query mode if URL contains {query}
             usageCount,
             badge: "Quick Link",
             perform: () => {
