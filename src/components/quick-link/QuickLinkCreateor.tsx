@@ -5,6 +5,8 @@ import {Icon} from "@iconify/react";
 import {useKeyPress} from "ahooks";
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
+import {Kbd, KbdGroup} from "@/components/ui/kbd.tsx";
+import {Button} from "@/components/ui/button.tsx";
 
 interface QuickLinkCreatorProps {
     onLoadingChange?: (loading: boolean) => void;
@@ -23,6 +25,8 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
     const [showVariableMenu, setShowVariableMenu] = React.useState(false);
     const [variableMenuPosition, setVariableMenuPosition] = React.useState(0);
     const [activeMenuIndex, setActiveMenuIndex] = React.useState(0);
+    const [urlError, setUrlError] = React.useState("");
+    const [nameError, setNameError] = React.useState("");
 
     // Ref for auto-focus
     const urlInputRef = React.useRef<HTMLInputElement>(null);
@@ -48,6 +52,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
         const cursorPosition = e.target.selectionStart || 0;
 
         setUrl(newValue);
+        setUrlError(""); // Clear error when user types
 
         // Check if user just typed {
         if (newValue[cursorPosition - 1] === '{') {
@@ -115,15 +120,37 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
 
     // Handle submit (create or update)
     const handleSubmit = async () => {
+        // Clear previous errors
+        setUrlError("");
+        setNameError("");
+
         // Validate inputs
-        if (!name.trim() || !url.trim()) {
-            return;
+        let hasError = false;
+
+        if (!url.trim()) {
+            setUrlError("请输入链接地址");
+            urlInputRef.current?.focus();
+            hasError = true;
+        } else {
+            // URL validation
+            try {
+                new URL(url);
+            } catch {
+                setUrlError("请输入有效的 URL 格式");
+                urlInputRef.current?.focus();
+                hasError = true;
+            }
         }
 
-        // Simple URL validation
-        try {
-            new URL(url);
-        } catch {
+        if (!name.trim()) {
+            setNameError("请输入名称");
+            if (!hasError) {
+                nameInputRef.current?.focus();
+            }
+            hasError = true;
+        }
+
+        if (hasError) {
             return;
         }
 
@@ -160,53 +187,49 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
 
     return (
         <>
-            <div className="w-[600px] mx-auto space-y-6 m-4">
+            <div className="w-full max-w-2xl mx-auto px-6 py-8">
                 {/* Form */}
-                <div className="rounded-lg border p-5 space-y-4">
+                <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-6 space-y-6">
                     {/* URL input */}
-                    <div className="relative">
-                        <Label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
-                            链接地址 <span style={{color: 'var(--red9)'}}>*</span>
+                    <div className="relative space-y-2">
+                        <Label htmlFor="url-input">
+                            链接地址 <span className="text-red-500">*</span>
                         </Label>
 
                         <Input
+                            id="url-input"
                             ref={urlInputRef}
                             type="text"
                             value={url}
                             onChange={handleUrlChange}
                             onKeyDown={handleUrlKeyDown}
                             placeholder="https://google.com/search?q={query}"
-                            className="w-full px-3 py-2 rounded-md border outline-none transition-colors duration-200 focus:ring-2"
-                            style={{
-                                background: "var(--gray3)",
-                                borderColor: "var(--gray7)",
-                                color: "var(--gray12)",
-                            }}
+                            className={urlError ? "border-red-500 dark:border-red-500" : ""}
                         />
+
+                        {urlError && (
+                            <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                                {urlError}
+                            </p>
+                        )}
 
                         {/* Variable selection menu - only shown when typing { */}
                         {showVariableMenu && (
-                            <div
-                                className="absolute z-50 mt-1 w-full rounded-md border shadow-lg"
-                                style={{
-                                    background: "var(--gray2)",
-                                    borderColor: "var(--gray6)",
-                                }}
-                            >
+                            <div className="absolute z-50 mt-2 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xl overflow-hidden">
                                 {variables.map((variable, index) => (
                                     <div
                                         key={variable}
-                                        className="px-3 py-2 cursor-pointer transition-colors"
-                                        style={{
-                                            color: "var(--gray12)",
-                                            background: activeMenuIndex === index ? "var(--gray4)" : "transparent",
-                                        }}
+                                        className={`px-4 py-3 cursor-pointer transition-colors ${
+                                            activeMenuIndex === index
+                                                ? 'bg-gray-100 dark:bg-gray-800'
+                                                : 'hover:bg-gray-50 dark:hover:bg-gray-850'
+                                        }`}
                                         onMouseEnter={() => setActiveMenuIndex(index)}
                                         onClick={() => insertVariable(variable)}
                                     >
-                                        <div className="flex flex-col gap-0.5">
-                                            <div className="font-medium">{variable}</div>
-                                            <div className="text-xs opacity-70">
+                                        <div className="flex flex-col gap-1">
+                                            <div className="font-medium text-gray-900 dark:text-gray-100">{variable}</div>
+                                            <div className="text-xs text-gray-600 dark:text-gray-400">
                                                 {variable === 'query' ? '代表查询内容' : '代表选中的文本（粘贴板内容）'}
                                             </div>
                                         </div>
@@ -215,29 +238,35 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
                             </div>
                         )}
 
-                        <p className="text-xs mt-1" style={{color: 'var(--gray11)'}}>
-                            支持变量：输入 {'{'} 选择变量，例如 {'{query}'} 或 {'{selection}'}
-                        </p>
+                        {!urlError && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                支持变量：输入 {'{'} 选择变量，例如 {'{query}'} 或 {'{selection}'}
+                            </p>
+                        )}
                     </div>
 
                     {/* Name input */}
-                    <div>
-                        <Label className="block text-sm font-medium mb-2" style={{color: 'var(--gray12)'}}>
-                            名称 <span style={{color: 'var(--red9)'}}>*</span>
+                    <div className="space-y-2">
+                        <Label htmlFor="name-input">
+                            名称 <span className="text-red-500">*</span>
                         </Label>
                         <Input
+                            id="name-input"
                             ref={nameInputRef}
                             type="text"
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="例如：Google 搜索"
-                            className="w-full px-3 py-2 rounded-md border outline-none transition-colors duration-200 focus:ring-2"
-                            style={{
-                                background: "var(--gray3)",
-                                borderColor: "var(--gray7)",
-                                color: "var(--gray12)",
+                            onChange={(e) => {
+                                setName(e.target.value);
+                                setNameError(""); // Clear error when user types
                             }}
+                            placeholder="例如：Google 搜索"
+                            className={nameError ? "border-red-500 dark:border-red-500" : ""}
                         />
+                        {nameError && (
+                            <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                                {nameError}
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -247,20 +276,21 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
                 icon={<Icon icon="tabler:link-plus" style={{fontSize: "20px"}}/>}
                 actions={() => []}
                 content={() => <div/>}
-                rightElement={<button
-                    onClick={handleSubmit}
-                    disabled={!name.trim() || !url.trim()}
-                    tabIndex={0}
-                    className="px-4 py-1.5 rounded-md font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                    style={{
-                        background: !name.trim() || !url.trim() ? "var(--gray7)" : "var(--blue9)",
-                        color: !name.trim() || !url.trim() ? "var(--gray11)" : "white",
-                        fontSize: "13px",
-                    }}
-                >
-                    <span>{editingId ? "更新快捷指令" : "创建快捷指令"}</span>
-                    <span className="text-xs opacity-70" style={{fontSize: "11px"}}>⌃↵</span>
-                </button>
+                rightElement={
+                    <div className='flex items-center gap-3 pr-6'>
+                        <Button
+                            onClick={handleSubmit}
+                            tabIndex={0}
+                            variant="outline"
+                            size="sm"
+                        >
+                            {editingId ? "更新" : "创建"}
+                            <KbdGroup>
+                                <Kbd>Ctrl</Kbd>
+                                <Kbd>⏎</Kbd>
+                            </KbdGroup>
+                        </Button>
+                    </div>
                 }
             />
         </>
