@@ -144,6 +144,11 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
             }
 
             resetForm();
+
+            // Wait for state updates to propagate before returning to main view
+            // This ensures the actions list has time to refresh with the new quick link
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             // Return to main view after creating/updating
             onReturn?.();
         } catch (err) {

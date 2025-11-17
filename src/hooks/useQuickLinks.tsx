@@ -80,11 +80,18 @@ export function useQuickLinks() {
     [quickLinks]
   );
 
+  // Refresh quick links from localStorage
+  const refreshQuickLinks = useCallback(() => {
+    const freshLinks = loadQuickLinks();
+    setQuickLinks(freshLinks);
+  }, []);
+
   return {
     quickLinks,
     addQuickLink,
     updateQuickLink,
     deleteQuickLink,
     getQuickLink,
+    refreshQuickLinks,
   };
 }

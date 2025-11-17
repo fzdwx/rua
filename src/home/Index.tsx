@@ -16,6 +16,7 @@ import {useActionUsage} from "@/hooks/useActionUsage";
 import {translateId, TranslateView} from "@/components/translate";
 import {quickLinkCreatorId, quickLinkViewPrefix, QuickLinkCreator, QuickLinkView} from "@/components/quick-link";
 import {DefaultView} from "./DefaultView";
+import {useQuickLinks} from "@/hooks/useQuickLinks.tsx";
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -25,6 +26,7 @@ export default function Home() {
     const inputRef = useRef<HTMLInputElement>(null);
     const {theme, toggleTheme} = useTheme();
     const {incrementUsage} = useActionUsage();
+    const {refreshQuickLinks} = useQuickLinks();
 
     // Initialize action store
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
@@ -188,6 +190,11 @@ export default function Home() {
                                 // Return to main view after creating quick link
                                 setRootActionId(null);
                                 setSearch("");
+                                refreshQuickLinks();
+                                // Focus the search input
+                                setTimeout(() => {
+                                    inputRef.current?.focus();
+                                }, 50);
                             }}
                         />
                     ) : state.rootActionId?.startsWith(quickLinkViewPrefix) ? (
