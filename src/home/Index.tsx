@@ -182,7 +182,14 @@ export default function Home() {
                     {state.rootActionId === translateId ? (
                         <TranslateView search={search} onLoadingChange={handleActionLoadingChange}/>
                     ) : state.rootActionId === quickLinkCreatorId ? (
-                        <QuickLinkCreator onLoadingChange={handleActionLoadingChange}/>
+                        <QuickLinkCreator
+                            onLoadingChange={handleActionLoadingChange}
+                            onReturn={() => {
+                                // Return to main view after creating quick link
+                                setRootActionId(null);
+                                setSearch("");
+                            }}
+                        />
                     ) : state.rootActionId?.startsWith(quickLinkViewPrefix) ? (
                         <QuickLinkView
                             quickLink={currentRootAction?.item}

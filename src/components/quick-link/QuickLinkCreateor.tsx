@@ -5,21 +5,16 @@ import {Icon} from "@iconify/react";
 import {useKeyPress} from "ahooks";
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/animate-ui/components/radix/dropdown-menu";
 
 interface QuickLinkCreatorProps {
     onLoadingChange?: (loading: boolean) => void;
+    onReturn?: () => void; // Called after successfully creating/updating quick link
 }
 
 /**
  * QuickLinkCreator component - for creating and managing quick links
  */
-export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
+export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorProps) {
     const {addQuickLink, updateQuickLink} = useQuickLinks();
     const [editingId, setEditingId] = React.useState<string | null>(null);
 
@@ -27,10 +22,14 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
     const [url, setUrl] = React.useState("");
     const [showVariableMenu, setShowVariableMenu] = React.useState(false);
     const [variableMenuPosition, setVariableMenuPosition] = React.useState(0);
+    const [activeMenuIndex, setActiveMenuIndex] = React.useState(0);
 
     // Ref for auto-focus
     const urlInputRef = React.useRef<HTMLInputElement>(null);
     const nameInputRef = React.useRef<HTMLInputElement>(null);
+
+    // Available variables
+    const variables = ['query', 'selection'];
 
     // Auto-focus on mount
     React.useEffect(() => {
@@ -54,8 +53,25 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
         if (newValue[cursorPosition - 1] === '{') {
             setShowVariableMenu(true);
             setVariableMenuPosition(cursorPosition);
+            setActiveMenuIndex(0); // Reset to first item
         } else {
             setShowVariableMenu(false);
+        }
+    };
+
+    // Handle keyboard navigation in URL input when menu is open
+    const handleUrlKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (!showVariableMenu) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setActiveMenuIndex((prev) => (prev + 1) % variables.length);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setActiveMenuIndex((prev) => (prev - 1 + variables.length) % variables.length);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            insertVariable(variables[activeMenuIndex]);
         }
     };
 
@@ -72,6 +88,7 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
         const newUrl = beforeCursor + variableName + '}' + afterCursor;
         setUrl(newUrl);
         setShowVariableMenu(false);
+        setActiveMenuIndex(0); // Reset menu index
 
         // Set cursor position after the inserted variable
         setTimeout(() => {
@@ -85,6 +102,7 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
     useKeyPress('esc', () => {
         if (showVariableMenu) {
             setShowVariableMenu(false);
+            setActiveMenuIndex(0); // Reset menu index
         }
     });
 
@@ -126,6 +144,8 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
             }
 
             resetForm();
+            // Return to main view after creating/updating
+            onReturn?.();
         } catch (err) {
             console.error("Failed to save quick link:", err);
         } finally {
@@ -144,51 +164,51 @@ export function QuickLinkCreator({onLoadingChange}: QuickLinkCreatorProps) {
                             链接地址 <span style={{color: 'var(--red9)'}}>*</span>
                         </Label>
 
-                        {/* Variable selection menu using DropdownMenu */}
-                        <DropdownMenu open={showVariableMenu} onOpenChange={setShowVariableMenu}>
-                            <DropdownMenuTrigger asChild>
-                                <Input
-                                    ref={urlInputRef}
-                                    type="text"
-                                    value={url}
-                                    onChange={handleUrlChange}
-                                    placeholder="https://google.com/search?q={query}"
-                                    className="w-full px-3 py-2 rounded-md border outline-none transition-colors duration-200 focus:ring-2"
-                                    style={{
-                                        background: "var(--gray3)",
-                                        borderColor: "var(--gray7)",
-                                        color: "var(--gray12)",
-                                    }}
-                                />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                side="bottom"
-                                align="start"
-                                className="w-[560px]"
-                                sideOffset={4}
-                                onCloseAutoFocus={(e) => {
-                                    e.preventDefault();
-                                    urlInputRef.current?.focus();
+                        <Input
+                            ref={urlInputRef}
+                            type="text"
+                            value={url}
+                            onChange={handleUrlChange}
+                            onKeyDown={handleUrlKeyDown}
+                            placeholder="https://google.com/search?q={query}"
+                            className="w-full px-3 py-2 rounded-md border outline-none transition-colors duration-200 focus:ring-2"
+                            style={{
+                                background: "var(--gray3)",
+                                borderColor: "var(--gray7)",
+                                color: "var(--gray12)",
+                            }}
+                        />
+
+                        {/* Variable selection menu - only shown when typing { */}
+                        {showVariableMenu && (
+                            <div
+                                className="absolute z-50 mt-1 w-full rounded-md border shadow-lg"
+                                style={{
+                                    background: "var(--gray2)",
+                                    borderColor: "var(--gray6)",
                                 }}
                             >
-                                <DropdownMenuItem
-                                    onSelect={() => insertVariable('query')}
-                                >
-                                    <div className="flex flex-col gap-0.5">
-                                        <div className="font-medium">query</div>
-                                        <div className="text-xs opacity-70">代表查询内容</div>
+                                {variables.map((variable, index) => (
+                                    <div
+                                        key={variable}
+                                        className="px-3 py-2 cursor-pointer transition-colors"
+                                        style={{
+                                            color: "var(--gray12)",
+                                            background: activeMenuIndex === index ? "var(--gray4)" : "transparent",
+                                        }}
+                                        onMouseEnter={() => setActiveMenuIndex(index)}
+                                        onClick={() => insertVariable(variable)}
+                                    >
+                                        <div className="flex flex-col gap-0.5">
+                                            <div className="font-medium">{variable}</div>
+                                            <div className="text-xs opacity-70">
+                                                {variable === 'query' ? '代表查询内容' : '代表选中的文本（粘贴板内容）'}
+                                            </div>
+                                        </div>
                                     </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onSelect={() => insertVariable('selection')}
-                                >
-                                    <div className="flex flex-col gap-0.5">
-                                        <div className="font-medium">selection</div>
-                                        <div className="text-xs opacity-70">代表选中的文本（粘贴板内容）</div>
-                                    </div>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                ))}
+                            </div>
+                        )}
 
                         <p className="text-xs mt-1" style={{color: 'var(--gray11)'}}>
                             支持变量：输入 {'{'} 选择变量，例如 {'{query}'} 或 {'{selection}'}
