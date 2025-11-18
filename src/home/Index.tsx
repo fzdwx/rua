@@ -14,6 +14,7 @@ import {Icon} from "@iconify/react";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useActionUsage} from "@/hooks/useActionUsage";
 import {translateId, TranslateView} from "@/components/translate";
+import {weatherId, WeatherView} from "@/components/weather";
 import {quickLinkCreatorId, quickLinkViewPrefix, QuickLinkCreator, QuickLinkView} from "@/components/quick-link";
 import {DefaultView} from "./DefaultView";
 import {useQuickLinks} from "@/hooks/useQuickLinks.tsx";
@@ -183,6 +184,8 @@ export default function Home() {
                     {/* Show translate view if translate action is active */}
                     {state.rootActionId === translateId ? (
                         <TranslateView search={search} onLoadingChange={handleActionLoadingChange}/>
+                    ) : state.rootActionId === weatherId ? (
+                        <WeatherView search={search} onLoadingChange={handleActionLoadingChange}/>
                     ) : state.rootActionId === quickLinkCreatorId ? (
                         <QuickLinkCreator
                             onLoadingChange={handleActionLoadingChange}

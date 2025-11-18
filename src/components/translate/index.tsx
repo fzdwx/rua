@@ -41,7 +41,7 @@ export function getTranslateAction(getUsageCount: (actionId: ActionId) => number
         id: translateId,
         name: "Translate",
         subtitle: "Translate text between Chinese and English",
-        keywords: "translate 翻译 tr",
+        keywords: "translate,翻译,tr",
         icon: <div style={{fontSize: "20px"}}>🌐</div>,
         kind: "built-in",
         query: true,  // Enable query input for this action

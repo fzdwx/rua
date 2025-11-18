@@ -24,7 +24,7 @@ export function getQuickLinkActions(
         name: "创建快捷指令",
         subtitle: "创建和管理快捷指令",
         icon: <Icon icon="tabler:link-plus" style={{fontSize: "20px"}}/>,
-        keywords: "create quick link 创建 快捷 指令 链接 管理",
+        keywords: "create,quick,link,创建,快捷,指令,链接,管理",
         kind: "built-in",
         query: false,
         usageCount: creatorUsageCount,

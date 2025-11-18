@@ -2,6 +2,7 @@ import {useMemo} from "react";
 import {Action, ActionId} from "@/command";
 import {useActionUsage} from "@/hooks/useActionUsage";
 import {getTranslateAction} from "@/components/translate";
+import {getWeatherAction} from "@/components/weather";
 import {getQuickLinkActions} from "@/components/quick-link";
 import {useQuickLinks} from "@/hooks/useQuickLinks";
 
@@ -18,6 +19,9 @@ export function useBuiltInActions(setRootActionId: (rootActionId: (ActionId | nu
 
         // Translation action - enters translation mode
         actions.push(getTranslateAction(getUsageCount, incrementUsage));
+
+        // Weather action - get current weather
+        actions.push(getWeatherAction(getUsageCount, incrementUsage));
 
         // Quick link actions - creator and user-created quick links
         actions.push(...getQuickLinkActions(quickLinks, getUsageCount, incrementUsage,setRootActionId));

@@ -16,7 +16,7 @@ export type Action = {
     id: ActionId;
     name: string;
     shortcut?: string[];
-    keywords?: string;
+    keywords?: string; // split ,
     section?: ActionSection;
     icon?: string | React.ReactElement | React.ReactNode;
     subtitle?: string;
