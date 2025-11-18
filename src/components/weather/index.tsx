@@ -7,18 +7,21 @@ import {
     fetchQWeatherDaily,
     fetchQWeatherIndices,
     searchLocationId,
-} from "./qweather";
+} from "./hefeng/qweather.ts";
 import {WeatherSettings} from "./WeatherSettings";
+import {WttrWeatherView} from "./WttrWeatherView";
+import {QWeatherView} from "./QWeatherView";
 import {Button} from "@/components/ui/button";
-import {useKeyPress} from "ahooks";
 import {Kbd, KbdGroup} from "@/components/ui/kbd";
+import {useKeyPress} from "ahooks";
 
 interface WeatherViewProps {
     search: string;
     onLoadingChange?: (loading: boolean) => void;
 }
 
-interface WeatherData {
+// Weather data for wttr.in provider
+interface WttrWeatherData {
     location: string;
     temperature: string;
     condition: string;
@@ -27,7 +30,23 @@ interface WeatherData {
     feelsLike: string;
     uvIndex: string;
     error?: string;
-    // Extended data for QWeather
+}
+
+// Weather data for QWeather provider
+interface QWeatherData {
+    location: string;
+    temperature: string;
+    condition: string;
+    humidity: string;
+    windSpeed: string;
+    windDir: string;
+    feelsLike: string;
+    pressure: string;
+    vis: string;
+    precip: string;
+    cloud?: string;
+    error?: string;
+    // Extended data
     daily?: Array<{
         date: string;
         tempMax: string;
@@ -42,6 +61,8 @@ interface WeatherData {
         text: string;
     }>;
 }
+
+type WeatherData = WttrWeatherData | QWeatherData;
 
 /**
  * Fetch weather data using wttr.in API
@@ -84,7 +105,7 @@ async function getWeatherFromWttr(location?: string): Promise<WeatherData> {
 /**
  * Fetch weather data using QWeather API
  */
-async function getWeatherFromQWeather(location: string, config: WeatherConfig): Promise<WeatherData> {
+async function getWeatherFromQWeather(location: string, config: WeatherConfig): Promise<QWeatherData> {
     try {
         if (!config.qweather) {
             throw new Error("QWeather configuration not found");
@@ -109,8 +130,12 @@ async function getWeatherFromQWeather(location: string, config: WeatherConfig): 
             condition: nowData.now.text,
             humidity: `${nowData.now.humidity}%`,
             windSpeed: `${nowData.now.windSpeed} km/h`,
+            windDir: nowData.now.windDir,
             feelsLike: `${nowData.now.feelsLike}°C`,
-            uvIndex: "-", // UV index is not available in now API
+            pressure: `${nowData.now.pressure} hPa`,
+            vis: `${nowData.now.vis} km`,
+            precip: `${nowData.now.precip} mm`,
+            cloud: nowData.now.cloud,
             daily: dailyData?.daily.slice(0, 5).map(day => ({
                 date: day.fxDate,
                 tempMax: day.tempMax,
@@ -147,23 +172,6 @@ async function getWeather(location?: string, config?: WeatherConfig): Promise<We
     }
 }
 
-/**
- * Get weather icon based on condition
- */
-function getWeatherIcon(condition: string): string {
-    const conditionLower = condition.toLowerCase();
-
-    if (conditionLower.includes('sun') || conditionLower.includes('clear')) return '☀️';
-    if (conditionLower.includes('cloud')) return '☁️';
-    if (conditionLower.includes('rain')) return '🌧️';
-    if (conditionLower.includes('snow')) return '❄️';
-    if (conditionLower.includes('thunder') || conditionLower.includes('storm')) return '⛈️';
-    if (conditionLower.includes('fog') || conditionLower.includes('mist')) return '🌫️';
-    if (conditionLower.includes('wind')) return '💨';
-
-    return '🌤️';
-}
-
 export const weatherId = "built-in-weather";
 
 export function getWeatherAction(getUsageCount: (actionId: ActionId) => number, incrementUsage: (actionId: ActionId) => void): Action {
@@ -191,7 +199,7 @@ export function WeatherView({search, onLoadingChange}: WeatherViewProps) {
     const {config} = useWeatherConfig();
 
     // Add keyboard shortcut to open settings (Ctrl+,)
-    useKeyPress('ctrl.,', (e) => {
+    useKeyPress(['ctrl.,', 'meta.,'], (e) => {
         e.preventDefault();
         setShowSettings(true);
     });
@@ -201,10 +209,18 @@ export function WeatherView({search, onLoadingChange}: WeatherViewProps) {
         // Start loading
         onLoadingChange?.(true);
 
-        // If search is empty and it's initial load, get weather based on IP
-        // Otherwise, get weather for the specified location
-        const location = search.trim() || undefined;
-        const isAutoDetect = !location;
+        // Determine location to query
+        let location = search.trim() || undefined;
+        let isAutoDetect = false;
+
+        // If no location specified and using QWeather, use default city
+        if (!location && config.provider === "qweather" && config.qweather?.defaultCity) {
+            location = config.qweather.defaultCity;
+            isAutoDetect = true;
+        } else if (!location && config.provider === "wttr") {
+            // For wttr.in, undefined means auto-detect by IP
+            isAutoDetect = true;
+        }
 
         let cancelled = false;
         getWeather(location, config)
@@ -250,11 +266,16 @@ export function WeatherView({search, onLoadingChange}: WeatherViewProps) {
         );
     }
 
+    // Show settings view
+    if (showSettings) {
+        return <WeatherSettings onClose={() => setShowSettings(false)} />;
+    }
+
     // Show error if weather fetch failed
     if (weatherData.error) {
         return (
             <>
-                <div className="p-3 overflow-y-auto max-h-[calc(100vh-120px)]">
+                <div className="p-3 overflow-y-auto ">
                     <div
                         className="p-4 my-2 rounded-lg border"
                         style={{
@@ -295,7 +316,7 @@ export function WeatherView({search, onLoadingChange}: WeatherViewProps) {
                                 设置
                                 <KbdGroup>
                                     <Kbd>Ctrl</Kbd>
-                                    <Kbd>,</Kbd>
+                                    <Kbd>k</Kbd>
                                 </KbdGroup>
                             </Button>
                         </div>
@@ -305,168 +326,31 @@ export function WeatherView({search, onLoadingChange}: WeatherViewProps) {
         );
     }
 
-    // Show settings view
-    if (showSettings) {
-        return <WeatherSettings onClose={() => setShowSettings(false)} />;
+    // Render appropriate view based on provider
+    if (config.provider === "qweather") {
+        // Type guard to check if weatherData is QWeatherData
+        if ('windDir' in weatherData && 'pressure' in weatherData) {
+            return (
+                <QWeatherView
+                    weatherData={weatherData}
+                    isDefaultCity={isCurrentLocation}
+                    onOpenSettings={() => setShowSettings(true)}
+                />
+            );
+        }
     }
 
-    return (
-        <>
-            <div className="p-3 overflow-y-auto max-h-[calc(100vh-120px)]">
-                {/* Weather card */}
-                <div
-                    className="p-4 my-2 rounded-lg border"
-                    style={{
-                        background: 'var(--gray3)',
-                        borderColor: 'var(--gray6)',
-                    }}
-                >
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="text-3xl">{getWeatherIcon(weatherData.condition)}</div>
-                        <div className="flex-1">
-                            <div className="text-lg font-bold" style={{color: 'var(--gray12)'}}>
-                                {weatherData.location}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="text-xs" style={{color: 'var(--gray11)'}}>
-                                    {weatherData.condition}
-                                </div>
-                                {isCurrentLocation && (
-                                    <div className="text-[10px] px-1.5 py-0.5 rounded" style={{
-                                        color: 'var(--gray11)',
-                                        background: 'var(--gray5)',
-                                    }}>
-                                        当前位置
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+    // Default to wttr view (or if type guard fails)
+    if ('uvIndex' in weatherData) {
+        return (
+            <WttrWeatherView
+                weatherData={weatherData}
+                isCurrentLocation={isCurrentLocation}
+                onOpenSettings={() => setShowSettings(true)}
+            />
+        );
+    }
 
-                    <div className="text-3xl font-bold mb-4" style={{color: 'var(--gray12)'}}>
-                        {weatherData.temperature}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:droplet" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>Humidity</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.humidity}</div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                        <Icon icon="tabler:wind" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                        <div style={{color: 'var(--gray11)'}}>Wind</div>
-                        <div style={{color: 'var(--gray12)'}}>{weatherData.windSpeed}</div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Icon icon="tabler:temperature" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                        <div style={{color: 'var(--gray11)'}}>Feels like</div>
-                        <div style={{color: 'var(--gray12)'}}>{weatherData.feelsLike}</div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Icon icon="tabler:sun" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                        <div style={{color: 'var(--gray11)'}}>UV Index</div>
-                        <div style={{color: 'var(--gray12)'}}>{weatherData.uvIndex}</div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Daily forecast (QWeather only) */}
-            {weatherData.daily && weatherData.daily.length > 0 && (
-                <div
-                    className="p-4 my-2 rounded-lg border"
-                    style={{
-                        background: 'var(--gray3)',
-                        borderColor: 'var(--gray6)',
-                    }}
-                >
-                    <div className="text-sm font-bold mb-3" style={{color: 'var(--gray12)'}}>
-                        未来天气
-                    </div>
-                    <div className="space-y-2">
-                        {weatherData.daily.map((day, index) => (
-                            <div key={index} className="flex items-center justify-between text-xs">
-                                <div style={{color: 'var(--gray11)', minWidth: '80px'}}>
-                                    {index === 0 ? '今天' : new Date(day.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
-                                </div>
-                                <div className="flex-1 px-2" style={{color: 'var(--gray12)'}}>
-                                    {day.textDay}
-                                </div>
-                                <div style={{color: 'var(--gray12)', fontWeight: '500'}}>
-                                    {day.tempMin}° - {day.tempMax}°
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Life indices (QWeather only) */}
-            {weatherData.indices && weatherData.indices.length > 0 && (
-                <div
-                    className="p-4 my-2 rounded-lg border"
-                    style={{
-                        background: 'var(--gray3)',
-                        borderColor: 'var(--gray6)',
-                    }}
-                >
-                    <div className="text-sm font-bold " style={{color: 'var(--gray12)'}}>
-                        生活指数
-                    </div>
-                    <div className="space-y-3">
-                        {weatherData.indices.map((index, i) => (
-                            <div key={i} className="text-xs">
-                                <div className="flex items-center justify-between mb-1">
-                                    <div style={{color: 'var(--gray11)'}}>{index.name}</div>
-                                    <div
-                                        className="px-2 py-0.5 rounded text-[10px]"
-                                        style={{
-                                            color: 'var(--blue11)',
-                                            background: 'var(--blue4)',
-                                        }}
-                                    >
-                                        {index.category}
-                                    </div>
-                                </div>
-                                <div style={{color: 'var(--gray12)', lineHeight: '1.4'}}>
-                                    {index.text}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-
-        <Footer
-            current={null}
-            icon={<Icon icon="tabler:cloud" style={{fontSize: "20px"}}/>}
-            actions={() => []}
-            content={() => (
-                <div className="text-[11px] text-center" style={{color: 'var(--gray10)'}}>
-                    Powered by {config.provider === "qweather" ? "和风天气" : "wttr.in"}
-                </div>
-            )}
-            rightElement={
-                <div className='flex items-center gap-3 pr-6'>
-                    <Button
-                        onClick={() => setShowSettings(true)}
-                        variant="outline"
-                        size="sm"
-                    >
-                        <Icon icon="tabler:settings" className="mr-1" style={{fontSize: "14px"}}/>
-                        设置
-                        <KbdGroup>
-                            <Kbd>Ctrl</Kbd>
-                            <Kbd>,</Kbd>
-                        </KbdGroup>
-                    </Button>
-                </div>
-            }
-        />
-    </>
-    );
+    // Fallback - should not happen
+    return null;
 }

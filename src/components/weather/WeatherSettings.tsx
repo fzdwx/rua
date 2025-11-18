@@ -5,6 +5,7 @@ import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {useKeyPress} from "ahooks";
 import {Kbd, KbdGroup} from "@/components/ui/kbd";
+import {clearQWeatherCache} from "./hefeng/qweather-cache.ts";
 
 interface WeatherSettingsProps {
     onClose?: () => void;
@@ -18,7 +19,9 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
     const [provider, setLocalProvider] = React.useState<"wttr" | "qweather">(config.provider);
     const [apiKey, setApiKey] = React.useState(config.qweather?.apiKey || "");
     const [apiUrl, setApiUrl] = React.useState(config.qweather?.apiUrl || "");
+    const [defaultCity, setDefaultCity] = React.useState(config.qweather?.defaultCity || "");
     const [error, setError] = React.useState("");
+    const [successMessage, setSuccessMessage] = React.useState("");
 
     // Refs for auto-focus
     const providerSelectRef = React.useRef<HTMLSelectElement>(null);
@@ -47,6 +50,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
 
     const handleSave = () => {
         setError("");
+        setSuccessMessage("");
 
         if (provider === "qweather") {
             if (!apiKey.trim()) {
@@ -61,6 +65,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
             setQWeatherConfig({
                 apiKey: apiKey.trim(),
                 apiUrl: apiUrl.trim(),
+                defaultCity: defaultCity.trim() || undefined,
             });
         } else {
             setProvider(provider);
@@ -69,8 +74,15 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
         onClose?.();
     };
 
+    const handleClearCache = () => {
+        clearQWeatherCache();
+        setSuccessMessage("缓存已清除");
+        // Auto-hide success message after 2 seconds
+        setTimeout(() => setSuccessMessage(""), 2000);
+    };
+
     return (
-        <div className="w-full max-w-2xl mx-auto px-6 py-8 overflow-y-auto max-h-[calc(100vh-120px)]">
+        <div className="w-full max-w-2xl mx-auto px-4 py-2 overflow-y-auto max-h-[calc(100vh-120px)]">
             <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-6 space-y-6">
                 {/* Provider selection */}
                 <div className="space-y-2">
@@ -137,12 +149,52 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
                                 {' '}获取 API Key
                             </p>
                         </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="default-city">
+                                默认城市
+                            </Label>
+                            <Input
+                                id="default-city"
+                                type="text"
+                                value={defaultCity}
+                                onChange={(e) => setDefaultCity(e.target.value)}
+                                placeholder="北京"
+                            />
+                            <p className="text-xs" style={{color: 'var(--gray11)'}}>
+                                当不输入城市名称时，将使用此默认城市查询天气（可选）
+                            </p>
+                        </div>
                     </div>
                 )}
 
                 {error && (
                     <div className="p-3 rounded-lg" style={{background: 'var(--red3)', color: 'var(--red11)'}}>
                         {error}
+                    </div>
+                )}
+
+                {successMessage && (
+                    <div className="p-3 rounded-lg" style={{background: 'var(--green3)', color: 'var(--green11)'}}>
+                        {successMessage}
+                    </div>
+                )}
+
+                {provider === "qweather" && (
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{background: 'var(--gray3)'}}>
+                        <div className="flex-1">
+                            <div className="text-sm font-medium" style={{color: 'var(--gray12)'}}>清除缓存</div>
+                            <p className="text-xs mt-1" style={{color: 'var(--gray11)'}}>
+                                和风天气数据会被缓存以减少 API 调用。如需强制刷新，可清除缓存。
+                            </p>
+                        </div>
+                        <Button
+                            onClick={handleClearCache}
+                            variant="outline"
+                            size="sm"
+                        >
+                            清除
+                        </Button>
                     </div>
                 )}
 

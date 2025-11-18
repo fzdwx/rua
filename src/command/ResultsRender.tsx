@@ -196,6 +196,19 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
                 return;
             }
 
+            // For built-in view actions (like weather, translate when accessed directly)
+            // They may have perform for tracking, but should also navigate
+            if (item.kind === "built-in" && !item.parent && item.children.length === 0) {
+                // Call perform if exists (for usage tracking)
+                if (item.command) {
+                    item.command.perform(item);
+                }
+                // Navigate to the view
+                props.setSearch("");
+                props.setRootActionId(item.id);
+                return;
+            }
+
             if (item.command) {
                 // Regular actions with command - just perform
                 item.command.perform(item);
