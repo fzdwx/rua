@@ -2,6 +2,7 @@ import {Icon} from "@iconify/react";
 import {Footer} from "@/command";
 import {Button} from "@/components/ui/button";
 import {Kbd, KbdGroup} from "@/components/ui/kbd";
+import {WeatherData} from "@/components/weather/index.tsx";
 
 interface WttrWeatherData {
     location: string;
@@ -18,6 +19,45 @@ interface WttrWeatherViewProps {
     isCurrentLocation: boolean;
     onOpenSettings: () => void;
 }
+
+/**
+ * Fetch weather data using wttr.in API
+ * If location is empty, it will auto-detect location based on IP
+ */
+export async function getWeatherFromWttr(location?: string): Promise<WeatherData> {
+    try {
+        // Use wttr.in API which doesn't require API key
+        // If no location provided, wttr.in will auto-detect based on IP
+        const url = location
+            ? `https://wttr.in/${encodeURIComponent(location)}?format=j1`
+            : `https://wttr.in/?format=j1`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        const current = data.current_condition[0];
+        const nearest = data.nearest_area[0];
+
+        return {
+            location: `${nearest.areaName[0].value}, ${nearest.country[0].value}`,
+            temperature: `${current.temp_C}°C / ${current.temp_F}°F`,
+            condition: current.weatherDesc[0].value,
+            humidity: `${current.humidity}%`,
+            windSpeed: `${current.windspeedKmph} km/h`,
+            feelsLike: `${current.FeelsLikeC}°C / ${current.FeelsLikeF}°F`,
+            uvIndex: current.uvIndex,
+        };
+    } catch (error) {
+        console.error("Wttr.in fetch error:", error);
+        throw new Error("Failed to fetch weather data from wttr.in");
+    }
+}
+
 
 /**
  * Get weather icon based on condition
@@ -126,7 +166,7 @@ export function WttrWeatherView({weatherData, isCurrentLocation, onOpenSettings}
                             设置
                             <KbdGroup>
                                 <Kbd>Ctrl</Kbd>
-                                <Kbd>,</Kbd>
+                                <Kbd>k</Kbd>
                             </KbdGroup>
                         </Button>
                     </div>

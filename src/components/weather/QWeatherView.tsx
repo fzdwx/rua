@@ -2,6 +2,13 @@ import {Icon} from "@iconify/react";
 import {Footer} from "@/command";
 import {Button} from "@/components/ui/button";
 import {Kbd, KbdGroup} from "@/components/ui/kbd";
+import {WeatherConfig} from "@/hooks/useWeatherConfig.tsx";
+import {
+    fetchQWeatherDaily,
+    fetchQWeatherIndices,
+    fetchQWeatherNow,
+    searchLocationId
+} from "@/components/weather/hefeng/qweather.ts";
 
 interface QWeatherData {
     location: string;
@@ -34,6 +41,60 @@ interface QWeatherViewProps {
     weatherData: QWeatherData;
     isDefaultCity?: boolean;
     onOpenSettings: () => void;
+}
+
+/**
+ * Fetch weather data using QWeather API
+ */
+export async function getWeatherFromQWeather(location: string, config: WeatherConfig): Promise<QWeatherData> {
+    try {
+        if (!config.qweather) {
+            throw new Error("QWeather configuration not found");
+        }
+
+        // Search for location ID
+        const locationId = searchLocationId(location);
+        if (!locationId) {
+            throw new Error(`无法找到城市 "${location}" 的ID，请检查城市名称`);
+        }
+
+        // Fetch current weather, daily forecast, and indices in parallel
+        const [nowData, dailyData, indicesData] = await Promise.all([
+            fetchQWeatherNow(locationId, config.qweather),
+            fetchQWeatherDaily(locationId, "7d", config.qweather).catch(() => null),
+            fetchQWeatherIndices(locationId, "1d", "1,2,3,5,8,9", config.qweather).catch(() => null),
+        ]);
+
+        return {
+            location: location,
+            temperature: `${nowData.now.temp}°C`,
+            condition: nowData.now.text,
+            humidity: `${nowData.now.humidity}%`,
+            windSpeed: `${nowData.now.windSpeed} km/h`,
+            windDir: nowData.now.windDir,
+            feelsLike: `${nowData.now.feelsLike}°C`,
+            pressure: `${nowData.now.pressure} hPa`,
+            vis: `${nowData.now.vis} km`,
+            precip: `${nowData.now.precip} mm`,
+            cloud: nowData.now.cloud,
+            daily: dailyData?.daily.slice(0, 5).map(day => ({
+                date: day.fxDate,
+                tempMax: day.tempMax,
+                tempMin: day.tempMin,
+                textDay: day.textDay,
+                sunrise: day.sunrise,
+                sunset: day.sunset,
+            })),
+            indices: indicesData?.daily.map(index => ({
+                name: index.name,
+                category: index.category,
+                text: index.text,
+            })),
+        };
+    } catch (error) {
+        console.error("QWeather fetch error:", error);
+        throw error;
+    }
 }
 
 /**
@@ -238,7 +299,7 @@ export function QWeatherView({weatherData, isDefaultCity, onOpenSettings}: QWeat
                             设置
                             <KbdGroup>
                                 <Kbd>Ctrl</Kbd>
-                                <Kbd>,</Kbd>
+                                <Kbd>k</Kbd>
                             </KbdGroup>
                         </Button>
                     </div>

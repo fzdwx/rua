@@ -11,8 +11,8 @@ interface CacheItem<T> {
 
 // Cache durations in milliseconds based on QWeather update frequency
 const CACHE_DURATIONS = {
-    now: 10 * 60 * 1000 * 6,        // 1 hours for real-time weather
-    daily: 1 * 60 * 60 * 1000 * 8,  // 8 hour for daily forecast
+    now: 10 * 60 * 1000,        // 10 min for real-time weather
+    daily: 8 * 60 * 60 * 1000,  // 8 hour for daily forecast
     indices: 6 * 60 * 60 * 1000, // 6 hours for weather indices
 };
 

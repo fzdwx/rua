@@ -2,15 +2,9 @@ import * as React from "react";
 import {Action, ActionId, Footer} from "@/command";
 import {Icon} from "@iconify/react";
 import {useWeatherConfig, WeatherConfig} from "@/hooks/useWeatherConfig";
-import {
-    fetchQWeatherNow,
-    fetchQWeatherDaily,
-    fetchQWeatherIndices,
-    searchLocationId,
-} from "./hefeng/qweather.ts";
 import {WeatherSettings} from "./WeatherSettings";
-import {WttrWeatherView} from "./WttrWeatherView";
-import {QWeatherView} from "./QWeatherView";
+import {getWeatherFromWttr, WttrWeatherView} from "./WttrWeatherView";
+import {getWeatherFromQWeather, QWeatherView} from "./QWeatherView";
 import {Button} from "@/components/ui/button";
 import {Kbd, KbdGroup} from "@/components/ui/kbd";
 import {useKeyPress} from "ahooks";
@@ -62,99 +56,7 @@ interface QWeatherData {
     }>;
 }
 
-type WeatherData = WttrWeatherData | QWeatherData;
-
-/**
- * Fetch weather data using wttr.in API
- * If location is empty, it will auto-detect location based on IP
- */
-async function getWeatherFromWttr(location?: string): Promise<WeatherData> {
-    try {
-        // Use wttr.in API which doesn't require API key
-        // If no location provided, wttr.in will auto-detect based on IP
-        const url = location
-            ? `https://wttr.in/${encodeURIComponent(location)}?format=j1`
-            : `https://wttr.in/?format=j1`;
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        const current = data.current_condition[0];
-        const nearest = data.nearest_area[0];
-
-        return {
-            location: `${nearest.areaName[0].value}, ${nearest.country[0].value}`,
-            temperature: `${current.temp_C}°C / ${current.temp_F}°F`,
-            condition: current.weatherDesc[0].value,
-            humidity: `${current.humidity}%`,
-            windSpeed: `${current.windspeedKmph} km/h`,
-            feelsLike: `${current.FeelsLikeC}°C / ${current.FeelsLikeF}°F`,
-            uvIndex: current.uvIndex,
-        };
-    } catch (error) {
-        console.error("Wttr.in fetch error:", error);
-        throw new Error("Failed to fetch weather data from wttr.in");
-    }
-}
-
-/**
- * Fetch weather data using QWeather API
- */
-async function getWeatherFromQWeather(location: string, config: WeatherConfig): Promise<QWeatherData> {
-    try {
-        if (!config.qweather) {
-            throw new Error("QWeather configuration not found");
-        }
-
-        // Search for location ID
-        const locationId = searchLocationId(location);
-        if (!locationId) {
-            throw new Error(`无法找到城市 "${location}" 的ID，请检查城市名称`);
-        }
-
-        // Fetch current weather, daily forecast, and indices in parallel
-        const [nowData, dailyData, indicesData] = await Promise.all([
-            fetchQWeatherNow(locationId, config.qweather),
-            fetchQWeatherDaily(locationId, "7d", config.qweather).catch(() => null),
-            fetchQWeatherIndices(locationId, "1d", "1,2,3,5,8,9", config.qweather).catch(() => null),
-        ]);
-
-        return {
-            location: location,
-            temperature: `${nowData.now.temp}°C`,
-            condition: nowData.now.text,
-            humidity: `${nowData.now.humidity}%`,
-            windSpeed: `${nowData.now.windSpeed} km/h`,
-            windDir: nowData.now.windDir,
-            feelsLike: `${nowData.now.feelsLike}°C`,
-            pressure: `${nowData.now.pressure} hPa`,
-            vis: `${nowData.now.vis} km`,
-            precip: `${nowData.now.precip} mm`,
-            cloud: nowData.now.cloud,
-            daily: dailyData?.daily.slice(0, 5).map(day => ({
-                date: day.fxDate,
-                tempMax: day.tempMax,
-                tempMin: day.tempMin,
-                textDay: day.textDay,
-                sunrise: day.sunrise,
-                sunset: day.sunset,
-            })),
-            indices: indicesData?.daily.map(index => ({
-                name: index.name,
-                category: index.category,
-                text: index.text,
-            })),
-        };
-    } catch (error) {
-        console.error("QWeather fetch error:", error);
-        throw error;
-    }
-}
+export type WeatherData = WttrWeatherData | QWeatherData;
 
 /**
  * Fetch weather data based on configuration
@@ -198,8 +100,8 @@ export function WeatherView({search, onLoadingChange}: WeatherViewProps) {
     const [showSettings, setShowSettings] = React.useState(false);
     const {config} = useWeatherConfig();
 
-    // Add keyboard shortcut to open settings (Ctrl+,)
-    useKeyPress(['ctrl.,', 'meta.,'], (e) => {
+    // Add keyboard shortcut to open settings (Ctrl+k)
+    useKeyPress(['ctrl.k'], (e) => {
         e.preventDefault();
         setShowSettings(true);
     });
