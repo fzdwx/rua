@@ -2,6 +2,7 @@ import Home from "./home/Index";
 import {register} from '@tauri-apps/plugin-global-shortcut';
 import {getCurrentWindow} from "@tauri-apps/api/window";
 import {ActionUsageProvider} from "@/hooks/useActionUsage";
+import {WeatherConfigProvider} from "@/hooks/useWeatherConfig";
 
 register('Alt+Space', async (e) => {
     if (e.state == 'Released') {
@@ -29,9 +30,11 @@ function AppContent() {
 
 function App() {
     return (
-        <ActionUsageProvider>
-            <AppContent/>
-        </ActionUsageProvider>
+        <WeatherConfigProvider>
+            <ActionUsageProvider>
+                <AppContent/>
+            </ActionUsageProvider>
+        </WeatherConfigProvider>
     );
 }
 
