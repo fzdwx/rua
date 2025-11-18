@@ -12,6 +12,7 @@ import {useKeyPress} from "ahooks";
 interface WeatherViewProps {
     search: string;
     onLoadingChange?: (loading: boolean) => void;
+    onRequestFocusInput?: () => void;  // Request to focus main input
 }
 
 // Weather data for wttr.in provider
@@ -94,7 +95,7 @@ export function getWeatherAction(getUsageCount: (actionId: ActionId) => number, 
     };
 }
 
-export function WeatherView({search, onLoadingChange}: WeatherViewProps) {
+export function WeatherView({search, onLoadingChange, onRequestFocusInput}: WeatherViewProps) {
     const [weatherData, setWeatherData] = React.useState<WeatherData | null>(null);
     const [isCurrentLocation, setIsCurrentLocation] = React.useState(false);
     const [showSettings, setShowSettings] = React.useState(false);
@@ -170,7 +171,10 @@ export function WeatherView({search, onLoadingChange}: WeatherViewProps) {
 
     // Show settings view
     if (showSettings) {
-        return <WeatherSettings onClose={() => setShowSettings(false)} />;
+        return <WeatherSettings onClose={() => {
+            setShowSettings(false);
+            onRequestFocusInput?.();
+        }} />;
     }
 
     // Show error if weather fetch failed

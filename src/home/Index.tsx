@@ -185,7 +185,16 @@ export default function Home() {
                     {state.rootActionId === translateId ? (
                         <TranslateView search={search} onLoadingChange={handleActionLoadingChange}/>
                     ) : state.rootActionId === weatherId ? (
-                        <WeatherView search={search} onLoadingChange={handleActionLoadingChange}/>
+                        <WeatherView
+                            search={search}
+                            onLoadingChange={handleActionLoadingChange}
+                            onRequestFocusInput={() => {
+                                // Focus the main input after closing settings
+                                setTimeout(() => {
+                                    inputRef.current?.focus();
+                                }, 50);
+                            }}
+                        />
                     ) : state.rootActionId === quickLinkCreatorId ? (
                         <QuickLinkCreator
                             onLoadingChange={handleActionLoadingChange}

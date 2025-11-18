@@ -6,6 +6,8 @@ import {Button} from "@/components/ui/button";
 import {useKeyPress} from "ahooks";
 import {Kbd, KbdGroup} from "@/components/ui/kbd";
 import {clearQWeatherCache} from "./hefeng/qweather-cache.ts";
+import {Footer} from "@/command";
+import {Icon} from "@iconify/react";
 
 interface WeatherSettingsProps {
     onClose?: () => void;
@@ -48,6 +50,12 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
         onClose?.();
     });
 
+    // Add Ctrl+K shortcut to close and return to weather view
+    useKeyPress(['ctrl.k', 'meta.k'], (e) => {
+        e.preventDefault();
+        onClose?.();
+    });
+
     const handleSave = () => {
         setError("");
         setSuccessMessage("");
@@ -82,148 +90,164 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto px-4 py-2 overflow-y-auto max-h-[calc(100vh-120px)]">
-            <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-6 space-y-6">
-                {/* Provider selection */}
-                <div className="space-y-2">
-                    <Label htmlFor="provider">数据来源</Label>
-                    <select
-                        id="provider"
-                        ref={providerSelectRef}
-                        value={provider}
-                        onChange={(e) => setLocalProvider(e.target.value as "wttr" | "qweather")}
-                        className="w-full px-3 py-2 rounded-lg border text-sm"
-                        style={{
-                            borderColor: 'var(--gray6)',
-                            background: 'var(--gray3)',
-                            color: 'var(--gray12)',
-                        }}
-                    >
-                        <option value="wttr">wttr.in (默认) - 免费，无需配置，支持全球城市和IP自动定位</option>
-                        <option value="qweather">和风天气 - 需要配置 API Key，支持中国城市，提供更详细的天气数据</option>
-                    </select>
-                </div>
-
-                {/* QWeather configuration */}
-                {provider === "qweather" && (
-                    <div className="space-y-4 p-4 rounded-lg" style={{background: 'var(--gray3)'}}>
-                        <div className="space-y-2">
-                            <Label htmlFor="api-url">
-                                API URL <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                                id="api-url"
-                                ref={apiUrlInputRef}
-                                type="text"
-                                value={apiUrl}
-                                onChange={(e) => setApiUrl(e.target.value)}
-                                placeholder="https://devapi.qweather.com"
-                            />
-                            <p className="text-xs" style={{color: 'var(--gray11)'}}>
-                                例如：https://devapi.qweather.com 或您的自定义域名
-                            </p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="api-key">
-                                API Key <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                                id="api-key"
-                                type="password"
-                                value={apiKey}
-                                onChange={(e) => setApiKey(e.target.value)}
-                                placeholder="请输入和风天气 API Key"
-                            />
-                            <p className="text-xs" style={{color: 'var(--gray11)'}}>
-                                在{' '}
-                                <a
-                                    href="https://dev.qweather.com"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="underline"
-                                    style={{color: 'var(--blue11)'}}
-                                >
-                                    和风天气开发平台
-                                </a>
-                                {' '}获取 API Key
-                            </p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="default-city">
-                                默认城市
-                            </Label>
-                            <Input
-                                id="default-city"
-                                type="text"
-                                value={defaultCity}
-                                onChange={(e) => setDefaultCity(e.target.value)}
-                                placeholder="北京"
-                            />
-                            <p className="text-xs" style={{color: 'var(--gray11)'}}>
-                                当不输入城市名称时，将使用此默认城市查询天气（可选）
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {error && (
-                    <div className="p-3 rounded-lg" style={{background: 'var(--red3)', color: 'var(--red11)'}}>
-                        {error}
-                    </div>
-                )}
-
-                {successMessage && (
-                    <div className="p-3 rounded-lg" style={{background: 'var(--green3)', color: 'var(--green11)'}}>
-                        {successMessage}
-                    </div>
-                )}
-
-                {provider === "qweather" && (
-                    <div className="flex items-center justify-between p-3 rounded-lg" style={{background: 'var(--gray3)'}}>
-                        <div className="flex-1">
-                            <div className="text-sm font-medium" style={{color: 'var(--gray12)'}}>清除缓存</div>
-                            <p className="text-xs mt-1" style={{color: 'var(--gray11)'}}>
-                                和风天气数据会被缓存以减少 API 调用。如需强制刷新，可清除缓存。
-                            </p>
-                        </div>
-                        <Button
-                            onClick={handleClearCache}
-                            variant="outline"
-                            size="sm"
+        <>
+            <div className="p-4 overflow-y-auto">
+                <div className="rounded-lg border border-gray-200 dark:border-gray-800  space-y-6">
+                    {/* Provider selection */}
+                    <div className="space-y-2">
+                        <Label htmlFor="provider">数据来源</Label>
+                        <select
+                            id="provider"
+                            ref={providerSelectRef}
+                            value={provider}
+                            onChange={(e) => setLocalProvider(e.target.value as "wttr" | "qweather")}
+                            className="w-full px-3 py-2 rounded-lg border text-sm"
+                            style={{
+                                borderColor: 'var(--gray6)',
+                                background: 'var(--gray3)',
+                                color: 'var(--gray12)',
+                            }}
                         >
-                            清除
-                        </Button>
+                            <option value="wttr">wttr.in (默认) - 免费，无需配置，支持全球城市和IP自动定位</option>
+                            <option value="qweather">和风天气 - 需要配置 API Key，支持中国城市，提供更详细的天气数据</option>
+                        </select>
                     </div>
-                )}
 
-                <div className="flex gap-3">
-                    <Button
-                        onClick={handleSave}
-                        variant="outline"
-                        className="flex-1"
-                    >
-                        保存设置
-                        <KbdGroup>
-                            <Kbd>Ctrl</Kbd>
-                            <Kbd>⏎</Kbd>
-                        </KbdGroup>
-                    </Button>
-                    {onClose && (
-                        <Button
-                            onClick={onClose}
-                            variant="outline"
-                            className="flex-1"
-                        >
-                            取消
-                            <KbdGroup>
-                                <Kbd>Esc</Kbd>
-                            </KbdGroup>
-                        </Button>
+                    {/* QWeather configuration */}
+                    {provider === "qweather" && (
+                        <div className="space-y-4 p-4 rounded-lg" style={{background: 'var(--gray3)'}}>
+                            <div className="space-y-2">
+                                <Label htmlFor="api-url">
+                                    API URL <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="api-url"
+                                    ref={apiUrlInputRef}
+                                    type="text"
+                                    value={apiUrl}
+                                    onChange={(e) => setApiUrl(e.target.value)}
+                                    placeholder="https://devapi.qweather.com"
+                                />
+                                <p className="text-xs" style={{color: 'var(--gray11)'}}>
+                                    例如：https://devapi.qweather.com 或您的自定义域名
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="api-key">
+                                    API Key <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="api-key"
+                                    type="password"
+                                    value={apiKey}
+                                    onChange={(e) => setApiKey(e.target.value)}
+                                    placeholder="请输入和风天气 API Key"
+                                />
+                                <p className="text-xs" style={{color: 'var(--gray11)'}}>
+                                    在{' '}
+                                    <a
+                                        href="https://dev.qweather.com"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="underline"
+                                        style={{color: 'var(--blue11)'}}
+                                    >
+                                        和风天气开发平台
+                                    </a>
+                                    {' '}获取 API Key
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="default-city">
+                                    默认城市
+                                </Label>
+                                <Input
+                                    id="default-city"
+                                    type="text"
+                                    value={defaultCity}
+                                    onChange={(e) => setDefaultCity(e.target.value)}
+                                    placeholder="北京"
+                                />
+                                <p className="text-xs" style={{color: 'var(--gray11)'}}>
+                                    当不输入城市名称时，将使用此默认城市查询天气（可选）
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="p-3 rounded-lg" style={{background: 'var(--red3)', color: 'var(--red11)'}}>
+                            {error}
+                        </div>
+                    )}
+
+                    {successMessage && (
+                        <div className="p-3 rounded-lg" style={{background: 'var(--green3)', color: 'var(--green11)'}}>
+                            {successMessage}
+                        </div>
+                    )}
+
+                    {provider === "qweather" && (
+                        <div className="flex items-center justify-between p-3 rounded-lg" style={{background: 'var(--gray3)'}}>
+                            <div className="flex-1">
+                                <div className="text-sm font-medium" style={{color: 'var(--gray12)'}}>清除缓存</div>
+                                <p className="text-xs mt-1" style={{color: 'var(--gray11)'}}>
+                                    和风天气数据会被缓存以减少 API 调用。如需强制刷新，可清除缓存。
+                                </p>
+                            </div>
+                            <Button
+                                onClick={handleClearCache}
+                                variant="outline"
+                                size="sm"
+                            >
+                                清除
+                            </Button>
+                        </div>
                     )}
                 </div>
             </div>
-        </div>
+
+            <Footer
+                current={null}
+                icon={<Icon icon="tabler:cloud" style={{fontSize: "20px"}}/>}
+                actions={() => []}
+                content={() => (
+                    <div className="text-[11px]" style={{color: 'var(--gray10)'}}>
+                        设置
+                    </div>
+                )}
+                rightElement={
+                    <div className='flex items-center gap-3 pr-6'>
+                        <Button
+                            onClick={handleSave}
+                            variant="outline"
+                            size="sm"
+                        >
+                            <Icon icon="tabler:device-floppy" className="mr-1" style={{fontSize: "14px"}}/>
+                            保存
+                            <KbdGroup>
+                                <Kbd>Ctrl</Kbd>
+                                <Kbd>⏎</Kbd>
+                            </KbdGroup>
+                        </Button>
+                        {onClose && (
+                            <Button
+                                onClick={onClose}
+                                variant="outline"
+                                size="sm"
+                            >
+                                <Icon icon="tabler:x" className="mr-1" style={{fontSize: "14px"}}/>
+                                取消
+                                <KbdGroup>
+                                    <Kbd>Esc</Kbd>
+                                </KbdGroup>
+                            </Button>
+                        )}
+                    </div>
+                }
+            />
+        </>
     );
 }
