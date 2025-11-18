@@ -237,6 +237,9 @@ export const Input = ({
                         onValueChange?.(event.target.value);
                     }}
                     onKeyDown={handleMainInputKeyDown}
+                    onFocus={() => {
+                        setResultHandleEvent?.(true); // Enable ResultsRender keyboard handling
+                    }}
                 />
 
                 {showQueryInput && (

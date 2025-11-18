@@ -37,6 +37,10 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
     const activeRef = React.useRef<HTMLDivElement | null>(null);
     const parentRef = React.useRef(null);
 
+    // Track if we recently used keyboard navigation
+    const keyboardNavigatedRef = React.useRef(false);
+    const lastPointerPositionRef = React.useRef({ x: 0, y: 0 });
+
     // store a ref to all items so we do not have to pass
     // them as a dependency when setting up event listeners.
     const itemsRef = React.useRef(props.items);
@@ -48,6 +52,31 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
         measureElement: (element) => element.clientHeight,
         getScrollElement: () => parentRef.current,
     });
+
+    // Listen for actual mouse movement to clear keyboard navigation flag
+    React.useEffect(() => {
+        // Initialize mouse position
+        const initMousePosition = (event: MouseEvent) => {
+            lastPointerPositionRef.current = { x: event.clientX, y: event.clientY };
+        };
+
+        const handleMouseMove = (event: MouseEvent) => {
+            const { x, y } = lastPointerPositionRef.current;
+            // Only clear the flag if mouse actually moved
+            if (Math.abs(event.clientX - x) > 5 || Math.abs(event.clientY - y) > 5) {
+                keyboardNavigatedRef.current = false;
+                lastPointerPositionRef.current = { x: event.clientX, y: event.clientY };
+            }
+        };
+
+        // Initialize on mount
+        window.addEventListener('mousemove', initMousePosition, { once: true });
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => {
+            window.removeEventListener('mousemove', initMousePosition);
+            window.removeEventListener('mousemove', handleMouseMove);
+        };
+    }, []);
 
     React.useEffect(() => {
         // @ts-ignore
@@ -63,15 +92,24 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
             if (event.key === "ArrowUp" || (event.ctrlKey && event.key === "p")) {
                 event.preventDefault();
                 event.stopPropagation();
+                keyboardNavigatedRef.current = true; // Mark that we used keyboard
                 props.setActiveIndex((index) => {
-                    return index > 0 ? index - 1 : props.items.length - 1
-                    // let nextIndex = index > START_INDEX ? index - 1 : index;
-                    // // avoid setting active index on a group
-                    // if (typeof itemsRef.current[nextIndex] === "string") {
-                    //     if (nextIndex === 0) return index;
-                    //     nextIndex -= 1;
-                    // }
-                    // return nextIndex;
+                    // If already at the start, stay there (no wrap)
+                    if (index === 0) return index;
+
+                    let nextIndex = index - 1;
+
+                    // Skip string items (section headers)
+                    while (nextIndex >= 0 && typeof itemsRef.current[nextIndex] === "string") {
+                        nextIndex--;
+                    }
+
+                    // If we've gone below 0, stay at current position
+                    if (nextIndex < 0) {
+                        return index;
+                    }
+
+                    return nextIndex;
                 });
             } else if (
                 event.key === "ArrowDown" ||
@@ -79,16 +117,24 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
             ) {
                 event.preventDefault();
                 event.stopPropagation();
+                keyboardNavigatedRef.current = true; // Mark that we used keyboard
                 props.setActiveIndex((index) => {
-                    return index < props.items.length - 1 ? index + 1 : 0
-                    // let nextIndex =
-                    //     index < itemsRef.current.length - 1 ? index + 1 : index;
-                    // // avoid setting active index on a group
-                    // if (typeof itemsRef.current[nextIndex] === "string") {
-                    //     if (nextIndex === itemsRef.current.length - 1) return index;
-                    //     nextIndex += 1;
-                    // }
-                    // return nextIndex;
+                    // If already at the end, stay there (no wrap)
+                    if (index === props.items.length - 1) return index;
+
+                    let nextIndex = index + 1;
+
+                    // Skip string items (section headers)
+                    while (nextIndex < props.items.length && typeof itemsRef.current[nextIndex] === "string") {
+                        nextIndex++;
+                    }
+
+                    // If we've gone beyond the array, stay at current position
+                    if (nextIndex >= props.items.length) {
+                        return index;
+                    }
+
+                    return nextIndex;
                 });
             } else if (event.key === "Enter") {
                 event.preventDefault();
@@ -189,11 +235,18 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
                     {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                         const item = itemsRef.current[virtualRow.index];
                         const handlers = typeof item !== "string" && {
-                            onPointerMove: () =>
-                                pointerMoved &&
-                                props.activeIndex !== virtualRow.index &&
-                                props.setActiveIndex(virtualRow.index),
-                            onPointerDown: () => props.setActiveIndex(virtualRow.index),
+                            onPointerMove: () => {
+                                // Don't change active index if we recently used keyboard navigation
+                                if (keyboardNavigatedRef.current) return;
+
+                                if (pointerMoved && props.activeIndex !== virtualRow.index) {
+                                    props.setActiveIndex(virtualRow.index);
+                                }
+                            },
+                            onPointerDown: () => {
+                                keyboardNavigatedRef.current = false; // Clear flag on click
+                                props.setActiveIndex(virtualRow.index);
+                            },
                             onClick: () => execute(item),
                         };
                         const active = virtualRow.index === props.activeIndex;
