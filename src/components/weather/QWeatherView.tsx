@@ -142,7 +142,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
                         {/* Main row: city (left), temperature (center), sunrise/sunset (right) */}
                         <div className="flex items-center justify-between mb-3">
                             {/* Left: City name and badge */}
-                            <div className="flex flex-col items-start min-w-0 flex-shrink-0">
+                            <div className="w-14 flex-none flex flex-col items-start min-w-0 flex-shrink-0">
                                 <h2 className="text-base font-bold truncate" style={{color: 'var(--gray12)'}}>
                                     {weatherData.location}
                                 </h2>
@@ -154,7 +154,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
                             </div>
 
                             {/* Center: Weather icon, temperature and condition */}
-                            <div className="flex items-center gap-2">
+                            <div className="w-14 flex-none flex items-center gap-2">
                                 <div className="text-3xl">
                                     {getWeatherIcon(weatherData.condition)}
                                 </div>
@@ -410,11 +410,12 @@ function SunTimeline({sunrise, sunset, condition}: {sunrise: string, sunset: str
     // SVG parameters
     const width = 120;
     const height = 65;
-    const padding = 8;
+    const padding = 10;
     const startX = padding;
     const endX = width - padding;
     const horizonY = height - 22;
     const waveAmplitude = 20;
+    const horizonExtension = 10; // Extend horizon line on both sides
 
     // Calculate sun position on wave
     const sunX = startX + (endX - startX) * sunProgress;
@@ -473,31 +474,13 @@ function SunTimeline({sunrise, sunset, condition}: {sunrise: string, sunset: str
                             />
                         )}
 
-                        {/* Horizon line - extended below */}
+                        {/* Horizon line - extended on both sides */}
                         <line
-                            x1={0}
+                            x1={-horizonExtension}
                             y1={horizonY}
-                            x2={width}
+                            x2={width + horizonExtension}
                             y2={horizonY}
                             stroke="var(--gray8)"
-                            strokeWidth="1"
-                        />
-
-                        {/* Vertical lines at sunrise/sunset positions */}
-                        <line
-                            x1={startX}
-                            y1={horizonY}
-                            x2={startX}
-                            y2={height}
-                            stroke="var(--gray6)"
-                            strokeWidth="1"
-                        />
-                        <line
-                            x1={endX}
-                            y1={horizonY}
-                            x2={endX}
-                            y2={height}
-                            stroke="var(--gray6)"
                             strokeWidth="1"
                         />
 

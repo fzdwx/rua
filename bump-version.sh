@@ -60,6 +60,11 @@ echo ""
 echo "💾 Committing changes..."
 git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json src-tauri/Cargo.lock
 git commit -m "chore: bump version to ${NEW_VERSION}
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
 # Create git tag
 echo "🏷️  Creating tag v${NEW_VERSION}..."
 git tag -a "v${NEW_VERSION}" -m "${RELEASE_NOTES}

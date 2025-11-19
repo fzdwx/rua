@@ -147,100 +147,116 @@ export default function Home() {
     }, [theme, toggleTheme]);
 
     return (
-        <Container>
-            <Background>
-                <Input
-                    value={search}
-                    onValueChange={setSearch}
-                    currentRootActionId={state.rootActionId}
-                    onCurrentRootActionIdChange={(id) => {
-                        setRootActionId(id)
-                        // Only focus search box if we're returning to main view (id is null)
-                        // or if the target action doesn't have disableSearchFocus
-                        if (id === null) {
-                            inputRef.current?.focus();
-                        } else {
-                            const targetAction = allActions.find(a => a.id === id);
-                            if (!targetAction?.disableSearchFocus) {
-                                inputRef.current?.focus();
-                            }
-                        }
-                    }}
-                    actions={state.actions}
-                    activeAction={activeMainAction}
-                    onQuerySubmit={handleQuerySubmit}
-                    setResultHandleEvent={setResultHandleEvent}
-                    loading={actionLoading}
-                    disableTabFocus={currentRootAction?.disableSearchFocus ?? false}
-                    focusQueryInput={focusQueryInput}
-                    inputRefSetter={(ref) => {
-                        inputRef.current = ref;
-                    }}
-                    defaultPlaceholder="Type a command or search…"
-                />
-
-                {/* Main content area with flex: 1 to prevent footer from being squeezed */}
-                <div style={{flex: 1, overflow: "hidden", display: "flex", flexDirection: "column"}}>
-                    {/* Show translate view if translate action is active */}
-                    {state.rootActionId === translateId ? (
-                        <TranslateView search={search} onLoadingChange={handleActionLoadingChange}/>
-                    ) : state.rootActionId === weatherId ? (
-                        <WeatherView
-                            search={search}
-                            onLoadingChange={handleActionLoadingChange}
-                            onRequestFocusInput={() => {
-                                // Focus the main input after closing settings
-                                setTimeout(() => {
-                                    inputRef.current?.focus();
-                                }, 50);
-                            }}
-                        />
-                    ) : state.rootActionId === quickLinkCreatorId ? (
-                        <QuickLinkCreator
-                            onLoadingChange={handleActionLoadingChange}
-                            onReturn={() => {
-                                // Return to main view after creating quick link
-                                setRootActionId(null);
-                                setSearch("");
-                                refreshQuickLinks();
-                                // Focus the search input
-                                setTimeout(() => {
-                                    inputRef.current?.focus();
-                                }, 50);
-                            }}
-                        />
-                    ) : state.rootActionId?.startsWith(quickLinkViewPrefix) ? (
-                        <QuickLinkView
-                            quickLink={currentRootAction?.item}
-                            search={search}
-                            onLoadingChange={handleActionLoadingChange}
-                            onReturn={() => {
-                                // Return to main view after opening link
-                                setRootActionId(null);
-                                setSearch("");
-                            }}
-                        />
-                    ) : (
-                        <DefaultView
-                            search={search}
-                            results={results}
-                            activeIndex={state.activeIndex}
-                            rootActionId={state.rootActionId}
-                            activeMainAction={activeMainAction}
-                            resultHandleEvent={resultHandleEvent}
-                            inputRef={inputRef}
-                            theme={theme}
-                            setSearch={setSearch}
-                            setActiveIndex={setActiveIndex}
-                            setRootActionId={setRootActionId}
-                            setResultHandleEvent={setResultHandleEvent}
-                            getFooterActions={getFooterActions}
-                            getSettingsActions={getSettingsActions}
-                            onQueryActionEnter={handleQueryActionEnter}
-                        />
-                    )}
-                </div>
-            </Background>
-        </Container>
+        // <Container>
+        //     <Background>
+        //         <Input
+        //             value={search}
+        //             onValueChange={setSearch}
+        //             currentRootActionId={state.rootActionId}
+        //             onCurrentRootActionIdChange={(id) => {
+        //                 setRootActionId(id)
+        //                 // Only focus search box if we're returning to main view (id is null)
+        //                 // or if the target action doesn't have disableSearchFocus
+        //                 if (id === null) {
+        //                     inputRef.current?.focus();
+        //                 } else {
+        //                     const targetAction = allActions.find(a => a.id === id);
+        //                     if (!targetAction?.disableSearchFocus) {
+        //                         inputRef.current?.focus();
+        //                     }
+        //                 }
+        //             }}
+        //             actions={state.actions}
+        //             activeAction={activeMainAction}
+        //             onQuerySubmit={handleQuerySubmit}
+        //             setResultHandleEvent={setResultHandleEvent}
+        //             loading={actionLoading}
+        //             disableTabFocus={currentRootAction?.disableSearchFocus ?? false}
+        //             focusQueryInput={focusQueryInput}
+        //             inputRefSetter={(ref) => {
+        //                 inputRef.current = ref;
+        //             }}
+        //             defaultPlaceholder="Type a command or search…"
+        //         />
+        //
+        //         {/* Main content area with flex: 1 to prevent footer from being squeezed */}
+        //         <div style={{flex: 1, overflow: "hidden", display: "flex", flexDirection: "column"}}>
+        //             {/* Show translate view if translate action is active */}
+        //             {state.rootActionId === translateId ? (
+        //                 <TranslateView search={search} onLoadingChange={handleActionLoadingChange}/>
+        //             ) : state.rootActionId === weatherId ? (
+        //                 <WeatherView
+        //                     search={search}
+        //                     onLoadingChange={handleActionLoadingChange}
+        //                     onRequestFocusInput={() => {
+        //                         // Focus the main input after closing settings
+        //                         setTimeout(() => {
+        //                             inputRef.current?.focus();
+        //                         }, 50);
+        //                     }}
+        //                 />
+        //             ) : state.rootActionId === quickLinkCreatorId ? (
+        //                 <QuickLinkCreator
+        //                     onLoadingChange={handleActionLoadingChange}
+        //                     onReturn={() => {
+        //                         // Return to main view after creating quick link
+        //                         setRootActionId(null);
+        //                         setSearch("");
+        //                         refreshQuickLinks();
+        //                         // Focus the search input
+        //                         setTimeout(() => {
+        //                             inputRef.current?.focus();
+        //                         }, 50);
+        //                     }}
+        //                 />
+        //             ) : state.rootActionId?.startsWith(quickLinkViewPrefix) ? (
+        //                 <QuickLinkView
+        //                     quickLink={currentRootAction?.item}
+        //                     search={search}
+        //                     onLoadingChange={handleActionLoadingChange}
+        //                     onReturn={() => {
+        //                         // Return to main view after opening link
+        //                         setRootActionId(null);
+        //                         setSearch("");
+        //                     }}
+        //                 />
+        //             ) : (
+        //                 <DefaultView
+        //                     search={search}
+        //                     results={results}
+        //                     activeIndex={state.activeIndex}
+        //                     rootActionId={state.rootActionId}
+        //                     activeMainAction={activeMainAction}
+        //                     resultHandleEvent={resultHandleEvent}
+        //                     inputRef={inputRef}
+        //                     theme={theme}
+        //                     setSearch={setSearch}
+        //                     setActiveIndex={setActiveIndex}
+        //                     setRootActionId={setRootActionId}
+        //                     setResultHandleEvent={setResultHandleEvent}
+        //                     getFooterActions={getFooterActions}
+        //                     getSettingsActions={getSettingsActions}
+        //                     onQueryActionEnter={handleQueryActionEnter}
+        //                 />
+        //             )}
+        //         </div>
+        //     </Background>
+        // </Container>
+        <div>
+             <Container>
+                 <Background>
+                     <WeatherView
+                         search={search}
+                         onLoadingChange={handleActionLoadingChange}
+                         onRequestFocusInput={() => {
+                             // Focus the main input after closing settings
+                             setTimeout(() => {
+                                 inputRef.current?.focus();
+                             }, 50);
+                         }}
+                     />
+                 </Background>
+             </Container>
+        </div>
     );
 }
