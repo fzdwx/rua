@@ -29,8 +29,14 @@ interface QWeatherData {
         tempMax: string;
         tempMin: string;
         textDay: string;
+        textNight: string;
         sunrise?: string;
         sunset?: string;
+        windDirDay: string;
+        windScaleDay: string;
+        humidity: string;
+        precip: string;
+        uvIndex: string;
     }>;
     indices?: Array<{
         name: string;
@@ -79,13 +85,19 @@ export async function getWeatherFromQWeather(location: string, config: WeatherCo
             vis: `${nowData.now.vis} km`,
             precip: `${nowData.now.precip} mm`,
             cloud: nowData.now.cloud,
-            daily: dailyData?.daily.slice(0, 5).map(day => ({
+            daily: dailyData?.daily.slice(0, 7).map(day => ({
                 date: day.fxDate,
                 tempMax: day.tempMax,
                 tempMin: day.tempMin,
                 textDay: day.textDay,
+                textNight: day.textNight,
                 sunrise: day.sunrise,
                 sunset: day.sunset,
+                windDirDay: day.windDirDay,
+                windScaleDay: day.windScaleDay,
+                humidity: day.humidity,
+                precip: day.precip,
+                uvIndex: day.uvIndex,
             })),
             indices: indicesData?.daily.map(index => ({
                 name: index.name,
@@ -123,45 +135,54 @@ function getWeatherIcon(condition: string): string {
 export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
     return (
         <>
-            <div className="p-3 space-y-3 overflow-y-auto">
+            <div className="p-2.5 space-y-2.5 overflow-y-auto max-h-[calc(100vh-80px)]">
                 {/* Current weather card */}
                 <Card className="border-0" style={{background: 'var(--gray3)'}}>
-                    <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-4 mb-4">
-                            <div className="flex items-start gap-4 flex-1">
-                                <div className="text-5xl">{getWeatherIcon(weatherData.condition)}</div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h2 className="text-xl font-bold truncate" style={{color: 'var(--gray12)'}}>
-                                            {weatherData.location}
-                                        </h2>
-                                        {isDefaultCity && (
-                                            <Badge variant="secondary" className="text-[10px] h-5">
-                                                默认城市
-                                            </Badge>
-                                        )}
-                                    </div>
-                                    <p className="text-sm" style={{color: 'var(--gray11)'}}>
-                                        {weatherData.condition}
-                                    </p>
-                                </div>
+                    <CardContent className="p-3">
+                        {/* Header with location */}
+                        <div className="flex items-center gap-2 mb-3">
+                            <h2 className="text-lg font-bold" style={{color: 'var(--gray12)'}}>
+                                {weatherData.location}
+                            </h2>
+                            {isDefaultCity && (
+                                <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
+                                    默认城市
+                                </Badge>
+                            )}
+                        </div>
+
+                        {/* Center section: icon, temperature, condition, sunrise/sunset */}
+                        <div className="flex items-center justify-between mb-3">
+                            {/* Left: Weather icon */}
+                            <div className="text-5xl">
+                                {getWeatherIcon(weatherData.condition)}
                             </div>
 
-                            {/* Sunrise and Sunset */}
+                            {/* Center: Temperature and condition */}
+                            <div className="flex flex-col items-center">
+                                <div className="text-4xl font-bold" style={{color: 'var(--gray12)'}}>
+                                    {weatherData.temperature}
+                                </div>
+                                <p className="text-sm" style={{color: 'var(--gray11)'}}>
+                                    {weatherData.condition}
+                                </p>
+                            </div>
+
+                            {/* Right: Sunrise and Sunset */}
                             {weatherData.daily && weatherData.daily[0] && (
-                                <div className="flex flex-col gap-2">
+                                <div className="flex flex-col gap-1.5">
                                     {weatherData.daily[0].sunrise && (
-                                        <div className="flex items-center gap-2">
-                                            <Icon icon="tabler:sunrise" style={{fontSize: "16px", color: 'var(--orange11)'}} />
-                                            <span className="text-xs tabular-nums" style={{color: 'var(--gray11)'}}>
+                                        <div className="flex items-center gap-1.5">
+                                            <Icon icon="tabler:sunrise" style={{fontSize: "14px", color: 'var(--orange11)'}} />
+                                            <span className="text-[10px] tabular-nums" style={{color: 'var(--gray11)'}}>
                                                 {weatherData.daily[0].sunrise}
                                             </span>
                                         </div>
                                     )}
                                     {weatherData.daily[0].sunset && (
-                                        <div className="flex items-center gap-2">
-                                            <Icon icon="tabler:sunset" style={{fontSize: "16px", color: 'var(--orange11)'}} />
-                                            <span className="text-xs tabular-nums" style={{color: 'var(--gray11)'}}>
+                                        <div className="flex items-center gap-1.5">
+                                            <Icon icon="tabler:sunset" style={{fontSize: "14px", color: 'var(--orange11)'}} />
+                                            <span className="text-[10px] tabular-nums" style={{color: 'var(--gray11)'}}>
                                                 {weatherData.daily[0].sunset}
                                             </span>
                                         </div>
@@ -170,16 +191,12 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
                             )}
                         </div>
 
-                        <div className="text-4xl font-bold mb-4" style={{color: 'var(--gray12)'}}>
-                            {weatherData.temperature}
-                        </div>
+                        <Separator className="my-2.5" />
 
-                        <Separator className="my-4" />
-
-                        <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="grid grid-cols-4 gap-2 text-sm">
                             <WeatherStat
                                 icon="tabler:temperature"
-                                label="体感温度"
+                                label="体感"
                                 value={weatherData.feelsLike}
                             />
                             <WeatherStat
@@ -209,7 +226,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
                             />
                             <WeatherStat
                                 icon="tabler:umbrella"
-                                label="降水量"
+                                label="降水"
                                 value={weatherData.precip}
                             />
                             {weatherData.cloud && (
@@ -226,32 +243,18 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
                 {/* Daily forecast */}
                 {weatherData.daily && weatherData.daily.length > 0 && (
                     <Card className="border-0" style={{background: 'var(--gray3)'}}>
-                        <CardHeader className="pb-3">
+                        <CardHeader className="pb-2 pt-2.5 px-3">
                             <CardTitle className="text-sm flex items-center gap-2">
-                                <Icon icon="tabler:calendar" style={{fontSize: "16px"}} />
-                                未来天气
+                                <Icon icon="tabler:calendar-week" style={{fontSize: "16px"}} />
+                                7日天气预报
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2">
-                            {weatherData.daily.map((day, index) => (
-                                <div key={index}>
-                                    {index > 0 && <Separator className="my-2" />}
-                                    <div className="flex items-center justify-between py-1">
-                                        <span className="text-xs min-w-[80px]" style={{color: 'var(--gray11)'}}>
-                                            {index === 0 ? '今天' : new Date(day.date).toLocaleDateString('zh-CN', {
-                                                month: 'short',
-                                                day: 'numeric'
-                                            })}
-                                        </span>
-                                        <span className="flex-1 px-3 text-xs" style={{color: 'var(--gray12)'}}>
-                                            {day.textDay}
-                                        </span>
-                                        <span className="text-xs font-medium tabular-nums" style={{color: 'var(--gray12)'}}>
-                                            {day.tempMin}° - {day.tempMax}°
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                        <CardContent className="px-3 pb-2.5">
+                            <div className="grid grid-cols-7 gap-1.5">
+                                {weatherData.daily.map((day, index) => (
+                                    <DailyWeatherCard key={index} day={day} index={index} />
+                                ))}
+                            </div>
                         </CardContent>
                     </Card>
                 )}
@@ -326,10 +329,108 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
  */
 function WeatherStat({icon, label, value}: {icon: string, label: string, value: string}) {
     return (
-        <div className="flex items-center gap-2">
-            <Icon icon={icon} style={{fontSize: "16px", color: 'var(--gray11)'}} />
-            <span className="text-xs" style={{color: 'var(--gray11)'}}>{label}</span>
-            <span className="text-xs font-medium ml-auto" style={{color: 'var(--gray12)'}}>{value}</span>
+        <div className="flex items-center gap-1.5">
+            <Icon icon={icon} style={{fontSize: "14px", color: 'var(--gray11)'}} />
+            <div className="flex flex-col">
+                <span className="text-[10px]" style={{color: 'var(--gray10)'}}>{label}</span>
+                <span className="text-xs font-medium" style={{color: 'var(--gray12)'}}>{value}</span>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Daily weather card component for displaying forecast day
+ */
+function DailyWeatherCard({day, index}: {
+    day: {
+        date: string;
+        tempMax: string;
+        tempMin: string;
+        textDay: string;
+        textNight: string;
+        windDirDay: string;
+        windScaleDay: string;
+        humidity: string;
+        precip: string;
+        uvIndex: string;
+    };
+    index: number;
+}) {
+    const date = new Date(day.date);
+    const dayName = index === 0 ? '今天' :
+                    index === 1 ? '明天' :
+                    ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()];
+    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+
+    const getUVLevel = (uvIndex: string) => {
+        const uv = parseInt(uvIndex);
+        if (uv <= 2) return { text: '低', color: 'var(--green11)' };
+        if (uv <= 5) return { text: '中', color: 'var(--yellow11)' };
+        if (uv <= 7) return { text: '高', color: 'var(--orange11)' };
+        if (uv <= 10) return { text: '很高', color: 'var(--red11)' };
+        return { text: '极高', color: 'var(--purple11)' };
+    };
+
+    const uvLevel = getUVLevel(day.uvIndex);
+
+    return (
+        <div
+            className="flex flex-col items-center p-1.5 rounded border border-border/40 hover:border-border transition-colors"
+            style={{background: 'var(--gray2)'}}
+        >
+            {/* Date */}
+            <div className="text-center mb-1">
+                <div className="text-[10px] font-medium" style={{color: 'var(--gray12)'}}>
+                    {dayName}
+                </div>
+                <div className="text-[9px]" style={{color: 'var(--gray11)'}}>
+                    {dateStr}
+                </div>
+            </div>
+
+            {/* Weather icon */}
+            <div className="text-3xl mb-1">
+                {getWeatherIcon(day.textDay)}
+            </div>
+
+            {/* Temperature */}
+            <div className="text-center mb-1">
+                <div className="text-sm font-bold tabular-nums" style={{color: 'var(--gray12)'}}>
+                    {day.tempMax}°
+                </div>
+                <div className="text-xs tabular-nums" style={{color: 'var(--gray11)'}}>
+                    {day.tempMin}°
+                </div>
+            </div>
+
+            {/* Weather condition */}
+            <div className="text-[10px] text-center mb-1 leading-tight px-0.5" style={{color: 'var(--gray11)'}}>
+                {day.textDay.length > 4 ? day.textDay.substring(0, 4) : day.textDay}
+            </div>
+
+            {/* Additional info */}
+            <div className="w-full space-y-0.5 pt-1 border-t border-border/30">
+                {/* UV Index */}
+                <div className="flex items-center justify-between text-[9px]">
+                    <span style={{color: 'var(--gray10)'}}>紫外线</span>
+                    <span style={{color: uvLevel.color}}>{uvLevel.text}</span>
+                </div>
+
+                {/* Precipitation - only if non-zero */}
+                {parseFloat(day.precip) > 0 && (
+                    <div className="flex items-center justify-between text-[9px]">
+                        <span style={{color: 'var(--gray10)'}}>降水</span>
+                        <span style={{color: 'var(--blue11)'}}>{day.precip}mm</span>
+                    </div>
+                )}
+
+                {/* Humidity */}
+                <div className="flex items-center justify-between text-[9px]">
+                    <span style={{color: 'var(--gray10)'}}>湿度</span>
+                    <span style={{color: 'var(--gray11)'}}>{day.humidity}%</span>
+                </div>
+            </div>
         </div>
     );
 }

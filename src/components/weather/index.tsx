@@ -46,8 +46,14 @@ interface QWeatherData {
         tempMax: string;
         tempMin: string;
         textDay: string;
+        textNight: string;
         sunrise?: string;
         sunset?: string;
+        windDirDay: string;
+        windScaleDay: string;
+        humidity: string;
+        precip: string;
+        uvIndex: string;
     }>;
     indices?: Array<{
         name: string;
