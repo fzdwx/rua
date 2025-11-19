@@ -1,7 +1,7 @@
 import * as React from "react";
 import {QuickLink} from "@/hooks/useQuickLinks.tsx";
 import {openUrl} from "@tauri-apps/plugin-opener";
-import {readText} from "@tauri-apps/plugin-clipboard-manager";
+import {readClipboard} from "@/utils/clipboard";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 
 interface QuickLinkViewProps {
@@ -33,7 +33,7 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
             // Replace {selection} with clipboard content
             if (url.includes('{selection}')) {
                 try {
-                    const clipboardText = await readText();
+                    const clipboardText = await readClipboard();
                     const selectionValue = clipboardText || '';
                     url = url.replace(/\{selection\}/g, encodeURIComponent(selectionValue));
                 } catch (error) {

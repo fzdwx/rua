@@ -1,5 +1,6 @@
 mod applications;
 mod proxy;
+mod clipboard;
 
 use tauri::Manager;
 
@@ -14,7 +15,6 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             let win = app.get_webview_window("main").unwrap();
             win.eval("window.location.reload()").unwrap();
@@ -29,7 +29,9 @@ pub fn run() {
             applications::get_applications,
             applications::refresh_applications_cache,
             applications::launch_application,
-            proxy::fetch_with_proxy
+            proxy::fetch_with_proxy,
+            clipboard::read_clipboard,
+            clipboard::write_clipboard
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

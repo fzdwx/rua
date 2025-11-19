@@ -6,6 +6,23 @@ This template should help get you started developing with Tauri, React and Types
 
 - [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
 
+## Linux Dependencies
+
+For clipboard functionality on Linux, install xclip:
+
+```shell
+# Arch Linux
+sudo pacman -S xclip
+
+# Ubuntu/Debian
+sudo apt install xclip
+
+# Fedora
+sudo dnf install xclip
+```
+
+## Environment Variables
+
 ```shell
 export WEBKIT_DISABLE_DMABUF_RENDERER=1
 export WEBKIT_DISABLE_COMPOSITING_MODE=1
