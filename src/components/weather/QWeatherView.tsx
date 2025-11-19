@@ -139,55 +139,42 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
                 {/* Current weather card */}
                 <Card className="border-0" style={{background: 'var(--gray3)'}}>
                     <CardContent className="p-3">
-                        {/* Header with location */}
-                        <div className="flex items-center gap-2 mb-3">
-                            <h2 className="text-lg font-bold" style={{color: 'var(--gray12)'}}>
-                                {weatherData.location}
-                            </h2>
-                            {isDefaultCity && (
-                                <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
-                                    默认城市
-                                </Badge>
-                            )}
-                        </div>
-
-                        {/* Center section: icon, temperature, condition, sunrise/sunset */}
+                        {/* Main row: city (left), temperature (center), sunrise/sunset (right) */}
                         <div className="flex items-center justify-between mb-3">
-                            {/* Left: Weather icon */}
-                            <div className="text-5xl">
-                                {getWeatherIcon(weatherData.condition)}
+                            {/* Left: City name and badge */}
+                            <div className="flex flex-col items-start min-w-0 flex-shrink-0">
+                                <h2 className="text-base font-bold truncate" style={{color: 'var(--gray12)'}}>
+                                    {weatherData.location}
+                                </h2>
+                                {isDefaultCity && (
+                                    <Badge variant="secondary" className="text-[9px] h-4 px-1.5 mt-0.5">
+                                        默认城市
+                                    </Badge>
+                                )}
                             </div>
 
-                            {/* Center: Temperature and condition */}
-                            <div className="flex flex-col items-center">
-                                <div className="text-4xl font-bold" style={{color: 'var(--gray12)'}}>
-                                    {weatherData.temperature}
+                            {/* Center: Weather icon, temperature and condition */}
+                            <div className="flex items-center gap-2">
+                                <div className="text-3xl">
+                                    {getWeatherIcon(weatherData.condition)}
                                 </div>
-                                <p className="text-sm" style={{color: 'var(--gray11)'}}>
-                                    {weatherData.condition}
-                                </p>
+                                <div className="flex flex-col items-center">
+                                    <div className="text-3xl font-bold" style={{color: 'var(--gray12)'}}>
+                                        {weatherData.temperature}
+                                    </div>
+                                    <p className="text-xs" style={{color: 'var(--gray11)'}}>
+                                        {weatherData.condition}
+                                    </p>
+                                </div>
                             </div>
 
-                            {/* Right: Sunrise and Sunset */}
-                            {weatherData.daily && weatherData.daily[0] && (
-                                <div className="flex flex-col gap-1.5">
-                                    {weatherData.daily[0].sunrise && (
-                                        <div className="flex items-center gap-1.5">
-                                            <Icon icon="tabler:sunrise" style={{fontSize: "14px", color: 'var(--orange11)'}} />
-                                            <span className="text-[10px] tabular-nums" style={{color: 'var(--gray11)'}}>
-                                                {weatherData.daily[0].sunrise}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {weatherData.daily[0].sunset && (
-                                        <div className="flex items-center gap-1.5">
-                                            <Icon icon="tabler:sunset" style={{fontSize: "14px", color: 'var(--orange11)'}} />
-                                            <span className="text-[10px] tabular-nums" style={{color: 'var(--gray11)'}}>
-                                                {weatherData.daily[0].sunset}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
+                            {/* Right: Sunrise and Sunset Timeline */}
+                            {weatherData.daily && weatherData.daily[0] && weatherData.daily[0].sunrise && weatherData.daily[0].sunset && (
+                                <SunTimeline
+                                    sunrise={weatherData.daily[0].sunrise}
+                                    sunset={weatherData.daily[0].sunset}
+                                    condition={weatherData.condition}
+                                />
                             )}
                         </div>
 
@@ -338,6 +325,262 @@ function WeatherStat({icon, label, value}: {icon: string, label: string, value: 
         </div>
     );
 }
+
+/**
+ * Sun Timeline component - modern sunrise/sunset display with wave trajectory
+ */
+function SunTimeline({sunrise, sunset, condition}: {sunrise: string, sunset: string, condition: string}) {
+    // Parse time strings (HH:mm format)
+    const parseTime = (timeStr: string) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+
+    const sunriseMinutes = parseTime(sunrise);
+    const sunsetMinutes = parseTime(sunset);
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    // Calculate sun position
+    const dayLength = sunsetMinutes - sunriseMinutes;
+    const sunProgress = Math.max(0, Math.min(1, (currentMinutes - sunriseMinutes) / dayLength));
+    const isDaytime = currentMinutes >= sunriseMinutes && currentMinutes <= sunsetMinutes;
+
+    // Determine weather-based styling for sky - lighter, more modern colors
+    const getWeatherStyle = (condition: string) => {
+        const conditionLower = condition.toLowerCase();
+
+        // Sunny/Clear - soft warm gradient
+        if (conditionLower.includes('sun') || conditionLower.includes('clear') || conditionLower.includes('晴')) {
+            return {
+                skyGradient: ['#fef9c3', '#fef3c7', '#fed7aa'], // Soft yellow to peach
+                textColor: '#78350f',
+                labelColor: '#d97706',
+                waveColor: 'rgba(251, 191, 36, 0.3)',
+                waveActiveColor: '#fbbf24',
+                markerColor: '#f59e0b',
+                sunColor: '#fbbf24',
+                sunGlow: '#fef08a'
+            };
+        }
+
+        // Cloudy - soft gray gradient
+        if (conditionLower.includes('cloud') || conditionLower.includes('云') || conditionLower.includes('阴')) {
+            return {
+                skyGradient: ['#f8fafc', '#f1f5f9', '#e2e8f0'],
+                textColor: '#334155',
+                labelColor: '#64748b',
+                waveColor: 'rgba(148, 163, 184, 0.3)',
+                waveActiveColor: '#94a3b8',
+                markerColor: '#64748b',
+                sunColor: '#fbbf24',
+                sunGlow: '#fef08a'
+            };
+        }
+
+        // Rainy - soft blue-gray gradient
+        if (conditionLower.includes('rain') || conditionLower.includes('雨')) {
+            return {
+                skyGradient: ['#f0f9ff', '#e0f2fe', '#bae6fd'],
+                textColor: '#0c4a6e',
+                labelColor: '#0284c7',
+                waveColor: 'rgba(56, 189, 248, 0.3)',
+                waveActiveColor: '#38bdf8',
+                markerColor: '#0ea5e9',
+                sunColor: '#fbbf24',
+                sunGlow: '#fef08a'
+            };
+        }
+
+        // Default - soft amber gradient
+        return {
+            skyGradient: ['#fffbeb', '#fef3c7', '#fde68a'],
+            textColor: '#78350f',
+            labelColor: '#b45309',
+            waveColor: 'rgba(251, 191, 36, 0.3)',
+            waveActiveColor: '#f59e0b',
+            markerColor: '#d97706',
+            sunColor: '#fbbf24',
+            sunGlow: '#fef08a'
+        };
+    };
+
+    const style = getWeatherStyle(condition);
+
+    // SVG parameters
+    const width = 120;
+    const height = 65;
+    const padding = 8;
+    const startX = padding;
+    const endX = width - padding;
+    const horizonY = height - 22;
+    const waveAmplitude = 20;
+
+    // Calculate sun position on wave
+    const sunX = startX + (endX - startX) * sunProgress;
+    const sunY = horizonY - Math.abs(Math.sin(sunProgress * Math.PI)) * waveAmplitude;
+
+    // Generate wave path
+    const generateWavePath = (progress: number) => {
+        let path = `M ${startX} ${horizonY}`;
+        const steps = 50;
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            if (t > progress) break;
+            const x = startX + (endX - startX) * t;
+            const y = horizonY - Math.abs(Math.sin(t * Math.PI)) * waveAmplitude;
+            path += ` L ${x} ${y}`;
+        }
+        return path;
+    };
+
+    return (
+        <div
+            className="rounded-xl overflow-hidden"
+            style={{minWidth: '140px'}}
+        >
+            <div className="flex items-center gap-2 px-2.5 py-2">
+                {/* Left: Current phase and time */}
+                <div className="flex flex-col min-w-[50px]">
+                    <span className="text-[10px] font-medium" style={{color: style.labelColor}}>
+                        {isDaytime ? '日落' : '日出'}
+                    </span>
+                    <span className="text-sm font-bold tabular-nums" style={{color: style.textColor}}>
+                        {isDaytime ? sunset : sunrise}
+                    </span>
+                </div>
+
+                {/* Right: Wave visualization */}
+                <div className="flex-1">
+                    <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{height: '65px'}}>
+                        {/* Background wave (full trajectory) */}
+                        <path
+                            d={generateWavePath(1)}
+                            fill="none"
+                            stroke={style.waveColor}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                        />
+
+                        {/* Active wave (current progress - daytime only) */}
+                        {isDaytime && (
+                            <path
+                                d={generateWavePath(sunProgress)}
+                                fill="none"
+                                stroke={style.waveActiveColor}
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                            />
+                        )}
+
+                        {/* Horizon line - extended below */}
+                        <line
+                            x1={0}
+                            y1={horizonY}
+                            x2={width}
+                            y2={horizonY}
+                            stroke="var(--gray8)"
+                            strokeWidth="1"
+                        />
+
+                        {/* Vertical lines at sunrise/sunset positions */}
+                        <line
+                            x1={startX}
+                            y1={horizonY}
+                            x2={startX}
+                            y2={height}
+                            stroke="var(--gray6)"
+                            strokeWidth="1"
+                        />
+                        <line
+                            x1={endX}
+                            y1={horizonY}
+                            x2={endX}
+                            y2={height}
+                            stroke="var(--gray6)"
+                            strokeWidth="1"
+                        />
+
+                        {/* Sunrise marker */}
+                        <g>
+                            <circle cx={startX} cy={horizonY} r="2.5" fill={style.markerColor} />
+                            <text
+                                x={startX + 2}
+                                y={horizonY + 11}
+                                fontSize="7"
+                                fill="var(--gray11)"
+                                textAnchor="start"
+                                fontFamily="system-ui"
+                                fontWeight="500"
+                            >
+                                {sunrise}
+                            </text>
+                        </g>
+
+                        {/* Sunset marker */}
+                        <g>
+                            <circle cx={endX} cy={horizonY} r="2.5" fill={style.markerColor} />
+                            <text
+                                x={endX - 2}
+                                y={horizonY + 11}
+                                fontSize="7"
+                                fill="var(--gray11)"
+                                textAnchor="end"
+                                fontFamily="system-ui"
+                                fontWeight="500"
+                            >
+                                {sunset}
+                            </text>
+                        </g>
+
+                        {/* Sun position (daytime) */}
+                        {isDaytime && (
+                            <g>
+                                {/* Outer glow */}
+                                <circle
+                                    cx={sunX}
+                                    cy={sunY}
+                                    r="8"
+                                    fill={style.sunGlow}
+                                    opacity="0.3"
+                                >
+                                    <animate
+                                        attributeName="r"
+                                        values="8;10;8"
+                                        dur="3s"
+                                        repeatCount="indefinite"
+                                    />
+                                    <animate
+                                        attributeName="opacity"
+                                        values="0.3;0.5;0.3"
+                                        dur="3s"
+                                        repeatCount="indefinite"
+                                    />
+                                </circle>
+                                {/* Inner glow */}
+                                <circle
+                                    cx={sunX}
+                                    cy={sunY}
+                                    r="5"
+                                    fill={style.sunGlow}
+                                    opacity="0.5"
+                                />
+                                {/* Sun core */}
+                                <circle
+                                    cx={sunX}
+                                    cy={sunY}
+                                    r="3.5"
+                                    fill={style.sunColor}
+                                />
+                            </g>
+                        )}
+                    </svg>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 
 /**
  * Daily weather card component for displaying forecast day
