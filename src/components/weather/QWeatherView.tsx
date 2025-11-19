@@ -1,7 +1,9 @@
 import {Icon} from "@iconify/react";
 import {Footer} from "@/command";
-import {Button} from "@/components/ui/button";
 import {Kbd, KbdGroup} from "@/components/ui/kbd";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
+import {Separator} from "@/components/ui/separator";
 import {WeatherConfig} from "@/hooks/useWeatherConfig.tsx";
 import {
     fetchQWeatherDaily,
@@ -118,164 +120,179 @@ function getWeatherIcon(condition: string): string {
  * Weather view for QWeather provider
  * Displays detailed weather information including daily forecast and life indices
  */
-export function QWeatherView({weatherData, isDefaultCity, onOpenSettings}: QWeatherViewProps) {
+export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
     return (
         <>
-            <div className="p-3 overflow-y-auto">
+            <div className="p-3 space-y-3 overflow-y-auto">
                 {/* Current weather card */}
-                <div
-                    className="p-4 rounded-lg border"
-                    style={{
-                        background: 'var(--gray3)',
-                        borderColor: 'var(--gray6)',
-                    }}
-                >
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="text-3xl">{getWeatherIcon(weatherData.condition)}</div>
-                        <div className="flex-1">
-                            <div className="text-lg font-bold" style={{color: 'var(--gray12)'}}>
-                                {weatherData.location}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="text-xs" style={{color: 'var(--gray11)'}}>
-                                    {weatherData.condition}
-                                </div>
-                                {isDefaultCity && (
-                                    <div className="text-[10px] px-1.5 py-0.5 rounded" style={{
-                                        color: 'var(--gray11)',
-                                        background: 'var(--gray5)',
-                                    }}>
-                                        默认城市
+                <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                    <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                            <div className="flex items-start gap-4 flex-1">
+                                <div className="text-5xl">{getWeatherIcon(weatherData.condition)}</div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h2 className="text-xl font-bold truncate" style={{color: 'var(--gray12)'}}>
+                                            {weatherData.location}
+                                        </h2>
+                                        {isDefaultCity && (
+                                            <Badge variant="secondary" className="text-[10px] h-5">
+                                                默认城市
+                                            </Badge>
+                                        )}
                                     </div>
-                                )}
+                                    <p className="text-sm" style={{color: 'var(--gray11)'}}>
+                                        {weatherData.condition}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div className="text-3xl font-bold mb-4" style={{color: 'var(--gray12)'}}>
-                        {weatherData.temperature}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:droplet" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>湿度</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.humidity}</div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:temperature" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>体感温度</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.feelsLike}</div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:wind" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>风速</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.windSpeed}</div>
+                            {/* Sunrise and Sunset */}
+                            {weatherData.daily && weatherData.daily[0] && (
+                                <div className="flex flex-col gap-2">
+                                    {weatherData.daily[0].sunrise && (
+                                        <div className="flex items-center gap-2">
+                                            <Icon icon="tabler:sunrise" style={{fontSize: "16px", color: 'var(--orange11)'}} />
+                                            <span className="text-xs tabular-nums" style={{color: 'var(--gray11)'}}>
+                                                {weatherData.daily[0].sunrise}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {weatherData.daily[0].sunset && (
+                                        <div className="flex items-center gap-2">
+                                            <Icon icon="tabler:sunset" style={{fontSize: "16px", color: 'var(--orange11)'}} />
+                                            <span className="text-xs tabular-nums" style={{color: 'var(--gray11)'}}>
+                                                {weatherData.daily[0].sunset}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:navigation" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>风向</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.windDir}</div>
+                        <div className="text-4xl font-bold mb-4" style={{color: 'var(--gray12)'}}>
+                            {weatherData.temperature}
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:gauge" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>气压</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.pressure}</div>
-                        </div>
+                        <Separator className="my-4" />
 
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:eye" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>能见度</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.vis}</div>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                            <WeatherStat
+                                icon="tabler:temperature"
+                                label="体感温度"
+                                value={weatherData.feelsLike}
+                            />
+                            <WeatherStat
+                                icon="tabler:droplet"
+                                label="湿度"
+                                value={weatherData.humidity}
+                            />
+                            <WeatherStat
+                                icon="tabler:wind"
+                                label="风速"
+                                value={weatherData.windSpeed}
+                            />
+                            <WeatherStat
+                                icon="tabler:navigation"
+                                label="风向"
+                                value={weatherData.windDir}
+                            />
+                            <WeatherStat
+                                icon="tabler:gauge"
+                                label="气压"
+                                value={weatherData.pressure}
+                            />
+                            <WeatherStat
+                                icon="tabler:eye"
+                                label="能见度"
+                                value={weatherData.vis}
+                            />
+                            <WeatherStat
+                                icon="tabler:umbrella"
+                                label="降水量"
+                                value={weatherData.precip}
+                            />
+                            {weatherData.cloud && (
+                                <WeatherStat
+                                    icon="tabler:cloud"
+                                    label="云量"
+                                    value={`${weatherData.cloud}%`}
+                                />
+                            )}
                         </div>
-
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:umbrella" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>降水量</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.precip}</div>
-                        </div>
-
-                        {weatherData.cloud && (
-                            <div className="flex items-center gap-2">
-                                <Icon icon="tabler:cloud" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                                <div style={{color: 'var(--gray11)'}}>云量</div>
-                                <div style={{color: 'var(--gray12)'}}>{weatherData.cloud}%</div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
                 {/* Daily forecast */}
                 {weatherData.daily && weatherData.daily.length > 0 && (
-                    <div
-                        className="p-4 my-2 rounded-lg border"
-                        style={{
-                            background: 'var(--gray3)',
-                            borderColor: 'var(--gray6)',
-                        }}
-                    >
-                        <div className="text-sm font-bold mb-3" style={{color: 'var(--gray12)'}}>
-                            未来天气
-                        </div>
-                        <div className="space-y-2">
+                    <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                                <Icon icon="tabler:calendar" style={{fontSize: "16px"}} />
+                                未来天气
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
                             {weatherData.daily.map((day, index) => (
-                                <div key={index} className="flex items-center justify-between text-xs">
-                                    <div style={{color: 'var(--gray11)', minWidth: '80px'}}>
-                                        {index === 0 ? '今天' : new Date(day.date).toLocaleDateString('zh-CN', {
-                                            month: 'short',
-                                            day: 'numeric'
-                                        })}
-                                    </div>
-                                    <div className="flex-1 px-2" style={{color: 'var(--gray12)'}}>
-                                        {day.textDay}
-                                    </div>
-                                    <div style={{color: 'var(--gray12)', fontWeight: '500'}}>
-                                        {day.tempMin}° - {day.tempMax}°
+                                <div key={index}>
+                                    {index > 0 && <Separator className="my-2" />}
+                                    <div className="flex items-center justify-between py-1">
+                                        <span className="text-xs min-w-[80px]" style={{color: 'var(--gray11)'}}>
+                                            {index === 0 ? '今天' : new Date(day.date).toLocaleDateString('zh-CN', {
+                                                month: 'short',
+                                                day: 'numeric'
+                                            })}
+                                        </span>
+                                        <span className="flex-1 px-3 text-xs" style={{color: 'var(--gray12)'}}>
+                                            {day.textDay}
+                                        </span>
+                                        <span className="text-xs font-medium tabular-nums" style={{color: 'var(--gray12)'}}>
+                                            {day.tempMin}° - {day.tempMax}°
+                                        </span>
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 )}
 
                 {/* Life indices */}
                 {weatherData.indices && weatherData.indices.length > 0 && (
-                    <div
-                        className="p-4 my-2 rounded-lg border"
-                        style={{
-                            background: 'var(--gray3)',
-                            borderColor: 'var(--gray6)',
-                        }}
-                    >
-                        <div className="text-sm font-bold mb-3" style={{color: 'var(--gray12)'}}>
-                            生活指数
-                        </div>
-                        <div className="space-y-3">
+                    <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                                <Icon icon="tabler:bulb" style={{fontSize: "16px"}} />
+                                生活指数
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
                             {weatherData.indices.map((index, i) => (
-                                <div key={i} className="text-xs">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <div style={{color: 'var(--gray11)'}}>{index.name}</div>
-                                        <div
-                                            className="px-2 py-0.5 rounded text-[10px]"
-                                            style={{
-                                                color: 'var(--blue11)',
-                                                background: 'var(--blue4)',
-                                            }}
-                                        >
-                                            {index.category}
+                                <div key={i}>
+                                    {i > 0 && <Separator className="my-3" />}
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium" style={{color: 'var(--gray11)'}}>
+                                                {index.name}
+                                            </span>
+                                            <Badge
+                                                variant="secondary"
+                                                className="text-[10px] h-5"
+                                                style={{
+                                                    color: 'var(--blue11)',
+                                                    background: 'var(--blue4)',
+                                                }}
+                                            >
+                                                {index.category}
+                                            </Badge>
                                         </div>
-                                    </div>
-                                    <div style={{color: 'var(--gray12)', lineHeight: '1.4'}}>
-                                        {index.text}
+                                        <p className="text-xs leading-relaxed" style={{color: 'var(--gray12)'}}>
+                                            {index.text}
+                                        </p>
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 )}
             </div>
 
@@ -289,22 +306,30 @@ export function QWeatherView({weatherData, isDefaultCity, onOpenSettings}: QWeat
                     </div>
                 )}
                 rightElement={
-                    <div className='flex items-center gap-3 pr-6'>
-                        <Button
-                            onClick={onOpenSettings}
-                            variant="outline"
-                            size="sm"
-                        >
-                            <Icon icon="tabler:settings" className="mr-1" style={{fontSize: "14px"}}/>
-                            设置
-                            <KbdGroup>
+                    <div className='flex items-center gap-3 pr-6 flex-shrink-0'>
+                        <div className="flex items-center gap-1.5 text-xs" style={{color: 'var(--gray11)'}}>
+                            <Icon icon="tabler:settings" style={{fontSize: "20px"}}/>
+                            <KbdGroup className="gap-1">
                                 <Kbd>Ctrl</Kbd>
-                                <Kbd>k</Kbd>
+                                <Kbd>K</Kbd>
                             </KbdGroup>
-                        </Button>
+                        </div>
                     </div>
                 }
             />
         </>
+    );
+}
+
+/**
+ * Weather stat component for displaying individual weather metrics
+ */
+function WeatherStat({icon, label, value}: {icon: string, label: string, value: string}) {
+    return (
+        <div className="flex items-center gap-2">
+            <Icon icon={icon} style={{fontSize: "16px", color: 'var(--gray11)'}} />
+            <span className="text-xs" style={{color: 'var(--gray11)'}}>{label}</span>
+            <span className="text-xs font-medium ml-auto" style={{color: 'var(--gray12)'}}>{value}</span>
+        </div>
     );
 }

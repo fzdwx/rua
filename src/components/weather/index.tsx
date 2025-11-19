@@ -5,7 +5,6 @@ import {useWeatherConfig, WeatherConfig} from "@/hooks/useWeatherConfig";
 import {WeatherSettings} from "./WeatherSettings";
 import {getWeatherFromWttr, WttrWeatherView} from "./WttrWeatherView";
 import {getWeatherFromQWeather, QWeatherView} from "./QWeatherView";
-import {Button} from "@/components/ui/button";
 import {Kbd, KbdGroup} from "@/components/ui/kbd";
 import {useKeyPress} from "ahooks";
 
@@ -213,18 +212,13 @@ export function WeatherView({search, onLoadingChange, onRequestFocusInput}: Weat
                     content={() => <div/>}
                     rightElement={
                         <div className='flex items-center gap-3 pr-6'>
-                            <Button
-                                onClick={() => setShowSettings(true)}
-                                variant="outline"
-                                size="sm"
-                            >
-                                <Icon icon="tabler:settings" className="mr-1" style={{fontSize: "14px"}}/>
-                                设置
-                                <KbdGroup>
+                            <div className="flex items-center gap-1.5 text-xs" style={{color: 'var(--gray11)'}}>
+                                <span>设置</span>
+                                <KbdGroup className="gap-1">
                                     <Kbd>Ctrl</Kbd>
-                                    <Kbd>k</Kbd>
+                                    <Kbd>K</Kbd>
                                 </KbdGroup>
-                            </Button>
+                            </div>
                         </div>
                     }
                 />

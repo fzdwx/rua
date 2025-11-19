@@ -4,10 +4,11 @@ import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {useKeyPress} from "ahooks";
-import {Kbd, KbdGroup} from "@/components/ui/kbd";
 import {clearQWeatherCache} from "./hefeng/qweather-cache.ts";
 import {Footer} from "@/command";
 import {Icon} from "@iconify/react";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 
 interface WeatherSettingsProps {
     onClose?: () => void;
@@ -26,17 +27,14 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
     const [successMessage, setSuccessMessage] = React.useState("");
 
     // Refs for auto-focus
-    const providerSelectRef = React.useRef<HTMLSelectElement>(null);
     const apiUrlInputRef = React.useRef<HTMLInputElement>(null);
 
     // Auto-focus on mount
     React.useEffect(() => {
         if (provider === "qweather" && apiUrlInputRef.current) {
             apiUrlInputRef.current.focus();
-        } else {
-            providerSelectRef.current?.focus();
         }
-    }, []);
+    }, [provider]);
 
     // Add Ctrl+Enter shortcut to save
     useKeyPress('ctrl.enter', (e) => {
@@ -91,31 +89,58 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
 
     return (
         <>
-            <div className="p-4 overflow-y-auto">
-                <div className="rounded-lg border border-gray-200 dark:border-gray-800  space-y-6">
-                    {/* Provider selection */}
-                    <div className="space-y-2">
-                        <Label htmlFor="provider">数据来源</Label>
-                        <select
-                            id="provider"
-                            ref={providerSelectRef}
+            <div className="p-4 space-y-4 overflow-y-auto">
+                {/* Provider selection card */}
+                <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                            <Icon icon="tabler:cloud-cog" style={{fontSize: "16px"}} />
+                            数据来源
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <Select
                             value={provider}
-                            onChange={(e) => setLocalProvider(e.target.value as "wttr" | "qweather")}
-                            className="w-full px-3 py-2 rounded-lg border text-sm"
-                            style={{
-                                borderColor: 'var(--gray6)',
-                                background: 'var(--gray3)',
-                                color: 'var(--gray12)',
-                            }}
+                            onValueChange={(value) => setLocalProvider(value as "wttr" | "qweather")}
                         >
-                            <option value="wttr">wttr.in (默认) - 免费，无需配置，支持全球城市和IP自动定位</option>
-                            <option value="qweather">和风天气 - 需要配置 API Key，支持中国城市，提供更详细的天气数据</option>
-                        </select>
-                    </div>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="选择数据来源" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="wttr">
+                                    wttr.in (默认) - 免费，无需配置，支持全球城市和IP自动定位
+                                </SelectItem>
+                                <SelectItem value="qweather">
+                                    和风天气 - 需要配置 API Key，支持中国城市，提供更详细的天气数据
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </CardContent>
+                </Card>
 
-                    {/* QWeather configuration */}
-                    {provider === "qweather" && (
-                        <div className="space-y-4 p-4 rounded-lg" style={{background: 'var(--gray3)'}}>
+                {/* QWeather configuration card */}
+                {provider === "qweather" && (
+                    <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                                <Icon icon="tabler:key" style={{fontSize: "16px"}} />
+                                和风天气配置
+                            </CardTitle>
+                            <CardDescription>
+                                在{' '}
+                                <a
+                                    href="https://dev.qweather.com"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="underline"
+                                    style={{color: 'var(--blue11)'}}
+                                >
+                                    和风天气开发平台
+                                </a>
+                                {' '}获取 API Key
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="api-url">
                                     API URL <span className="text-red-500">*</span>
@@ -144,19 +169,6 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
                                     onChange={(e) => setApiKey(e.target.value)}
                                     placeholder="请输入和风天气 API Key"
                                 />
-                                <p className="text-xs" style={{color: 'var(--gray11)'}}>
-                                    在{' '}
-                                    <a
-                                        href="https://dev.qweather.com"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="underline"
-                                        style={{color: 'var(--blue11)'}}
-                                    >
-                                        和风天气开发平台
-                                    </a>
-                                    {' '}获取 API Key
-                                </p>
                             </div>
 
                             <div className="space-y-2">
@@ -174,75 +186,90 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
                                     当不输入城市名称时，将使用此默认城市查询天气（可选）
                                 </p>
                             </div>
-                        </div>
-                    )}
+                        </CardContent>
+                    </Card>
+                )}
 
-                    {error && (
-                        <div className="p-3 rounded-lg" style={{background: 'var(--red3)', color: 'var(--red11)'}}>
-                            {error}
-                        </div>
-                    )}
-
-                    {successMessage && (
-                        <div className="p-3 rounded-lg" style={{background: 'var(--green3)', color: 'var(--green11)'}}>
-                            {successMessage}
-                        </div>
-                    )}
-
-                    {provider === "qweather" && (
-                        <div className="flex items-center justify-between p-3 rounded-lg" style={{background: 'var(--gray3)'}}>
-                            <div className="flex-1">
-                                <div className="text-sm font-medium" style={{color: 'var(--gray12)'}}>清除缓存</div>
-                                <p className="text-xs mt-1" style={{color: 'var(--gray11)'}}>
-                                    和风天气数据会被缓存以减少 API 调用。如需强制刷新，可清除缓存。
-                                </p>
-                            </div>
+                {/* Cache management card */}
+                {provider === "qweather" && (
+                    <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                                <Icon icon="tabler:database" style={{fontSize: "16px"}} />
+                                缓存管理
+                            </CardTitle>
+                            <CardDescription>
+                                和风天气数据会被缓存以减少 API 调用。如需强制刷新，可清除缓存。
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
                             <Button
                                 onClick={handleClearCache}
                                 variant="outline"
                                 size="sm"
+                                className="w-full"
                             >
-                                清除
+                                <Icon icon="tabler:trash" className="mr-2" style={{fontSize: "14px"}}/>
+                                清除缓存
                             </Button>
-                        </div>
-                    )}
-                </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Error message */}
+                {error && (
+                    <Card className="border-0" style={{background: 'var(--red3)'}}>
+                        <CardContent className="p-4">
+                            <div className="flex items-start gap-2">
+                                <Icon icon="tabler:alert-circle" style={{fontSize: "16px", color: 'var(--red11)'}} />
+                                <p className="text-sm" style={{color: 'var(--red11)'}}>{error}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Success message */}
+                {successMessage && (
+                    <Card className="border-0" style={{background: 'var(--green3)'}}>
+                        <CardContent className="p-4">
+                            <div className="flex items-start gap-2">
+                                <Icon icon="tabler:check" style={{fontSize: "16px", color: 'var(--green11)'}} />
+                                <p className="text-sm" style={{color: 'var(--green11)'}}>{successMessage}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
 
             <Footer
                 current={null}
-                icon={<Icon icon="tabler:cloud" style={{fontSize: "20px"}}/>}
+                icon={<Icon icon="tabler:settings" style={{fontSize: "20px"}}/>}
                 actions={() => []}
                 content={() => (
                     <div className="text-[11px]" style={{color: 'var(--gray10)'}}>
-                        设置
+                        天气设置
                     </div>
                 )}
                 rightElement={
-                    <div className='flex items-center gap-3 pr-6'>
+                    <div className='flex items-center gap-3 pr-4 flex-shrink-0'>
                         <Button
                             onClick={handleSave}
                             variant="outline"
                             size="sm"
+                            className="whitespace-nowrap"
                         >
-                            <Icon icon="tabler:device-floppy" className="mr-1" style={{fontSize: "14px"}}/>
+                            <Icon icon="tabler:device-floppy" className="mr-1.5" style={{fontSize: "14px"}}/>
                             保存
-                            <KbdGroup>
-                                <Kbd>Ctrl</Kbd>
-                                <Kbd>⏎</Kbd>
-                            </KbdGroup>
                         </Button>
                         {onClose && (
                             <Button
                                 onClick={onClose}
                                 variant="outline"
                                 size="sm"
+                                className="whitespace-nowrap"
                             >
-                                <Icon icon="tabler:x" className="mr-1" style={{fontSize: "14px"}}/>
+                                <Icon icon="tabler:x" className="mr-1.5" style={{fontSize: "14px"}}/>
                                 取消
-                                <KbdGroup>
-                                    <Kbd>Esc</Kbd>
-                                </KbdGroup>
                             </Button>
                         )}
                     </div>

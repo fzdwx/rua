@@ -1,7 +1,9 @@
 import {Icon} from "@iconify/react";
 import {Footer} from "@/command";
-import {Button} from "@/components/ui/button";
 import {Kbd, KbdGroup} from "@/components/ui/kbd";
+import {Card, CardContent} from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
+import {Separator} from "@/components/ui/separator";
 import {WeatherData} from "@/components/weather/index.tsx";
 
 interface WttrWeatherData {
@@ -80,70 +82,62 @@ function getWeatherIcon(condition: string): string {
  * Weather view for wttr.in provider
  * Displays basic weather information
  */
-export function WttrWeatherView({weatherData, isCurrentLocation, onOpenSettings}: WttrWeatherViewProps) {
+export function WttrWeatherView({weatherData, isCurrentLocation}: WttrWeatherViewProps) {
     return (
         <>
-            <div className="p-3 overflow-y-auto max-h-[calc(100vh-120px)]">
+            <div className="p-3 space-y-3 overflow-y-auto">
                 {/* Weather card */}
-                <div
-                    className="p-4 my-2 rounded-lg border"
-                    style={{
-                        background: 'var(--gray3)',
-                        borderColor: 'var(--gray6)',
-                    }}
-                >
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="text-3xl">{getWeatherIcon(weatherData.condition)}</div>
-                        <div className="flex-1">
-                            <div className="text-lg font-bold" style={{color: 'var(--gray12)'}}>
-                                {weatherData.location}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="text-xs" style={{color: 'var(--gray11)'}}>
-                                    {weatherData.condition}
+                <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                    <CardContent className="p-4">
+                        <div className="flex items-start gap-4 mb-4">
+                            <div className="text-5xl">{getWeatherIcon(weatherData.condition)}</div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <h2 className="text-xl font-bold truncate" style={{color: 'var(--gray12)'}}>
+                                        {weatherData.location}
+                                    </h2>
+                                    {isCurrentLocation && (
+                                        <Badge variant="secondary" className="text-[10px] h-5">
+                                            当前位置
+                                        </Badge>
+                                    )}
                                 </div>
-                                {isCurrentLocation && (
-                                    <div className="text-[10px] px-1.5 py-0.5 rounded" style={{
-                                        color: 'var(--gray11)',
-                                        background: 'var(--gray5)',
-                                    }}>
-                                        当前位置
-                                    </div>
-                                )}
+                                <p className="text-sm" style={{color: 'var(--gray11)'}}>
+                                    {weatherData.condition}
+                                </p>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="text-3xl font-bold mb-4" style={{color: 'var(--gray12)'}}>
-                        {weatherData.temperature}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:droplet" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>Humidity</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.humidity}</div>
+                        <div className="text-4xl font-bold mb-4" style={{color: 'var(--gray12)'}}>
+                            {weatherData.temperature}
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:wind" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>Wind</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.windSpeed}</div>
-                        </div>
+                        <Separator className="my-4" />
 
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:temperature" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>Feels like</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.feelsLike}</div>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                            <WeatherStat
+                                icon="tabler:droplet"
+                                label="Humidity"
+                                value={weatherData.humidity}
+                            />
+                            <WeatherStat
+                                icon="tabler:wind"
+                                label="Wind"
+                                value={weatherData.windSpeed}
+                            />
+                            <WeatherStat
+                                icon="tabler:temperature"
+                                label="Feels like"
+                                value={weatherData.feelsLike}
+                            />
+                            <WeatherStat
+                                icon="tabler:sun"
+                                label="UV Index"
+                                value={weatherData.uvIndex}
+                            />
                         </div>
-
-                        <div className="flex items-center gap-2">
-                            <Icon icon="tabler:sun" style={{fontSize: "16px", color: 'var(--gray11)'}}/>
-                            <div style={{color: 'var(--gray11)'}}>UV Index</div>
-                            <div style={{color: 'var(--gray12)'}}>{weatherData.uvIndex}</div>
-                        </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
 
             <Footer
@@ -156,22 +150,30 @@ export function WttrWeatherView({weatherData, isCurrentLocation, onOpenSettings}
                     </div>
                 )}
                 rightElement={
-                    <div className='flex items-center gap-3 pr-6'>
-                        <Button
-                            onClick={onOpenSettings}
-                            variant="outline"
-                            size="sm"
-                        >
-                            <Icon icon="tabler:settings" className="mr-1" style={{fontSize: "14px"}}/>
-                            设置
-                            <KbdGroup>
+                    <div className='flex items-center gap-3 pr-6 flex-shrink-0'>
+                        <div className="flex items-center gap-1.5 text-xs" style={{color: 'var(--gray11)'}}>
+                            <span>设置</span>
+                            <KbdGroup className="gap-1">
                                 <Kbd>Ctrl</Kbd>
-                                <Kbd>k</Kbd>
+                                <Kbd>K</Kbd>
                             </KbdGroup>
-                        </Button>
+                        </div>
                     </div>
                 }
             />
         </>
+    );
+}
+
+/**
+ * Weather stat component for displaying individual weather metrics
+ */
+function WeatherStat({icon, label, value}: {icon: string, label: string, value: string}) {
+    return (
+        <div className="flex items-center gap-2">
+            <Icon icon={icon} style={{fontSize: "16px", color: 'var(--gray11)'}} />
+            <span className="text-xs" style={{color: 'var(--gray11)'}}>{label}</span>
+            <span className="text-xs font-medium ml-auto" style={{color: 'var(--gray12)'}}>{value}</span>
+        </div>
     );
 }

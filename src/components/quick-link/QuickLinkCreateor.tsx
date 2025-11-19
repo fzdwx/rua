@@ -6,7 +6,6 @@ import {useKeyPress} from "ahooks";
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Kbd, KbdGroup} from "@/components/ui/kbd.tsx";
-import {Button} from "@/components/ui/button.tsx";
 
 interface QuickLinkCreatorProps {
     onLoadingChange?: (loading: boolean) => void;
@@ -278,18 +277,13 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
                 content={() => <div/>}
                 rightElement={
                     <div className='flex items-center gap-3 pr-6'>
-                        <Button
-                            onClick={handleSubmit}
-                            tabIndex={0}
-                            variant="outline"
-                            size="sm"
-                        >
-                            {editingId ? "更新" : "创建"}
-                            <KbdGroup>
+                        <div className="flex items-center gap-1.5 text-xs" style={{color: 'var(--gray11)'}}>
+                            <span>{editingId ? "更新" : "创建"}</span>
+                            <KbdGroup className="gap-1">
                                 <Kbd>Ctrl</Kbd>
                                 <Kbd>⏎</Kbd>
                             </KbdGroup>
-                        </Button>
+                        </div>
                     </div>
                 }
             />
