@@ -165,15 +165,6 @@ export function WeatherView({search, onLoadingChange, onRequestFocusInput}: Weat
         };
     }, [search, onLoadingChange, config]);
 
-    if (!weatherData) {
-        return (
-            <div className="py-10 px-5 text-center text-sm" style={{color: 'var(--gray11)'}}>
-                <div className="text-2xl mb-2">🌤️</div>
-                <div>Loading weather data...</div>
-            </div>
-        );
-    }
-
     // Show settings view
     if (showSettings) {
         return <WeatherSettings onClose={() => {
@@ -181,6 +172,39 @@ export function WeatherView({search, onLoadingChange, onRequestFocusInput}: Weat
             onRequestFocusInput?.();
         }} />;
     }
+
+    if (!weatherData) {
+        return (
+            <>
+                <div className="py-10 px-5 text-center text-sm" style={{color: 'var(--gray11)'}}>
+                    <div className="text-2xl mb-2">🌤️</div>
+                    <div>Loading weather data...</div>
+                </div>
+                <Footer
+                    current={null}
+                    icon={<Icon icon="tabler:cloud" style={{fontSize: "20px"}}/>}
+                    actions={() => []}
+                    content={() => (
+                        <div className="text-[11px] text-center" style={{color: 'var(--gray10)'}}>
+                            Powered by wttr.in
+                        </div>
+                    )}
+                    rightElement={
+                        <div className='flex items-center gap-3 pr-6 flex-shrink-0'>
+                            <div className="flex items-center gap-1.5 text-xs" style={{color: 'var(--gray11)'}}>
+                                <span>设置</span>
+                                <KbdGroup className="gap-1">
+                                    <Kbd>Ctrl</Kbd>
+                                    <Kbd>K</Kbd>
+                                </KbdGroup>
+                            </div>
+                        </div>
+                    }
+                />
+            </>
+        );
+    }
+
 
     // Show error if weather fetch failed
     if (weatherData.error) {
