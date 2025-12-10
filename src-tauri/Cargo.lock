@@ -3477,6 +3477,7 @@ dependencies = [
 name = "rua"
 version = "0.1.8"
 dependencies = [
+ "anyhow",
  "freedesktop-desktop-entry",
  "lazy_static",
  "reqwest",

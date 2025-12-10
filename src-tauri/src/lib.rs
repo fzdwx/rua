@@ -1,8 +1,8 @@
 mod applications;
-mod proxy;
 mod clipboard;
+mod proxy;
 
-use tauri::Manager;
+use tauri::{App, Manager};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -10,18 +10,23 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
+fn setup(app: &mut App) -> anyhow::Result<()> {
+    let win = app.get_webview_window("main").unwrap();
+    win.eval("window.location.reload()")?;
+
+    #[cfg(desktop)]
+    let _ = app
+        .handle()
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build());
+    Ok(())
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            let win = app.get_webview_window("main").unwrap();
-            win.eval("window.location.reload()").unwrap();
-            #[cfg(desktop)]
-            let _ = app.handle()
-                .plugin(tauri_plugin_global_shortcut::Builder::new().build());
-
+            setup(app)?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
