@@ -1,6 +1,10 @@
 mod applications;
 mod clipboard;
 mod proxy;
+mod control_server;
+
+#[cfg(target_os = "linux")]
+mod hyprland;
 
 use tauri::{App, Manager};
 
@@ -18,6 +22,18 @@ fn setup(app: &mut App) -> anyhow::Result<()> {
     let _ = app
         .handle()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build());
+
+    // Start the control server in a separate thread
+    let app_handle = app.handle().clone();
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            if let Err(e) = control_server::start_server(app_handle).await {
+                eprintln!("Failed to start control server: {}", e);
+            }
+        });
+    });
+
     Ok(())
 }
 
@@ -36,7 +52,13 @@ pub fn run() {
             applications::launch_application,
             proxy::fetch_with_proxy,
             clipboard::read_clipboard,
-            clipboard::write_clipboard
+            clipboard::write_clipboard,
+            #[cfg(target_os = "linux")]
+            hyprland::focus_window_hyprland,
+            #[cfg(target_os = "linux")]
+            hyprland::move_to_current_workspace,
+            #[cfg(target_os = "linux")]
+            hyprland::is_window_on_current_workspace
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

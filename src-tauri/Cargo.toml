@@ -4,7 +4,7 @@ version = "0.1.8"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
-
+default-run = "rua"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
@@ -14,6 +14,12 @@ edition = "2021"
 name = "rua_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+
+
+[[bin]]
+name = "ruactl"
+path = "src/bin/ruactl.rs"
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
@@ -22,8 +28,10 @@ tauri-plugin-http = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 lazy_static = "1.4"
-reqwest = { version = "0.12", features = ["blocking"] }
+reqwest = { version = "0.12", features = ["blocking", "json"] }
 anyhow = "1.0.100"
+tokio = { version = "1", features = ["full"] }
+axum = "0.7"
 
 [target."cfg(target_os = \"linux\")".dependencies]
 freedesktop-desktop-entry = "0.5"

@@ -19,21 +19,26 @@ Rua is a Tauri-based application launcher for Linux, built with React, TypeScrip
 
 ```bash
 # Development
-pnpm dev                    # Start Vite dev server (runs on http://localhost:1421)
-pnpm tauri dev             # Start Tauri app in dev mode
+bun dev                    # Start Vite dev server (runs on http://localhost:1421)
+bun tauri                  # Start Tauri app in dev mode
 
 # Type Checking & Build
-pnpm exec tsc --noEmit     # Check TypeScript without emitting files
-pnpm build                 # Build frontend (TypeScript check + Vite build)
-pnpm tauri build          # Build Tauri application
-just build                 # Alternative: Build using justfile
+bun x tsc --noEmit        # Check TypeScript without emitting files
+bun run build             # Build frontend (TypeScript check + Vite build)
+bun tauri-build           # Build Tauri application
+just build                # Alternative: Build using justfile
 cargo check --manifest-path src-tauri/Cargo.toml  # Check Rust compilation
 
-# Version Management
-just bump <version>        # Bump version number (runs bump-version.sh)
+# ruactl - Control Utility
+cargo build --manifest-path src-tauri/Cargo.toml --bin ruactl  # Build ruactl
+cargo build --manifest-path src-tauri/Cargo.toml --bin ruactl --release  # Build ruactl (optimized)
+./install-ruactl.sh       # Install ruactl to ~/.local/bin
+just install              # Install both rua and ruactl to /usr/bin (requires sudo)
+ruactl toggle             # Toggle window visibility (after installation)
+ruactl health             # Check if rua is running
 
-# Preview
-pnpm preview              # Preview production build
+# Version Management
+just bump <version>       # Bump version number (runs bump-version.sh)
 ```
 
 ## Linux Environment Variables
@@ -188,6 +193,41 @@ The application registers a global hotkey (`Alt+Space`) in `src/App.tsx`:
   - Transparent background supported
   - Always on top, skips taskbar
   - Vite dev server: `http://localhost:1421`
+
+### Control Server (HTTP API)
+
+Rua includes a built-in HTTP control server that listens on `127.0.0.1:7777`:
+- Started automatically when the application launches
+- Provides API endpoints for external control
+- Used by `ruactl` command-line utility
+
+**Endpoints:**
+- `POST /toggle` - Toggle window visibility
+- `POST /health` - Check server status
+
+### ruactl - Command-Line Control Utility
+
+`ruactl` is a standalone binary that communicates with rua via HTTP:
+
+**Installation:**
+```bash
+./install-ruactl.sh  # Installs to ~/.local/bin
+```
+
+**Usage:**
+```bash
+ruactl toggle   # Toggle window visibility
+ruactl health   # Check if rua is running
+ruactl help     # Show help message
+```
+
+**Hyprland Integration:**
+You can bind `ruactl toggle` to a global hotkey in your Hyprland config:
+```
+bind = ALT, Space, exec, ruactl toggle
+```
+
+This approach works across all workspaces in Hyprland, avoiding the workspace-switching issues with Tauri's global shortcuts.
 
 ## Tauri Asset Protocol
 
