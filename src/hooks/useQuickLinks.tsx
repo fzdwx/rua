@@ -2,11 +2,14 @@ import { useState, useCallback, useEffect } from "react";
 
 const QUICK_LINKS_STORAGE_KEY = "rua_quick_links";
 
+export type QuickLinkOpenType = "url" | "shell";
+
 export interface QuickLink {
   id: string;
   name: string;
-  url: string;
-  icon?: string; // Emoji or icon name
+  url: string; // For openType="url", this is the URL; for openType="shell", this is the command
+  openType?: QuickLinkOpenType; // Default is "url"
+  icon?: string; // Emoji or icon name or URL
   iconUrl?: string; // Auto-fetched favicon URL
   keywords?: string;
   subtitle?: string;

@@ -4,6 +4,7 @@ import {openUrl} from "@tauri-apps/plugin-opener";
 import {readClipboard} from "@/utils/clipboard";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useKeyPress} from "ahooks";
+import {Command} from "@tauri-apps/plugin-shell";
 
 /**
  * Check if a string is a URL or Data URL
@@ -43,15 +44,17 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
         onReturn?.();
     });
 
-    // Process URL and replace variables
+    // Process URL/command and replace variables
     React.useEffect(() => {
         const processUrl = async () => {
             let url = quickLink.url;
+            const openType = quickLink.openType || "url";
 
             // Replace {query} with search input
             if (url.includes('{query}')) {
                 const queryValue = search.trim() || '';
-                url = url.replace(/\{query\}/g, encodeURIComponent(queryValue));
+                // For URL type, encode the value; for shell, use raw value
+                url = url.replace(/\{query\}/g, openType === "url" ? encodeURIComponent(queryValue) : queryValue);
             }
 
             // Replace {selection} with clipboard content
@@ -59,7 +62,8 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
                 try {
                     const clipboardText = await readClipboard();
                     const selectionValue = clipboardText || '';
-                    url = url.replace(/\{selection\}/g, encodeURIComponent(selectionValue));
+                    // For URL type, encode the value; for shell, use raw value
+                    url = url.replace(/\{selection\}/g, openType === "url" ? encodeURIComponent(selectionValue) : selectionValue);
                 } catch (error) {
                     console.error('Failed to read clipboard:', error);
                     // If clipboard read fails, replace with empty string
@@ -71,25 +75,38 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
         };
 
         processUrl();
-    }, [search, quickLink.url]);
+    }, [search, quickLink.url, quickLink.openType]);
 
-    // Handle opening the URL
+    // Handle opening the URL or executing shell command
     const handleOpen = async () => {
         setIsLoading(true);
         setError(null);
         onLoadingChange?.(true);
 
+        const openType = quickLink.openType || "url";
+
         try {
-            // Hide window immediately before opening link
+            // Hide window immediately before executing
             await getCurrentWebviewWindow().hide();
-            // Open the URL
-            await openUrl(finalUrl);
-            // Return to previous view after successfully opening
+
+            if (openType === "shell") {
+                // Execute shell command
+                console.log("Executing shell command:", finalUrl);
+                const command = Command.create("sh", ["-c", finalUrl]);
+                await command.execute();
+            } else {
+                // Open URL in browser
+                await openUrl(finalUrl);
+            }
+
+            // Return to previous view after successfully executing
             onReturn?.();
         } catch (error) {
-            console.error("Failed to open link:", error);
-            setError("无法打开链接，请检查 URL 格式");
-            // Show window again if opening failed
+            console.error(`Failed to ${openType === "shell" ? "execute command" : "open link"}:`, error);
+            setError(openType === "shell"
+                ? "无法执行命令，请检查命令格式"
+                : "无法打开链接，请检查 URL 格式");
+            // Show window again if execution failed
             await getCurrentWebviewWindow().show();
         } finally {
             setIsLoading(false);

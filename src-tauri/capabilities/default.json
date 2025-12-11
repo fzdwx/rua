@@ -27,6 +27,8 @@
     "http:allow-fetch-cancel",
     "http:allow-fetch-read-body",
     "http:allow-fetch-send",
+    "shell:allow-execute",
+    "shell:allow-open",
     {
       "identifier": "http:default",
       "allow": [{ "url": "http://**" },{"url": "https://**"}]

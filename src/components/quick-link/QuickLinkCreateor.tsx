@@ -1,5 +1,5 @@
 import * as React from "react";
-import {QuickLink, useQuickLinks} from "@/hooks/useQuickLinks";
+import {QuickLink, QuickLinkOpenType, useQuickLinks} from "@/hooks/useQuickLinks";
 import {Footer} from "@/command";
 import {Icon} from "@iconify/react";
 import {useKeyPress} from "ahooks";
@@ -23,6 +23,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
 
     const [name, setName] = React.useState(editQuickLink?.name || "");
     const [url, setUrl] = React.useState(editQuickLink?.url || "");
+    const [openType, setOpenType] = React.useState<QuickLinkOpenType>(editQuickLink?.openType || "url");
     const [customIcon, setCustomIcon] = React.useState(editQuickLink?.icon || ""); // Manual icon input
     const [iconUrl, setIconUrl] = React.useState<string | null>(editQuickLink?.iconUrl || null);
     const [showVariableMenu, setShowVariableMenu] = React.useState(false);
@@ -47,10 +48,10 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
         return () => clearTimeout(timer);
     }, []);
 
-    // Auto-fetch favicon when URL changes
+    // Auto-fetch favicon when URL changes (only for URL type)
     React.useEffect(() => {
-        // Only fetch if URL is valid
-        if (!url.trim()) {
+        // Only fetch if openType is "url" and URL is valid
+        if (openType !== "url" || !url.trim()) {
             setIconUrl(null);
             return;
         }
@@ -64,7 +65,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
             // Invalid URL, clear iconUrl
             setIconUrl(null);
         }
-    }, [url]);
+    }, [url, openType]);
 
     // Add Ctrl+Enter shortcut
     useKeyPress('ctrl.enter', (e) => {
@@ -144,6 +145,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
     const resetForm = () => {
         setName("");
         setUrl("");
+        setOpenType("url");
         setCustomIcon("");
         setIconUrl(null);
         setEditingId(null);
@@ -159,11 +161,11 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
         let hasError = false;
 
         if (!url.trim()) {
-            setUrlError("请输入链接地址");
+            setUrlError(openType === "url" ? "请输入链接地址" : "请输入命令");
             urlInputRef.current?.focus();
             hasError = true;
-        } else {
-            // URL validation
+        } else if (openType === "url") {
+            // URL validation (only for URL type)
             try {
                 new URL(url);
             } catch {
@@ -192,6 +194,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                 updateQuickLink(editingId, {
                     name: name.trim(),
                     url: url.trim(),
+                    openType,
                     icon: customIcon.trim() || undefined,
                     iconUrl: iconUrl || undefined,
                 });
@@ -200,6 +203,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                 addQuickLink({
                     name: name.trim(),
                     url: url.trim(),
+                    openType,
                     icon: customIcon.trim() || undefined,
                     iconUrl: iconUrl || undefined,
                 });
@@ -225,10 +229,31 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
             <div className="w-full max-w-2xl mx-auto px-6 py-8">
                 {/* Form */}
                 <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-6 space-y-6">
+                    {/* Open Type selector */}
+                    <div className="space-y-2">
+                        <Label htmlFor="open-type-select">
+                            打开方式 <span className="text-red-500">*</span>
+                        </Label>
+                        <select
+                            id="open-type-select"
+                            value={openType}
+                            onChange={(e) => setOpenType(e.target.value as QuickLinkOpenType)}
+                            className="w-full px-3 py-2 rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="url">浏览器打开 URL</option>
+                            <option value="shell">Shell 命令执行</option>
+                        </select>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {openType === "url"
+                                ? "将通过默认浏览器打开链接"
+                                : "将在终端中执行 shell 命令"}
+                        </p>
+                    </div>
+
                     {/* URL input */}
                     <div className="relative space-y-2">
                         <Label htmlFor="url-input">
-                            链接地址 <span className="text-red-500">*</span>
+                            {openType === "url" ? "链接地址" : "Shell 命令"} <span className="text-red-500">*</span>
                         </Label>
 
                         <Input
@@ -238,7 +263,9 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                             value={url}
                             onChange={handleUrlChange}
                             onKeyDown={handleUrlKeyDown}
-                            placeholder="https://google.com/search?q={query}"
+                            placeholder={openType === "url"
+                                ? "https://google.com/search?q={query}"
+                                : "notify-send 'Hello' '{query}'"}
                             className={urlError ? "border-red-500 dark:border-red-500" : ""}
                         />
 
