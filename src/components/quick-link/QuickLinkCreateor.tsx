@@ -7,22 +7,21 @@ import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Kbd, KbdGroup} from "@/components/ui/kbd.tsx";
 import {getFaviconUrl} from "@/utils/favicon.ts";
-import {motion, AnimatePresence} from "motion/react";
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
-import {Alert, AlertDescription} from "@/components/ui/alert";
 import {Badge} from "@/components/ui/badge";
-import {ExternalLink, Terminal, Sparkles, Info} from "lucide-react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface QuickLinkCreatorProps {
     onLoadingChange?: (loading: boolean) => void;
-    onReturn?: () => void; // Called after successfully creating/updating quick link
-    editQuickLink?: QuickLink; // Quick link to edit (if in edit mode)
+    onReturn?: () => void;
+    editQuickLink?: QuickLink;
 }
 
-/**
- * QuickLinkCreator component - for creating and managing quick links
- */
 export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: QuickLinkCreatorProps) {
     const {addQuickLink, updateQuickLink} = useQuickLinks();
     const [editingId, setEditingId] = React.useState<string | null>(editQuickLink?.id || null);
@@ -30,27 +29,41 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
     const [name, setName] = React.useState(editQuickLink?.name || "");
     const [url, setUrl] = React.useState(editQuickLink?.url || "");
     const [openType, setOpenType] = React.useState<QuickLinkOpenType>(editQuickLink?.openType || "url");
-    const [customIcon, setCustomIcon] = React.useState(editQuickLink?.icon || ""); // Manual icon input
+    const [customIcon, setCustomIcon] = React.useState(editQuickLink?.icon || "");
     const [iconUrl, setIconUrl] = React.useState<string | null>(editQuickLink?.iconUrl || null);
     const [showVariableMenu, setShowVariableMenu] = React.useState(false);
     const [variableMenuPosition, setVariableMenuPosition] = React.useState(0);
     const [activeMenuIndex, setActiveMenuIndex] = React.useState(0);
     const [urlError, setUrlError] = React.useState("");
     const [nameError, setNameError] = React.useState("");
+    const [iconLoadError, setIconLoadError] = React.useState(false);
 
-    // Ref for auto-focus
     const urlInputRef = React.useRef<HTMLInputElement>(null);
     const nameInputRef = React.useRef<HTMLInputElement>(null);
 
-    // Available variables
     const variables = [
         { name: 'query', description: '代表查询内容' },
         { name: 'selection', description: '代表选中的文本（粘贴板内容）' }
     ];
 
+    // Check if a string is a URL
+    const isUrl = (str: string): boolean => {
+        if (!str) return false;
+        try {
+            new URL(str);
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
+    // Reset icon load error when customIcon changes
+    React.useEffect(() => {
+        setIconLoadError(false);
+    }, [customIcon]);
+
     // Auto-focus on mount
     React.useEffect(() => {
-        // Use setTimeout to ensure DOM is ready and other focus logic has completed
         const timer = setTimeout(() => {
             urlInputRef.current?.focus();
         }, 150);
@@ -59,7 +72,6 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
 
     // Auto-fetch favicon when URL changes (only for URL type)
     React.useEffect(() => {
-        // Only fetch if openType is "url" and URL is valid
         if (openType !== "url" || !url.trim()) {
             setIconUrl(null);
             return;
@@ -67,11 +79,9 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
 
         try {
             new URL(url);
-            // URL is valid, fetch favicon
             const faviconUrl = getFaviconUrl(url);
             setIconUrl(faviconUrl);
         } catch {
-            // Invalid URL, clear iconUrl
             setIconUrl(null);
         }
     }, [url, openType]);
@@ -82,25 +92,22 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
         handleSubmit();
     });
 
-    // Handle URL input change and detect { for variable menu
     const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
         const cursorPosition = e.target.selectionStart || 0;
 
         setUrl(newValue);
-        setUrlError(""); // Clear error when user types
+        setUrlError("");
 
-        // Check if user just typed {
         if (newValue[cursorPosition - 1] === '{') {
             setShowVariableMenu(true);
             setVariableMenuPosition(cursorPosition);
-            setActiveMenuIndex(0); // Reset to first item
+            setActiveMenuIndex(0);
         } else {
             setShowVariableMenu(false);
         }
     };
 
-    // Handle keyboard navigation in URL input when menu is open
     const handleUrlKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (!showVariableMenu) return;
 
@@ -116,7 +123,6 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
         }
     };
 
-    // Insert variable into URL
     const insertVariable = (variableName: string) => {
         const input = urlInputRef.current;
         if (!input) return;
@@ -125,13 +131,11 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
         const beforeCursor = url.substring(0, cursorPosition);
         const afterCursor = url.substring(cursorPosition);
 
-        // Insert variable name and closing brace
         const newUrl = beforeCursor + variableName + '}' + afterCursor;
         setUrl(newUrl);
         setShowVariableMenu(false);
-        setActiveMenuIndex(0); // Reset menu index
+        setActiveMenuIndex(0);
 
-        // Set cursor position after the inserted variable
         setTimeout(() => {
             const newCursorPos = cursorPosition + variableName.length + 1;
             input.focus();
@@ -139,18 +143,15 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
         }, 0);
     };
 
-    // Close menu on Escape, or return to home if menu is not open
     useKeyPress('esc', () => {
         if (showVariableMenu) {
             setShowVariableMenu(false);
-            setActiveMenuIndex(0); // Reset menu index
+            setActiveMenuIndex(0);
         } else {
-            // Return to home if menu is not open
             onReturn?.();
         }
     });
 
-    // Reset form
     const resetForm = () => {
         setName("");
         setUrl("");
@@ -160,13 +161,10 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
         setEditingId(null);
     };
 
-    // Handle submit (create or update)
     const handleSubmit = async () => {
-        // Clear previous errors
         setUrlError("");
         setNameError("");
 
-        // Validate inputs
         let hasError = false;
 
         if (!url.trim()) {
@@ -174,7 +172,6 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
             urlInputRef.current?.focus();
             hasError = true;
         } else if (openType === "url") {
-            // URL validation (only for URL type)
             try {
                 new URL(url);
             } catch {
@@ -199,7 +196,6 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
         onLoadingChange?.(true);
         try {
             if (editingId) {
-                // Update existing
                 updateQuickLink(editingId, {
                     name: name.trim(),
                     url: url.trim(),
@@ -208,7 +204,6 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                     iconUrl: iconUrl || undefined,
                 });
             } else {
-                // Create new
                 addQuickLink({
                     name: name.trim(),
                     url: url.trim(),
@@ -219,12 +214,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
             }
 
             resetForm();
-
-            // Wait for state updates to propagate before returning to main view
-            // This ensures the actions list has time to refresh with the new quick link
             await new Promise(resolve => setTimeout(resolve, 100));
-
-            // Return to main view after creating/updating
             onReturn?.();
         } catch (err) {
             console.error("Failed to save quick link:", err);
@@ -235,228 +225,182 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
 
     return (
         <>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="w-full max-w-2xl mx-auto px-6 py-8 overflow-y-auto"
-                style={{flex: 1}}
-            >
-                <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Sparkles className="w-5 h-5" />
-                                {editingId ? "编辑快捷链接" : "创建快捷链接"}
-                            </CardTitle>
-                            <CardDescription>
-                                {editingId
-                                    ? "修改已有的快捷链接配置"
-                                    : "创建一个新的快捷链接，支持变量和参数"}
-                            </CardDescription>
-                        </CardHeader>
-
-                        <CardContent className="space-y-6">
-                            {/* Open Type selector */}
-                            <motion.div
-                                initial={{ x: -20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{ delay: 0.1 }}
-                                className="space-y-3"
-                            >
-                                <Label htmlFor="open-type-select" className="text-base">
-                                    打开方式 <span className="text-destructive">*</span>
-                                </Label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Button
-                                        type="button"
-                                        variant={openType === "url" ? "default" : "outline"}
-                                        className="h-auto py-4 flex flex-col items-center gap-2"
-                                        onClick={() => setOpenType("url")}
-                                    >
-                                        <ExternalLink className="w-5 h-5" />
-                                        <div className="text-sm font-medium">浏览器</div>
-                                        <div className="text-xs opacity-70">打开 URL 链接</div>
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant={openType === "shell" ? "default" : "outline"}
-                                        className="h-auto py-4 flex flex-col items-center gap-2"
-                                        onClick={() => setOpenType("shell")}
-                                    >
-                                        <Terminal className="w-5 h-5" />
-                                        <div className="text-sm font-medium">终端</div>
-                                        <div className="text-xs opacity-70">执行 Shell 命令</div>
-                                    </Button>
-                                </div>
-                            </motion.div>
-
-                            {/* URL input */}
-                            <motion.div
-                                initial={{ x: -20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{ delay: 0.15 }}
-                                className="relative space-y-3"
-                            >
-                                <Label htmlFor="url-input" className="text-base">
-                                    {openType === "url" ? "链接地址" : "Shell 命令"}{" "}
-                                    <span className="text-destructive">*</span>
-                                </Label>
-
-                                <Input
-                                    id="url-input"
-                                    ref={urlInputRef}
-                                    type="text"
-                                    value={url}
-                                    onChange={handleUrlChange}
-                                    onKeyDown={handleUrlKeyDown}
-                                    placeholder={openType === "url"
-                                        ? "https://google.com/search?q={query}"
-                                        : "notify-send 'Hello' '{query}'"}
-                                    className={`${urlError ? "border-destructive" : ""} font-mono text-sm`}
-                                />
-
-                                <AnimatePresence>
-                                    {urlError && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                        >
-                                            <Alert variant="destructive" className="py-2">
-                                                <AlertDescription className="text-xs">
-                                                    {urlError}
-                                                </AlertDescription>
-                                            </Alert>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-
-                                {/* Variable selection menu - only shown when typing { */}
-                                <AnimatePresence>
-                                    {showVariableMenu && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                            transition={{ duration: 0.15 }}
-                                            className="absolute z-50 w-full mt-2"
-                                        >
-                                            <Card className="shadow-lg border-2">
-                                                <CardContent className="p-0">
-                                                    {variables.map((variable, index) => (
-                                                        <motion.div
-                                                            key={variable.name}
-                                                            className={`px-4 py-3 cursor-pointer transition-colors border-b last:border-b-0 ${
-                                                                activeMenuIndex === index
-                                                                    ? 'bg-accent'
-                                                                    : 'hover:bg-muted'
-                                                            }`}
-                                                            onMouseEnter={() => setActiveMenuIndex(index)}
-                                                            onClick={() => insertVariable(variable.name)}
-                                                            whileHover={{ x: 4 }}
-                                                            transition={{ duration: 0.15 }}
-                                                        >
-                                                            <div className="flex items-center gap-3">
-                                                                <Badge variant="secondary" className="font-mono">
-                                                                    {variable.name}
-                                                                </Badge>
-                                                                <span className="text-sm text-muted-foreground">
-                                                                    {variable.description}
-                                                                </span>
-                                                            </div>
-                                                        </motion.div>
-                                                    ))}
-                                                </CardContent>
-                                            </Card>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-
-                                {!urlError && (
-                                    <Alert>
-                                        <Info className="h-4 w-4" />
-                                        <AlertDescription className="text-xs">
-                                            输入 <code className="px-1.5 py-0.5 rounded bg-muted font-mono">{"{"}</code> 可插入变量
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-                            </motion.div>
-
-                            {/* Name input */}
-                            <motion.div
-                                initial={{ x: -20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                                className="space-y-3"
-                            >
-                                <Label htmlFor="name-input" className="text-base">
-                                    名称 <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    id="name-input"
-                                    ref={nameInputRef}
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => {
-                                        setName(e.target.value);
-                                        setNameError(""); // Clear error when user types
-                                    }}
-                                    placeholder="例如：Google 搜索"
-                                    className={nameError ? "border-destructive" : ""}
-                                />
-                                <AnimatePresence>
-                                    {nameError && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                        >
-                                            <Alert variant="destructive" className="py-2">
-                                                <AlertDescription className="text-xs">
-                                                    {nameError}
-                                                </AlertDescription>
-                                            </Alert>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </motion.div>
-
-                            {/* Custom Icon input */}
-                            <motion.div
-                                initial={{ x: -20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{ delay: 0.25 }}
-                                className="space-y-3"
-                            >
-                                <Label htmlFor="icon-input" className="text-base">
-                                    图标 <span className="text-muted-foreground text-sm font-normal">(可选)</span>
-                                </Label>
-                                <div className="flex gap-3 items-center">
-                                    <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-2xl border rounded-md bg-muted">
-                                        {customIcon || (iconUrl ? <img src={iconUrl} alt="icon" className="w-6 h-6" /> : "🔗")}
-                                    </div>
-                                    <Input
-                                        id="icon-input"
-                                        type="text"
-                                        value={customIcon}
-                                        onChange={(e) => setCustomIcon(e.target.value)}
-                                        placeholder="🔗 或 https://example.com/icon.png"
-                                        className="flex-1"
-                                    />
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    输入 emoji 表情或图标 URL，留空则自动获取网站 favicon
+            <div className="w-full max-w-3xl mx-auto px-8 py-6 overflow-y-auto" style={{flex: 1}}>
+                <div className="space-y-5">
+                    {/* URL/Command input */}
+                    <div className="flex items-start gap-8">
+                        <Label htmlFor="url-input" className="w-32 pt-2 text-right flex-shrink-0">
+                            {openType === "url" ? "链接地址" : "Shell 命令"}
+                            <span className="text-destructive ml-1">*</span>
+                        </Label>
+                        <div className="flex-1 relative">
+                            <Input
+                                id="url-input"
+                                ref={urlInputRef}
+                                type="text"
+                                value={url}
+                                onChange={handleUrlChange}
+                                onKeyDown={handleUrlKeyDown}
+                                placeholder={openType === "url"
+                                    ? "https://google.com/search?q={query}"
+                                    : "notify-send 'Hello' '{query}'"}
+                                className={`${urlError ? "border-destructive" : ""} font-mono text-sm`}
+                            />
+                            {urlError && (
+                                <p className="text-xs text-destructive pt-2">{urlError}</p>
+                            )}
+                            {!urlError && (
+                                <p className="text-xs text-muted-foreground pt-2">
+                                    输入 <code className="px-1 py-0.5 rounded bg-muted font-mono text-xs">{"{"}</code> 可插入变量 {"{query}"} 或 {"{selection}"}
                                 </p>
-                            </motion.div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
-            </motion.div>
+                            )}
+
+                            {/* Variable selection menu */}
+                            {showVariableMenu && (
+                                <div className="absolute z-50 w-full mt-1 rounded-md border bg-popover shadow-md">
+                                    {variables.map((variable, index) => (
+                                        <div
+                                            key={variable.name}
+                                            className={`px-3 py-2 cursor-pointer text-sm ${
+                                                activeMenuIndex === index
+                                                    ? 'bg-accent'
+                                                    : 'hover:bg-accent/50'
+                                            }`}
+                                            onMouseEnter={() => setActiveMenuIndex(index)}
+                                            onClick={() => insertVariable(variable.name)}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="secondary" className="font-mono text-xs">
+                                                    {variable.name}
+                                                </Badge>
+                                                <span className="text-muted-foreground text-xs">
+                                                    {variable.description}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Name input */}
+                    <div className="flex items-start gap-8">
+                        <Label htmlFor="name-input" className="w-32 pt-2 text-right flex-shrink-0">
+                            名称
+                            <span className="text-destructive ml-1">*</span>
+                        </Label>
+                        <div className="flex-1">
+                            <Input
+                                id="name-input"
+                                ref={nameInputRef}
+                                type="text"
+                                value={name}
+                                onChange={(e) => {
+                                    setName(e.target.value);
+                                    setNameError("");
+                                }}
+                                placeholder="例如：Google 搜索"
+                                className={nameError ? "border-destructive" : ""}
+                            />
+                            {nameError && (
+                                <p className="text-xs text-destructive mt-1.5">{nameError}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Open Type selector */}
+                    <div className="flex items-start gap-8">
+                        <Label htmlFor="open-type-select" className="w-32 pt-2 text-right flex-shrink-0">
+                            打开方式
+                            <span className="text-destructive ml-1">*</span>
+                        </Label>
+                        <div className="flex-1">
+                            <Select  value={openType} onValueChange={(value) => setOpenType(value as QuickLinkOpenType)}>
+                                <SelectTrigger id="open-type-select" className="bg-background">
+                                    <SelectValue placeholder="选择打开方式" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="url">浏览器打开 URL</SelectItem>
+                                    <SelectItem value="shell">Shell 命令执行</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground pt-2">
+                                {openType === "url"
+                                    ? "将通过默认浏览器打开链接"
+                                    : "将在终端中执行 shell 命令"}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Custom Icon input */}
+                    <div className="flex items-start gap-8">
+                        <Label htmlFor="icon-input" className="w-32 pt-2 text-right flex-shrink-0">
+                            图标
+                        </Label>
+                        <div className="flex-1">
+                            <div className="flex gap-3 items-center">
+                                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-2xl border rounded-md bg-muted overflow-hidden">
+                                    {(() => {
+                                        // If customIcon is provided
+                                        if (customIcon) {
+                                            // Check if it's a URL
+                                            if (isUrl(customIcon)) {
+                                                // If previous load failed, show fallback
+                                                if (iconLoadError) {
+                                                    return iconUrl ? (
+                                                        <img
+                                                            src={iconUrl}
+                                                            alt="icon"
+                                                            className="w-6 h-6"
+                                                            onError={() => {}}
+                                                        />
+                                                    ) : "🔗";
+                                                }
+                                                // Try to load as image
+                                                return (
+                                                    <img
+                                                        src={customIcon}
+                                                        alt="icon"
+                                                        className="w-6 h-6"
+                                                        onError={() => setIconLoadError(true)}
+                                                    />
+                                                );
+                                            }
+                                            // It's an emoji or text - show first character if too long
+                                            const displayText = customIcon.length > 2 ? customIcon.substring(0, 1) : customIcon;
+                                            return <span className="select-none">{displayText}</span>;
+                                        }
+                                        // No customIcon, show auto-fetched favicon or default
+                                        if (iconUrl) {
+                                            return (
+                                                <img
+                                                    src={iconUrl}
+                                                    alt="icon"
+                                                    className="w-6 h-6"
+                                                    onError={() => {}}
+                                                />
+                                            );
+                                        }
+                                        return "🔗";
+                                    })()}
+                                </div>
+                                <Input
+                                    id="icon-input"
+                                    type="text"
+                                    value={customIcon}
+                                    onChange={(e) => setCustomIcon(e.target.value)}
+                                    placeholder="🔗 或 https://example.com/icon.png"
+                                    className="flex-1"
+                                />
+                            </div>
+                            <p className="text-xs text-muted-foreground pt-2">
+                                输入 emoji 表情或图标 URL，留空则自动获取网站 favicon
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <Footer
                 current={null}
@@ -464,12 +408,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                 actions={() => []}
                 content={() => <div/>}
                 rightElement={
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className='flex items-center gap-3 pr-6'
-                    >
+                    <div className='flex items-center gap-3 pr-6'>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <span>{editingId ? "更新" : "创建"}</span>
                             <KbdGroup className="gap-1">
@@ -477,7 +416,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                                 <Kbd>⏎</Kbd>
                             </KbdGroup>
                         </div>
-                    </motion.div>
+                    </div>
                 }
             />
         </>

@@ -44,6 +44,7 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
     const [finalUrl, setFinalUrl] = React.useState("");
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
+    const [iconLoadError, setIconLoadError] = React.useState(false);
 
     // ESC key to return to home
     useKeyPress('esc', () => {
@@ -171,26 +172,50 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
                                 animate={{ rotate: 0 }}
                                 transition={{ duration: 0.3, delay: 0.1 }}
                             >
-                                <div className="w-12 h-12 flex items-center justify-center text-3xl">
-                                    {quickLink.icon ? (
-                                        isUrl(quickLink.icon) ? (
-                                            <img
-                                                src={quickLink.icon}
-                                                alt={quickLink.name}
-                                                className="w-12 h-12 object-contain"
-                                            />
-                                        ) : (
-                                            quickLink.icon
-                                        )
-                                    ) : quickLink.iconUrl ? (
-                                        <img
-                                            src={quickLink.iconUrl}
-                                            alt={quickLink.name}
-                                            className="w-12 h-12 object-contain"
-                                        />
-                                    ) : (
-                                        "🔗"
-                                    )}
+                                <div className="w-12 h-12 flex items-center justify-center text-3xl overflow-hidden">
+                                    {(() => {
+                                        // If custom icon is provided
+                                        if (quickLink.icon) {
+                                            // Check if it's a URL
+                                            if (isUrl(quickLink.icon)) {
+                                                // If previous load failed, show fallback
+                                                if (iconLoadError) {
+                                                    return quickLink.iconUrl ? (
+                                                        <img
+                                                            src={quickLink.iconUrl}
+                                                            alt={quickLink.name}
+                                                            className="w-12 h-12 object-contain"
+                                                            onError={() => {}}
+                                                        />
+                                                    ) : "🔗";
+                                                }
+                                                // Try to load as image
+                                                return (
+                                                    <img
+                                                        src={quickLink.icon}
+                                                        alt={quickLink.name}
+                                                        className="w-12 h-12 object-contain"
+                                                        onError={() => setIconLoadError(true)}
+                                                    />
+                                                );
+                                            }
+                                            // It's an emoji or text - show first character if too long
+                                            const displayText = quickLink.icon.length > 2 ? quickLink.icon.substring(0, 1) : quickLink.icon;
+                                            return <span className="select-none">{displayText}</span>;
+                                        }
+                                        // No custom icon, show auto-fetched favicon or default
+                                        if (quickLink.iconUrl) {
+                                            return (
+                                                <img
+                                                    src={quickLink.iconUrl}
+                                                    alt={quickLink.name}
+                                                    className="w-12 h-12 object-contain"
+                                                    onError={() => {}}
+                                                />
+                                            );
+                                        }
+                                        return "🔗";
+                                    })()}
                                 </div>
                             </motion.div>
                             <div className="flex-1 min-w-0">

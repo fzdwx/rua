@@ -79,11 +79,21 @@ export function getQuickLinkActions(
                             height: "20px",
                             objectFit: "contain"
                         }}
+                        onError={(e) => {
+                            // If image fails to load, replace with default icon or favicon
+                            const target = e.target as HTMLImageElement;
+                            if (link.iconUrl) {
+                                target.src = link.iconUrl;
+                            } else {
+                                target.style.display = 'none';
+                            }
+                        }}
                     />
                 );
             } else {
-                // Use emoji or custom text icon
-                iconElement = <div style={{fontSize: "20px"}}>{link.icon}</div>;
+                // Use emoji or custom text icon - show first character if too long
+                const displayText = link.icon.length > 2 ? link.icon.substring(0, 1) : link.icon;
+                iconElement = <div style={{fontSize: "20px"}}>{displayText}</div>;
             }
         } else if (link.iconUrl) {
             // Use auto-fetched favicon
