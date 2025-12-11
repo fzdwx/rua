@@ -1,5 +1,5 @@
 import * as React from "react";
-import {useQuickLinks} from "@/hooks/useQuickLinks";
+import {QuickLink, useQuickLinks} from "@/hooks/useQuickLinks";
 import {Footer} from "@/command";
 import {Icon} from "@iconify/react";
 import {useKeyPress} from "ahooks";
@@ -11,18 +11,20 @@ import {getFaviconUrl} from "@/utils/favicon.ts";
 interface QuickLinkCreatorProps {
     onLoadingChange?: (loading: boolean) => void;
     onReturn?: () => void; // Called after successfully creating/updating quick link
+    editQuickLink?: QuickLink; // Quick link to edit (if in edit mode)
 }
 
 /**
  * QuickLinkCreator component - for creating and managing quick links
  */
-export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorProps) {
+export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: QuickLinkCreatorProps) {
     const {addQuickLink, updateQuickLink} = useQuickLinks();
-    const [editingId, setEditingId] = React.useState<string | null>(null);
+    const [editingId, setEditingId] = React.useState<string | null>(editQuickLink?.id || null);
 
-    const [name, setName] = React.useState("");
-    const [url, setUrl] = React.useState("");
-    const [iconUrl, setIconUrl] = React.useState<string | null>(null);
+    const [name, setName] = React.useState(editQuickLink?.name || "");
+    const [url, setUrl] = React.useState(editQuickLink?.url || "");
+    const [customIcon, setCustomIcon] = React.useState(editQuickLink?.icon || ""); // Manual icon input
+    const [iconUrl, setIconUrl] = React.useState<string | null>(editQuickLink?.iconUrl || null);
     const [showVariableMenu, setShowVariableMenu] = React.useState(false);
     const [variableMenuPosition, setVariableMenuPosition] = React.useState(0);
     const [activeMenuIndex, setActiveMenuIndex] = React.useState(0);
@@ -38,7 +40,11 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
 
     // Auto-focus on mount
     React.useEffect(() => {
-        urlInputRef.current?.focus();
+        // Use setTimeout to ensure DOM is ready and other focus logic has completed
+        const timer = setTimeout(() => {
+            urlInputRef.current?.focus();
+        }, 150);
+        return () => clearTimeout(timer);
     }, []);
 
     // Auto-fetch favicon when URL changes
@@ -123,11 +129,14 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
         }, 0);
     };
 
-    // Close menu on Escape
+    // Close menu on Escape, or return to home if menu is not open
     useKeyPress('esc', () => {
         if (showVariableMenu) {
             setShowVariableMenu(false);
             setActiveMenuIndex(0); // Reset menu index
+        } else {
+            // Return to home if menu is not open
+            onReturn?.();
         }
     });
 
@@ -135,6 +144,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
     const resetForm = () => {
         setName("");
         setUrl("");
+        setCustomIcon("");
         setIconUrl(null);
         setEditingId(null);
     };
@@ -182,6 +192,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
                 updateQuickLink(editingId, {
                     name: name.trim(),
                     url: url.trim(),
+                    icon: customIcon.trim() || undefined,
                     iconUrl: iconUrl || undefined,
                 });
             } else {
@@ -189,6 +200,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
                 addQuickLink({
                     name: name.trim(),
                     url: url.trim(),
+                    icon: customIcon.trim() || undefined,
                     iconUrl: iconUrl || undefined,
                 });
             }
@@ -290,6 +302,23 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
                                 {nameError}
                             </p>
                         )}
+                    </div>
+
+                    {/* Custom Icon input */}
+                    <div className="space-y-2">
+                        <Label htmlFor="icon-input">
+                            图标 (可选)
+                        </Label>
+                        <Input
+                            id="icon-input"
+                            type="text"
+                            value={customIcon}
+                            onChange={(e) => setCustomIcon(e.target.value)}
+                            placeholder="例如：🔗 或 https://example.com/icon.png"
+                        />
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            输入 emoji 表情或图标 URL 链接，留空则自动从网站获取 favicon
+                        </p>
                     </div>
                 </div>
             </div>

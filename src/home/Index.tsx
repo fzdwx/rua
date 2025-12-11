@@ -9,25 +9,26 @@ import {
 } from "@/command";
 import {useApplications} from "@/hooks/useApplications";
 import {useBuiltInActions} from "@/hooks/useBuiltInActions";
+import {useQuickLinks} from "@/hooks/useQuickLinks";
 import {useTheme} from "@/hooks/useTheme";
 import {Icon} from "@iconify/react";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useActionUsage} from "@/hooks/useActionUsage";
 import {translateId, TranslateView} from "@/components/translate";
 import {weatherId, WeatherView} from "@/components/weather";
-import {quickLinkCreatorId, quickLinkViewPrefix, QuickLinkCreator, QuickLinkView} from "@/components/quick-link";
+import {quickLinkCreatorId, quickLinkViewPrefix, quickLinkEditPrefix, QuickLinkCreator, QuickLinkView} from "@/components/quick-link";
 import {DefaultView} from "./DefaultView";
-import {useQuickLinks} from "@/hooks/useQuickLinks.tsx";
 
 export default function Home() {
     const [search, setSearch] = useState("");
     const [actionLoading, setActionLoading] = useState(false);
     const [resultHandleEvent, setResultHandleEvent] = useState(true);
     const [focusQueryInput, setFocusQueryInput] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0); // Used to force refresh of built-in actions
     const inputRef = useRef<HTMLInputElement>(null);
     const {theme, toggleTheme} = useTheme();
     const {incrementUsage} = useActionUsage();
-    const {quickLinks, refreshQuickLinks} = useQuickLinks();
+    const {getQuickLink} = useQuickLinks();
 
     // Initialize action store
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
@@ -36,7 +37,8 @@ export default function Home() {
     const { actions: applicationActions} = useApplications();
 
     // Get built-in actions (static actions like translate)
-    const builtInActions = useBuiltInActions(setRootActionId, quickLinks);
+    // refreshKey forces re-computation when quick links are updated
+    const builtInActions = useBuiltInActions(setRootActionId, refreshKey);
 
     // Combine all actions (built-in actions first for priority)
     const allActions = useMemo(() => {
@@ -183,13 +185,34 @@ export default function Home() {
                 <div style={{flex: 1, overflow: "hidden", display: "flex", flexDirection: "column"}}>
                     {/* Show translate view if translate action is active */}
                     {state.rootActionId === translateId ? (
-                        <TranslateView search={search} onLoadingChange={handleActionLoadingChange}/>
+                        <TranslateView
+                            search={search}
+                            onLoadingChange={handleActionLoadingChange}
+                            onReturn={() => {
+                                // Return to main view
+                                setRootActionId(null);
+                                setSearch("");
+                                // Focus the search input
+                                setTimeout(() => {
+                                    inputRef.current?.focus();
+                                }, 50);
+                            }}
+                        />
                     ) : state.rootActionId === weatherId ? (
                         <WeatherView
                             search={search}
                             onLoadingChange={handleActionLoadingChange}
                             onRequestFocusInput={() => {
                                 // Focus the main input after closing settings
+                                setTimeout(() => {
+                                    inputRef.current?.focus();
+                                }, 50);
+                            }}
+                            onReturn={() => {
+                                // Return to main view
+                                setRootActionId(null);
+                                setSearch("");
+                                // Focus the search input
                                 setTimeout(() => {
                                     inputRef.current?.focus();
                                 }, 50);
@@ -202,7 +225,24 @@ export default function Home() {
                                 // Return to main view after creating quick link
                                 setRootActionId(null);
                                 setSearch("");
-                                refreshQuickLinks();
+                                // Force refresh of built-in actions to show new quick link
+                                setRefreshKey(prev => prev + 1);
+                                // Focus the search input
+                                setTimeout(() => {
+                                    inputRef.current?.focus();
+                                }, 50);
+                            }}
+                        />
+                    ) : state.rootActionId?.startsWith(quickLinkEditPrefix) ? (
+                        <QuickLinkCreator
+                            editQuickLink={getQuickLink(state.rootActionId.replace(quickLinkEditPrefix, ""))}
+                            onLoadingChange={handleActionLoadingChange}
+                            onReturn={() => {
+                                // Return to main view after editing quick link
+                                setRootActionId(null);
+                                setSearch("");
+                                // Force refresh of built-in actions to show updated quick link
+                                setRefreshKey(prev => prev + 1);
                                 // Focus the search input
                                 setTimeout(() => {
                                     inputRef.current?.focus();

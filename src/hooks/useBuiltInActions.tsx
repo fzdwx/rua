@@ -1,10 +1,10 @@
-import {useMemo} from "react";
+import {useMemo, useEffect} from "react";
 import {Action, ActionId} from "@/command";
 import {useActionUsage} from "@/hooks/useActionUsage";
 import {getTranslateAction} from "@/components/translate";
 import {getWeatherAction} from "@/components/weather";
 import {getQuickLinkActions} from "@/components/quick-link";
-import {QuickLink} from "@/hooks/useQuickLinks";
+import {useQuickLinks} from "@/hooks/useQuickLinks";
 
 /**
  * Custom hook to provide built-in actions
@@ -12,9 +12,17 @@ import {QuickLink} from "@/hooks/useQuickLinks";
  */
 export function useBuiltInActions(
     setRootActionId: (rootActionId: (ActionId | null)) => void,
-    quickLinks: QuickLink[]
+    refreshKey: number = 0 // Used to force refresh when quick links are updated
 ): Action[] {
     const {getUsageCount, incrementUsage} = useActionUsage();
+    const {quickLinks, deleteQuickLink, refreshQuickLinks} = useQuickLinks();
+
+    // Reload quick links from localStorage when refreshKey changes
+    useEffect(() => {
+        if (refreshKey > 0) {
+            refreshQuickLinks();
+        }
+    }, [refreshKey, refreshQuickLinks]);
 
     return useMemo(() => {
         const actions: Action[] = [];
@@ -26,7 +34,13 @@ export function useBuiltInActions(
         actions.push(getWeatherAction(getUsageCount, incrementUsage));
 
         // Quick link actions - creator and user-created quick links
-        actions.push(...getQuickLinkActions(quickLinks, getUsageCount, incrementUsage,setRootActionId));
+        actions.push(...getQuickLinkActions(
+            quickLinks,
+            getUsageCount,
+            incrementUsage,
+            setRootActionId,
+            deleteQuickLink
+        ));
 
         // TODO: Add more built-in actions here
         // - Base64 encode/decode
@@ -37,5 +51,5 @@ export function useBuiltInActions(
         // etc.
 
         return actions;
-    }, [getUsageCount, incrementUsage, quickLinks, setRootActionId]);
+    }, [getUsageCount, incrementUsage, quickLinks, setRootActionId, deleteQuickLink, refreshKey]);
 }

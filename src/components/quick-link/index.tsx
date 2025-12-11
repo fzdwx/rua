@@ -6,6 +6,25 @@ import {QuickLinkView} from "@/components/quick-link/QuickLinkView.tsx";
 
 export const quickLinkCreatorId = "built-in-quickLinkCreator";
 export const quickLinkViewPrefix = "quick-link-view-";
+export const quickLinkEditPrefix = "quick-link-edit-";
+
+/**
+ * Check if a string is a URL or Data URL
+ */
+function isUrl(str: string): boolean {
+    // Check for Data URL (data:image/png;base64,...)
+    if (str.startsWith('data:')) {
+        return true;
+    }
+
+    // Check for regular URL
+    try {
+        new URL(str);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 /**
  * Get quick link actions including creator and all user-created quick links
@@ -14,7 +33,8 @@ export function getQuickLinkActions(
     quickLinks: QuickLink[],
     getUsageCount: (actionId: ActionId) => number,
     incrementUsage: (actionId: ActionId) => void,
-    setRootActionId: (rootActionId: (ActionId | null)) => void): Action[] {
+    setRootActionId: (rootActionId: (ActionId | null)) => void,
+    deleteQuickLink: (id: string) => void): Action[] {
     const actions: Action[] = [];
 
     // Add quick link creator action
@@ -44,10 +64,29 @@ export function getQuickLinkActions(
         // Check if the URL contains {query} variable to enable query mode
         const hasQueryVariable = link.url.includes('{query}');
 
-        // Determine which icon to use: iconUrl > emoji icon > default icon
+        // Determine which icon to use: custom icon (URL or emoji) > auto-fetched iconUrl > default icon
         let iconElement;
-        if (link.iconUrl) {
-            // Use fetched favicon
+        if (link.icon) {
+            // Check if custom icon is a URL
+            if (isUrl(link.icon)) {
+                // Use custom icon URL
+                iconElement = (
+                    <img
+                        src={link.icon}
+                        alt={link.name}
+                        style={{
+                            width: "20px",
+                            height: "20px",
+                            objectFit: "contain"
+                        }}
+                    />
+                );
+            } else {
+                // Use emoji or custom text icon
+                iconElement = <div style={{fontSize: "20px"}}>{link.icon}</div>;
+            }
+        } else if (link.iconUrl) {
+            // Use auto-fetched favicon
             iconElement = (
                 <img
                     src={link.iconUrl}
@@ -59,14 +98,12 @@ export function getQuickLinkActions(
                     }}
                 />
             );
-        } else if (link.icon) {
-            // Use emoji or custom icon
-            iconElement = <div style={{fontSize: "20px"}}>{link.icon}</div>;
         } else {
             // Default icon
             iconElement = <Icon icon="tabler:link" style={{fontSize: "20px"}}/>;
         }
 
+        // Add main action with footer action for delete
         actions.push({
             id: actionId,
             name: link.name,
@@ -82,6 +119,47 @@ export function getQuickLinkActions(
                 incrementUsage(actionId);
             },
             item: link, // Pass the link data to the view
+            // Footer actions for this quick link
+            footerAction: (changeVisible) => {
+                return [
+                    {
+                        id: `${actionId}-edit`,
+                        name: "编辑",
+                        subtitle: "编辑此快捷指令",
+                        icon: <Icon icon="tabler:edit" style={{fontSize: "20px"}}/>,
+                        keywords: "edit,modify,编辑,修改",
+                        perform: () => {
+                            // Close the popover first
+                            changeVisible();
+
+                            // Use setTimeout to ensure popover closes before state updates
+                            setTimeout(() => {
+                                // Switch to edit mode
+                                setRootActionId(`${quickLinkEditPrefix}${link.id}`);
+                            }, 100);
+                        },
+                    },
+                    {
+                        id: `${actionId}-delete`,
+                        name: "删除",
+                        subtitle: "删除此快捷指令",
+                        icon: <Icon icon="tabler:trash" style={{fontSize: "20px"}}/>,
+                        keywords: "delete,remove,删除,移除",
+                        perform: () => {
+                            // Close the popover first
+                            changeVisible();
+
+                            // Use setTimeout to ensure popover closes before state updates
+                            setTimeout(() => {
+                                // Delete the quick link (useEffect will auto-save to localStorage)
+                                deleteQuickLink(link.id);
+                                // Return to main view
+                                setRootActionId(null);
+                            }, 100);
+                        },
+                    },
+                ];
+            },
         });
     });
 

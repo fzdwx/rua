@@ -12,6 +12,7 @@ interface WeatherViewProps {
     search: string;
     onLoadingChange?: (loading: boolean) => void;
     onRequestFocusInput?: () => void;  // Request to focus main input
+    onReturn?: () => void;  // Return to home
 }
 
 // Weather data for wttr.in provider
@@ -100,7 +101,7 @@ export function getWeatherAction(getUsageCount: (actionId: ActionId) => number, 
     };
 }
 
-export function WeatherView({search, onLoadingChange, onRequestFocusInput}: WeatherViewProps) {
+export function WeatherView({search, onLoadingChange, onRequestFocusInput, onReturn}: WeatherViewProps) {
     const [weatherData, setWeatherData] = React.useState<WeatherData | null>(null);
     const [isCurrentLocation, setIsCurrentLocation] = React.useState(false);
     const [showSettings, setShowSettings] = React.useState(false);
@@ -110,6 +111,15 @@ export function WeatherView({search, onLoadingChange, onRequestFocusInput}: Weat
     useKeyPress(['ctrl.k'], (e) => {
         e.preventDefault();
         setShowSettings(true);
+    });
+
+    // ESC key to close settings or return to home
+    useKeyPress('esc', () => {
+        if (showSettings) {
+            setShowSettings(false);
+        } else {
+            onReturn?.();
+        }
     });
 
     // Fetch weather data

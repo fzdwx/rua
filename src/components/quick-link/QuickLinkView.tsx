@@ -3,6 +3,25 @@ import {QuickLink} from "@/hooks/useQuickLinks.tsx";
 import {openUrl} from "@tauri-apps/plugin-opener";
 import {readClipboard} from "@/utils/clipboard";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
+import {useKeyPress} from "ahooks";
+
+/**
+ * Check if a string is a URL or Data URL
+ */
+function isUrl(str: string): boolean {
+    // Check for Data URL (data:image/png;base64,...)
+    if (str.startsWith('data:')) {
+        return true;
+    }
+
+    // Check for regular URL
+    try {
+        new URL(str);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 interface QuickLinkViewProps {
     quickLink: QuickLink;
@@ -15,9 +34,14 @@ interface QuickLinkViewProps {
  * QuickLinkView component - for executing quick link with optional parameters
  */
 export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: QuickLinkViewProps) {
-    const [finalUrl, setFinalUrl] = React.useState(quickLink.url);
+    const [finalUrl, setFinalUrl] = React.useState("");
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
+
+    // ESC key to return to home
+    useKeyPress('esc', () => {
+        onReturn?.();
+    });
 
     // Process URL and replace variables
     React.useEffect(() => {
@@ -94,7 +118,21 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
             <div className="mb-6">
                 <div className="flex items-center gap-3 mb-2">
                     <div style={{fontSize: "32px"}}>
-                        {quickLink.iconUrl ? (
+                        {quickLink.icon ? (
+                            isUrl(quickLink.icon) ? (
+                                <img
+                                    src={quickLink.icon}
+                                    alt={quickLink.name}
+                                    style={{
+                                        width: "32px",
+                                        height: "32px",
+                                        objectFit: "contain"
+                                    }}
+                                />
+                            ) : (
+                                quickLink.icon
+                            )
+                        ) : quickLink.iconUrl ? (
                             <img
                                 src={quickLink.iconUrl}
                                 alt={quickLink.name}
@@ -105,7 +143,7 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
                                 }}
                             />
                         ) : (
-                            quickLink.icon || "🔗"
+                            "🔗"
                         )}
                     </div>
                     <div>

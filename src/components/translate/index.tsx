@@ -1,10 +1,12 @@
 import * as React from "react";
 import {translate, Language} from "./google.tsx";
 import {Action, ActionId} from "@/command";
+import {useKeyPress} from "ahooks";
 
 interface TranslateViewProps {
     search: string;
     onLoadingChange?: (loading: boolean) => void;
+    onReturn?: () => void;
 }
 
 /**
@@ -79,7 +81,7 @@ export function getTranslateAction(getUsageCount: (actionId: ActionId) => number
     }
 }
 
-export function TranslateView({search, onLoadingChange}: TranslateViewProps) {
+export function TranslateView({search, onLoadingChange, onReturn}: TranslateViewProps) {
     const [translationResult, setTranslationResult] = React.useState<{
         original: string;
         translated: string;
@@ -87,6 +89,11 @@ export function TranslateView({search, onLoadingChange}: TranslateViewProps) {
         toLang: string;
         error?: string;
     } | null>(null);
+
+    // ESC key to return to home
+    useKeyPress('esc', () => {
+        onReturn?.();
+    });
 
     // Translate with Google Translate API
     React.useEffect(() => {
