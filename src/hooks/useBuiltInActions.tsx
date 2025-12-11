@@ -4,15 +4,17 @@ import {useActionUsage} from "@/hooks/useActionUsage";
 import {getTranslateAction} from "@/components/translate";
 import {getWeatherAction} from "@/components/weather";
 import {getQuickLinkActions} from "@/components/quick-link";
-import {useQuickLinks} from "@/hooks/useQuickLinks";
+import {QuickLink} from "@/hooks/useQuickLinks";
 
 /**
  * Custom hook to provide built-in actions
  * These are static actions that don't depend on search input
  */
-export function useBuiltInActions(setRootActionId: (rootActionId: (ActionId | null)) => void): Action[] {
+export function useBuiltInActions(
+    setRootActionId: (rootActionId: (ActionId | null)) => void,
+    quickLinks: QuickLink[]
+): Action[] {
     const {getUsageCount, incrementUsage} = useActionUsage();
-    const {quickLinks} = useQuickLinks();
 
     return useMemo(() => {
         const actions: Action[] = [];
@@ -35,5 +37,5 @@ export function useBuiltInActions(setRootActionId: (rootActionId: (ActionId | nu
         // etc.
 
         return actions;
-    }, [getUsageCount, incrementUsage, quickLinks]);
+    }, [getUsageCount, incrementUsage, quickLinks, setRootActionId]);
 }

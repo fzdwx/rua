@@ -27,7 +27,7 @@ export default function Home() {
     const inputRef = useRef<HTMLInputElement>(null);
     const {theme, toggleTheme} = useTheme();
     const {incrementUsage} = useActionUsage();
-    const {refreshQuickLinks} = useQuickLinks();
+    const {quickLinks, refreshQuickLinks} = useQuickLinks();
 
     // Initialize action store
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
@@ -36,7 +36,7 @@ export default function Home() {
     const { actions: applicationActions} = useApplications();
 
     // Get built-in actions (static actions like translate)
-    const builtInActions = useBuiltInActions(setRootActionId);
+    const builtInActions = useBuiltInActions(setRootActionId, quickLinks);
 
     // Combine all actions (built-in actions first for priority)
     const allActions = useMemo(() => {
