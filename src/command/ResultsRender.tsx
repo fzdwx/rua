@@ -228,7 +228,7 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
             <div
                 ref={parentRef}
                 style={{
-                    maxHeight: props.maxHeight || '450px',
+                    maxHeight: props.maxHeight || '100%',
                     height: props.height === 'auto' ? '100%' : props.height || '450px',
                     position: "relative",
                     overflow: "auto",
