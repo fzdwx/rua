@@ -85,7 +85,7 @@ function getWeatherIcon(condition: string): string {
 export function WttrWeatherView({weatherData, isCurrentLocation}: WttrWeatherViewProps) {
     return (
         <>
-            <div className="p-3 space-y-3 overflow-y-auto">
+            <div className="p-3 space-y-3 overflow-y-auto" style={{flex: 1}}>
                 {/* Weather card */}
                 <Card className="border-0" style={{background: 'var(--gray3)'}}>
                     <CardContent className="p-4">

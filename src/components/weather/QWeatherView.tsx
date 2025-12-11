@@ -135,7 +135,7 @@ function getWeatherIcon(condition: string): string {
 export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
     return (
         <>
-            <div className="p-2.5 space-y-2.5 overflow-y-auto max-h-[calc(100vh-80px)]">
+            <div className="p-2.5 space-y-2.5 overflow-y-auto" style={{flex: 1}}>
                 {/* Current weather card */}
                 <Card className="border-0" style={{background: 'var(--gray3)'}}>
                     <CardContent className="p-3">

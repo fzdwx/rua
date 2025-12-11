@@ -186,7 +186,7 @@ export function WeatherView({search, onLoadingChange, onRequestFocusInput, onRet
     if (!weatherData) {
         return (
             <>
-                <div className="py-10 px-5 text-center text-sm" style={{color: 'var(--gray11)'}}>
+                <div className="py-10 px-5 text-center text-sm overflow-y-auto" style={{color: 'var(--gray11)', flex: 1}}>
                     <div className="text-2xl mb-2">🌤️</div>
                     <div>Loading weather data...</div>
                 </div>
@@ -220,7 +220,7 @@ export function WeatherView({search, onLoadingChange, onRequestFocusInput, onRet
     if (weatherData.error) {
         return (
             <>
-                <div className="p-3 overflow-y-auto ">
+                <div className="p-3 overflow-y-auto" style={{flex: 1}}>
                     <div
                         className="p-4 my-2 rounded-lg border"
                         style={{

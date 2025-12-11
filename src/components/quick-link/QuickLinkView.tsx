@@ -4,7 +4,13 @@ import {openUrl} from "@tauri-apps/plugin-opener";
 import {readClipboard} from "@/utils/clipboard";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useKeyPress} from "ahooks";
-import {Command} from "@tauri-apps/plugin-shell";
+import {invoke} from "@tauri-apps/api/core";
+import {motion} from "motion/react";
+import {Card, CardContent, CardHeader} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {Alert, AlertDescription} from "@/components/ui/alert";
+import {Badge} from "@/components/ui/badge";
+import {Loader2, AlertCircle, Info, ExternalLink, Terminal} from "lucide-react";
 
 /**
  * Check if a string is a URL or Data URL
@@ -90,10 +96,20 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
             await getCurrentWebviewWindow().hide();
 
             if (openType === "shell") {
-                // Execute shell command
+                // Execute shell command using Tauri command
                 console.log("Executing shell command:", finalUrl);
-                const command = Command.create("sh", ["-c", finalUrl]);
-                await command.execute();
+                const result = await invoke<{success: boolean, stdout: string, stderr: string, exit_code: number | null}>(
+                    "execute_shell_command",
+                    { command: finalUrl }
+                );
+
+                // Log the result for debugging
+                console.log("Shell command result:", result);
+
+                // Check if command failed
+                if (!result.success) {
+                    throw new Error(`命令执行失败 (退出码: ${result.exit_code})\n${result.stderr || result.stdout}`);
+                }
             } else {
                 // Open URL in browser
                 await openUrl(finalUrl);
@@ -103,8 +119,9 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
             onReturn?.();
         } catch (error) {
             console.error(`Failed to ${openType === "shell" ? "execute command" : "open link"}:`, error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
             setError(openType === "shell"
-                ? "无法执行命令，请检查命令格式"
+                ? `无法执行命令：${errorMessage}`
                 : "无法打开链接，请检查 URL 格式");
             // Show window again if execution failed
             await getCurrentWebviewWindow().show();
@@ -128,141 +145,189 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
 
     const hasPlaceholders = /\{(query|selection)\}/.test(quickLink.url);
     const hasUnresolvedPlaceholders = /\{(query|selection)\}/.test(finalUrl);
+    const openType = quickLink.openType || "url";
 
     return (
-        <div className="p-6 max-w-2xl mx-auto">
-            {/* Header with link info */}
-            <div className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                    <div style={{fontSize: "32px"}}>
-                        {quickLink.icon ? (
-                            isUrl(quickLink.icon) ? (
-                                <img
-                                    src={quickLink.icon}
-                                    alt={quickLink.name}
-                                    style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        objectFit: "contain"
-                                    }}
-                                />
-                            ) : (
-                                quickLink.icon
-                            )
-                        ) : quickLink.iconUrl ? (
-                            <img
-                                src={quickLink.iconUrl}
-                                alt={quickLink.name}
-                                style={{
-                                    width: "32px",
-                                    height: "32px",
-                                    objectFit: "contain"
-                                }}
-                            />
-                        ) : (
-                            "🔗"
-                        )}
-                    </div>
-                    <div>
-                        <div className="text-xl font-semibold" style={{color: "var(--gray12)"}}>
-                            {quickLink.name}
-                        </div>
-                        {quickLink.subtitle && (
-                            <div className="text-sm" style={{color: "var(--gray11)"}}>
-                                {quickLink.subtitle}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* URL preview */}
-            <div
-                className="mb-4 p-4 rounded-lg border"
-                style={{
-                    background: "var(--gray3)",
-                    borderColor: "var(--gray6)",
-                }}
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="p-6 max-w-2xl mx-auto overflow-y-auto"
+            style={{flex: 1}}
+        >
+            {/* Header Card with link info */}
+            <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.2, delay: 0.05 }}
             >
-                <div className="text-xs mb-2 font-medium" style={{color: "var(--gray11)"}}>
-                    将要打开的链接:
-                </div>
-                <div
-                    className="text-sm font-mono break-all"
-                    style={{color: "var(--gray12)"}}
-                >
-                    {finalUrl}
-                </div>
-            </div>
+                <Card className="mb-4 border-none shadow-sm">
+                    <CardHeader className="pb-3">
+                        <div className="flex items-start gap-4">
+                            <motion.div
+                                className="flex-shrink-0"
+                                initial={{ rotate: -10 }}
+                                animate={{ rotate: 0 }}
+                                transition={{ duration: 0.3, delay: 0.1 }}
+                            >
+                                <div className="w-12 h-12 flex items-center justify-center text-3xl">
+                                    {quickLink.icon ? (
+                                        isUrl(quickLink.icon) ? (
+                                            <img
+                                                src={quickLink.icon}
+                                                alt={quickLink.name}
+                                                className="w-12 h-12 object-contain"
+                                            />
+                                        ) : (
+                                            quickLink.icon
+                                        )
+                                    ) : quickLink.iconUrl ? (
+                                        <img
+                                            src={quickLink.iconUrl}
+                                            alt={quickLink.name}
+                                            className="w-12 h-12 object-contain"
+                                        />
+                                    ) : (
+                                        "🔗"
+                                    )}
+                                </div>
+                            </motion.div>
+                            <div className="flex-1 min-w-0">
+                                <h2 className="text-xl font-semibold truncate">
+                                    {quickLink.name}
+                                </h2>
+                                {quickLink.subtitle && (
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        {quickLink.subtitle}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </CardHeader>
+                </Card>
+            </motion.div>
+
+            {/* URL/Command preview */}
+            <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2, delay: 0.1 }}
+            >
+                <Card className="mb-4">
+                    <CardContent className="pt-6">
+                        <div className="flex items-center gap-2 mb-2">
+                            {openType === "shell" ? (
+                                <Terminal className="w-4 h-4 text-muted-foreground" />
+                            ) : (
+                                <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                            )}
+                            <span className="text-xs font-medium text-muted-foreground">
+                                {openType === "shell" ? "将要执行的命令" : "将要打开的链接"}
+                            </span>
+                        </div>
+                        <code className="block text-sm font-mono break-all bg-muted p-3 rounded-md">
+                            {finalUrl}
+                        </code>
+                    </CardContent>
+                </Card>
+            </motion.div>
 
             {/* Help text for placeholders */}
             {hasPlaceholders && (
-                <div
-                    className="mb-4 p-4 rounded-lg border"
-                    style={{
-                        background: "var(--blue3)",
-                        borderColor: "var(--blue6)",
-                        color: "var(--blue11)",
-                    }}
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.2, delay: 0.15 }}
                 >
-                    <div className="text-sm font-medium mb-2">
-                        💡 变量说明
-                    </div>
-                    <div className="text-xs space-y-1">
-                        {quickLink.url.includes('{query}') && (
-                            <div>• <code className="px-1 rounded" style={{background: "var(--blue4)"}}>{'query'}</code> - 在搜索框中输入的内容</div>
-                        )}
-                        {quickLink.url.includes('{selection}') && (
-                            <div>• <code className="px-1 rounded" style={{background: "var(--blue4)"}}>{'selection'}</code> - 剪贴板中的文本内容</div>
-                        )}
-                    </div>
-                </div>
+                    <Alert className="mb-4">
+                        <Info className="h-4 w-4" />
+                        <AlertDescription className="text-sm">
+                            <div className="font-medium mb-2">变量说明</div>
+                            <div className="space-y-1.5 text-xs">
+                                {quickLink.url.includes('{query}') && (
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="secondary" className="font-mono text-xs">
+                                            query
+                                        </Badge>
+                                        <span>在搜索框中输入的内容</span>
+                                    </div>
+                                )}
+                                {quickLink.url.includes('{selection}') && (
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="secondary" className="font-mono text-xs">
+                                            selection
+                                        </Badge>
+                                        <span>剪贴板中的文本内容</span>
+                                    </div>
+                                )}
+                            </div>
+                        </AlertDescription>
+                    </Alert>
+                </motion.div>
             )}
 
             {/* Error message */}
             {error && (
-                <div
-                    className="mb-4 p-4 rounded-lg border"
-                    style={{
-                        background: "var(--red3)",
-                        borderColor: "var(--red6)",
-                        color: "var(--red11)",
-                    }}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2 }}
                 >
-                    <div className="text-sm">⚠️ {error}</div>
-                </div>
+                    <Alert variant="destructive" className="mb-4">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                </motion.div>
             )}
 
             {/* Open button */}
-            <button
-                onClick={handleOpen}
-                disabled={isLoading || hasUnresolvedPlaceholders}
-                className="w-full px-4 py-3 rounded-md font-medium transition-colors"
-                style={{
-                    background: isLoading || hasUnresolvedPlaceholders ? "var(--gray6)" : "var(--blue9)",
-                    color: "white",
-                    cursor: isLoading || hasUnresolvedPlaceholders ? "not-allowed" : "pointer",
-                    opacity: hasUnresolvedPlaceholders ? 0.5 : 1,
-                }}
-                onMouseEnter={(e) => {
-                    if (!isLoading && !hasUnresolvedPlaceholders) {
-                        e.currentTarget.style.background = "var(--blue10)";
-                    }
-                }}
-                onMouseLeave={(e) => {
-                    if (!isLoading && !hasUnresolvedPlaceholders) {
-                        e.currentTarget.style.background = "var(--blue9)";
-                    }
-                }}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: 0.2 }}
             >
-                {isLoading ? "打开中..." : hasUnresolvedPlaceholders ? "请填写必需参数" : "打开链接"}
-            </button>
+                <Button
+                    onClick={handleOpen}
+                    disabled={isLoading || hasUnresolvedPlaceholders}
+                    className="w-full h-11 text-base font-medium"
+                    size="lg"
+                >
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {openType === "shell" ? "执行中..." : "打开中..."}
+                        </>
+                    ) : hasUnresolvedPlaceholders ? (
+                        "请填写必需参数"
+                    ) : (
+                        <>
+                            {openType === "shell" ? (
+                                <>
+                                    <Terminal className="mr-2 h-4 w-4" />
+                                    执行命令
+                                </>
+                            ) : (
+                                <>
+                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                    打开链接
+                                </>
+                            )}
+                        </>
+                    )}
+                </Button>
 
-            {hasUnresolvedPlaceholders && search.trim() === '' && quickLink.url.includes('{query}') && (
-                <div className="text-xs text-center mt-2" style={{color: "var(--gray11)"}}>
-                    提示：在搜索框中输入查询内容
-                </div>
-            )}
-        </div>
+                {hasUnresolvedPlaceholders && search.trim() === '' && quickLink.url.includes('{query}') && (
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-xs text-center text-muted-foreground mt-2"
+                    >
+                        提示：在搜索框中输入查询内容
+                    </motion.p>
+                )}
+            </motion.div>
+        </motion.div>
     );
 }

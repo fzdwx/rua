@@ -2,6 +2,7 @@ mod applications;
 mod clipboard;
 mod proxy;
 mod control_server;
+mod shell_executor;
 
 #[cfg(target_os = "linux")]
 mod hyprland;
@@ -41,7 +42,6 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             setup(app)?;
             Ok(())
@@ -54,6 +54,7 @@ pub fn run() {
             proxy::fetch_with_proxy,
             clipboard::read_clipboard,
             clipboard::write_clipboard,
+            shell_executor::execute_shell_command,
             #[cfg(target_os = "linux")]
             hyprland::focus_window_hyprland,
             #[cfg(target_os = "linux")]

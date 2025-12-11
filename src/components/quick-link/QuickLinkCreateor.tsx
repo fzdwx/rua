@@ -7,6 +7,12 @@ import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Kbd, KbdGroup} from "@/components/ui/kbd.tsx";
 import {getFaviconUrl} from "@/utils/favicon.ts";
+import {motion, AnimatePresence} from "motion/react";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {Alert, AlertDescription} from "@/components/ui/alert";
+import {Badge} from "@/components/ui/badge";
+import {ExternalLink, Terminal, Sparkles, Info} from "lucide-react";
 
 interface QuickLinkCreatorProps {
     onLoadingChange?: (loading: boolean) => void;
@@ -37,7 +43,10 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
     const nameInputRef = React.useRef<HTMLInputElement>(null);
 
     // Available variables
-    const variables = ['query', 'selection'];
+    const variables = [
+        { name: 'query', description: '代表查询内容' },
+        { name: 'selection', description: '代表选中的文本（粘贴板内容）' }
+    ];
 
     // Auto-focus on mount
     React.useEffect(() => {
@@ -103,7 +112,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
             setActiveMenuIndex((prev) => (prev - 1 + variables.length) % variables.length);
         } else if (e.key === 'Enter') {
             e.preventDefault();
-            insertVariable(variables[activeMenuIndex]);
+            insertVariable(variables[activeMenuIndex].name);
         }
     };
 
@@ -226,129 +235,228 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
 
     return (
         <>
-            <div className="w-full max-w-2xl mx-auto px-6 py-8">
-                {/* Form */}
-                <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-6 space-y-6">
-                    {/* Open Type selector */}
-                    <div className="space-y-2">
-                        <Label htmlFor="open-type-select">
-                            打开方式 <span className="text-red-500">*</span>
-                        </Label>
-                        <select
-                            id="open-type-select"
-                            value={openType}
-                            onChange={(e) => setOpenType(e.target.value as QuickLinkOpenType)}
-                            className="w-full px-3 py-2 rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="url">浏览器打开 URL</option>
-                            <option value="shell">Shell 命令执行</option>
-                        </select>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {openType === "url"
-                                ? "将通过默认浏览器打开链接"
-                                : "将在终端中执行 shell 命令"}
-                        </p>
-                    </div>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full max-w-2xl mx-auto px-6 py-8 overflow-y-auto"
+                style={{flex: 1}}
+            >
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Sparkles className="w-5 h-5" />
+                                {editingId ? "编辑快捷链接" : "创建快捷链接"}
+                            </CardTitle>
+                            <CardDescription>
+                                {editingId
+                                    ? "修改已有的快捷链接配置"
+                                    : "创建一个新的快捷链接，支持变量和参数"}
+                            </CardDescription>
+                        </CardHeader>
 
-                    {/* URL input */}
-                    <div className="relative space-y-2">
-                        <Label htmlFor="url-input">
-                            {openType === "url" ? "链接地址" : "Shell 命令"} <span className="text-red-500">*</span>
-                        </Label>
-
-                        <Input
-                            id="url-input"
-                            ref={urlInputRef}
-                            type="text"
-                            value={url}
-                            onChange={handleUrlChange}
-                            onKeyDown={handleUrlKeyDown}
-                            placeholder={openType === "url"
-                                ? "https://google.com/search?q={query}"
-                                : "notify-send 'Hello' '{query}'"}
-                            className={urlError ? "border-red-500 dark:border-red-500" : ""}
-                        />
-
-                        {urlError && (
-                            <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                                {urlError}
-                            </p>
-                        )}
-
-                        {/* Variable selection menu - only shown when typing { */}
-                        {showVariableMenu && (
-                            <div className="absolute z-50 mt-2 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xl overflow-hidden">
-                                {variables.map((variable, index) => (
-                                    <div
-                                        key={variable}
-                                        className={`px-4 py-3 cursor-pointer transition-colors ${
-                                            activeMenuIndex === index
-                                                ? 'bg-gray-100 dark:bg-gray-800'
-                                                : 'hover:bg-gray-50 dark:hover:bg-gray-850'
-                                        }`}
-                                        onMouseEnter={() => setActiveMenuIndex(index)}
-                                        onClick={() => insertVariable(variable)}
+                        <CardContent className="space-y-6">
+                            {/* Open Type selector */}
+                            <motion.div
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.1 }}
+                                className="space-y-3"
+                            >
+                                <Label htmlFor="open-type-select" className="text-base">
+                                    打开方式 <span className="text-destructive">*</span>
+                                </Label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button
+                                        type="button"
+                                        variant={openType === "url" ? "default" : "outline"}
+                                        className="h-auto py-4 flex flex-col items-center gap-2"
+                                        onClick={() => setOpenType("url")}
                                     >
-                                        <div className="flex flex-col gap-1">
-                                            <div className="font-medium text-gray-900 dark:text-gray-100">{variable}</div>
-                                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                                                {variable === 'query' ? '代表查询内容' : '代表选中的文本（粘贴板内容）'}
-                                            </div>
-                                        </div>
+                                        <ExternalLink className="w-5 h-5" />
+                                        <div className="text-sm font-medium">浏览器</div>
+                                        <div className="text-xs opacity-70">打开 URL 链接</div>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant={openType === "shell" ? "default" : "outline"}
+                                        className="h-auto py-4 flex flex-col items-center gap-2"
+                                        onClick={() => setOpenType("shell")}
+                                    >
+                                        <Terminal className="w-5 h-5" />
+                                        <div className="text-sm font-medium">终端</div>
+                                        <div className="text-xs opacity-70">执行 Shell 命令</div>
+                                    </Button>
+                                </div>
+                            </motion.div>
+
+                            {/* URL input */}
+                            <motion.div
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.15 }}
+                                className="relative space-y-3"
+                            >
+                                <Label htmlFor="url-input" className="text-base">
+                                    {openType === "url" ? "链接地址" : "Shell 命令"}{" "}
+                                    <span className="text-destructive">*</span>
+                                </Label>
+
+                                <Input
+                                    id="url-input"
+                                    ref={urlInputRef}
+                                    type="text"
+                                    value={url}
+                                    onChange={handleUrlChange}
+                                    onKeyDown={handleUrlKeyDown}
+                                    placeholder={openType === "url"
+                                        ? "https://google.com/search?q={query}"
+                                        : "notify-send 'Hello' '{query}'"}
+                                    className={`${urlError ? "border-destructive" : ""} font-mono text-sm`}
+                                />
+
+                                <AnimatePresence>
+                                    {urlError && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                        >
+                                            <Alert variant="destructive" className="py-2">
+                                                <AlertDescription className="text-xs">
+                                                    {urlError}
+                                                </AlertDescription>
+                                            </Alert>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* Variable selection menu - only shown when typing { */}
+                                <AnimatePresence>
+                                    {showVariableMenu && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute z-50 w-full mt-2"
+                                        >
+                                            <Card className="shadow-lg border-2">
+                                                <CardContent className="p-0">
+                                                    {variables.map((variable, index) => (
+                                                        <motion.div
+                                                            key={variable.name}
+                                                            className={`px-4 py-3 cursor-pointer transition-colors border-b last:border-b-0 ${
+                                                                activeMenuIndex === index
+                                                                    ? 'bg-accent'
+                                                                    : 'hover:bg-muted'
+                                                            }`}
+                                                            onMouseEnter={() => setActiveMenuIndex(index)}
+                                                            onClick={() => insertVariable(variable.name)}
+                                                            whileHover={{ x: 4 }}
+                                                            transition={{ duration: 0.15 }}
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <Badge variant="secondary" className="font-mono">
+                                                                    {variable.name}
+                                                                </Badge>
+                                                                <span className="text-sm text-muted-foreground">
+                                                                    {variable.description}
+                                                                </span>
+                                                            </div>
+                                                        </motion.div>
+                                                    ))}
+                                                </CardContent>
+                                            </Card>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                {!urlError && (
+                                    <Alert>
+                                        <Info className="h-4 w-4" />
+                                        <AlertDescription className="text-xs">
+                                            输入 <code className="px-1.5 py-0.5 rounded bg-muted font-mono">{"{"}</code> 可插入变量
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                            </motion.div>
+
+                            {/* Name input */}
+                            <motion.div
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="space-y-3"
+                            >
+                                <Label htmlFor="name-input" className="text-base">
+                                    名称 <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                    id="name-input"
+                                    ref={nameInputRef}
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => {
+                                        setName(e.target.value);
+                                        setNameError(""); // Clear error when user types
+                                    }}
+                                    placeholder="例如：Google 搜索"
+                                    className={nameError ? "border-destructive" : ""}
+                                />
+                                <AnimatePresence>
+                                    {nameError && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                        >
+                                            <Alert variant="destructive" className="py-2">
+                                                <AlertDescription className="text-xs">
+                                                    {nameError}
+                                                </AlertDescription>
+                                            </Alert>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
+
+                            {/* Custom Icon input */}
+                            <motion.div
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.25 }}
+                                className="space-y-3"
+                            >
+                                <Label htmlFor="icon-input" className="text-base">
+                                    图标 <span className="text-muted-foreground text-sm font-normal">(可选)</span>
+                                </Label>
+                                <div className="flex gap-3 items-center">
+                                    <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-2xl border rounded-md bg-muted">
+                                        {customIcon || (iconUrl ? <img src={iconUrl} alt="icon" className="w-6 h-6" /> : "🔗")}
                                     </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {!urlError && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                支持变量：输入 {'{'} 选择变量，例如 {'{query}'} 或 {'{selection}'}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Name input */}
-                    <div className="space-y-2">
-                        <Label htmlFor="name-input">
-                            名称 <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                            id="name-input"
-                            ref={nameInputRef}
-                            type="text"
-                            value={name}
-                            onChange={(e) => {
-                                setName(e.target.value);
-                                setNameError(""); // Clear error when user types
-                            }}
-                            placeholder="例如：Google 搜索"
-                            className={nameError ? "border-red-500 dark:border-red-500" : ""}
-                        />
-                        {nameError && (
-                            <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                                {nameError}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Custom Icon input */}
-                    <div className="space-y-2">
-                        <Label htmlFor="icon-input">
-                            图标 (可选)
-                        </Label>
-                        <Input
-                            id="icon-input"
-                            type="text"
-                            value={customIcon}
-                            onChange={(e) => setCustomIcon(e.target.value)}
-                            placeholder="例如：🔗 或 https://example.com/icon.png"
-                        />
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                            输入 emoji 表情或图标 URL 链接，留空则自动从网站获取 favicon
-                        </p>
-                    </div>
-                </div>
-            </div>
+                                    <Input
+                                        id="icon-input"
+                                        type="text"
+                                        value={customIcon}
+                                        onChange={(e) => setCustomIcon(e.target.value)}
+                                        placeholder="🔗 或 https://example.com/icon.png"
+                                        className="flex-1"
+                                    />
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    输入 emoji 表情或图标 URL，留空则自动获取网站 favicon
+                                </p>
+                            </motion.div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </motion.div>
 
             <Footer
                 current={null}
@@ -356,15 +464,20 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                 actions={() => []}
                 content={() => <div/>}
                 rightElement={
-                    <div className='flex items-center gap-3 pr-6'>
-                        <div className="flex items-center gap-1.5 text-xs" style={{color: 'var(--gray11)'}}>
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className='flex items-center gap-3 pr-6'
+                    >
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <span>{editingId ? "更新" : "创建"}</span>
                             <KbdGroup className="gap-1">
                                 <Kbd>Ctrl</Kbd>
                                 <Kbd>⏎</Kbd>
                             </KbdGroup>
                         </div>
-                    </div>
+                    </motion.div>
                 }
             />
         </>

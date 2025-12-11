@@ -4,11 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Rua is a Tauri-based application launcher for Linux, built with React, TypeScript, and Rust. It provides a command palette interface for searching and launching applications installed on the system.
+Rua is a Tauri-based application launcher for Linux, built with React, TypeScript, and Rust. It provides a command
+palette interface for searching and launching applications installed on the system.
 
 ## Technology Stack
 
-- **Frontend**: React 19, TypeScript, Vite
+UI 组件必须使用 Shadcn,要做到现代化，简约风格
+
+- **Frontend**: React 19, TypeScript, Vite, Shadcn
 - **Backend**: Tauri v2, Rust
 - **Styling**: Tailwind CSS (v4), @iconify/react for icons
 - **State Management**: React Context API for global state
@@ -44,6 +47,7 @@ just bump <version>       # Bump version number (runs bump-version.sh)
 ## Linux Environment Variables
 
 When running on Linux with certain graphics issues, you may need:
+
 ```bash
 export WEBKIT_DISABLE_DMABUF_RENDERER=1
 export WEBKIT_DISABLE_COMPOSITING_MODE=1
@@ -56,51 +60,51 @@ export WEBKIT_DISABLE_COMPOSITING_MODE=1
 The application uses a custom command palette system inspired by kbar:
 
 1. **Action System** (`src/command/action/`):
-   - `ActionInterface.ts` - Manages action registration and hierarchies
-   - `ActionImpl.ts` - Implementation of individual actions with parent-child relationships
-   - `Command.ts` - Core command execution logic
-   - `HistoryImpl.ts` - Command history management
+    - `ActionInterface.ts` - Manages action registration and hierarchies
+    - `ActionImpl.ts` - Implementation of individual actions with parent-child relationships
+    - `Command.ts` - Core command execution logic
+    - `HistoryImpl.ts` - Command history management
 
 2. **Action Store** (`src/command/useActionStore.tsx`):
-   - Central state management for actions using a custom hook
-   - Handles action registration, current root action, and active index
-   - Similar to Zustand pattern but specialized for command palette
+    - Central state management for actions using a custom hook
+    - Handles action registration, current root action, and active index
+    - Similar to Zustand pattern but specialized for command palette
 
 3. **Matching & Search** (`src/command/useMatches.tsx`):
-   - Uses Fuse.js for fuzzy search across actions
-   - Searches action names, keywords, and subtitles
-   - Groups results by section with priority sorting
+    - Uses Fuse.js for fuzzy search across actions
+    - Searches action names, keywords, and subtitles
+    - Groups results by section with priority sorting
 
 4. **Main Application Flow** (`src/home/Index.tsx`):
-   - Combines built-in actions (translate, theme toggle) with system applications
-   - Manages search state, active action, and result handling
-   - Coordinates between Input, ResultsRender, Footer, and custom views
+    - Combines built-in actions (translate, theme toggle) with system applications
+    - Manages search state, active action, and result handling
+    - Coordinates between Input, ResultsRender, Footer, and custom views
 
 ### Backend Architecture (Rust)
 
 Located in `src-tauri/src/lib.rs`:
 
 1. **Application Discovery**:
-   - Scans `.desktop` files from system directories
-   - Parses using `freedesktop-desktop-entry` crate
-   - Caches icon lookups for performance
-   - Handles icon resolution from multiple system paths
+    - Scans `.desktop` files from system directories
+    - Parses using `freedesktop-desktop-entry` crate
+    - Caches icon lookups for performance
+    - Handles icon resolution from multiple system paths
 
 2. **Application Launch**:
-   - Supports both GUI and terminal applications
-   - Auto-detects terminal emulator (konsole, gnome-terminal, alacritty, etc.)
-   - Cleans exec commands (removes field codes like %f, %u)
+    - Supports both GUI and terminal applications
+    - Auto-detects terminal emulator (konsole, gnome-terminal, alacritty, etc.)
+    - Cleans exec commands (removes field codes like %f, %u)
 
 3. **Tauri Commands**:
-   - `get_applications()` - Returns all desktop applications
-   - `launch_application(exec, terminal)` - Launches app and hides window
-   - `refresh_applications_cache()` - Clears cached application data, forcing reload on next request
+    - `get_applications()` - Returns all desktop applications
+    - `launch_application(exec, terminal)` - Launches app and hides window
+    - `refresh_applications_cache()` - Clears cached application data, forcing reload on next request
 
 4. **Application Caching**:
-   - Desktop applications are cached in `$XDG_CACHE_HOME/rua/applications.json` (defaults to `~/.cache/rua/`)
-   - Cache is invalidated automatically when `.desktop` files are modified
-   - Cache includes timestamp-based validation against file modification times
-   - Icon paths are cached in-memory using `lazy_static` for performance
+    - Desktop applications are cached in `$XDG_CACHE_HOME/rua/applications.json` (defaults to `~/.cache/rua/`)
+    - Cache is invalidated automatically when `.desktop` files are modified
+    - Cache includes timestamp-based validation against file modification times
+    - Icon paths are cached in-memory using `lazy_static` for performance
 
 ### Key Components
 
@@ -114,31 +118,34 @@ Located in `src-tauri/src/lib.rs`:
 ### Action Types
 
 Actions follow this interface (`src/command/types.ts`):
+
 ```typescript
 {
-  id: string              // Unique identifier
-  name: string            // Display name
-  icon?: ReactElement     // Optional icon
-  subtitle?: string       // Description text
-  keywords?: string       // Search keywords
-  section?: string        // Grouping section
-  priority?: number       // Sort priority
-  parent?: string         // Parent action ID for nested actions
-  query?: boolean         // Shows query input when active
-  perform?: () => void    // Action handler
-  footerAction?: () => Action[]  // Dynamic footer actions
+    id: string              // Unique identifier
+    name: string            // Display name
+    icon ? : ReactElement     // Optional icon
+    subtitle ? : string       // Description text
+    keywords ? : string       // Search keywords
+    section ? : string        // Grouping section
+    priority ? : number       // Sort priority
+    parent ? : string         // Parent action ID for nested actions
+    query ? : boolean         // Shows query input when active
+    perform ? : () => void    // Action handler
+        footerAction ? : () => Action[]  // Dynamic footer actions
 }
 ```
 
 ### Built-in Actions
 
 Defined in `src/hooks/useBuiltInActions.tsx`:
+
 - **Translate**: Multi-language translation with language selection
 - **Theme Toggle**: Available via footer on any screen
 
 ### Application Actions
 
 Generated from system `.desktop` files via `src/hooks/useApplications.tsx`:
+
 - Loaded via Tauri command `get_applications()`
 - Icons converted using `convertFileSrc()` for Tauri asset protocol
 - Launch triggers window hide after execution
@@ -184,24 +191,27 @@ src-tauri/src/
 ## Window Management & Global Shortcuts
 
 The application registers a global hotkey (`Alt+Space`) in `src/App.tsx`:
+
 - Toggles window visibility when pressed and released
 - When showing window: automatically centers, focuses, and makes visible
 - When hiding window: simply hides without destroying
 - Window configuration (`src-tauri/tauri.conf.json`):
-  - Size: 900x540px
-  - Decorations: disabled (custom frameless window)
-  - Transparent background supported
-  - Always on top, skips taskbar
-  - Vite dev server: `http://localhost:1421`
+    - Size: 900x540px
+    - Decorations: disabled (custom frameless window)
+    - Transparent background supported
+    - Always on top, skips taskbar
+    - Vite dev server: `http://localhost:1421`
 
 ### Control Server (HTTP API)
 
 Rua includes a built-in HTTP control server that listens on `127.0.0.1:7777`:
+
 - Started automatically when the application launches
 - Provides API endpoints for external control
 - Used by `ruactl` command-line utility
 
 **Endpoints:**
+
 - `POST /toggle` - Toggle window visibility
 - `POST /health` - Check server status
 
@@ -210,11 +220,13 @@ Rua includes a built-in HTTP control server that listens on `127.0.0.1:7777`:
 `ruactl` is a standalone binary that communicates with rua via HTTP:
 
 **Installation:**
+
 ```bash
 ./install-ruactl.sh  # Installs to ~/.local/bin
 ```
 
 **Usage:**
+
 ```bash
 ruactl toggle   # Toggle window visibility
 ruactl health   # Check if rua is running
@@ -223,15 +235,18 @@ ruactl help     # Show help message
 
 **Hyprland Integration:**
 You can bind `ruactl toggle` to a global hotkey in your Hyprland config:
+
 ```
 bind = ALT, Space, exec, ruactl toggle
 ```
 
-This approach works across all workspaces in Hyprland, avoiding the workspace-switching issues with Tauri's global shortcuts.
+This approach works across all workspaces in Hyprland, avoiding the workspace-switching issues with Tauri's global
+shortcuts.
 
 ## Tauri Asset Protocol
 
 The application uses Tauri's asset protocol to access system icons:
+
 - Enabled in `src-tauri/tauri.conf.json` under `security.assetProtocol`
 - Scoped to: `$HOME/.local/share/**` and `/usr/share/**`
 - Required permissions defined in `src-tauri/capabilities/default.json`

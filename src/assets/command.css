@@ -106,7 +106,8 @@ a {
   -moz-osx-font-smoothing: grayscale
 }
 
-button {
+/* Reset button styles only for buttons without classes (to preserve shadcn Button styles) */
+button:not([class]) {
   background: none;
   font-family: var(--font-sans);
   padding: 0;

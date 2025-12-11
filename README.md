@@ -19,6 +19,9 @@ sudo apt install xclip
 
 # Fedora
 sudo dnf install xclip
+
+bunx --bun shadcn@latest mcp init --client claude
+bunx --bun @magicuidesign/cli@latest install claude
 ```
 
 ## Environment Variables

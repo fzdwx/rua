@@ -167,7 +167,7 @@ export function TranslateView({search, onLoadingChange, onReturn}: TranslateView
 
     if (!translationResult) {
         return (
-            <div className="py-10 px-5 text-center text-sm" style={{color: 'var(--gray11)'}}>
+            <div className="py-10 px-5 text-center text-sm overflow-y-auto" style={{color: 'var(--gray11)', flex: 1}}>
                 Type something to translate...
             </div>
         );
@@ -176,7 +176,7 @@ export function TranslateView({search, onLoadingChange, onReturn}: TranslateView
     // Show error if translation failed
     if (translationResult.error) {
         return (
-            <div className="p-3">
+            <div className="p-3 overflow-y-auto" style={{flex: 1}}>
                 <div
                     className="p-4 my-2 rounded-lg border"
                     style={{
@@ -204,7 +204,7 @@ export function TranslateView({search, onLoadingChange, onReturn}: TranslateView
     }
 
     return (
-        <div className="p-3">
+        <div className="p-3 overflow-y-auto" style={{flex: 1}}>
             {/* Translation result card */}
             <div
                 onClick={() => handleCopy(translationResult.translated)}
