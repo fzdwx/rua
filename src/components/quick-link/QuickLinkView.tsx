@@ -94,7 +94,19 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
             <div className="mb-6">
                 <div className="flex items-center gap-3 mb-2">
                     <div style={{fontSize: "32px"}}>
-                        {quickLink.icon || "🔗"}
+                        {quickLink.iconUrl ? (
+                            <img
+                                src={quickLink.iconUrl}
+                                alt={quickLink.name}
+                                style={{
+                                    width: "32px",
+                                    height: "32px",
+                                    objectFit: "contain"
+                                }}
+                            />
+                        ) : (
+                            quickLink.icon || "🔗"
+                        )}
                     </div>
                     <div>
                         <div className="text-xl font-semibold" style={{color: "var(--gray12)"}}>

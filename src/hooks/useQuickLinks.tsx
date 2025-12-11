@@ -7,6 +7,7 @@ export interface QuickLink {
   name: string;
   url: string;
   icon?: string; // Emoji or icon name
+  iconUrl?: string; // Auto-fetched favicon URL
   keywords?: string;
   subtitle?: string;
 }

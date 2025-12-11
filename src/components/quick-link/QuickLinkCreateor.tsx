@@ -6,6 +6,7 @@ import {useKeyPress} from "ahooks";
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Kbd, KbdGroup} from "@/components/ui/kbd.tsx";
+import {getFaviconUrl} from "@/utils/favicon.ts";
 
 interface QuickLinkCreatorProps {
     onLoadingChange?: (loading: boolean) => void;
@@ -21,6 +22,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
 
     const [name, setName] = React.useState("");
     const [url, setUrl] = React.useState("");
+    const [iconUrl, setIconUrl] = React.useState<string | null>(null);
     const [showVariableMenu, setShowVariableMenu] = React.useState(false);
     const [variableMenuPosition, setVariableMenuPosition] = React.useState(0);
     const [activeMenuIndex, setActiveMenuIndex] = React.useState(0);
@@ -38,6 +40,25 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
     React.useEffect(() => {
         urlInputRef.current?.focus();
     }, []);
+
+    // Auto-fetch favicon when URL changes
+    React.useEffect(() => {
+        // Only fetch if URL is valid
+        if (!url.trim()) {
+            setIconUrl(null);
+            return;
+        }
+
+        try {
+            new URL(url);
+            // URL is valid, fetch favicon
+            const faviconUrl = getFaviconUrl(url);
+            setIconUrl(faviconUrl);
+        } catch {
+            // Invalid URL, clear iconUrl
+            setIconUrl(null);
+        }
+    }, [url]);
 
     // Add Ctrl+Enter shortcut
     useKeyPress('ctrl.enter', (e) => {
@@ -114,6 +135,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
     const resetForm = () => {
         setName("");
         setUrl("");
+        setIconUrl(null);
         setEditingId(null);
     };
 
@@ -160,12 +182,14 @@ export function QuickLinkCreator({onLoadingChange, onReturn}: QuickLinkCreatorPr
                 updateQuickLink(editingId, {
                     name: name.trim(),
                     url: url.trim(),
+                    iconUrl: iconUrl || undefined,
                 });
             } else {
                 // Create new
                 addQuickLink({
                     name: name.trim(),
                     url: url.trim(),
+                    iconUrl: iconUrl || undefined,
                 });
             }
 

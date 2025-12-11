@@ -44,15 +44,34 @@ export function getQuickLinkActions(
         // Check if the URL contains {query} variable to enable query mode
         const hasQueryVariable = link.url.includes('{query}');
 
+        // Determine which icon to use: iconUrl > emoji icon > default icon
+        let iconElement;
+        if (link.iconUrl) {
+            // Use fetched favicon
+            iconElement = (
+                <img
+                    src={link.iconUrl}
+                    alt={link.name}
+                    style={{
+                        width: "20px",
+                        height: "20px",
+                        objectFit: "contain"
+                    }}
+                />
+            );
+        } else if (link.icon) {
+            // Use emoji or custom icon
+            iconElement = <div style={{fontSize: "20px"}}>{link.icon}</div>;
+        } else {
+            // Default icon
+            iconElement = <Icon icon="tabler:link" style={{fontSize: "20px"}}/>;
+        }
+
         actions.push({
             id: actionId,
             name: link.name,
             subtitle: link.subtitle || link.url,
-            icon: link.icon ? (
-                <div style={{fontSize: "20px"}}>{link.icon}</div>
-            ) : (
-                <Icon icon="tabler:link" style={{fontSize: "20px"}}/>
-            ),
+            icon: iconElement,
             keywords: link.keywords || "",
             kind: "quick-link",
             query: hasQueryVariable, // Enable query mode if URL contains {query}
