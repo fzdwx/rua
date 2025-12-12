@@ -187,9 +187,24 @@ export function WeatherView({search, onLoadingChange, onRequestFocusInput, onRet
     if (!weatherData) {
         return (
             <>
-                <div className="py-10 px-5 text-center text-sm overflow-y-auto flex-1 text-gray-11">
-                    <div className="text-2xl mb-2">🌤️</div>
-                    <div>Loading weather data...</div>
+                <div className="py-10 px-5 text-center text-sm overflow-y-auto flex-1">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex flex-col items-center gap-4"
+                    >
+                        <div className="text-4xl mb-2 animate-pulse">🌤️</div>
+                        <div className="text-gray-11 font-medium">Loading weather data...</div>
+                        <div className="w-32 h-1 bg-[var(--gray4)] rounded-full overflow-hidden">
+                            <motion.div
+                                className="h-full bg-primary"
+                                initial={{ width: "0%" }}
+                                animate={{ width: "100%" }}
+                                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                            />
+                        </div>
+                    </motion.div>
                 </div>
                 <Footer
                     current={null}

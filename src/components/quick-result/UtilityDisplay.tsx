@@ -272,7 +272,7 @@ export function UtilityDisplay({input}: UtilityDisplayProps) {
                 {/* Main Result Card */}
                 <Card
                     onClick={handleCopy}
-                    className="cursor-pointer transition-all duration-200 bg-gray-3 border-gray-6 hover:bg-gray-4 hover:border-gray-7"
+                    className="cursor-pointer bg-[var(--gray3)] border-[var(--gray6)] hover:bg-[var(--gray4)] hover:border-[var(--gray7)] hover:scale-[1.01]"
                 >
                     <CardContent className="p-4">
                         <div className="flex items-center gap-3">

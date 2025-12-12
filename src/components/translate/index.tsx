@@ -5,6 +5,7 @@ import {useKeyPress} from "ahooks";
 import {Card, CardContent} from "@/components/ui/card";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {Icon} from "@iconify/react";
+import {motion} from "motion/react";
 
 interface TranslateViewProps {
     search: string;
@@ -170,8 +171,17 @@ export function TranslateView({search, onLoadingChange, onReturn}: TranslateView
 
     if (!translationResult) {
         return (
-            <div className="py-10 px-5 text-center text-sm overflow-y-auto flex-1 text-gray-11">
-                Type something to translate...
+            <div className="py-10 px-5 text-center text-sm overflow-y-auto flex-1">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex flex-col items-center gap-3"
+                >
+                    <div className="text-4xl mb-2 opacity-50">🌐</div>
+                    <div className="text-gray-11 font-medium">Type something to translate...</div>
+                    <div className="text-xs text-gray-10">Supports Chinese ↔ English</div>
+                </motion.div>
             </div>
         );
     }
@@ -197,7 +207,7 @@ export function TranslateView({search, onLoadingChange, onReturn}: TranslateView
             {/* Translation result card */}
             <Card
                 onClick={() => handleCopy(translationResult.translated)}
-                className="my-2 cursor-pointer transition-all duration-200 bg-gray-3 border-gray-6 hover:bg-gray-4 hover:border-gray-7"
+                className="my-2 cursor-pointer bg-[var(--gray3)] border-[var(--gray6)] hover:bg-[var(--gray4)] hover:border-[var(--gray7)] hover:scale-[1.01]"
             >
                 <CardContent className="p-4">
                     <div className="flex items-center gap-3 mb-3">

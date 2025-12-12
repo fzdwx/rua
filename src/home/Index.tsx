@@ -24,6 +24,7 @@ import {
     QuickLinkView
 } from "@/components/quick-link";
 import {DefaultView} from "./DefaultView";
+import {AnimatePresence, motion} from "motion/react";
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -191,10 +192,19 @@ export default function Home() {
                 )}
 
                 {/* Main content area with flex: 1 to prevent footer from being squeezed */}
-                <div style={{flex: 1, overflow: "hidden", display: "flex", flexDirection: "column"}}>
-                    {/* Show translate view if translate action is active */}
-                    {state.rootActionId === translateId ? (
-                        <TranslateView
+                <div className="flex-1 overflow-hidden flex flex-col">
+                    <AnimatePresence mode="wait">
+                        {/* Show translate view if translate action is active */}
+                        {state.rootActionId === translateId ? (
+                            <motion.div
+                                key="translate"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                className="flex-1 overflow-hidden"
+                            >
+                                <TranslateView
                             search={search}
                             onLoadingChange={handleActionLoadingChange}
                             onReturn={() => {
@@ -206,9 +216,18 @@ export default function Home() {
                                     inputRef.current?.focus();
                                 }, 50);
                             }}
-                        />
-                    ) : state.rootActionId === weatherId ? (
-                        <WeatherView
+                            />
+                            </motion.div>
+                        ) : state.rootActionId === weatherId ? (
+                            <motion.div
+                                key="weather"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                className="flex-1 overflow-hidden"
+                            >
+                                <WeatherView
                             search={search}
                             onLoadingChange={handleActionLoadingChange}
                             onRequestFocusInput={() => {
@@ -226,9 +245,18 @@ export default function Home() {
                                     inputRef.current?.focus();
                                 }, 50);
                             }}
-                        />
-                    ) : state.rootActionId === quickLinkCreatorId ? (
-                        <QuickLinkCreator
+                            />
+                            </motion.div>
+                        ) : state.rootActionId === quickLinkCreatorId ? (
+                            <motion.div
+                                key="quicklink-creator"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                className="flex-1 overflow-hidden"
+                            >
+                                <QuickLinkCreator
                             onLoadingChange={handleActionLoadingChange}
                             onReturn={() => {
                                 // Return to main view after creating quick link
@@ -241,9 +269,18 @@ export default function Home() {
                                     inputRef.current?.focus();
                                 }, 50);
                             }}
-                        />
-                    ) : state.rootActionId?.startsWith(quickLinkEditPrefix) ? (
-                        <QuickLinkCreator
+                            />
+                            </motion.div>
+                        ) : state.rootActionId?.startsWith(quickLinkEditPrefix) ? (
+                            <motion.div
+                                key={`quicklink-edit-${state.rootActionId}`}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                className="flex-1 overflow-hidden"
+                            >
+                                <QuickLinkCreator
                             editQuickLink={getQuickLink(state.rootActionId.replace(quickLinkEditPrefix, ""))}
                             onLoadingChange={handleActionLoadingChange}
                             onReturn={() => {
@@ -257,9 +294,18 @@ export default function Home() {
                                     inputRef.current?.focus();
                                 }, 50);
                             }}
-                        />
-                    ) : state.rootActionId?.startsWith(quickLinkViewPrefix) ? (
-                        <QuickLinkView
+                            />
+                            </motion.div>
+                        ) : state.rootActionId?.startsWith(quickLinkViewPrefix) ? (
+                            <motion.div
+                                key={`quicklink-view-${state.rootActionId}`}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                className="flex-1 overflow-hidden"
+                            >
+                                <QuickLinkView
                             quickLink={currentRootAction?.item}
                             search={search}
                             onLoadingChange={handleActionLoadingChange}
@@ -268,9 +314,18 @@ export default function Home() {
                                 setRootActionId(null);
                                 setSearch("");
                             }}
-                        />
-                    ) : (
-                        <DefaultView
+                            />
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="default"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                className="flex-1 overflow-hidden"
+                            >
+                                <DefaultView
                             search={search}
                             results={results}
                             activeIndex={state.activeIndex}
@@ -286,8 +341,10 @@ export default function Home() {
                             getFooterActions={getFooterActions}
                             getSettingsActions={getSettingsActions}
                             onQueryActionEnter={handleQueryActionEnter}
-                        />
-                    )}
+                            />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </Background>
         </Container>

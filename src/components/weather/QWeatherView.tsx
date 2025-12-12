@@ -137,7 +137,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
         <>
             <div className="p-2.5 space-y-2.5 overflow-y-auto flex-1">
                 {/* Current weather card */}
-                <Card className="border-0 bg-gray-3">
+                <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
                     <CardContent className="p-3">
                         {/* Main row: city (left), temperature (center), sunrise/sunset (right) */}
                         <div className="flex items-center justify-between mb-3">
@@ -229,7 +229,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
 
                 {/* Daily forecast */}
                 {weatherData.daily && weatherData.daily.length > 0 && (
-                    <Card className="border-0 bg-gray-3">
+                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
                         <CardHeader className="pb-2 pt-2.5 px-3">
                             <CardTitle className="text-sm flex items-center gap-2">
                                 <Icon icon="tabler:calendar-week" style={{fontSize: "16px"}} />
@@ -248,7 +248,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
 
                 {/* Life indices */}
                 {weatherData.indices && weatherData.indices.length > 0 && (
-                    <Card className="border-0 bg-gray-3">
+                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm flex items-center gap-2">
                                 <Icon icon="tabler:bulb" style={{fontSize: "16px"}} />

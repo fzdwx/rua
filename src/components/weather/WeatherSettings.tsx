@@ -92,7 +92,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
         <>
             <div className="p-4 space-y-4 overflow-y-auto flex-1">
                 {/* Provider selection card */}
-                <Card className="border-0 bg-gray-3">
+                <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
                     <CardHeader className="pb-3">
                         <CardTitle className="text-sm flex items-center gap-2">
                             <Icon icon="tabler:cloud-cog" style={{fontSize: "16px"}} />
@@ -121,7 +121,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
 
                 {/* QWeather configuration card */}
                 {provider === "qweather" && (
-                    <Card className="border-0 bg-gray-3">
+                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm flex items-center gap-2">
                                 <Icon icon="tabler:key" style={{fontSize: "16px"}} />
@@ -192,7 +192,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
 
                 {/* Cache management card */}
                 {provider === "qweather" && (
-                    <Card className="border-0 bg-gray-3">
+                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm flex items-center gap-2">
                                 <Icon icon="tabler:database" style={{fontSize: "16px"}} />

@@ -2,6 +2,7 @@ import {ActionImpl, Footer, RenderItem, ResultsRender} from "@/command";
 import {QuickResult} from "@/components/quick-result";
 import {Icon} from "@iconify/react";
 import {RefObject} from "react";
+import {motion} from "motion/react";
 
 interface DefaultViewProps {
     search: string;
@@ -47,30 +48,23 @@ export function DefaultView({
 
             {
                 results.length === 0 ? (
-                    <div
-                        style={{
-                            textAlign: "center",
-                            padding: "40px 20px",
-                            color: "var(--gray11)",
-                            fontSize: "14px",
-                        }}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="text-center py-10 px-5"
                     >
-                        No applications found
-                    </div>
+                        <div className="text-5xl mb-4 opacity-40">🔍</div>
+                        <div className="text-gray-11 font-medium mb-2 text-sm">No applications found</div>
+                        <div className="text-xs text-gray-10">Try a different search term or check your spelling</div>
+                    </motion.div>
                 ) : (
                     <ResultsRender
                         items={results}
                         onRender={({item, active}) => {
                             if (typeof item === "string") {
                                 return (
-                                    <div
-                                        style={{
-                                            padding: "8px 16px",
-                                            fontSize: "12px",
-                                            color: "var(--gray11)",
-                                            fontWeight: "bold",
-                                        }}
-                                    >
+                                    <div className="px-4 py-2 text-xs font-semibold text-gray-11 uppercase tracking-wide">
                                         {item}
                                     </div>
                                 );

@@ -597,7 +597,7 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
     }) => (
         <Card
             onClick={onClick}
-            className="relative cursor-pointer transition-all duration-150 bg-gray-2 border-gray-6 hover:bg-gray-3 hover:border-gray-7"
+            className="relative cursor-pointer bg-[var(--gray2)] border-[var(--gray6)] hover:bg-[var(--gray3)] hover:border-[var(--gray7)] hover:scale-[1.01] transition-all duration-raycast-fast"
         >
             <CardContent className="p-3">
                 {/* Copy icon in top-right corner */}

@@ -2,6 +2,7 @@ import React from "react";
 import {ActionImpl} from "./action";
 import {ActionId} from "./types";
 import {Kbd} from "@/components/ui/kbd.tsx";
+import {motion} from "motion/react";
 
 const RenderItem = React.forwardRef(
     (
@@ -32,9 +33,12 @@ const RenderItem = React.forwardRef(
         }, [action.ancestors, currentRootActionId]);
 
         return (
-            <div
+            <motion.div
                 ref={ref}
                 className={active ? 'command-item-active' : 'command-item'}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
             >
                 <div className="flex gap-2 items-center text-sm">
                     {action.icon && action.icon}
@@ -87,7 +91,7 @@ const RenderItem = React.forwardRef(
                         </div>
                     ) : null}
                 </div>
-            </div>
+            </motion.div>
         );
     },
 );

@@ -163,7 +163,7 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.2, delay: 0.05 }}
                 >
-                <Card className="mb-4 border-none shadow-sm">
+                <Card className="mb-4 border-none hover:shadow-raycast-hover">
                     <CardHeader className="pb-3">
                         <div className="flex items-start gap-4">
                             <motion.div
@@ -239,7 +239,7 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.2, delay: 0.1 }}
             >
-                <Card className="mb-4">
+                <Card className="mb-4 hover:shadow-raycast-hover">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 mb-2">
                             {openType === "shell" ? (

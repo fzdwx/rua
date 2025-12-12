@@ -87,7 +87,7 @@ export function WttrWeatherView({weatherData, isCurrentLocation}: WttrWeatherVie
         <>
             <div className="p-3 space-y-3 overflow-y-auto flex-1">
                 {/* Weather card */}
-                <Card className="border-0 bg-gray-3">
+                <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
                     <CardContent className="p-4">
                         <div className="flex items-start gap-4 mb-4">
                             <div className="text-5xl">{getWeatherIcon(weatherData.condition)}</div>
