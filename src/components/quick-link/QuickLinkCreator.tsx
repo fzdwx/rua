@@ -9,6 +9,7 @@ import {Kbd, KbdGroup} from "@/components/ui/Kbd.tsx";
 import {getFaviconUrl} from "@/utils/favicon.ts";
 import {Badge} from "@/components/ui/Badge";
 import {Button} from "@/components/ui/Button";
+import {Switch} from "@/components/ui/switch";
 import {
     Select,
     SelectContent,
@@ -30,6 +31,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
     const [name, setName] = React.useState(editQuickLink?.name || "");
     const [url, setUrl] = React.useState(editQuickLink?.url || "");
     const [openType, setOpenType] = React.useState<QuickLinkOpenType>(editQuickLink?.openType || "url");
+    const [waitForCompletion, setWaitForCompletion] = React.useState(editQuickLink?.waitForCompletion ?? true);
     const [customIcon, setCustomIcon] = React.useState(editQuickLink?.icon || "");
     const [iconUrl, setIconUrl] = React.useState<string | null>(editQuickLink?.iconUrl || null);
     const [showVariableMenu, setShowVariableMenu] = React.useState(false);
@@ -157,6 +159,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
         setName("");
         setUrl("");
         setOpenType("url");
+        setWaitForCompletion(true);
         setCustomIcon("");
         setIconUrl(null);
         setEditingId(null);
@@ -201,6 +204,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                     name: name.trim(),
                     url: url.trim(),
                     openType,
+                    waitForCompletion: openType === "shell" ? waitForCompletion : undefined,
                     icon: customIcon.trim() || undefined,
                     iconUrl: iconUrl || undefined,
                 });
@@ -209,6 +213,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                     name: name.trim(),
                     url: url.trim(),
                     openType,
+                    waitForCompletion: openType === "shell" ? waitForCompletion : undefined,
                     icon: customIcon.trim() || undefined,
                     iconUrl: iconUrl || undefined,
                 });
@@ -333,6 +338,32 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                             </p>
                         </div>
                     </div>
+
+                    {/* Wait for completion option (only for shell commands) */}
+                    {openType === "shell" && (
+                        <div className="flex items-start gap-8">
+                            <Label htmlFor="wait-completion" className="w-32 pt-2 text-right flex-shrink-0">
+                                执行方式
+                            </Label>
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3">
+                                    <Switch
+                                        id="wait-completion"
+                                        checked={waitForCompletion}
+                                        onCheckedChange={setWaitForCompletion}
+                                    />
+                                    <Label htmlFor="wait-completion" className="cursor-pointer font-normal">
+                                        等待命令执行完成
+                                    </Label>
+                                </div>
+                                <p className="text-xs text-muted-foreground pt-2">
+                                    {waitForCompletion
+                                        ? "命令执行完成后才会关闭窗口（适用于需要查看输出的命令）"
+                                        : "命令将在后台执行，窗口立即关闭（适用于启动应用等场景）"}
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Custom Icon input */}
                     <div className="flex items-start gap-8">

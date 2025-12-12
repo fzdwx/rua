@@ -171,7 +171,7 @@ src/
 │   ├── useBuiltInActions.tsx
 │   └── useTheme.tsx
 ├── home/             # Main application views
-│   └── Index.tsx     # Main component
+│   └── Home.tsx     # Main component
 └── assets/           # CSS and static files
 
 src-tauri/src/

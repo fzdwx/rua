@@ -9,6 +9,7 @@ export interface QuickLink {
   name: string;
   url: string; // For openType="url", this is the URL; for openType="shell", this is the command
   openType?: QuickLinkOpenType; // Default is "url"
+  waitForCompletion?: boolean; // For shell commands: true = wait for completion (default), false = run in background
   icon?: string; // Emoji or icon name or URL
   iconUrl?: string; // Auto-fetched favicon URL
   keywords?: string;

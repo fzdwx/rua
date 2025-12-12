@@ -20,7 +20,7 @@ fn get_default_shell() -> String {
     "sh".to_string()
 }
 
-/// Execute a shell command using the default shell
+/// Execute a shell command using the default shell (waits for completion)
 #[tauri::command]
 pub async fn execute_shell_command(command: String) -> Result<ShellResult, String> {
     let shell = get_default_shell();
@@ -40,4 +40,19 @@ pub async fn execute_shell_command(command: String) -> Result<ShellResult, Strin
     };
 
     Ok(result)
+}
+
+/// Execute a shell command asynchronously without waiting for completion
+#[tauri::command]
+pub async fn execute_shell_command_async(command: String) -> Result<String, String> {
+    let shell = get_default_shell();
+
+    // Spawn the command without waiting for it to complete
+    Command::new(&shell)
+        .arg("-c")
+        .arg(&command)
+        .spawn()
+        .map_err(|e| format!("Failed to spawn command with shell '{}': {}", shell, e))?;
+
+    Ok(format!("Command started in background"))
 }

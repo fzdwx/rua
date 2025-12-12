@@ -91,25 +91,36 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
         onLoadingChange?.(true);
 
         const openType = quickLink.openType || "url";
+        const waitForCompletion = quickLink.waitForCompletion ?? true;
 
         try {
             // Hide window immediately before executing
             await getCurrentWebviewWindow().hide();
 
             if (openType === "shell") {
-                // Execute shell command using Tauri command
                 console.log("Executing shell command:", finalUrl);
-                const result = await invoke<{success: boolean, stdout: string, stderr: string, exit_code: number | null}>(
-                    "execute_shell_command",
-                    { command: finalUrl }
-                );
 
-                // Log the result for debugging
-                console.log("Shell command result:", result);
+                if (waitForCompletion) {
+                    // Execute and wait for completion
+                    const result = await invoke<{success: boolean, stdout: string, stderr: string, exit_code: number | null}>(
+                        "execute_shell_command",
+                        { command: finalUrl }
+                    );
 
-                // Check if command failed
-                if (!result.success) {
-                    throw new Error(`命令执行失败 (退出码: ${result.exit_code})\n${result.stderr || result.stdout}`);
+                    // Log the result for debugging
+                    console.log("Shell command result:", result);
+
+                    // Check if command failed
+                    if (!result.success) {
+                        throw new Error(`命令执行失败 (退出码: ${result.exit_code})\n${result.stderr || result.stdout}`);
+                    }
+                } else {
+                    // Execute in background without waiting
+                    const result = await invoke<string>(
+                        "execute_shell_command_async",
+                        { command: finalUrl }
+                    );
+                    console.log("Shell command started in background:", result);
                 }
             } else {
                 // Open URL in browser

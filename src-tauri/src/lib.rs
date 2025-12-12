@@ -55,6 +55,7 @@ pub fn run() {
             clipboard::read_clipboard,
             clipboard::write_clipboard,
             shell_executor::execute_shell_command,
+            shell_executor::execute_shell_command_async,
             #[cfg(target_os = "linux")]
             hyprland::focus_window_hyprland,
             #[cfg(target_os = "linux")]
