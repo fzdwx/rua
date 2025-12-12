@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {
+    Action,
     ActionImpl,
     Background,
     Container,
@@ -9,7 +10,7 @@ import {
 } from "@/command";
 import {useApplications} from "@/hooks/useApplications";
 import {useBuiltInActions} from "@/hooks/useBuiltInActions";
-import {useQuickLinks} from "@/hooks/useQuickLinks";
+import {QuickLink} from "@/hooks/useQuickLinks";
 import {useTheme} from "@/hooks/useTheme";
 import {Icon} from "@iconify/react";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
@@ -19,7 +20,7 @@ import {weatherId, WeatherView} from "@/components/weather";
 import {
     quickLinkCreatorId,
     quickLinkViewPrefix,
-    quickLinkEditPrefix,
+    quickLinkEditId,
     QuickLinkCreator,
     QuickLinkView
 } from "@/components/quick-link";
@@ -33,9 +34,9 @@ export default function Home() {
     const [focusQueryInput, setFocusQueryInput] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0); // Used to force refresh of built-in actions
     const inputRef = useRef<HTMLInputElement>(null);
+    const lastActiveMainActionRef = useRef<ActionImpl | null>(null); // Store last active main action for passing data to edit action
     const {theme, toggleTheme} = useTheme();
     const {incrementUsage} = useActionUsage();
-    const {getQuickLink} = useQuickLinks();
 
     // Initialize action store
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
@@ -86,7 +87,12 @@ export default function Home() {
         if (typeof activeItem === "string") {
             return null;
         }
-        return activeItem as ActionImpl;
+        const action = activeItem as ActionImpl;
+        // Store the last active main action for potential use in edit mode
+        if (action && action.kind === "quick-link") {
+            lastActiveMainActionRef.current = action;
+        }
+        return action;
     }, [results, state.activeIndex]);
 
     const currentRootAction = useMemo(() => {
@@ -100,6 +106,28 @@ export default function Home() {
         })
         return actions[0] as ActionImpl;
     }, [allActions, state.rootActionId]);
+
+    // Get action configuration from registered actions
+    const getActionConfig = useCallback((rootActionId: string | null): Partial<Action> | null => {
+        if (rootActionId === null) {
+            return null;
+        }
+
+        // Find registered action
+        const registeredAction = allActions.find(v => v.id === rootActionId);
+        if (registeredAction) {
+            return {
+                hideSearchBox: registeredAction.hideSearchBox,
+                disableSearchFocus: registeredAction.disableSearchFocus,
+            };
+        }
+
+        return null;
+    }, [allActions]);
+
+    const actionConfig = useMemo(() => {
+        return getActionConfig(state.rootActionId);
+    }, [getActionConfig, state.rootActionId]);
 
 
     // Handle query submission from Input component
@@ -159,7 +187,7 @@ export default function Home() {
         <Container>
             <Background>
                 {/* Hide Input when current action has hideSearchBox set to true */}
-                {!currentRootAction?.hideSearchBox && (
+                {!actionConfig?.hideSearchBox && (
                     <Input
                         value={search}
                         onValueChange={setSearch}
@@ -171,8 +199,8 @@ export default function Home() {
                             if (id === null) {
                                 inputRef.current?.focus();
                             } else {
-                                const targetAction = allActions.find(a => a.id === id);
-                                if (!targetAction?.disableSearchFocus) {
+                                const targetConfig = getActionConfig(id);
+                                if (!targetConfig?.disableSearchFocus) {
                                     inputRef.current?.focus();
                                 }
                             }
@@ -182,7 +210,7 @@ export default function Home() {
                         onQuerySubmit={handleQuerySubmit}
                         setResultHandleEvent={setResultHandleEvent}
                         loading={actionLoading}
-                        disableTabFocus={currentRootAction?.disableSearchFocus ?? false}
+                        disableTabFocus={actionConfig?.disableSearchFocus ?? false}
                         focusQueryInput={focusQueryInput}
                         inputRefSetter={(ref) => {
                             inputRef.current = ref;
@@ -198,123 +226,123 @@ export default function Home() {
                         {state.rootActionId === translateId ? (
                             <motion.div
                                 key="translate"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                initial={{opacity: 0, y: 8}}
+                                animate={{opacity: 1, y: 0}}
+                                exit={{opacity: 0, y: -8}}
+                                transition={{duration: 0.2, ease: [0.4, 0, 0.2, 1]}}
                                 className="absolute inset-0 flex flex-col"
                             >
                                 <TranslateView
-                            search={search}
-                            onLoadingChange={handleActionLoadingChange}
-                            onReturn={() => {
-                                // Return to main view
-                                setRootActionId(null);
-                                setSearch("");
-                                // Focus the search input
-                                setTimeout(() => {
-                                    inputRef.current?.focus();
-                                }, 50);
-                            }}
-                            />
+                                    search={search}
+                                    onLoadingChange={handleActionLoadingChange}
+                                    onReturn={() => {
+                                        // Return to main view
+                                        setRootActionId(null);
+                                        setSearch("");
+                                        // Focus the search input
+                                        setTimeout(() => {
+                                            inputRef.current?.focus();
+                                        }, 50);
+                                    }}
+                                />
                             </motion.div>
                         ) : state.rootActionId === weatherId ? (
                             <motion.div
                                 key="weather"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                initial={{opacity: 0, y: 8}}
+                                animate={{opacity: 1, y: 0}}
+                                exit={{opacity: 0, y: -8}}
+                                transition={{duration: 0.2, ease: [0.4, 0, 0.2, 1]}}
                                 className="absolute inset-0 flex flex-col"
                             >
                                 <WeatherView
-                            search={search}
-                            onLoadingChange={handleActionLoadingChange}
-                            onRequestFocusInput={() => {
-                                // Focus the main input after closing settings
-                                setTimeout(() => {
-                                    inputRef.current?.focus();
-                                }, 50);
-                            }}
-                            onReturn={() => {
-                                // Return to main view
-                                setRootActionId(null);
-                                setSearch("");
-                                // Focus the search input
-                                setTimeout(() => {
-                                    inputRef.current?.focus();
-                                }, 50);
-                            }}
-                            />
+                                    search={search}
+                                    onLoadingChange={handleActionLoadingChange}
+                                    onRequestFocusInput={() => {
+                                        // Focus the main input after closing settings
+                                        setTimeout(() => {
+                                            inputRef.current?.focus();
+                                        }, 50);
+                                    }}
+                                    onReturn={() => {
+                                        // Return to main view
+                                        setRootActionId(null);
+                                        setSearch("");
+                                        // Focus the search input
+                                        setTimeout(() => {
+                                            inputRef.current?.focus();
+                                        }, 50);
+                                    }}
+                                />
                             </motion.div>
                         ) : state.rootActionId === quickLinkCreatorId ? (
                             <motion.div
                                 key="quicklink-creator"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                initial={{opacity: 0, y: 8}}
+                                animate={{opacity: 1, y: 0}}
+                                exit={{opacity: 0, y: -8}}
+                                transition={{duration: 0.2, ease: [0.4, 0, 0.2, 1]}}
                                 className="absolute inset-0 flex flex-col"
                             >
                                 <QuickLinkCreator
-                            onLoadingChange={handleActionLoadingChange}
-                            onReturn={() => {
-                                // Return to main view after creating quick link
-                                setRootActionId(null);
-                                setSearch("");
-                                // Force refresh of built-in actions to show new quick link
-                                setRefreshKey(prev => prev + 1);
-                                // Focus the search input
-                                setTimeout(() => {
-                                    inputRef.current?.focus();
-                                }, 50);
-                            }}
-                            />
+                                    onLoadingChange={handleActionLoadingChange}
+                                    onReturn={() => {
+                                        // Return to main view after creating quick link
+                                        setRootActionId(null);
+                                        setSearch("");
+                                        // Force refresh of built-in actions to show new quick link
+                                        setRefreshKey(prev => prev + 1);
+                                        // Focus the search input
+                                        setTimeout(() => {
+                                            inputRef.current?.focus();
+                                        }, 50);
+                                    }}
+                                />
                             </motion.div>
-                        ) : state.rootActionId?.startsWith(quickLinkEditPrefix) ? (
+                        ) : state.rootActionId === quickLinkEditId ? (
                             <motion.div
-                                key={`quicklink-edit-${state.rootActionId}`}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                key="quicklink-edit"
+                                initial={{opacity: 0, y: 8}}
+                                animate={{opacity: 1, y: 0}}
+                                exit={{opacity: 0, y: -8}}
+                                transition={{duration: 0.2, ease: [0.4, 0, 0.2, 1]}}
                                 className="absolute inset-0 flex flex-col"
                             >
                                 <QuickLinkCreator
-                            editQuickLink={getQuickLink(state.rootActionId.replace(quickLinkEditPrefix, ""))}
-                            onLoadingChange={handleActionLoadingChange}
-                            onReturn={() => {
-                                // Return to main view after editing quick link
-                                setRootActionId(null);
-                                setSearch("");
-                                // Force refresh of built-in actions to show updated quick link
-                                setRefreshKey(prev => prev + 1);
-                                // Focus the search input
-                                setTimeout(() => {
-                                    inputRef.current?.focus();
-                                }, 50);
-                            }}
-                            />
+                                    editQuickLink={lastActiveMainActionRef.current?.item as QuickLink | undefined}
+                                    onLoadingChange={handleActionLoadingChange}
+                                    onReturn={() => {
+                                        // Return to main view after editing quick link
+                                        setRootActionId(null);
+                                        setSearch("");
+                                        // Force refresh of built-in actions to show updated quick link
+                                        setRefreshKey(prev => prev + 1);
+                                        // Focus the search input
+                                        setTimeout(() => {
+                                            inputRef.current?.focus();
+                                        }, 50);
+                                    }}
+                                />
                             </motion.div>
                         ) : state.rootActionId?.startsWith(quickLinkViewPrefix) ? (
                             <motion.div
                                 key={`quicklink-view-${state.rootActionId}`}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                initial={{opacity: 0, y: 8}}
+                                animate={{opacity: 1, y: 0}}
+                                exit={{opacity: 0, y: -8}}
+                                transition={{duration: 0.2, ease: [0.4, 0, 0.2, 1]}}
                                 className="absolute inset-0 flex flex-col"
                             >
                                 <QuickLinkView
-                            quickLink={currentRootAction?.item}
-                            search={search}
-                            onLoadingChange={handleActionLoadingChange}
-                            onReturn={() => {
-                                // Return to main view after opening link
-                                setRootActionId(null);
-                                setSearch("");
-                            }}
-                            />
+                                    quickLink={currentRootAction?.item}
+                                    search={search}
+                                    onLoadingChange={handleActionLoadingChange}
+                                    onReturn={() => {
+                                        // Return to main view after opening link
+                                        setRootActionId(null);
+                                        setSearch("");
+                                    }}
+                                />
                             </motion.div>
                         ) : (
                             <DefaultView

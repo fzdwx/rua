@@ -6,7 +6,7 @@ import {QuickLinkView} from "@/components/quick-link/QuickLinkView.tsx";
 
 export const quickLinkCreatorId = "built-in-quickLinkCreator";
 export const quickLinkViewPrefix = "quick-link-view-";
-export const quickLinkEditPrefix = "quick-link-edit-";
+export const quickLinkEditId = "built-in-quickLinkEdit";
 
 /**
  * Check if a string is a URL or Data URL
@@ -36,6 +36,26 @@ export function getQuickLinkActions(
     setRootActionId: (rootActionId: (ActionId | null)) => void,
     deleteQuickLink: (id: string) => void): Action[] {
     const actions: Action[] = [];
+
+    // Add quick link edit action (registered as a main action)
+    // This action will be triggered from footer actions, and the link data
+    // will be passed via the parent action's item property
+    actions.push({
+        id: quickLinkEditId,
+        name: "编辑快捷指令",
+        subtitle: "编辑快捷指令",
+        icon: <Icon icon="tabler:edit" style={{fontSize: "20px"}}/>,
+        keywords: "edit,quick,link,编辑,快捷,指令",
+        kind: "built-in",
+        query: false,
+        hideSearchBox: true, // Hide search box when editing
+        disableSearchFocus: true, // Prevent auto-focus to search box when editing
+        perform: () => {
+            // This will be called when the action is activated
+            // The link data should be passed via item property from the parent action
+            setRootActionId(quickLinkEditId);
+        },
+    });
 
     // Add quick link creator action
     const creatorUsageCount = getUsageCount(quickLinkCreatorId);
@@ -141,16 +161,19 @@ export function getQuickLinkActions(
                         icon: <Icon icon="tabler:edit" style={{fontSize: "20px"}}/>,
                         keywords: "edit,modify,编辑,修改",
                         hideSearchBox: true, // Hide search box when editing
+                        disableSearchFocus: true, // Prevent auto-focus to search box when editing
                         perform: () => {
                             // Close the popover first
                             changeVisible();
 
                             // Use setTimeout to ensure popover closes before state updates
                             setTimeout(() => {
-                                // Switch to edit mode
-                                setRootActionId(`${quickLinkEditPrefix}${link.id}`);
+                                // Switch to edit mode using registered action ID
+                                // The link data will be passed via item property in the main action
+                                setRootActionId(quickLinkEditId);
                             }, 100);
                         },
+                        item: link, // Pass the link data to the edit action
                     },
                     {
                         id: `${actionId}-delete`,
