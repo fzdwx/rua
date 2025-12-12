@@ -42,7 +42,7 @@ export function DefaultView({
                                 onQueryActionEnter,
                             }: DefaultViewProps) {
     return (
-        <>
+        <div className="flex-1 flex flex-col overflow-hidden">
             {/* Quick result view for calculations and built-in functions */}
             <QuickResult search={search}/>
 
@@ -52,11 +52,13 @@ export function DefaultView({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="text-center py-10 px-5"
+                        className="text-center py-10 px-5 flex-1 flex items-center justify-center"
                     >
-                        <div className="text-5xl mb-4 opacity-40">🔍</div>
-                        <div className="text-gray-11 font-medium mb-2 text-sm">No applications found</div>
-                        <div className="text-xs text-gray-10">Try a different search term or check your spelling</div>
+                        <div>
+                            <div className="text-5xl mb-4 opacity-40">🔍</div>
+                            <div className="text-gray-11 font-medium mb-2 text-sm">No applications found</div>
+                            <div className="text-xs text-gray-10">Try a different search term or check your spelling</div>
+                        </div>
                     </motion.div>
                 ) : (
                     <ResultsRender
@@ -87,7 +89,8 @@ export function DefaultView({
                         handleKeyEvent={resultHandleEvent}
                         onQueryActionEnter={onQueryActionEnter}
                     />
-                )}
+                )
+            }
 
             {/* Footer with theme toggle and dynamic actions */}
             <Footer
@@ -107,6 +110,6 @@ export function DefaultView({
                     setResultHandleEvent(false)
                 }}
             />
-        </>
+        </div>
     );
 }

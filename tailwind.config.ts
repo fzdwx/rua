@@ -66,39 +66,6 @@ export default {
       textColor: {
         'text': 'var(--text)',
       },
-      // Raycast-style shadows - subtle and layered
-      boxShadow: {
-        'raycast-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-        'raycast': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-        'raycast-md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.05)',
-        'raycast-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1), 0 20px 25px -5px rgba(0, 0, 0, 0.05)',
-        'raycast-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.08)',
-      },
-      // Unified border radius
-      borderRadius: {
-        'raycast': '0.5rem',
-        'raycast-sm': '0.375rem',
-        'raycast-md': '0.625rem',
-        'raycast-lg': '0.75rem',
-      },
-      // Transition timing - Raycast style (smooth and fast)
-      transitionTimingFunction: {
-        'raycast': 'cubic-bezier(0.4, 0, 0.2, 1)',
-        'raycast-in': 'cubic-bezier(0.4, 0, 1, 1)',
-        'raycast-out': 'cubic-bezier(0, 0, 0.2, 1)',
-      },
-      // Animation durations
-      transitionDuration: {
-        'raycast-fast': '150ms',
-        'raycast': '200ms',
-        'raycast-slow': '300ms',
-      },
-      // Backdrop blur
-      backdropBlur: {
-        'raycast': '12px',
-        'raycast-sm': '8px',
-        'raycast-lg': '16px',
-      },
     },
   },
   plugins: [],

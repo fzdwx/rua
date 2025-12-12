@@ -192,7 +192,7 @@ export default function Home() {
                 )}
 
                 {/* Main content area with flex: 1 to prevent footer from being squeezed */}
-                <div className="flex-1 overflow-hidden flex flex-col">
+                <div className="flex-1 overflow-hidden flex flex-col relative">
                     <AnimatePresence mode="wait">
                         {/* Show translate view if translate action is active */}
                         {state.rootActionId === translateId ? (
@@ -202,7 +202,7 @@ export default function Home() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
                                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                                className="flex-1 overflow-hidden"
+                                className="absolute inset-0 flex flex-col"
                             >
                                 <TranslateView
                             search={search}
@@ -225,7 +225,7 @@ export default function Home() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
                                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                                className="flex-1 overflow-hidden"
+                                className="absolute inset-0 flex flex-col"
                             >
                                 <WeatherView
                             search={search}
@@ -254,7 +254,7 @@ export default function Home() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
                                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                                className="flex-1 overflow-hidden"
+                                className="absolute inset-0 flex flex-col"
                             >
                                 <QuickLinkCreator
                             onLoadingChange={handleActionLoadingChange}
@@ -278,7 +278,7 @@ export default function Home() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
                                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                                className="flex-1 overflow-hidden"
+                                className="absolute inset-0 flex flex-col"
                             >
                                 <QuickLinkCreator
                             editQuickLink={getQuickLink(state.rootActionId.replace(quickLinkEditPrefix, ""))}
@@ -303,7 +303,7 @@ export default function Home() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
                                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                                className="flex-1 overflow-hidden"
+                                className="absolute inset-0 flex flex-col"
                             >
                                 <QuickLinkView
                             quickLink={currentRootAction?.item}
@@ -317,32 +317,24 @@ export default function Home() {
                             />
                             </motion.div>
                         ) : (
-                            <motion.div
+                            <DefaultView
                                 key="default"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                                className="flex-1 overflow-hidden"
-                            >
-                                <DefaultView
-                            search={search}
-                            results={results}
-                            activeIndex={state.activeIndex}
-                            rootActionId={state.rootActionId}
-                            activeMainAction={activeMainAction}
-                            resultHandleEvent={resultHandleEvent}
-                            inputRef={inputRef}
-                            theme={theme}
-                            setSearch={setSearch}
-                            setActiveIndex={setActiveIndex}
-                            setRootActionId={setRootActionId}
-                            setResultHandleEvent={setResultHandleEvent}
-                            getFooterActions={getFooterActions}
-                            getSettingsActions={getSettingsActions}
-                            onQueryActionEnter={handleQueryActionEnter}
+                                search={search}
+                                results={results}
+                                activeIndex={state.activeIndex}
+                                rootActionId={state.rootActionId}
+                                activeMainAction={activeMainAction}
+                                resultHandleEvent={resultHandleEvent}
+                                inputRef={inputRef}
+                                theme={theme}
+                                setSearch={setSearch}
+                                setActiveIndex={setActiveIndex}
+                                setRootActionId={setRootActionId}
+                                setResultHandleEvent={setResultHandleEvent}
+                                getFooterActions={getFooterActions}
+                                getSettingsActions={getSettingsActions}
+                                onQueryActionEnter={handleQueryActionEnter}
                             />
-                            </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
