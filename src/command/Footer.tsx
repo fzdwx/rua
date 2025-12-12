@@ -8,7 +8,7 @@ import {
     PopoverPanel,
 } from '@/components/animate-ui/components/base/popover';
 import {Icon} from "@iconify/react";
-import { Kbd } from "@/components/ui/kbd"
+import { Kbd } from "@/components/ui/Kbd"
 
 export const Footer: React.FC<{
     current: string | ActionImpl | null,

@@ -5,9 +5,10 @@ import {useWeatherConfig, WeatherConfig} from "@/hooks/useWeatherConfig";
 import {WeatherSettings} from "./WeatherSettings";
 import {getWeatherFromWttr, WttrWeatherView} from "./WttrWeatherView";
 import {getWeatherFromQWeather, QWeatherView} from "./QWeatherView";
-import {Kbd, KbdGroup} from "@/components/ui/kbd";
-import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
+import {Kbd, KbdGroup} from "@/components/ui/Kbd";
+import {Alert, AlertDescription, AlertTitle} from "@/components/ui/Alert";
 import {useKeyPress} from "ahooks";
+import { motion } from "motion/react";
 
 interface WeatherViewProps {
     search: string;

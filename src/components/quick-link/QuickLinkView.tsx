@@ -6,10 +6,10 @@ import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useKeyPress} from "ahooks";
 import {invoke} from "@tauri-apps/api/core";
 import {motion} from "motion/react";
-import {Card, CardContent, CardHeader} from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
-import {Alert, AlertDescription} from "@/components/ui/alert";
-import {Badge} from "@/components/ui/badge";
+import {Card, CardContent, CardHeader} from "@/components/ui/Card";
+import {Button} from "@/components/ui/Button";
+import {Alert, AlertDescription} from "@/components/ui/Alert";
+import {Badge} from "@/components/ui/Badge";
 import {Loader2, AlertCircle, Info, ExternalLink, Terminal} from "lucide-react";
 
 /**

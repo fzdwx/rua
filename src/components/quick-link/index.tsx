@@ -1,7 +1,7 @@
 import {Action, ActionId} from "@/command";
 import {QuickLink} from "@/hooks/useQuickLinks";
 import {Icon} from "@iconify/react";
-import {QuickLinkCreator} from "@/components/quick-link/QuickLinkCreateor.tsx";
+import {QuickLinkCreator} from "@/components/quick-link/QuickLinkCreator.tsx";
 import {QuickLinkView} from "@/components/quick-link/QuickLinkView.tsx";
 
 export const quickLinkCreatorId = "built-in-quickLinkCreator";

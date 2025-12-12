@@ -1,7 +1,7 @@
 import {useState} from "react";
 import {toast} from "sonner";
-import {Toaster} from "@/components/ui/sonner.tsx";
-import {Card, CardContent} from "@/components/ui/card";
+import {Toaster} from "@/components/ui/Sonner.tsx";
+import {Card, CardContent} from "@/components/ui/Card";
 
 interface UtilityDisplayProps {
     input: string;

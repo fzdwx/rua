@@ -3,19 +3,19 @@ import {QuickLink, QuickLinkOpenType, useQuickLinks} from "@/hooks/useQuickLinks
 import {Footer} from "@/command";
 import {Icon} from "@iconify/react";
 import {useKeyPress} from "ahooks";
-import {Label} from "@/components/ui/label.tsx";
-import {Input} from "@/components/ui/input.tsx";
-import {Kbd, KbdGroup} from "@/components/ui/kbd.tsx";
+import {Label} from "@/components/ui/Label.tsx";
+import {Input} from "@/components/ui/Input.tsx";
+import {Kbd, KbdGroup} from "@/components/ui/Kbd.tsx";
 import {getFaviconUrl} from "@/utils/favicon.ts";
-import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
+import {Badge} from "@/components/ui/Badge";
+import {Button} from "@/components/ui/Button";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/Select";
 
 interface QuickLinkCreatorProps {
     onLoadingChange?: (loading: boolean) => void;

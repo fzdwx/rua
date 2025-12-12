@@ -75,7 +75,7 @@ The application uses a custom command palette system inspired by kbar:
     - Searches action names, keywords, and subtitles
     - Groups results by section with priority sorting
 
-4. **Main Application Flow** (`src/home/Index.tsx`):
+4. **Main Application Flow** (`src/home/Home.tsx`):
     - Combines built-in actions (translate, theme toggle) with system applications
     - Manages search state, active action, and result handling
     - Coordinates between Input, ResultsRender, Footer, and custom views

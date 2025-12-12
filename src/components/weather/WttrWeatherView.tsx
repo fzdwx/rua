@@ -1,9 +1,9 @@
 import {Icon} from "@iconify/react";
 import {Footer} from "@/command";
-import {Kbd, KbdGroup} from "@/components/ui/kbd";
-import {Card, CardContent} from "@/components/ui/card";
-import {Badge} from "@/components/ui/badge";
-import {Separator} from "@/components/ui/separator";
+import {Kbd, KbdGroup} from "@/components/ui/Kbd";
+import {Card, CardContent} from "@/components/ui/Card";
+import {Badge} from "@/components/ui/Badge";
+import {Separator} from "@/components/ui/Separator";
 import {WeatherData} from "@/components/weather/index.tsx";
 
 interface WttrWeatherData {

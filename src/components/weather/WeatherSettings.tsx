@@ -1,15 +1,15 @@
 import * as React from "react";
 import {useWeatherConfig} from "@/hooks/useWeatherConfig";
-import {Label} from "@/components/ui/label";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
+import {Label} from "@/components/ui/Label";
+import {Input} from "@/components/ui/Input";
+import {Button} from "@/components/ui/Button";
 import {useKeyPress} from "ahooks";
 import {clearQWeatherCache} from "./hefeng/qweather-cache.ts";
 import {Footer} from "@/command";
 import {Icon} from "@iconify/react";
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
-import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/Card";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/Select";
+import {Alert, AlertDescription, AlertTitle} from "@/components/ui/Alert";
 
 interface WeatherSettingsProps {
     onClose?: () => void;
