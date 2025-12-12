@@ -1,4 +1,5 @@
 import {useMemo} from "react";
+import {Card, CardContent} from "@/components/ui/card";
 
 interface CalculatorProps {
     expression: string;
@@ -75,66 +76,26 @@ export function Calculator({expression}: CalculatorProps) {
     };
 
     return (
-        <div
+        <Card
             onClick={handleCopy}
-            style={{
-                padding: "12px 16px",
-                margin: "8px 12px",
-                background: "var(--gray3)",
-                border: "1px solid var(--gray6)",
-                borderRadius: "8px",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--gray4)";
-                e.currentTarget.style.borderColor = "var(--gray7)";
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.background = "var(--gray3)";
-                e.currentTarget.style.borderColor = "var(--gray6)";
-            }}
+            className="mx-3 my-2 cursor-pointer transition-all duration-200 bg-gray-3 border-gray-6 hover:bg-gray-4 hover:border-gray-7"
         >
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                }}
-            >
-                <div style={{fontSize: "24px"}}>🔢</div>
-                <div style={{flex: 1}}>
-                    <div
-                        style={{
-                            fontSize: "20px",
-                            fontWeight: "600",
-                            color: "var(--gray12)",
-                            marginBottom: "4px",
-                        }}
-                    >
-                        {result}
+            <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                    <div className="text-2xl">🔢</div>
+                    <div className="flex-1">
+                        <div className="text-xl font-semibold text-gray-12 mb-1">
+                            {result}
+                        </div>
+                        <div className="text-xs text-gray-11">
+                            = {expression}
+                        </div>
                     </div>
-                    <div
-                        style={{
-                            fontSize: "12px",
-                            color: "var(--gray11)",
-                        }}
-                    >
-                        = {expression}
+                    <div className="text-[11px] text-gray-10 px-2 py-1 rounded bg-gray-5">
+                        Click to copy
                     </div>
                 </div>
-                <div
-                    style={{
-                        fontSize: "11px",
-                        color: "var(--gray10)",
-                        padding: "4px 8px",
-                        background: "var(--gray5)",
-                        borderRadius: "4px",
-                    }}
-                >
-                    Click to copy
-                </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 }

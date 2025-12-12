@@ -2,6 +2,9 @@ import * as React from "react";
 import {translate, Language} from "./google.tsx";
 import {Action, ActionId} from "@/command";
 import {useKeyPress} from "ahooks";
+import {Card, CardContent} from "@/components/ui/card";
+import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
+import {Icon} from "@iconify/react";
 
 interface TranslateViewProps {
     search: string;
@@ -167,7 +170,7 @@ export function TranslateView({search, onLoadingChange, onReturn}: TranslateView
 
     if (!translationResult) {
         return (
-            <div className="py-10 px-5 text-center text-sm overflow-y-auto" style={{color: 'var(--gray11)', flex: 1}}>
+            <div className="py-10 px-5 text-center text-sm overflow-y-auto flex-1 text-gray-11">
                 Type something to translate...
             </div>
         );
@@ -176,80 +179,47 @@ export function TranslateView({search, onLoadingChange, onReturn}: TranslateView
     // Show error if translation failed
     if (translationResult.error) {
         return (
-            <div className="p-3 overflow-y-auto" style={{flex: 1}}>
-                <div
-                    className="p-4 my-2 rounded-lg border"
-                    style={{
-                        background: 'var(--gray3)',
-                        borderColor: 'var(--gray6)',
-                    }}
-                >
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="text-2xl">⚠️</div>
-                        <div className="text-xs" style={{color: 'var(--gray11)'}}>
-                            Translation Error
-                        </div>
-                    </div>
-
-                    <div className="text-sm font-semibold mb-2" style={{color: 'var(--gray12)'}}>
-                        {translationResult.error}
-                    </div>
-
-                    <div className="text-[13px] mt-2" style={{color: 'var(--gray11)'}}>
-                        Original: {translationResult.original}
-                    </div>
-                </div>
+            <div className="p-3 overflow-y-auto flex-1">
+                <Alert variant="destructive" className="my-2">
+                    <Icon icon="tabler:alert-circle" className="h-4 w-4" />
+                    <AlertTitle>Translation Error</AlertTitle>
+                    <AlertDescription>
+                        <div className="font-semibold mb-2">{translationResult.error}</div>
+                        <div className="text-xs mt-2">Original: {translationResult.original}</div>
+                    </AlertDescription>
+                </Alert>
             </div>
         );
     }
 
     return (
-        <div className="p-3 overflow-y-auto" style={{flex: 1}}>
+        <div className="p-3 overflow-y-auto flex-1">
             {/* Translation result card */}
-            <div
+            <Card
                 onClick={() => handleCopy(translationResult.translated)}
-                className="p-4 my-2 rounded-lg border cursor-pointer transition-all duration-200"
-                style={{
-                    background: 'var(--gray3)',
-                    borderColor: 'var(--gray6)',
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "var(--gray4)";
-                    e.currentTarget.style.borderColor = "var(--gray7)";
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "var(--gray3)";
-                    e.currentTarget.style.borderColor = "var(--gray6)";
-                }}
+                className="my-2 cursor-pointer transition-all duration-200 bg-gray-3 border-gray-6 hover:bg-gray-4 hover:border-gray-7"
             >
-                <div className="flex items-center gap-3 mb-3">
-                    <div className="text-2xl">🌐</div>
-                    <div className="text-xs" style={{color: 'var(--gray11)'}}>
-                        {translationResult.fromLang} → {translationResult.toLang}
+                <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="text-2xl">🌐</div>
+                        <div className="text-xs text-gray-11">
+                            {translationResult.fromLang} → {translationResult.toLang}
+                        </div>
                     </div>
-                </div>
 
-                <div
-                    className="text-lg font-semibold mb-2 whitespace-pre-wrap"
-                    style={{color: 'var(--gray12)'}}
-                >
-                    {translationResult.translated}
-                </div>
+                    <div className="text-lg font-semibold mb-2 whitespace-pre-wrap text-gray-12">
+                        {translationResult.translated}
+                    </div>
 
-                <div className="text-[13px] mt-2" style={{color: 'var(--gray11)'}}>
-                    Original: {translationResult.original}
-                </div>
+                    <div className="text-[13px] mt-2 text-gray-11">
+                        Original: {translationResult.original}
+                    </div>
 
-                <div
-                    className="text-[11px] mt-3 px-2 py-1 rounded inline-block"
-                    style={{
-                        color: 'var(--gray10)',
-                        background: 'var(--gray5)',
-                    }}
-                >
-                    Click to copy translation
-                </div>
-            </div>
+                    <div className="text-[11px] mt-3 px-2 py-1 rounded inline-block text-gray-10 bg-gray-5">
+                        Click to copy translation
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }

@@ -154,8 +154,7 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="flex items-center justify-center p-6 overflow-y-auto"
-            style={{flex: 1}}
+            className="flex items-center justify-center p-6 overflow-y-auto flex-1"
         >
             <div className="w-full max-w-2xl">
                 {/* Header Card with link info */}

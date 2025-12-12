@@ -1,6 +1,7 @@
 import React, {useMemo, useState, useEffect} from "react";
 import { toast } from "sonner"
 import {Toaster} from "@/components/ui/sonner.tsx";
+import {Card, CardContent} from "@/components/ui/card";
 
 interface DateTimeDisplayProps {
     input: string;
@@ -594,28 +595,30 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
         value: string;
         onClick: (e: React.MouseEvent) => void;
     }) => (
-        <div
+        <Card
             onClick={onClick}
-            className="relative p-3 bg-[var(--gray2)] border border-[var(--gray6)] rounded-md cursor-pointer transition-all duration-150 hover:bg-[var(--gray3)] hover:border-[var(--gray7)]"
+            className="relative cursor-pointer transition-all duration-150 bg-gray-2 border-gray-6 hover:bg-gray-3 hover:border-gray-7"
         >
-            {/* Copy icon in top-right corner */}
-            <div
-                className={`absolute top-2 right-2 flex items-center justify-center w-5 h-5 text-sm transition-colors duration-200 ${
-                    copiedItem === value ? 'text-[var(--green11)]' : 'text-[var(--gray10)]'
-                }`}>
-                {copiedItem === value ? "✓" : "📋"}
-            </div>
+            <CardContent className="p-3">
+                {/* Copy icon in top-right corner */}
+                <div
+                    className={`absolute top-2 right-2 flex items-center justify-center w-5 h-5 text-sm transition-colors duration-200 ${
+                        copiedItem === value ? 'text-green-11' : 'text-gray-10'
+                    }`}>
+                    {copiedItem === value ? "✓" : "📋"}
+                </div>
 
-            {/* Label */}
-            <div className="text-[11px] text-[var(--gray11)] mb-1">
-                {label}
-            </div>
+                {/* Label */}
+                <div className="text-[11px] text-gray-11 mb-1">
+                    {label}
+                </div>
 
-            {/* Value */}
-            <div className="text-[15px] font-medium text-[var(--gray12)] break-all pr-6">
-                {value}
-            </div>
-        </div>
+                {/* Value */}
+                <div className="text-[15px] font-medium text-gray-12 break-all pr-6">
+                    {value}
+                </div>
+            </CardContent>
+        </Card>
     );
 
     return (
@@ -674,30 +677,32 @@ export function DateTimeDisplay({input}: DateTimeDisplayProps) {
 
             {/* Smart Hints Section */}
             {smartHints.length > 0 && (
-                <div className="mt-2 border border-[var(--blue6)] bg-[var(--blue2)] rounded-md p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[13px] font-semibold text-[var(--blue11)]">💡 相关提示</span>
-                    </div>
-                    <div className="space-y-3">
-                        {smartHints.map((section, idx) => (
-                            <div key={idx}>
-                                <div className="text-[11px] font-semibold text-[var(--gray12)] mb-1">
-                                    {section.category}
+                <Card className="mt-2 border-blue-6 bg-blue-2">
+                    <CardContent className="p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[13px] font-semibold text-blue-11">💡 相关提示</span>
+                        </div>
+                        <div className="space-y-3">
+                            {smartHints.map((section, idx) => (
+                                <div key={idx}>
+                                    <div className="text-[11px] font-semibold text-gray-12 mb-1">
+                                        {section.category}
+                                    </div>
+                                    <div className="space-y-1 pl-2">
+                                        {section.hints.map((hint, hintIdx) => (
+                                            <div key={hintIdx} className="text-[11px] text-gray-11">
+                                                <code className="text-blue-11 bg-blue-3 px-1 py-0.5 rounded">
+                                                    {hint.code}
+                                                </code>
+                                                {' '}- {hint.description}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div className="space-y-1 pl-2">
-                                    {section.hints.map((hint, hintIdx) => (
-                                        <div key={hintIdx} className="text-[11px] text-[var(--gray11)]">
-                                            <code className="text-[var(--blue11)] bg-[var(--blue3)] px-1 py-0.5 rounded">
-                                                {hint.code}
-                                            </code>
-                                            {' '}- {hint.description}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
             )}
         </div>
     );

@@ -9,6 +9,7 @@ import {Footer} from "@/command";
 import {Icon} from "@iconify/react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 
 interface WeatherSettingsProps {
     onClose?: () => void;
@@ -89,9 +90,9 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
 
     return (
         <>
-            <div className="p-4 space-y-4 overflow-y-auto" style={{flex: 1}}>
+            <div className="p-4 space-y-4 overflow-y-auto flex-1">
                 {/* Provider selection card */}
-                <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                <Card className="border-0 bg-gray-3">
                     <CardHeader className="pb-3">
                         <CardTitle className="text-sm flex items-center gap-2">
                             <Icon icon="tabler:cloud-cog" style={{fontSize: "16px"}} />
@@ -120,7 +121,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
 
                 {/* QWeather configuration card */}
                 {provider === "qweather" && (
-                    <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                    <Card className="border-0 bg-gray-3">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm flex items-center gap-2">
                                 <Icon icon="tabler:key" style={{fontSize: "16px"}} />
@@ -132,8 +133,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
                                     href="https://dev.qweather.com"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="underline"
-                                    style={{color: 'var(--blue11)'}}
+                                    className="underline text-blue-11"
                                 >
                                     和风天气开发平台
                                 </a>
@@ -153,7 +153,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
                                     onChange={(e) => setApiUrl(e.target.value)}
                                     placeholder="https://devapi.qweather.com"
                                 />
-                                <p className="text-xs" style={{color: 'var(--gray11)'}}>
+                                <p className="text-xs text-gray-11">
                                     例如：https://devapi.qweather.com 或您的自定义域名
                                 </p>
                             </div>
@@ -182,7 +182,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
                                     onChange={(e) => setDefaultCity(e.target.value)}
                                     placeholder="北京"
                                 />
-                                <p className="text-xs" style={{color: 'var(--gray11)'}}>
+                                <p className="text-xs text-gray-11">
                                     当不输入城市名称时，将使用此默认城市查询天气（可选）
                                 </p>
                             </div>
@@ -192,7 +192,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
 
                 {/* Cache management card */}
                 {provider === "qweather" && (
-                    <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                    <Card className="border-0 bg-gray-3">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm flex items-center gap-2">
                                 <Icon icon="tabler:database" style={{fontSize: "16px"}} />
@@ -218,26 +218,20 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
 
                 {/* Error message */}
                 {error && (
-                    <Card className="border-0" style={{background: 'var(--red3)'}}>
-                        <CardContent className="p-4">
-                            <div className="flex items-start gap-2">
-                                <Icon icon="tabler:alert-circle" style={{fontSize: "16px", color: 'var(--red11)'}} />
-                                <p className="text-sm" style={{color: 'var(--red11)'}}>{error}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <Alert variant="destructive">
+                        <Icon icon="tabler:alert-circle" className="h-4 w-4" />
+                        <AlertTitle>错误</AlertTitle>
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
                 )}
 
                 {/* Success message */}
                 {successMessage && (
-                    <Card className="border-0" style={{background: 'var(--green3)'}}>
-                        <CardContent className="p-4">
-                            <div className="flex items-start gap-2">
-                                <Icon icon="tabler:check" style={{fontSize: "16px", color: 'var(--green11)'}} />
-                                <p className="text-sm" style={{color: 'var(--green11)'}}>{successMessage}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <Alert>
+                        <Icon icon="tabler:check" className="h-4 w-4" />
+                        <AlertTitle>成功</AlertTitle>
+                        <AlertDescription>{successMessage}</AlertDescription>
+                    </Alert>
                 )}
             </div>
 
@@ -246,7 +240,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
                 icon={<Icon icon="tabler:settings" style={{fontSize: "20px"}}/>}
                 actions={() => []}
                 content={() => (
-                    <div className="text-[11px]" style={{color: 'var(--gray10)'}}>
+                    <div className="text-[11px] text-gray-10">
                         天气设置
                     </div>
                 )}

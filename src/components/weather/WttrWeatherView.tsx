@@ -85,15 +85,15 @@ function getWeatherIcon(condition: string): string {
 export function WttrWeatherView({weatherData, isCurrentLocation}: WttrWeatherViewProps) {
     return (
         <>
-            <div className="p-3 space-y-3 overflow-y-auto" style={{flex: 1}}>
+            <div className="p-3 space-y-3 overflow-y-auto flex-1">
                 {/* Weather card */}
-                <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                <Card className="border-0 bg-gray-3">
                     <CardContent className="p-4">
                         <div className="flex items-start gap-4 mb-4">
                             <div className="text-5xl">{getWeatherIcon(weatherData.condition)}</div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <h2 className="text-xl font-bold truncate" style={{color: 'var(--gray12)'}}>
+                                    <h2 className="text-xl font-bold truncate text-gray-12">
                                         {weatherData.location}
                                     </h2>
                                     {isCurrentLocation && (
@@ -102,13 +102,13 @@ export function WttrWeatherView({weatherData, isCurrentLocation}: WttrWeatherVie
                                         </Badge>
                                     )}
                                 </div>
-                                <p className="text-sm" style={{color: 'var(--gray11)'}}>
+                                <p className="text-sm text-gray-11">
                                     {weatherData.condition}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="text-4xl font-bold mb-4" style={{color: 'var(--gray12)'}}>
+                        <div className="text-4xl font-bold mb-4 text-gray-12">
                             {weatherData.temperature}
                         </div>
 
@@ -145,13 +145,13 @@ export function WttrWeatherView({weatherData, isCurrentLocation}: WttrWeatherVie
                 icon={<Icon icon="tabler:cloud" style={{fontSize: "20px"}}/>}
                 actions={() => []}
                 content={() => (
-                    <div className="text-[11px] text-center" style={{color: 'var(--gray10)'}}>
+                    <div className="text-[11px] text-center text-gray-10">
                         Powered by wttr.in
                     </div>
                 )}
                 rightElement={
                     <div className='flex items-center gap-3 pr-6 flex-shrink-0'>
-                        <div className="flex items-center gap-1.5 text-xs" style={{color: 'var(--gray11)'}}>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-11">
                             <span>设置</span>
                             <KbdGroup className="gap-1">
                                 <Kbd>Ctrl</Kbd>
@@ -171,9 +171,9 @@ export function WttrWeatherView({weatherData, isCurrentLocation}: WttrWeatherVie
 function WeatherStat({icon, label, value}: {icon: string, label: string, value: string}) {
     return (
         <div className="flex items-center gap-2">
-            <Icon icon={icon} style={{fontSize: "16px", color: 'var(--gray11)'}} />
-            <span className="text-xs" style={{color: 'var(--gray11)'}}>{label}</span>
-            <span className="text-xs font-medium ml-auto" style={{color: 'var(--gray12)'}}>{value}</span>
+            <Icon icon={icon} className="text-gray-11" style={{fontSize: "16px"}} />
+            <span className="text-xs text-gray-11">{label}</span>
+            <span className="text-xs font-medium ml-auto text-gray-12">{value}</span>
         </div>
     );
 }

@@ -135,15 +135,15 @@ function getWeatherIcon(condition: string): string {
 export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
     return (
         <>
-            <div className="p-2.5 space-y-2.5 overflow-y-auto" style={{flex: 1}}>
+            <div className="p-2.5 space-y-2.5 overflow-y-auto flex-1">
                 {/* Current weather card */}
-                <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                <Card className="border-0 bg-gray-3">
                     <CardContent className="p-3">
                         {/* Main row: city (left), temperature (center), sunrise/sunset (right) */}
                         <div className="flex items-center justify-between mb-3">
                             {/* Left: City name and badge */}
                             <div className="w-14 flex-none flex flex-col items-start min-w-0 flex-shrink-0">
-                                <h2 className="text-base font-bold truncate" style={{color: 'var(--gray12)'}}>
+                                <h2 className="text-base font-bold truncate text-gray-12">
                                     {weatherData.location}
                                 </h2>
                                 {isDefaultCity && (
@@ -159,10 +159,10 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
                                     {getWeatherIcon(weatherData.condition)}
                                 </div>
                                 <div className="flex flex-col items-center">
-                                    <div className="text-3xl font-bold" style={{color: 'var(--gray12)'}}>
+                                    <div className="text-3xl font-bold text-gray-12">
                                         {weatherData.temperature}
                                     </div>
-                                    <p className="text-xs" style={{color: 'var(--gray11)'}}>
+                                    <p className="text-xs text-gray-11">
                                         {weatherData.condition}
                                     </p>
                                 </div>
@@ -229,7 +229,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
 
                 {/* Daily forecast */}
                 {weatherData.daily && weatherData.daily.length > 0 && (
-                    <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                    <Card className="border-0 bg-gray-3">
                         <CardHeader className="pb-2 pt-2.5 px-3">
                             <CardTitle className="text-sm flex items-center gap-2">
                                 <Icon icon="tabler:calendar-week" style={{fontSize: "16px"}} />
@@ -248,7 +248,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
 
                 {/* Life indices */}
                 {weatherData.indices && weatherData.indices.length > 0 && (
-                    <Card className="border-0" style={{background: 'var(--gray3)'}}>
+                    <Card className="border-0 bg-gray-3">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm flex items-center gap-2">
                                 <Icon icon="tabler:bulb" style={{fontSize: "16px"}} />
@@ -261,21 +261,17 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
                                     {i > 0 && <Separator className="my-3" />}
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-medium" style={{color: 'var(--gray11)'}}>
+                                            <span className="text-xs font-medium text-gray-11">
                                                 {index.name}
                                             </span>
                                             <Badge
                                                 variant="secondary"
-                                                className="text-[10px] h-5"
-                                                style={{
-                                                    color: 'var(--blue11)',
-                                                    background: 'var(--blue4)',
-                                                }}
+                                                className="text-[10px] h-5 text-blue-11 bg-blue-4"
                                             >
                                                 {index.category}
                                             </Badge>
                                         </div>
-                                        <p className="text-xs leading-relaxed" style={{color: 'var(--gray12)'}}>
+                                        <p className="text-xs leading-relaxed text-gray-12">
                                             {index.text}
                                         </p>
                                     </div>
@@ -291,13 +287,13 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
                 icon={<Icon icon="tabler:cloud" style={{fontSize: "20px"}}/>}
                 actions={() => []}
                 content={() => (
-                    <div className="text-[11px] text-center" style={{color: 'var(--gray10)'}}>
+                    <div className="text-[11px] text-center text-gray-10">
                         Powered by 和风天气
                     </div>
                 )}
                 rightElement={
                     <div className='flex items-center gap-3 pr-6 flex-shrink-0'>
-                        <div className="flex items-center gap-1.5 text-xs" style={{color: 'var(--gray11)'}}>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-11">
                             <Icon icon="tabler:settings" style={{fontSize: "20px"}}/>
                             <KbdGroup className="gap-1">
                                 <Kbd>Ctrl</Kbd>
@@ -317,10 +313,10 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
 function WeatherStat({icon, label, value}: {icon: string, label: string, value: string}) {
     return (
         <div className="flex items-center gap-1.5">
-            <Icon icon={icon} style={{fontSize: "14px", color: 'var(--gray11)'}} />
+            <Icon icon={icon} className="text-gray-11" style={{fontSize: "14px"}} />
             <div className="flex flex-col">
-                <span className="text-[10px]" style={{color: 'var(--gray10)'}}>{label}</span>
-                <span className="text-xs font-medium" style={{color: 'var(--gray12)'}}>{value}</span>
+                <span className="text-[10px] text-gray-10">{label}</span>
+                <span className="text-xs font-medium text-gray-12">{value}</span>
             </div>
         </div>
     );
@@ -436,10 +432,7 @@ function SunTimeline({sunrise, sunset, condition}: {sunrise: string, sunset: str
     };
 
     return (
-        <div
-            className="rounded-xl overflow-hidden"
-            style={{minWidth: '140px'}}
-        >
+        <div className="rounded-xl overflow-hidden min-w-[140px]">
             <div className="flex items-center gap-2 px-2.5 py-2">
                 {/* Left: Current phase and time */}
                 <div className="flex flex-col min-w-[50px]">
@@ -601,16 +594,13 @@ function DailyWeatherCard({day, index}: {
     const uvLevel = getUVLevel(day.uvIndex);
 
     return (
-        <div
-            className="flex flex-col items-center p-1.5 rounded border border-border/40 hover:border-border transition-colors"
-            style={{background: 'var(--gray2)'}}
-        >
+        <div className="flex flex-col items-center p-1.5 rounded border border-border/40 hover:border-border transition-colors bg-gray-2">
             {/* Date */}
             <div className="text-center mb-1">
-                <div className="text-[10px] font-medium" style={{color: 'var(--gray12)'}}>
+                <div className="text-[10px] font-medium text-gray-12">
                     {dayName}
                 </div>
-                <div className="text-[9px]" style={{color: 'var(--gray11)'}}>
+                <div className="text-[9px] text-gray-11">
                     {dateStr}
                 </div>
             </div>
@@ -622,16 +612,16 @@ function DailyWeatherCard({day, index}: {
 
             {/* Temperature */}
             <div className="text-center mb-1">
-                <div className="text-sm font-bold tabular-nums" style={{color: 'var(--gray12)'}}>
+                <div className="text-sm font-bold tabular-nums text-gray-12">
                     {day.tempMax}°
                 </div>
-                <div className="text-xs tabular-nums" style={{color: 'var(--gray11)'}}>
+                <div className="text-xs tabular-nums text-gray-11">
                     {day.tempMin}°
                 </div>
             </div>
 
             {/* Weather condition */}
-            <div className="text-[10px] text-center mb-1 leading-tight px-0.5" style={{color: 'var(--gray11)'}}>
+            <div className="text-[10px] text-center mb-1 leading-tight px-0.5 text-gray-11">
                 {day.textDay.length > 4 ? day.textDay.substring(0, 4) : day.textDay}
             </div>
 
@@ -639,22 +629,22 @@ function DailyWeatherCard({day, index}: {
             <div className="w-full space-y-0.5 pt-1 border-t border-border/30">
                 {/* UV Index */}
                 <div className="flex items-center justify-between text-[9px]">
-                    <span style={{color: 'var(--gray10)'}}>紫外线</span>
+                    <span className="text-gray-10">紫外线</span>
                     <span style={{color: uvLevel.color}}>{uvLevel.text}</span>
                 </div>
 
                 {/* Precipitation - only if non-zero */}
                 {parseFloat(day.precip) > 0 && (
                     <div className="flex items-center justify-between text-[9px]">
-                        <span style={{color: 'var(--gray10)'}}>降水</span>
-                        <span style={{color: 'var(--blue11)'}}>{day.precip}mm</span>
+                        <span className="text-gray-10">降水</span>
+                        <span className="text-blue-11">{day.precip}mm</span>
                     </div>
                 )}
 
                 {/* Humidity */}
                 <div className="flex items-center justify-between text-[9px]">
-                    <span style={{color: 'var(--gray10)'}}>湿度</span>
-                    <span style={{color: 'var(--gray11)'}}>{day.humidity}%</span>
+                    <span className="text-gray-10">湿度</span>
+                    <span className="text-gray-11">{day.humidity}%</span>
                 </div>
             </div>
         </div>

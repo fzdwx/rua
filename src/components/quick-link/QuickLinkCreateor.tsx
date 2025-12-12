@@ -226,7 +226,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
 
     return (
         <>
-            <div className="w-full max-w-3xl mx-auto px-8 py-6 overflow-y-auto" style={{flex: 1}}>
+            <div className="w-full max-w-3xl mx-auto px-8 py-6 overflow-y-auto flex-1">
                 <div className="space-y-5 pt-20">
                     {/* URL/Command input */}
                     <div className="flex items-start gap-8">
@@ -318,7 +318,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                         </Label>
                         <div className="flex-1">
                             <Select  value={openType} onValueChange={(value) => setOpenType(value as QuickLinkOpenType)}>
-                                <SelectTrigger id="open-type-select" className="bg-background">
+                                <SelectTrigger id="open-type-select" className="w-[40%]">
                                     <SelectValue placeholder="选择打开方式" />
                                 </SelectTrigger>
                                 <SelectContent>

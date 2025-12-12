@@ -1,6 +1,7 @@
 import {useState} from "react";
 import {toast} from "sonner";
 import {Toaster} from "@/components/ui/sonner.tsx";
+import {Card, CardContent} from "@/components/ui/card";
 
 interface UtilityDisplayProps {
     input: string;
@@ -269,58 +270,62 @@ export function UtilityDisplay({input}: UtilityDisplayProps) {
             <Toaster position="bottom-center"/>
             <div className="mx-3 my-2">
                 {/* Main Result Card */}
-                <div
+                <Card
                     onClick={handleCopy}
-                    className="px-4 py-3 bg-[var(--gray3)] border border-[var(--gray6)] rounded-lg cursor-pointer transition-all duration-200 hover:bg-[var(--gray4)] hover:border-[var(--gray7)]"
+                    className="cursor-pointer transition-all duration-200 bg-gray-3 border-gray-6 hover:bg-gray-4 hover:border-gray-7"
                 >
-                    <div className="flex items-center gap-3">
-                        <div className="text-2xl">{result.icon}</div>
-                        <div className="flex-1">
-                            {result.label && (
-                                <div className="text-[11px] text-[var(--gray11)] mb-1">
-                                    {result.label}
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="text-2xl">{result.icon}</div>
+                            <div className="flex-1">
+                                {result.label && (
+                                    <div className="text-[11px] text-gray-11 mb-1">
+                                        {result.label}
+                                    </div>
+                                )}
+                                <div className="text-xl font-semibold text-gray-12">
+                                    {result.primary}
                                 </div>
-                            )}
-                            <div className="text-xl font-semibold text-[var(--gray12)]">
-                                {result.primary}
+                            </div>
+                            <div className={`text-[11px] px-2 py-1 rounded transition-colors duration-200 ${
+                                copiedItem === result.primary
+                                    ? 'text-green-11 bg-green-3'
+                                    : 'text-gray-10 bg-gray-5'
+                            }`}>
+                                {copiedItem === result.primary ? '✓ Copied' : 'Click to copy'}
                             </div>
                         </div>
-                        <div className={`text-[11px] px-2 py-1 rounded transition-colors duration-200 ${
-                            copiedItem === result.primary
-                                ? 'text-[var(--green11)] bg-[var(--green3)]'
-                                : 'text-[var(--gray10)] bg-[var(--gray5)]'
-                        }`}>
-                            {copiedItem === result.primary ? '✓ Copied' : 'Click to copy'}
-                        </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
                 {/* Smart Hints Section */}
                 {smartHints.length > 0 && (
-                    <div className="mt-2 border border-[var(--blue6)] bg-[var(--blue2)] rounded-md p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-[13px] font-semibold text-[var(--blue11)]">💡 相关提示</span>
-                        </div>
-                        <div className="space-y-3">
-                            {smartHints.map((section, idx) => (
-                                <div key={idx}>
-                                    <div className="text-[11px] font-semibold text-[var(--gray12)] mb-1">
-                                        {section.category}
+                    <Card className="mt-2 border-blue-6 bg-blue-2">
+                        <CardContent className="p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-[13px] font-semibold text-blue-11">💡 相关提示</span>
+                            </div>
+                            <div className="space-y-3">
+                                {smartHints.map((section, idx) => (
+                                    <div key={idx}>
+                                        <div className="text-[11px] font-semibold text-gray-12 mb-1">
+                                            {section.category}
+                                        </div>
+                                        <div className="space-y-1 pl-2">
+                                            {section.hints.map((hint, hintIdx) => (
+                                                <div key={hintIdx} className="text-[11px] text-gray-11">
+                                                    <code className="text-blue-11 bg-blue-3 px-1 py-0.5 rounded">
+                                                        {hint.code}
+                                                    </code>
+                                                    {' '}- {hint.description}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div className="space-y-1 pl-2">
-                                        {section.hints.map((hint, hintIdx) => (
-                                            <div key={hintIdx} className="text-[11px] text-[var(--gray11)]">
-                                                <code className="text-[var(--blue11)] bg-[var(--blue3)] px-1 py-0.5 rounded">
-                                                    {hint.code}
-                                                </code>
-                                                {' '}- {hint.description}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
                 )}
             </div>
         </>
