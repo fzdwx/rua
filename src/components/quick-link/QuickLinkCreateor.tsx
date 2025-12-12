@@ -8,6 +8,7 @@ import {Input} from "@/components/ui/input.tsx";
 import {Kbd, KbdGroup} from "@/components/ui/kbd.tsx";
 import {getFaviconUrl} from "@/utils/favicon.ts";
 import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
 import {
     Select,
     SelectContent,
@@ -226,7 +227,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
     return (
         <>
             <div className="w-full max-w-3xl mx-auto px-8 py-6 overflow-y-auto" style={{flex: 1}}>
-                <div className="space-y-5">
+                <div className="space-y-5 pt-20">
                     {/* URL/Command input */}
                     <div className="flex items-start gap-8">
                         <Label htmlFor="url-input" className="w-32 pt-2 text-right flex-shrink-0">
@@ -409,8 +410,15 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                 content={() => <div/>}
                 rightElement={
                     <div className='flex items-center gap-3 pr-6'>
+                        <Button
+                            onClick={handleSubmit}
+                            size="sm"
+                            variant="outline"
+                            className=""
+                        >
+                            {editingId ? "更新" : "创建"}
+                        </Button>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <span>{editingId ? "更新" : "创建"}</span>
                             <KbdGroup className="gap-1">
                                 <Kbd>Ctrl</Kbd>
                                 <Kbd>⏎</Kbd>

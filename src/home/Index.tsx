@@ -16,7 +16,13 @@ import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useActionUsage} from "@/hooks/useActionUsage";
 import {translateId, TranslateView} from "@/components/translate";
 import {weatherId, WeatherView} from "@/components/weather";
-import {quickLinkCreatorId, quickLinkViewPrefix, quickLinkEditPrefix, QuickLinkCreator, QuickLinkView} from "@/components/quick-link";
+import {
+    quickLinkCreatorId,
+    quickLinkViewPrefix,
+    quickLinkEditPrefix,
+    QuickLinkCreator,
+    QuickLinkView
+} from "@/components/quick-link";
 import {DefaultView} from "./DefaultView";
 
 export default function Home() {
@@ -34,7 +40,7 @@ export default function Home() {
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
 
     // Load applications and convert to actions
-    const { actions: applicationActions} = useApplications();
+    const {actions: applicationActions} = useApplications();
 
     // Get built-in actions (static actions like translate)
     // refreshKey forces re-computation when quick links are updated
@@ -87,7 +93,7 @@ export default function Home() {
         if (state.rootActionId === null) {
             return null
         }
-        let actions  = allActions.filter(v=>{
+        let actions = allActions.filter(v => {
             return v.id === state.rootActionId;
 
         })
@@ -151,35 +157,38 @@ export default function Home() {
     return (
         <Container>
             <Background>
-                <Input
-                    value={search}
-                    onValueChange={setSearch}
-                    currentRootActionId={state.rootActionId}
-                    onCurrentRootActionIdChange={(id) => {
-                        setRootActionId(id)
-                        // Only focus search box if we're returning to main view (id is null)
-                        // or if the target action doesn't have disableSearchFocus
-                        if (id === null) {
-                            inputRef.current?.focus();
-                        } else {
-                            const targetAction = allActions.find(a => a.id === id);
-                            if (!targetAction?.disableSearchFocus) {
+                {/* Hide Input when current action has hideSearchBox set to true */}
+                {!currentRootAction?.hideSearchBox && (
+                    <Input
+                        value={search}
+                        onValueChange={setSearch}
+                        currentRootActionId={state.rootActionId}
+                        onCurrentRootActionIdChange={(id) => {
+                            setRootActionId(id)
+                            // Only focus search box if we're returning to main view (id is null)
+                            // or if the target action doesn't have disableSearchFocus
+                            if (id === null) {
                                 inputRef.current?.focus();
+                            } else {
+                                const targetAction = allActions.find(a => a.id === id);
+                                if (!targetAction?.disableSearchFocus) {
+                                    inputRef.current?.focus();
+                                }
                             }
-                        }
-                    }}
-                    actions={state.actions}
-                    activeAction={activeMainAction}
-                    onQuerySubmit={handleQuerySubmit}
-                    setResultHandleEvent={setResultHandleEvent}
-                    loading={actionLoading}
-                    disableTabFocus={currentRootAction?.disableSearchFocus ?? false}
-                    focusQueryInput={focusQueryInput}
-                    inputRefSetter={(ref) => {
-                        inputRef.current = ref;
-                    }}
-                    defaultPlaceholder="Type a command or search…"
-                />
+                        }}
+                        actions={state.actions}
+                        activeAction={activeMainAction}
+                        onQuerySubmit={handleQuerySubmit}
+                        setResultHandleEvent={setResultHandleEvent}
+                        loading={actionLoading}
+                        disableTabFocus={currentRootAction?.disableSearchFocus ?? false}
+                        focusQueryInput={focusQueryInput}
+                        inputRefSetter={(ref) => {
+                            inputRef.current = ref;
+                        }}
+                        defaultPlaceholder="Type a command or search…"
+                    />
+                )}
 
                 {/* Main content area with flex: 1 to prevent footer from being squeezed */}
                 <div style={{flex: 1, overflow: "hidden", display: "flex", flexDirection: "column"}}>

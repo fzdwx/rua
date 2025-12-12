@@ -50,6 +50,7 @@ export function getQuickLinkActions(
         usageCount: creatorUsageCount,
         badge: "Quick Link",
         disableSearchFocus: true, // Prevent auto-focus to search box when this action is active
+        hideSearchBox: true, // Hide search box when this action is active
         perform: () => {
             setRootActionId(quickLinkCreatorId)
             incrementUsage(quickLinkCreatorId);
@@ -124,6 +125,7 @@ export function getQuickLinkActions(
             query: hasQueryVariable, // Enable query mode if URL contains {query}
             usageCount,
             badge: "Quick Link",
+            hideSearchBox: true, // Hide search box when viewing this quick link
             perform: () => {
                 setRootActionId(actionId)
                 incrementUsage(actionId);
@@ -138,6 +140,7 @@ export function getQuickLinkActions(
                         subtitle: "编辑此快捷指令",
                         icon: <Icon icon="tabler:edit" style={{fontSize: "20px"}}/>,
                         keywords: "edit,modify,编辑,修改",
+                        hideSearchBox: true, // Hide search box when editing
                         perform: () => {
                             // Close the popover first
                             changeVisible();
