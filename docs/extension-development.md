@@ -28,10 +28,10 @@ bunx create-rua-ext my-extension
    
    - 打开 Rua 命令面板
    - 搜索 "Manage Extensions" 或 "扩展管理"
-   - 在 **Development Mode** 区域输入扩展目录的完整路径
+   - 在 **Development Mode** 区域输入扩展目录的完整路径(不需要是dist目录)
    - 点击 "Start" 按钮
    - 扩展会以 `[DEV]` 前缀显示在列表中
-   - 修改代码后，点击刷新按钮 🔄 重新加载
+   - 修改代码后，会自动热加载
    - 开发完成后点击 "Stop" 停止开发模式
 
    ```bash
@@ -51,18 +51,9 @@ bunx create-rua-ext my-extension
    - 扩展会被复制到扩展目录中
 
 4. **扩展目录位置**
-   - Linux: `~/.local/share/rua/extensions/`
-   - macOS: `~/Library/Application Support/rua/extensions/`
-   - Windows: `%APPDATA%/rua/extensions/`
-
-5. **快捷命令**
-   ```bash
-   # 安装示例扩展
-   just install-example-ext
-   
-   # 运行 Rua 开发模式
-   just dev
-   ```
+   - Linux: `~/.local/share/like.rua.ai/extensions/`
+   - macOS: `~/Library/Application Support/like.rua.ai/extensions/`
+   - Windows: `%APPDATA%/like.rua.ai/extensions/`
 
 ### 手动创建扩展目录结构
 
@@ -96,7 +87,8 @@ my-extension/
         "mode": "view",
         "keywords": ["search", "keywords"],
         "icon": "tabler:star",
-        "subtitle": "Action description"
+        "subtitle": "Action description",
+        "query": true
       }
     ]
   },
@@ -141,7 +133,8 @@ my-extension/
   "title": "Open My View",
   "mode": "view",
   "keywords": ["view", "ui"],
-  "icon": "tabler:layout"
+  "icon": "tabler:layout",
+  "query": true
 }
 ```
 
@@ -171,6 +164,40 @@ const action = params.get('action'); // "my-view"
 }
 ```
 
+### Query 支持
+
+设置 `"query": true` 可以在命令面板中显示查询输入框。用户可以在进入扩展视图之前输入查询内容：
+
+```json
+{
+  "name": "search",
+  "title": "Search Something",
+  "mode": "view",
+  "query": true
+}
+```
+
+用户操作流程：
+1. 在命令面板中选择该 Action
+2. 按 Tab 键切换到查询输入框
+3. 输入查询内容
+4. 按 Enter 进入扩展视图
+
+在扩展中接收查询内容：
+
+```javascript
+import { initializeRuaAPI } from 'rua-api/browser'
+
+const rua = await initializeRuaAPI()
+
+// 监听搜索输入变化
+rua.on('search-change', (query) => {
+  console.log('Search query:', query)
+  // 处理查询内容
+  performSearch(query as string)
+})
+```
+
 ## 权限系统
 
 扩展需要在 manifest 中声明所需权限：
@@ -183,11 +210,24 @@ const action = params.get('action'); // "my-view"
 | `http` | HTTP 请求 |
 | `shell` | Shell 命令执行 |
 
-## Extension API (window.rua)
+## Extension API
 
-扩展 UI 中可以通过 `window.rua` 访问 Rua API。API 会在 iframe 加载后自动注入。
+推荐使用 `rua-api` 包来访问 Rua API，它提供了类型安全的接口。
 
-API 使用 [kkrpc](https://github.com/kunkunsh/kkrpc) 库实现类型安全的 RPC 通信，支持双向调用。
+### 安装
+
+```bash
+bun add rua-api
+```
+
+### 初始化
+
+```typescript
+import { initializeRuaAPI } from 'rua-api/browser'
+
+const rua = await initializeRuaAPI()
+console.log('Extension:', rua.extension.id)
+```
 
 ### 等待 API 就绪
 
@@ -202,29 +242,29 @@ window.addEventListener('rua-ready', (event) => {
 
 ```javascript
 // 获取当前扩展信息
-console.log(window.rua.extension.id);      // "author.my-extension"
-console.log(window.rua.extension.name);    // "My Extension"
-console.log(window.rua.extension.version); // "1.0.0"
+console.log(rua.extension.id);      // "author.my-extension"
+console.log(rua.extension.name);    // "My Extension"
+console.log(rua.extension.version); // "1.0.0"
 ```
 
 ### Storage API
 
 ```javascript
 // 存储数据（需要 storage 权限）
-await window.rua.storage.set('key', { foo: 'bar' });
+await rua.storage.set('key', { foo: 'bar' });
 
 // 读取数据
-const data = await window.rua.storage.get('key');
+const data = await rua.storage.get('key');
 
 // 删除数据
-await window.rua.storage.remove('key');
+await rua.storage.remove('key');
 ```
 
 ### Notification API
 
 ```javascript
 // 显示系统通知（需要 notification 权限）
-await window.rua.notification.show({
+await rua.notification.show({
   title: 'Hello',
   body: 'This is a notification'
 });
@@ -234,33 +274,33 @@ await window.rua.notification.show({
 
 ```javascript
 // 读取剪贴板（需要 clipboard 权限）
-const text = await window.rua.clipboard.read();
+const text = await rua.clipboard.readText();
 
 // 写入剪贴板
-await window.rua.clipboard.write('Hello, World!');
+await rua.clipboard.writeText('Hello, World!');
 ```
 
 ### UI Control API
 
 ```javascript
 // 隐藏主界面搜索框
-await window.rua.ui.hideInput();
+await rua.ui.hideInput();
 
 // 显示主界面搜索框
-await window.rua.ui.showInput();
+await rua.ui.showInput();
 
 // 关闭扩展视图，返回主界面
-await window.rua.ui.close();
+await rua.ui.close();
 
 // 设置扩展标题
-await window.rua.ui.setTitle('New Title');
+await rua.ui.setTitle('New Title');
 ```
 
 ### Dynamic Actions API
 
 ```javascript
 // 动态注册 Actions（会出现在命令面板中）
-await window.rua.actions.register([
+await rua.actions.register([
   {
     id: 'dynamic-action',
     name: 'Dynamic Action',
@@ -272,19 +312,24 @@ await window.rua.actions.register([
 ]);
 
 // 取消注册 Actions
-await window.rua.actions.unregister(['dynamic-action']);
+await rua.actions.unregister(['dynamic-action']);
 ```
 
 ### Event API
 
 ```javascript
-// 监听事件
-window.rua.on('some-event', (data) => {
-  console.log('Event received:', data);
+// 监听搜索输入变化
+rua.on('search-change', (query) => {
+  console.log('Search changed:', query);
+});
+
+// 监听 Action 触发
+rua.on('action-triggered', (data) => {
+  console.log('Action triggered:', data);
 });
 
 // 取消监听
-window.rua.off('some-event', handler);
+rua.off('search-change', handler);
 ```
 
 ## 初始化脚本 (init.js)
@@ -293,18 +338,22 @@ window.rua.off('some-event', handler);
 
 ```javascript
 // init.js
-window.addEventListener('rua-ready', async (event) => {
-  console.log('Extension loaded:', event.detail);
+import { initializeRuaAPI } from 'rua-api/browser'
+
+async function init() {
+  const rua = await initializeRuaAPI()
   
   // 注册动态 Actions
-  await window.rua.actions.register([
+  await rua.actions.register([
     {
       id: 'my-dynamic-action',
       name: 'My Dynamic Action',
       mode: 'view'
     }
   ]);
-});
+}
+
+init()
 ```
 
 ## 开发模式热重载
@@ -317,7 +366,7 @@ window.addEventListener('rua-ready', async (event) => {
 
 ## 示例扩展
 
-查看 `examples/hello-ext` 目录获取完整的示例扩展。
+查看 `examples/hello-word` 目录获取完整的示例扩展。
 
 ## 最佳实践
 
@@ -326,3 +375,5 @@ window.addEventListener('rua-ready', async (event) => {
 3. **处理错误**: 使用 try-catch 处理 API 调用
 4. **提供清晰的 UI**: 保持界面简洁一致
 5. **支持深色模式**: 使用 CSS 媒体查询适配主题
+6. **使用 TypeScript**: 推荐使用 TypeScript 获得更好的类型提示
+7. **监听 search-change**: 如果启用了 query，记得监听搜索变化事件

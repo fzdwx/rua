@@ -9,7 +9,7 @@ bump version:
 
 install:
     jq '.bundle.active = false' apps/rua/src-tauri/tauri.conf.json > apps/rua/src-tauri/tauri.conf.json.tmp && mv apps/rua/src-tauri/tauri.conf.json.tmp apps/rua/src-tauri/tauri.conf.json
-    cd apps/rua && bun tauri build
+    cd apps/rua && bun tauri-build
     cargo build --manifest-path apps/rua/src-tauri/Cargo.toml --bin ruactl --release
     sudo cp apps/rua/src-tauri/target/release/rua /usr/bin/
     sudo cp apps/rua/src-tauri/target/release/ruactl /usr/bin/
