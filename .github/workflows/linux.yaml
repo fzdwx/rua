@@ -28,7 +28,7 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libgtk-3-dev libglib2.0-dev libssl-dev
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libgtk-3-dev libglib2.0-dev libssl-dev xvfb
 
       - name: setup bun
         uses: oven-sh/setup-bun@v2
@@ -53,9 +53,14 @@ jobs:
       - name: build rua-api package
         run: bun run --cwd packages/rua-api build
 
+      - name: start virtual display (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: Xvfb :99 -screen 0 1024x768x24 &
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISPLAY: ':99'
         with:
           projectPath: apps/rua
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
