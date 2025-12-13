@@ -2,14 +2,14 @@ import * as React from "react";
 import {QuickLink, QuickLinkOpenType, useQuickLinks} from "@/hooks/useQuickLinks";
 import {Footer} from "@/command";
 import {Icon} from "@iconify/react";
-import {useKeyPress} from "ahooks";
+import {useKeyPress, useDebounceFn} from "ahooks";
 import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import {Kbd, KbdGroup} from "@/components/ui/kbd";
 import {getFaviconUrl} from "@/utils/favicon.ts";
-import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Switch} from "@/components/ui/switch";
+import {invoke} from "@tauri-apps/api/core";
 import {
     Select,
     SelectContent,
@@ -40,9 +40,63 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
     const [urlError, setUrlError] = React.useState("");
     const [nameError, setNameError] = React.useState("");
     const [iconLoadError, setIconLoadError] = React.useState(false);
+    const [fetchingPageInfo, setFetchingPageInfo] = React.useState(false);
 
     const urlInputRef = React.useRef<HTMLInputElement>(null);
     const nameInputRef = React.useRef<HTMLInputElement>(null);
+
+    // Page info type from Rust backend
+    interface PageInfo {
+        title?: string;
+        description?: string;
+        icon?: string;
+        image?: string;
+    }
+
+    // Fetch page info using webpage-rs backend
+    const fetchPageInfo = async (targetUrl: string) => {
+        // Skip if URL contains variables
+        if (targetUrl.includes('{') || targetUrl.includes('}')) {
+            return;
+        }
+
+        try {
+            new URL(targetUrl);
+        } catch {
+            return;
+        }
+
+        setFetchingPageInfo(true);
+        console.log("[QuickLinkCreator] Fetching page info for:", targetUrl);
+        try {
+            const info = await invoke<PageInfo>("fetch_page_info", { url: targetUrl });
+            console.log("[QuickLinkCreator] Page info:", info);
+
+            // Only set if user hasn't manually entered values
+            if (info.title && !name) {
+                console.log("[QuickLinkCreator] Setting name to:", info.title);
+                setName(info.title);
+            }
+            if (info.icon && !customIcon) {
+                console.log("[QuickLinkCreator] Setting icon to:", info.icon);
+                setCustomIcon(info.icon);
+            }
+        } catch (err) {
+            console.error("[QuickLinkCreator] Failed to fetch page info:", err);
+        } finally {
+            setFetchingPageInfo(false);
+        }
+    };
+
+    // Debounced fetch page info
+    const { run: debouncedFetchPageInfo } = useDebounceFn(
+        (targetUrl: string) => {
+            if (openType === "url" && targetUrl) {
+                fetchPageInfo(targetUrl);
+            }
+        },
+        { wait: 800 }
+    );
 
     const variables = [
         { name: 'query', description: '代表查询内容' },
@@ -109,6 +163,9 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
         } else {
             setShowVariableMenu(false);
         }
+
+        // Trigger debounced fetch for page info
+        debouncedFetchPageInfo(newValue);
     };
 
     const handleUrlKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -231,13 +288,12 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
 
     return (
         <>
-            <div className="w-full max-w-3xl mx-auto px-8 py-6 overflow-y-auto flex-1">
-                <div className="space-y-5 pt-20">
+            <div className="w-full max-w-2xl mx-auto px-12 py-6 overflow-y-auto flex-1">
+                <div className="space-y-6 pt-8">
                     {/* URL/Command input */}
-                    <div className="flex items-start gap-8">
-                        <Label htmlFor="url-input" className="w-32 pt-2 text-right flex-shrink-0">
+                    <div className="flex items-start gap-4">
+                        <Label htmlFor="url-input" className="w-16 pt-2.5 text-right flex-shrink-0 text-muted-foreground text-sm">
                             {openType === "url" ? "链接地址" : "Shell 命令"}
-                            <span className="text-destructive ml-1">*</span>
                         </Label>
                         <div className="flex-1 relative">
                             <Input
@@ -250,80 +306,90 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                                 placeholder={openType === "url"
                                     ? "https://google.com/search?q={query}"
                                     : "notify-send 'Hello' '{query}'"}
-                                className={`${urlError ? "border-destructive" : ""} font-mono text-sm`}
+                                className={`${urlError ? "border-destructive" : ""} font-mono`}
                             />
                             {urlError && (
-                                <p className="text-xs text-destructive pt-2">{urlError}</p>
+                                <p className="text-xs text-destructive mt-1.5">{urlError}</p>
                             )}
                             {!urlError && (
-                                <p className="text-xs text-muted-foreground pt-2">
-                                    输入 <code className="px-1 py-0.5 rounded bg-muted font-mono text-xs">{"{"}</code> 可插入变量 {"{query}"} 或 {"{selection}"}
+                                <p className="text-xs text-muted-foreground/70 pt-1 leading-relaxed">
+                                    可以通过【<span className="text-foreground font-medium">动态替换方式</span>】占位符的方式动态组装 url，如 <code className="px-1 py-0.5 rounded bg-muted font-mono text-[11px] text-foreground font-medium">{"{selection}"}</code>
+                                    <br/>
+                                    表示通过选择文本替换掉 <code className="px-1 py-0.5 rounded bg-muted font-mono text-[11px] text-foreground font-medium">{"{selection}"}</code> 的方式拼接 url，大大提高灵活性。
                                 </p>
                             )}
 
                             {/* Variable selection menu */}
                             {showVariableMenu && (
-                                <div className="absolute z-50 w-full mt-1 rounded-md border bg-popover shadow-md">
+                                <div className="absolute z-50 w-72 mt-1 rounded-lg border border-border/50 bg-popover/95 backdrop-blur-sm shadow-lg overflow-hidden">
                                     {variables.map((variable, index) => (
                                         <div
                                             key={variable.name}
-                                            className={`px-3 py-2 cursor-pointer text-sm ${
+                                            className={`px-3 py-2.5 cursor-pointer transition-colors ${
                                                 activeMenuIndex === index
-                                                    ? 'bg-accent'
-                                                    : 'hover:bg-accent/50'
+                                                    ? 'bg-accent/80'
+                                                    : 'hover:bg-accent/40'
                                             }`}
                                             onMouseEnter={() => setActiveMenuIndex(index)}
                                             onClick={() => insertVariable(variable.name)}
                                         >
-                                            <div className="flex items-center gap-2">
-                                                <Badge variant="secondary" className="font-mono text-xs">
-                                                    {variable.name}
-                                                </Badge>
+                                            <div className="flex items-center gap-3">
+                                                <code className="px-2 py-1 rounded-md bg-muted border border-border/50 text-foreground font-mono text-xs">
+                                                    {`{${variable.name}}`}
+                                                </code>
                                                 <span className="text-muted-foreground text-xs">
                                                     {variable.description}
                                                 </span>
                                             </div>
                                         </div>
                                     ))}
+                                    <div className="px-3 py-1.5 border-t border-border/30 bg-muted/20">
+                                        <span className="text-[10px] text-muted-foreground">↑↓ 选择 · Enter 确认 · Esc 取消</span>
+                                    </div>
                                 </div>
                             )}
                         </div>
                     </div>
 
                     {/* Name input */}
-                    <div className="flex items-start gap-8">
-                        <Label htmlFor="name-input" className="w-32 pt-2 text-right flex-shrink-0">
-                            名称
-                            <span className="text-destructive ml-1">*</span>
+                    <div className="flex items-start gap-4">
+                        <Label htmlFor="name-input" className="w-16 pt-2.5 text-right flex-shrink-0 text-muted-foreground text-sm">
+                            指令名
                         </Label>
                         <div className="flex-1">
-                            <Input
-                                id="name-input"
-                                ref={nameInputRef}
-                                type="text"
-                                value={name}
-                                onChange={(e) => {
-                                    setName(e.target.value);
-                                    setNameError("");
-                                }}
-                                placeholder="例如：Google 搜索"
-                                className={nameError ? "border-destructive" : ""}
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="name-input"
+                                    ref={nameInputRef}
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => {
+                                        setName(e.target.value);
+                                        setNameError("");
+                                    }}
+                                    placeholder={fetchingPageInfo ? "正在获取..." : "快捷链接名字"}
+                                    className={nameError ? "border-destructive" : ""}
+                                />
+                                {fetchingPageInfo && (
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                        <Icon icon="tabler:loader-2" className="size-4 text-muted-foreground animate-spin" />
+                                    </div>
+                                )}
+                            </div>
                             {nameError && (
                                 <p className="text-xs text-destructive mt-1.5">{nameError}</p>
                             )}
                         </div>
                     </div>
 
-                    {/* Open Type selector */}
-                    <div className="flex items-start gap-8">
-                        <Label htmlFor="open-type-select" className="w-32 pt-2 text-right flex-shrink-0">
-                            打开方式
-                            <span className="text-destructive ml-1">*</span>
+                    {/* Open Type selector - hidden by default, only show for advanced users */}
+                    <div className="flex items-start gap-4">
+                        <Label htmlFor="open-type-select" className="w-16 pt-2.5 text-right flex-shrink-0 text-muted-foreground text-sm">
+                            类型
                         </Label>
                         <div className="flex-1">
-                            <Select  value={openType} onValueChange={(value) => setOpenType(value as QuickLinkOpenType)}>
-                                <SelectTrigger id="open-type-select" className="w-[40%]">
+                            <Select value={openType} onValueChange={(value) => setOpenType(value as QuickLinkOpenType)}>
+                                <SelectTrigger id="open-type-select" className="bg-background w-48">
                                     <SelectValue placeholder="选择打开方式" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -331,19 +397,14 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                                     <SelectItem value="shell">Shell 命令执行</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <p className="text-xs text-muted-foreground pt-2">
-                                {openType === "url"
-                                    ? "将通过默认浏览器打开链接"
-                                    : "将在终端中执行 shell 命令"}
-                            </p>
                         </div>
                     </div>
 
                     {/* Wait for completion option (only for shell commands) */}
                     {openType === "shell" && (
-                        <div className="flex items-start gap-8">
-                            <Label htmlFor="wait-completion" className="w-32 pt-2 text-right flex-shrink-0">
-                                执行方式
+                        <div className="flex items-start gap-4">
+                            <Label htmlFor="wait-completion" className="w-16 pt-0.5 text-right flex-shrink-0 text-muted-foreground text-sm">
+                                执行
                             </Label>
                             <div className="flex-1">
                                 <div className="flex items-center gap-3">
@@ -352,67 +413,39 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                                         checked={waitForCompletion}
                                         onCheckedChange={setWaitForCompletion}
                                     />
-                                    <Label htmlFor="wait-completion" className="cursor-pointer font-normal">
+                                    <Label htmlFor="wait-completion" className="cursor-pointer font-normal text-sm">
                                         等待命令执行完成
                                     </Label>
                                 </div>
-                                <p className="text-xs text-muted-foreground pt-2">
-                                    {waitForCompletion
-                                        ? "命令执行完成后才会关闭窗口（适用于需要查看输出的命令）"
-                                        : "命令将在后台执行，窗口立即关闭（适用于启动应用等场景）"}
-                                </p>
                             </div>
                         </div>
                     )}
 
-                    {/* Custom Icon input */}
-                    <div className="flex items-start gap-8">
-                        <Label htmlFor="icon-input" className="w-32 pt-2 text-right flex-shrink-0">
+                    {/* Custom Icon input - simplified */}
+                    <div className="flex items-start gap-4">
+                        <Label htmlFor="icon-input" className="w-16 pt-2.5 text-right flex-shrink-0 text-muted-foreground text-sm">
                             图标
                         </Label>
                         <div className="flex-1">
-                            <div className="flex gap-3 items-center">
-                                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-2xl border rounded-md bg-muted overflow-hidden">
+                            <div className="flex gap-2 items-center">
+                                <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center text-xl border rounded-md bg-muted overflow-hidden">
                                     {(() => {
-                                        // If customIcon is provided
                                         if (customIcon) {
-                                            // Check if it's a URL
                                             if (isUrl(customIcon)) {
-                                                // If previous load failed, show fallback
                                                 if (iconLoadError) {
                                                     return iconUrl ? (
-                                                        <img
-                                                            src={iconUrl}
-                                                            alt="icon"
-                                                            className="w-6 h-6"
-                                                            onError={() => {}}
-                                                        />
+                                                        <img src={iconUrl} alt="icon" className="w-6 h-6" onError={() => {}} />
                                                     ) : "🔗";
                                                 }
-                                                // Try to load as image
                                                 return (
-                                                    <img
-                                                        src={customIcon}
-                                                        alt="icon"
-                                                        className="w-6 h-6"
-                                                        onError={() => setIconLoadError(true)}
-                                                    />
+                                                    <img src={customIcon} alt="icon" className="w-6 h-6" onError={() => setIconLoadError(true)} />
                                                 );
                                             }
-                                            // It's an emoji or text - show first character if too long
                                             const displayText = customIcon.length > 2 ? customIcon.substring(0, 1) : customIcon;
                                             return <span className="select-none">{displayText}</span>;
                                         }
-                                        // No customIcon, show auto-fetched favicon or default
                                         if (iconUrl) {
-                                            return (
-                                                <img
-                                                    src={iconUrl}
-                                                    alt="icon"
-                                                    className="w-6 h-6"
-                                                    onError={() => {}}
-                                                />
-                                            );
+                                            return <img src={iconUrl} alt="icon" className="w-6 h-6" onError={() => {}} />;
                                         }
                                         return "🔗";
                                     })()}
@@ -422,13 +455,10 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
                                     type="text"
                                     value={customIcon}
                                     onChange={(e) => setCustomIcon(e.target.value)}
-                                    placeholder="🔗 或 https://example.com/icon.png"
+                                    placeholder="emoji 或图标 URL(可选), 支持 data uri"
                                     className="flex-1"
                                 />
                             </div>
-                            <p className="text-xs text-muted-foreground pt-2">
-                                输入 emoji 表情或图标 URL，留空则自动获取网站 favicon
-                            </p>
                         </div>
                     </div>
                 </div>

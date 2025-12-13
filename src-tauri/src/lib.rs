@@ -3,6 +3,7 @@ mod clipboard;
 mod proxy;
 mod control_server;
 mod shell_executor;
+mod webpage_info;
 
 #[cfg(target_os = "linux")]
 mod hyprland;
@@ -56,6 +57,7 @@ pub fn run() {
             clipboard::write_clipboard,
             shell_executor::execute_shell_command,
             shell_executor::execute_shell_command_async,
+            webpage_info::fetch_page_info,
             #[cfg(target_os = "linux")]
             hyprland::focus_window_hyprland,
             #[cfg(target_os = "linux")]
