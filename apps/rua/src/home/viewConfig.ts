@@ -10,10 +10,14 @@ import {
     QuickLinkView
 } from "@/components/quick-link";
 import {PluginManagerView} from "@/components/plugin-manager";
+import {ExtensionViewWrapper} from "@/components/extension-view";
 import {ViewContext} from "./viewContext";
 
-// Plugin manager action ID
-export const pluginManagerId = "manage-plugins";
+// Extension action ID prefix (format: pluginId.actionName)
+export const extensionActionPrefix = "ext:";
+
+// Extension manager action ID
+export const extensionManagerId = "manage-extension";
 
 // View configuration type
 export interface ViewConfig {
@@ -113,8 +117,8 @@ export function createViewConfigs(
             }),
         },
         {
-            key: "plugin-manager",
-            match: (id) => id === pluginManagerId,
+            key: "extension-manager",
+            match: (id) => id === extensionManagerId,
             component: PluginManagerView,
             getProps: (context) => ({
                 onClose: () => {
@@ -125,6 +129,35 @@ export function createViewConfigs(
                     }, 50);
                 },
             }),
+        },
+        {
+            key: "extension-view",
+            // Match any action that has a dot (pluginId.actionName format)
+            match: (id) => id !== null && id.includes('.') && !id.startsWith('quick-link'),
+            component: ExtensionViewWrapper,
+            getProps: (context) => {
+                // Get extension info from the current root action
+                // Note: currentRootAction comes from allActions which includes uiEntry
+                const action = context.currentRootAction as any;
+                console.log('[ExtensionView] action:', action, 'uiEntry:', action?.uiEntry);
+                return {
+                    uiEntry: action?.uiEntry || '',
+                    extensionName: action?.name || 'Extension',
+                    extensionId: action?.pluginId,
+                    onReturn: () => {
+                        // Reset input visibility when closing
+                        context.setExtensionInputHidden?.(false);
+                        context.setRootActionId(null);
+                        context.setSearch("");
+                        setTimeout(() => {
+                            context.inputRef.current?.focus();
+                        }, 50);
+                    },
+                    onInputVisibilityChange: (visible: boolean) => {
+                        context.setExtensionInputHidden?.(!visible);
+                    },
+                };
+            },
         },
     ];
 }

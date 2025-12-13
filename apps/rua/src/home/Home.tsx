@@ -10,6 +10,7 @@ import {
 } from "@/command";
 import {useApplications} from "@/hooks/useApplications";
 import {useBuiltInActions} from "@/hooks/useBuiltInActions";
+import {usePluginActionsForPalette} from "@/hooks/usePluginActions";
 import {useTheme} from "@/hooks/useTheme";
 import {Icon} from "@iconify/react";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
@@ -27,6 +28,7 @@ export default function Home() {
     const [resultHandleEvent, setResultHandleEvent] = useState(true);
     const [focusQueryInput, setFocusQueryInput] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0); // Used to force refresh of built-in actions
+    const [extensionInputHidden, setExtensionInputHidden] = useState(false); // Extension-controlled input visibility
     const inputRef = useRef<HTMLInputElement>(null);
     const lastActiveMainActionRef = useRef<ActionImpl | null>(null); // Store last active main action for passing data to edit action
     const {theme, toggleTheme} = useTheme();
@@ -42,10 +44,13 @@ export default function Home() {
     // refreshKey forces re-computation when quick links are updated
     const builtInActions = useBuiltInActions(setRootActionId, refreshKey);
 
-    // Combine all actions (built-in actions first for priority)
+    // Get plugin/extension actions
+    const pluginActions = usePluginActionsForPalette(setRootActionId);
+
+    // Combine all actions (built-in actions first for priority, then plugins, then applications)
     const allActions = useMemo(() => {
-        return [...builtInActions, ...applicationActions];
-    }, [builtInActions, applicationActions]);
+        return [...builtInActions, ...pluginActions, ...applicationActions];
+    }, [builtInActions, pluginActions, applicationActions]);
 
     // Handle window focus - respect disableSearchFocus flag
     useEffect(() => {
@@ -190,8 +195,8 @@ export default function Home() {
     return (
         <Container>
             <Background>
-                {/* Hide Input when current action has hideSearchBox set to true */}
-                {!actionConfig?.hideSearchBox && (
+                {/* Hide Input when current action has hideSearchBox set to true or extension requests it */}
+                {!actionConfig?.hideSearchBox && !extensionInputHidden && (
                     <Input
                         value={search}
                         onValueChange={setSearch}
@@ -248,6 +253,8 @@ export default function Home() {
                                     setActiveIndex,
                                     setResultHandleEvent,
                                     onQueryActionEnter: handleQueryActionEnter,
+                                    extensionInputHidden,
+                                    setExtensionInputHidden,
                                 } as ViewContext))}
                             </AnimatedView>
                         ) : (

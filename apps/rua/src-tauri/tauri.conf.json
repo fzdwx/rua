@@ -34,7 +34,9 @@
         "enable": true,
         "scope": [
           "$HOME/.local/share/**",
-          "/usr/share/**"
+          "/usr/share/**",
+          "$RESOURCE/**",
+          "**"
         ]
       }
     }

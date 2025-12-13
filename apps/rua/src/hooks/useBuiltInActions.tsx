@@ -6,7 +6,7 @@ import {getTranslateAction} from "@/components/translate";
 import {getWeatherAction} from "@/components/weather";
 import {getQuickLinkActions} from "@/components/quick-link";
 import {useQuickLinks} from "@/hooks/useQuickLinks";
-import {pluginManagerId} from "@/home/viewConfig";
+import {extensionManagerId} from "@/home/viewConfig";
 
 /**
  * Custom hook to provide built-in actions
@@ -46,16 +46,16 @@ export function useBuiltInActions(
 
         // Plugin manager action
         actions.push({
-            id: pluginManagerId,
-            name: "Manage Plugins",
-            keywords: "plugins extensions addons settings",
+            id: extensionManagerId,
+            name: "Manage Extension",
+            keywords: "extensions addons settings",
             icon: <Icon icon="tabler:puzzle" style={{fontSize: "20px"}} />,
-            subtitle: "View and manage installed plugins",
+            subtitle: "View and manage installed extensions",
             section: "Settings",
-            usageCount: getUsageCount(pluginManagerId),
+            usageCount: getUsageCount(extensionManagerId),
             perform: () => {
-                incrementUsage(pluginManagerId);
-                setRootActionId(pluginManagerId);
+                incrementUsage(extensionManagerId);
+                setRootActionId(extensionManagerId);
             },
         });
 

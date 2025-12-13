@@ -26,5 +26,5 @@ export * from './api';
 // Export components
 export * from './components';
 
-// Shared components will be exported here
-// export * from './components';
+// Export browser API for extensions
+export * from './browser';

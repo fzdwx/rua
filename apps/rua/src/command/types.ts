@@ -31,6 +31,7 @@ export type Action = {
     badge?: string  // Badge text to display on the right side of the action
     disableSearchFocus?: boolean  // If true, prevents automatic focus to search box when this action is active
     hideSearchBox?: boolean  // If true, hides the search box when this action is active
+    uiEntry?: string  // UI entry path for extension view mode actions
 };
 
 export type ActionStore = Record<ActionId, ActionImpl>;

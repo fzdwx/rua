@@ -39,3 +39,20 @@ publish-ext-cli:
 # Publish all packages to npm
 publish-all: publish-api publish-ext-cli
     @echo "✓ All packages published to bun"
+
+# Install example extension for testing
+install-example-ext:
+    mkdir -p ~/.local/share/rua/extensions
+    cp -r examples/hello-ext ~/.local/share/rua/extensions/
+    @echo "✓ hello-ext installed to ~/.local/share/rua/extensions/"
+
+# Create and install a test extension
+test-ext name="test-extension":
+    cd /tmp && bunx create-rua-ext {{name}} --template basic
+    mkdir -p ~/.local/share/rua/extensions
+    cp -r /tmp/{{name}} ~/.local/share/rua/extensions/
+    @echo "✓ {{name}} created and installed"
+
+# Run Rua in development mode
+dev:
+    bun run --cwd apps/rua tauri dev

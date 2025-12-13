@@ -22,5 +22,8 @@ export interface ViewContext {
     setActiveIndex: (index: number | ((prev: number) => number)) => void;
     setResultHandleEvent: (value: boolean) => void;
     onQueryActionEnter?: () => void;
+    // Extension input visibility control
+    extensionInputHidden?: boolean;
+    setExtensionInputHidden?: (hidden: boolean) => void;
 }
 

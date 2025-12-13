@@ -10,6 +10,60 @@
 bunx create-rua-ext my-extension
 ```
 
+### 测试扩展
+
+1. **创建扩展**
+   ```bash
+   bunx create-rua-ext my-test-extension
+   cd my-test-extension
+   
+   # 如果选择了 Vite 构建
+   bun install
+   bun run build
+   ```
+
+2. **开发模式预览（推荐）**
+   
+   开发模式允许你在不安装扩展的情况下实时预览：
+   
+   - 打开 Rua 命令面板
+   - 搜索 "Manage Extensions" 或 "扩展管理"
+   - 在 **Development Mode** 区域输入扩展目录的完整路径
+   - 点击 "Start" 按钮
+   - 扩展会以 `[DEV]` 前缀显示在列表中
+   - 修改代码后，点击刷新按钮 🔄 重新加载
+   - 开发完成后点击 "Stop" 停止开发模式
+
+   ```bash
+   # 开发流程示例
+   cd my-test-extension
+   bun run dev          # 启动 Vite 开发服务器（如果使用 Vite）
+   
+   # 在另一个终端
+   bun run build        # 构建后在 Rua 中刷新查看效果
+   ```
+
+3. **安装到 Rua**
+   
+   开发完成后，可以正式安装扩展：
+   - 在 Extension Manager 的安装输入框中输入扩展目录路径
+   - 点击 "Install" 按钮
+   - 扩展会被复制到扩展目录中
+
+4. **扩展目录位置**
+   - Linux: `~/.local/share/rua/extensions/`
+   - macOS: `~/Library/Application Support/rua/extensions/`
+   - Windows: `%APPDATA%/rua/extensions/`
+
+5. **快捷命令**
+   ```bash
+   # 安装示例扩展
+   just install-example-ext
+   
+   # 运行 Rua 开发模式
+   just dev
+   ```
+
 ### 手动创建扩展目录结构
 
 ```
@@ -129,83 +183,137 @@ const action = params.get('action'); // "my-view"
 | `http` | HTTP 请求 |
 | `shell` | Shell 命令执行 |
 
-## Extension API
+## Extension API (window.rua)
 
-### 初始化脚本
+扩展 UI 中可以通过 `window.rua` 访问 Rua API。API 会在 iframe 加载后自动注入。
+
+API 使用 [kkrpc](https://github.com/kunkunsh/kkrpc) 库实现类型安全的 RPC 通信，支持双向调用。
+
+### 等待 API 就绪
 
 ```javascript
-// init.js
-export function activate(api) {
-  console.log(`Extension ${api.pluginId} activated`);
-  
-  // 注册额外的 actions
-  api.registerActions([
-    {
-      id: 'dynamic-action',
-      name: 'Dynamic Action',
-      perform: () => console.log('Hello!'),
-    }
-  ]);
-}
+window.addEventListener('rua-ready', (event) => {
+  console.log('Rua API ready!', event.detail);
+  // 现在可以使用 window.rua
+});
+```
 
-export function deactivate() {
-  console.log('Extension deactivated');
-}
+### 扩展信息
+
+```javascript
+// 获取当前扩展信息
+console.log(window.rua.extension.id);      // "author.my-extension"
+console.log(window.rua.extension.name);    // "My Extension"
+console.log(window.rua.extension.version); // "1.0.0"
 ```
 
 ### Storage API
 
 ```javascript
-// 存储数据
-await api.storage.set('key', { foo: 'bar' });
+// 存储数据（需要 storage 权限）
+await window.rua.storage.set('key', { foo: 'bar' });
 
 // 读取数据
-const data = await api.storage.get('key');
+const data = await window.rua.storage.get('key');
 
 // 删除数据
-await api.storage.remove('key');
-
-// 列出所有键
-const keys = await api.storage.keys();
-
-// 清空所有数据
-await api.storage.clear();
+await window.rua.storage.remove('key');
 ```
 
 ### Notification API
 
 ```javascript
-await api.notification.show({
+// 显示系统通知（需要 notification 权限）
+await window.rua.notification.show({
   title: 'Hello',
-  body: 'This is a notification',
-  icon: '/path/to/icon.png'
+  body: 'This is a notification'
 });
 ```
 
 ### Clipboard API
 
 ```javascript
-// 读取剪贴板
-const text = await api.clipboard.read();
+// 读取剪贴板（需要 clipboard 权限）
+const text = await window.rua.clipboard.read();
 
 // 写入剪贴板
-await api.clipboard.write('Hello, World!');
+await window.rua.clipboard.write('Hello, World!');
+```
+
+### UI Control API
+
+```javascript
+// 隐藏主界面搜索框
+await window.rua.ui.hideInput();
+
+// 显示主界面搜索框
+await window.rua.ui.showInput();
+
+// 关闭扩展视图，返回主界面
+await window.rua.ui.close();
+
+// 设置扩展标题
+await window.rua.ui.setTitle('New Title');
+```
+
+### Dynamic Actions API
+
+```javascript
+// 动态注册 Actions（会出现在命令面板中）
+await window.rua.actions.register([
+  {
+    id: 'dynamic-action',
+    name: 'Dynamic Action',
+    keywords: ['dynamic', 'action'],
+    icon: 'tabler:sparkles',
+    subtitle: 'A dynamically registered action',
+    mode: 'view'
+  }
+]);
+
+// 取消注册 Actions
+await window.rua.actions.unregister(['dynamic-action']);
 ```
 
 ### Event API
 
 ```javascript
 // 监听事件
-api.on('some-event', (data) => {
+window.rua.on('some-event', (data) => {
   console.log('Event received:', data);
 });
 
-// 发送事件
-api.emit('some-event', { foo: 'bar' });
-
 // 取消监听
-api.off('some-event', handler);
+window.rua.off('some-event', handler);
 ```
+
+## 初始化脚本 (init.js)
+
+初始化脚本在扩展 UI 加载时执行，可用于注册动态 Actions：
+
+```javascript
+// init.js
+window.addEventListener('rua-ready', async (event) => {
+  console.log('Extension loaded:', event.detail);
+  
+  // 注册动态 Actions
+  await window.rua.actions.register([
+    {
+      id: 'my-dynamic-action',
+      name: 'My Dynamic Action',
+      mode: 'view'
+    }
+  ]);
+});
+```
+
+## 开发模式热重载
+
+在开发模式下，修改扩展文件会自动刷新扩展视图：
+
+1. 在 Extension Manager 中启动开发模式
+2. 修改扩展文件（HTML、JS、CSS 等）
+3. 扩展视图会自动刷新，无需手动操作
 
 ## 示例扩展
 

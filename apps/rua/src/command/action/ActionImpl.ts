@@ -36,6 +36,7 @@ export class ActionImpl implements Action {
     badge?: Action["badge"];
     disableSearchFocus?: Action["disableSearchFocus"];
     hideSearchBox?: Action["hideSearchBox"];
+    uiEntry?: Action["uiEntry"];
     /**
      * @deprecated use action.command.perform
      */

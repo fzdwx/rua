@@ -1,5 +1,9 @@
 mod applications;
 mod clipboard;
+mod extensions;
+mod extension_storage;
+mod file_watcher;
+mod notification;
 mod proxy;
 mod control_server;
 mod shell_executor;
@@ -58,6 +62,21 @@ pub fn run() {
             shell_executor::execute_shell_command,
             shell_executor::execute_shell_command_async,
             webpage_info::fetch_page_info,
+            extensions::get_extensions,
+            extensions::install_extension,
+            extensions::uninstall_extension,
+            extensions::enable_extension,
+            extensions::disable_extension,
+            extensions::get_extensions_path,
+            extensions::load_dev_extension,
+            file_watcher::watch_directory,
+            file_watcher::stop_watching,
+            file_watcher::is_watching,
+            file_watcher::get_watched_path,
+            notification::show_notification,
+            extension_storage::extension_storage_get,
+            extension_storage::extension_storage_set,
+            extension_storage::extension_storage_remove,
             #[cfg(target_os = "linux")]
             hyprland::focus_window_hyprland,
             #[cfg(target_os = "linux")]
