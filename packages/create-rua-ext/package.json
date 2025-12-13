@@ -9,10 +9,10 @@
   "main": "./dist/index.js",
   "files": [
     "dist",
-    "templates"
+    "src/templates"
   ],
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target node",
+    "build": "bun build src/index.ts --outdir dist --target node && cp -r src/templates dist/",
     "dev": "bun run src/index.ts"
   },
   "keywords": [
@@ -30,11 +30,13 @@
   },
   "dependencies": {
     "prompts": "^2.4.2",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "handlebars": "^4.7.8"
   },
   "devDependencies": {
     "@types/prompts": "^2.4.9",
     "@types/node": "^24.9.1",
+    "@types/handlebars": "^4.1.0",
     "typescript": "~5.8.3"
   }
 }

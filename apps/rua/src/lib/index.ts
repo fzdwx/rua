@@ -1,16 +1,15 @@
-// Legacy API bridge (kept for compatibility)
-export * from './api-bridge';
-
-// Extension server API (tauri-api-adapter + Rua-specific)
+// Extension server API
 export {
   createExtensionServerAPI,
   createRuaAPI,
-  mapRuaPermissionsToTauriPermissions,
   type ExtensionServerAPI,
   type RuaAPI,
-  type RuaHostCallbacks,
-  type ExtensionHostInfo,
-  type DynamicAction,
-  type ExtensionMeta,
-  type NotificationOptions,
 } from './extension-server-api';
+
+// Re-export shared types from rua-api
+export type {
+  RuaHostCallbacks,
+  ExtensionHostInfo,
+  DynamicAction,
+  ExtensionMeta,
+} from 'rua-api';

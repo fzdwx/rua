@@ -1,169 +1,147 @@
 /**
  * Rua Extension API
- * 
+ *
  * Provides the window.rua API for extensions running in iframes.
- * Uses tauri-api-adapter for Tauri API access and kkrpc for communication.
+ * Uses kkrpc for communication with the host application.
  */
 
 import { IframeChildIO, RPCChannel } from 'kkrpc/browser';
-// Re-export tauri-api-adapter iframe APIs for direct use
-export { clipboard, dialog, fetch, fs, notification, os, shell, sysInfo, network } from 'tauri-api-adapter/iframe';
+import type { RuaClientAPI, RuaServerAPI, EventHandler as RuaEventHandler } from '../types/rua';
 
-/** Extension metadata */
-export interface ExtensionMeta {
-  id: string;
-  name: string;
-  version: string;
-}
+// Re-export types for convenience
+export type { ExtensionMeta, DynamicAction, RuaClientAPI as RuaAPI } from '../types/rua';
+export type { RuaClientAPI } from '../types/rua';
 
-/** Notification options */
-export interface NotificationOptions {
-  title: string;
-  body?: string;
-}
+/** Event handler type (local alias) */
+type EventHandler = RuaEventHandler;
 
-/** Dynamic action definition */
-export interface DynamicAction {
-  id: string;
-  name: string;
-  keywords?: string[];
-  icon?: string;
-  subtitle?: string;
-  mode: 'view' | 'command';
-}
-
-/** Event handler type */
-type EventHandler = (data: unknown) => void;
-
-/**
- * Rua-specific API (UI control, storage, actions)
- */
-export interface RuaAPI {
-  extension: ExtensionMeta;
-
-  storage: {
-    get<T>(key: string): Promise<T | null>;
-    set<T>(key: string, value: T): Promise<void>;
-    remove(key: string): Promise<void>;
-  };
-
-  ui: {
-    hideInput(): Promise<void>;
-    showInput(): Promise<void>;
-    close(): Promise<void>;
-    setTitle(title: string): Promise<void>;
-  };
-
-  actions: {
-    register(actions: DynamicAction[]): Promise<void>;
-    unregister(actionIds: string[]): Promise<void>;
-  };
-
-  on(event: string, handler: EventHandler): void;
-  off(event: string, handler: EventHandler): void;
-}
+// Singleton instance
+let ruaInstance: RuaClientAPI | null = null;
+let initPromise: Promise<RuaClientAPI> | null = null;
 
 // Extend Window interface
 declare global {
   interface Window {
-    rua?: RuaAPI;
+    rua?: RuaClientAPI;
   }
 }
 
 /**
- * Initialize the Rua-specific API for an extension
- * Note: For Tauri APIs (clipboard, fs, etc.), use the re-exported APIs from tauri-api-adapter
+ * Initialize the Rua API for an extension
+ * All APIs are accessed through the returned rua object
+ * 
+ * Extension info (id, name, version) is automatically fetched from the host
+ *
+ * This function is idempotent - calling it multiple times returns the same instance
  */
-export async function initializeRuaAPI(extensionMeta: ExtensionMeta): Promise<RuaAPI> {
-  // Event handlers map
-  const eventHandlers = new Map<string, EventHandler[]>();
+export async function initializeRuaAPI(): Promise<RuaClientAPI> {
+  // Return existing instance if already initialized
+  if (ruaInstance) {
+    return ruaInstance;
+  }
 
-  // Create kkrpc IO and channel
-  const io = new IframeChildIO();
-  const rpc = new RPCChannel(io, {
-    expose: {
-      onActionTriggered: async (actionId: string, context: unknown) => {
-        const handlers = eventHandlers.get('action-triggered') || [];
-        handlers.forEach((handler) => {
+  // Return existing promise if initialization is in progress
+  if (initPromise) {
+    return initPromise;
+  }
+
+  // Create initialization promise
+  initPromise = (async () => {
+    // Event handlers map
+    const eventHandlers = new Map<string, EventHandler[]>();
+
+    // Create kkrpc IO and channel
+    const io = new IframeChildIO();
+    const rpc = new RPCChannel(io, {
+      expose: {
+        onActionTriggered: async (actionId: string, context: unknown) => {
+          const handlers = eventHandlers.get('action-triggered') || [];
+          handlers.forEach((handler) => {
+            try {
+              handler({ actionId, context });
+            } catch (e) {
+              console.error('[Rua API] Event handler error:', e);
+            }
+          });
+        },
+      },
+    });
+
+    // Get the host API proxy
+    const hostAPI = rpc.getAPI() as RuaServerAPI;
+
+    // Get extension info from host (read from manifest)
+    const extensionMeta = await hostAPI.getExtensionInfo();
+    console.log('[Rua API] Extension info from host:', extensionMeta);
+
+    // Define the Rua API
+    const ruaAPI: RuaClientAPI = {
+      extension: extensionMeta,
+
+      clipboard: {
+        readText: () => hostAPI.clipboardReadText(),
+        writeText: (text) => hostAPI.clipboardWriteText(text),
+      },
+
+      notification: {
+        show: (options) => hostAPI.notificationShow(options),
+      },
+
+      storage: {
+        get: async (key) => {
+          const value = await hostAPI.storageGet(key);
+          if (value === null || value === undefined) return null;
           try {
-            handler({ actionId, context });
-          } catch (e) {
-            console.error('[Rua API] Event handler error:', e);
+            return JSON.parse(value);
+          } catch {
+            return value as never;
           }
-        });
+        },
+        set: (key, value) => hostAPI.storageSet(key, JSON.stringify(value)),
+        remove: (key) => hostAPI.storageRemove(key),
       },
-    },
-  });
 
-  // Get the host API proxy (Rua-specific methods)
-  const hostAPI = rpc.getAPI() as {
-    getExtensionInfo(): Promise<ExtensionMeta>;
-    storageGet(key: string): Promise<string | null>;
-    storageSet(key: string, value: string): Promise<void>;
-    storageRemove(key: string): Promise<void>;
-    uiHideInput(): Promise<void>;
-    uiShowInput(): Promise<void>;
-    uiClose(): Promise<void>;
-    uiSetTitle(title: string): Promise<void>;
-    actionsRegister(actions: DynamicAction[]): Promise<void>;
-    actionsUnregister(actionIds: string[]): Promise<void>;
-  };
+      ui: {
+        hideInput: () => hostAPI.uiHideInput(),
+        showInput: () => hostAPI.uiShowInput(),
+        close: () => hostAPI.uiClose(),
+        setTitle: (title) => hostAPI.uiSetTitle(title),
+      },
 
-  // Define the Rua-specific API
-  const ruaAPI: RuaAPI = {
-    extension: extensionMeta,
+      actions: {
+        register: (actions) => hostAPI.actionsRegister(actions),
+        unregister: (actionIds) => hostAPI.actionsUnregister(actionIds),
+      },
 
-    storage: {
-      get: async (key) => {
-        const value = await hostAPI.storageGet(key);
-        if (value === null || value === undefined) return null;
-        try {
-          return JSON.parse(value);
-        } catch {
-          return value as never;
+      on: (event, handler) => {
+        if (!eventHandlers.has(event)) {
+          eventHandlers.set(event, []);
+        }
+        eventHandlers.get(event)!.push(handler);
+      },
+
+      off: (event, handler) => {
+        const handlers = eventHandlers.get(event);
+        if (handlers) {
+          const index = handlers.indexOf(handler);
+          if (index > -1) {
+            handlers.splice(index, 1);
+          }
         }
       },
-      set: (key, value) => hostAPI.storageSet(key, JSON.stringify(value)),
-      remove: (key) => hostAPI.storageRemove(key),
-    },
+    };
 
-    ui: {
-      hideInput: () => hostAPI.uiHideInput(),
-      showInput: () => hostAPI.uiShowInput(),
-      close: () => hostAPI.uiClose(),
-      setTitle: (title) => hostAPI.uiSetTitle(title),
-    },
+    // Set on window and store singleton
+    window.rua = ruaAPI;
+    ruaInstance = ruaAPI;
 
-    actions: {
-      register: (actions) => hostAPI.actionsRegister(actions),
-      unregister: (actionIds) => hostAPI.actionsUnregister(actionIds),
-    },
+    // Dispatch ready event
+    window.dispatchEvent(new CustomEvent('rua-ready', { detail: ruaAPI.extension }));
 
-    on: (event, handler) => {
-      if (!eventHandlers.has(event)) {
-        eventHandlers.set(event, []);
-      }
-      eventHandlers.get(event)!.push(handler);
-    },
+    console.log('[Rua API] Initialized for extension:', ruaAPI.extension.id);
 
-    off: (event, handler) => {
-      const handlers = eventHandlers.get(event);
-      if (handlers) {
-        const index = handlers.indexOf(handler);
-        if (index > -1) {
-          handlers.splice(index, 1);
-        }
-      }
-    },
-  };
+    return ruaAPI;
+  })();
 
-  // Set on window
-  window.rua = ruaAPI;
-
-  // Dispatch ready event
-  window.dispatchEvent(new CustomEvent('rua-ready', { detail: extensionMeta }));
-
-  console.log('[Rua API] Initialized for extension:', extensionMeta.id);
-
-  return ruaAPI;
+  return initPromise;
 }

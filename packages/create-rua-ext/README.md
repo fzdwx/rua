@@ -2,6 +2,16 @@
 
 CLI tool to scaffold Rua extension projects with support for various build tools and UI frameworks.
 
+## Features
+
+- 🎯 **Template-based generation** - Each file is a separate template for easy maintenance
+- 🚀 **Multiple frameworks** - React, Vue, Svelte, or vanilla JS
+- ⚡ **Vite integration** - Fast development with HMR
+- 🎨 **Styling options** - None, Tailwind CSS, or shadcn/ui
+- 🔧 **Flexible permissions** - Choose only the APIs you need
+- 📦 **Package manager choice** - npm, bun, pnpm, or yarn
+- 🛠️ **Modern tooling** - TypeScript, ESM, and latest dependencies
+
 ## Usage
 
 ```bash
@@ -36,7 +46,11 @@ The CLI will ask you for:
    - **Svelte** - Svelte with TypeScript
 7. **Package Manager** (when using Vite):
    - npm / bun / pnpm / yarn
-8. **Permissions**:
+8. **Styling** (when using Vite for UI extensions):
+   - **None** - No CSS framework
+   - **Tailwind CSS** - Utility-first CSS framework
+   - **shadcn/ui** - Tailwind + shadcn/ui components
+9. **Permissions**:
    - `clipboard` - Read/write clipboard
    - `notification` - Show system notifications
    - `storage` - Local storage access
@@ -72,6 +86,28 @@ my-extension/
 └── README.md
 ```
 
+### Vite + React + shadcn/ui Template
+
+```
+my-extension/
+├── manifest.json
+├── package.json
+├── vite.config.ts
+├── tsconfig.json
+├── tailwind.config.ts
+├── postcss.config.ts
+├── components.json
+├── index.html
+├── src/
+│   ├── main.ts
+│   ├── App.tsx
+│   ├── init.ts
+│   ├── style.css
+│   └── lib/
+│       └── utils.ts
+└── README.md
+```
+
 ### Command Template
 
 ```
@@ -87,17 +123,27 @@ my-extension/
 
 ## Using rua-api
 
-When using Vite templates, `rua-api` is automatically added as a dependency. You can import types and utilities:
+All templates include `rua-api` for extension functionality. The API is initialized automatically:
 
 ```typescript
-import type { PluginAPI, PluginManifest } from 'rua-api'
-import { usePluginContext, usePluginAPI } from 'rua-api'
+import { initializeRuaAPI } from 'rua-api/browser'
 
-export function activate(api: PluginAPI) {
-  // Use the extension API
-  api.storage.set('key', 'value')
-  api.notification.show({ title: 'Hello!' })
-}
+// Initialize the API (extension info fetched from host)
+const rua = await initializeRuaAPI()
+
+// Use extension APIs
+await rua.clipboard.writeText('Hello!')
+await rua.notification.show({ title: 'Hello!', body: 'From extension' })
+await rua.storage.set('key', 'value')
+await rua.ui.close()
+
+// Register dynamic actions
+await rua.actions.register([{
+  id: 'my-action',
+  name: 'My Action',
+  mode: 'view',
+  keywords: ['hello']
+}])
 ```
 
 ## Example
@@ -114,6 +160,7 @@ $ bunx create-rua-ext
 ✔ Build tool: › Vite
 ✔ UI Framework: › React
 ✔ Package manager: › bun
+✔ Styling: › shadcn/ui
 ✔ Permissions: › storage, notification
 
 Creating extension in /path/to/my-extension...
@@ -123,15 +170,38 @@ Creating extension in /path/to/my-extension...
 Next steps:
   cd my-extension
   bun install
+  npx shadcn@latest add button card badge separator
   bun dev
 ```
+
+## Template System
+
+Templates are stored in `src/templates/` and use Handlebars for variable substitution:
+
+- `manifest.json.template` - Extension manifest
+- `package.json.template` - Package configuration
+- `vite.config.ts.template` - Vite configuration
+- `src/App.tsx.template` - React component template
+- `src/App.vue.template` - Vue component template
+- `src/App.svelte.template` - Svelte component template
+- `src/init.ts.template` - Extension initialization
+- `src/style.css.template` - Base styles
+- `README.md.template` - Project documentation
+
+Each template receives a context object with configuration flags and values.
 
 ## Development
 
 ```bash
-# Build the CLI
+# Install dependencies
+bun install
+
+# Build the CLI (includes copying templates)
 bun run build
 
 # Run in development
 bun run dev
+
+# Test template generation
+node test-template.js
 ```

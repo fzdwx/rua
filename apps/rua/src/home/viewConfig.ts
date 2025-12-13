@@ -138,12 +138,22 @@ export function createViewConfigs(
             getProps: (context) => {
                 // Get extension info from the current root action
                 // Note: currentRootAction comes from allActions which includes uiEntry
+                // pluginId is stored in item.pluginId
                 const action = context.currentRootAction as any;
-                console.log('[ExtensionView] action:', action, 'uiEntry:', action?.uiEntry);
+                // Try to get pluginId from item, or extract from action id (format: pluginId.actionName)
+                let pluginId = action?.item?.pluginId;
+                if (!pluginId && action?.id) {
+                    // Extract pluginId from action id (e.g., "fzdwx.hello-word.main" -> "fzdwx.hello-word")
+                    const parts = action.id.split('.');
+                    if (parts.length >= 2) {
+                        pluginId = parts.slice(0, -1).join('.');
+                    }
+                }
+                console.log('[ExtensionView] action:', action, 'uiEntry:', action?.uiEntry, 'pluginId:', pluginId);
                 return {
                     uiEntry: action?.uiEntry || '',
                     extensionName: action?.name || 'Extension',
-                    extensionId: action?.pluginId,
+                    extensionId: pluginId,
                     onReturn: () => {
                         // Reset input visibility when closing
                         context.setExtensionInputHidden?.(false);

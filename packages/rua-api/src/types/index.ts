@@ -51,3 +51,14 @@ export type {
 export {
   REGISTRY_STATE_VERSION,
 } from './registry';
+
+// Rua extension API types
+export type {
+  ExtensionMeta,
+  DynamicAction,
+  EventHandler as RuaEventHandler,
+  RuaClientAPI,
+  RuaServerAPI,
+  RuaHostCallbacks,
+  ExtensionHostInfo,
+} from './rua';

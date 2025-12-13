@@ -2,17 +2,21 @@
  * Rua Extension Browser API
  * 
  * This module provides the browser-side API for extensions running in iframes.
- * Uses tauri-api-adapter for Tauri API access and kkrpc for communication.
+ * Uses kkrpc for communication with the host application.
+ * 
+ * Usage:
+ *   const rua = await initializeRuaAPI({ id, name, version })
+ *   await rua.clipboard.readText()
+ *   await rua.notification.show({ title: 'Hello' })
+ *   await rua.storage.set('key', value)
  */
 
-export { 
-  initializeRuaAPI, 
-  type RuaAPI, 
-  type ExtensionMeta, 
-  type DynamicAction,
-  // Rename to avoid conflict with types/api.ts
-  type NotificationOptions as RuaNotificationOptions,
-} from './rua-api';
+export { initializeRuaAPI } from './rua-api';
 
-// Re-export tauri-api-adapter iframe APIs for convenience
-export { clipboard, dialog, fetch, fs, notification, os, shell, sysInfo, network } from 'tauri-api-adapter/iframe';
+// Re-export types
+export type { 
+  RuaAPI, 
+  RuaClientAPI,
+  ExtensionMeta, 
+  DynamicAction,
+} from './rua-api';

@@ -9,11 +9,8 @@ import { initializeRuaAPI } from 'rua-api/browser'
 // Initialize when the extension loads
 async function init() {
   try {
-    const rua = await initializeRuaAPI({
-      id: 'fzdwx.hello-word',
-      name: 'hello-word',
-      version: '0.1.0'
-    })
+    // Extension info is automatically fetched from host
+    const rua = await initializeRuaAPI()
 
     console.log(`[${rua.extension.id}] Extension initialized!`)
 

@@ -11,8 +11,13 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import prompts from 'prompts';
 import pc from 'picocolors';
+import Handlebars from 'handlebars';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface ExtensionConfig {
   name: string;
@@ -23,6 +28,7 @@ interface ExtensionConfig {
   packageManager: 'npm' | 'bun' | 'pnpm' | 'yarn';
   buildTool: 'vite' | 'none';
   framework: 'none' | 'react' | 'vue' | 'svelte';
+  styling: 'none' | 'tailwind' | 'shadcn';
   permissions: string[];
 }
 
@@ -60,6 +66,12 @@ const FRAMEWORKS = [
   { title: 'Svelte', value: 'svelte', description: 'Svelte with TypeScript' },
 ];
 
+const STYLING_OPTIONS = [
+  { title: 'None', value: 'none', description: 'No CSS framework' },
+  { title: 'Tailwind CSS', value: 'tailwind', description: 'Utility-first CSS framework' },
+  { title: 'shadcn/ui', value: 'shadcn', description: 'Tailwind + shadcn/ui components' },
+];
+
 const PERMISSIONS = [
   { title: 'Clipboard', value: 'clipboard', description: 'Read/write clipboard' },
   { title: 'Notification', value: 'notification', description: 'Show system notifications' },
@@ -68,7 +80,6 @@ const PERMISSIONS = [
   { title: 'Shell', value: 'shell', description: 'Execute shell commands' },
 ];
 
-
 function toKebabCase(str: string): string {
   return str
     .toLowerCase()
@@ -76,426 +87,200 @@ function toKebabCase(str: string): string {
     .replace(/^-|-$/g, '');
 }
 
-function generateManifest(config: ExtensionConfig): string {
+function getTemplatesDir(): string {
+  // In development, templates are in src/templates
+  // In production, they should be in the same directory as the built JS
+  const devTemplatesDir = path.join(__dirname, '../src/templates');
+  const prodTemplatesDir = path.join(__dirname, 'templates');
+  
+  if (fs.existsSync(devTemplatesDir)) {
+    return devTemplatesDir;
+  }
+  return prodTemplatesDir;
+}
+
+function renderTemplate(templatePath: string, context: any): string {
+  const templateContent = fs.readFileSync(templatePath, 'utf-8');
+  const template = Handlebars.compile(templateContent);
+  return template(context);
+}
+
+function createTemplateContext(config: ExtensionConfig) {
+  const kebabName = toKebabCase(config.name);
   const hasUI = config.template !== 'command';
-  const manifest: Record<string, unknown> = {
-    id: config.id,
+  const useVite = config.buildTool === 'vite';
+  const pmRun = config.packageManager === 'npm' ? 'npm run' : config.packageManager;
+
+  return {
+    // Basic info
     name: config.name,
-    version: '0.1.0',
+    id: config.id,
     description: config.description,
     author: config.author,
-    rua: {
-      engineVersion: '^0.1.0',
-      ui: hasUI ? { entry: config.buildTool === 'vite' ? 'dist/index.html' : 'index.html' } : undefined,
-      init: config.buildTool === 'vite' ? 'dist/init.js' : 'init.js',
-      actions: [] as Array<Record<string, unknown>>,
-    },
-    permissions: config.permissions.length > 0 ? config.permissions : undefined,
+    kebabName,
+    
+    // Template flags
+    isViewExtension: config.template === 'basic' || config.template === 'view',
+    isCommandExtension: config.template === 'command',
+    hasUI,
+    
+    // Build tool flags
+    useVite,
+    useVanilla: config.framework === 'none',
+    useReact: config.framework === 'react',
+    useVue: config.framework === 'vue',
+    useSvelte: config.framework === 'svelte',
+    hasPlugins: config.framework !== 'none',
+    
+    // Styling flags
+    useTailwind: config.styling === 'tailwind' || config.styling === 'shadcn',
+    useShadcn: config.styling === 'shadcn',
+    useNoStyling: config.styling === 'none',
+    
+    // Package manager
+    packageManager: config.packageManager,
+    pmRun,
+    
+    // Permissions
+    permissions: config.permissions,
+    hasPermissions: config.permissions.length > 0,
+    hasClipboard: config.permissions.includes('clipboard'),
+    hasNotification: config.permissions.includes('notification'),
+    hasStorage: config.permissions.includes('storage'),
+    hasHttp: config.permissions.includes('http'),
+    hasShell: config.permissions.includes('shell'),
+    
+    // File paths
+    uiEntry: useVite ? 'dist/index.html' : 'index.html',
+    initEntry: useVite ? 'dist/init.js' : 'init.js',
+    commandScript: useVite ? 'dist/commands/run.js' : 'commands/run.js',
+    scriptSrc: useVite ? '/src/main.ts' : 'main.js',
+    scriptType: useVite ? 'module' : 'text/javascript',
   };
-
-  const actions = manifest.rua as { actions: Array<Record<string, unknown>> };
-  
-  if (config.template === 'basic' || config.template === 'view') {
-    actions.actions.push({
-      name: 'main',
-      title: config.name,
-      mode: 'view',
-      keywords: [toKebabCase(config.name)],
-      icon: 'tabler:star',
-      subtitle: config.description,
-    });
-  }
-
-  if (config.template === 'command') {
-    actions.actions.push({
-      name: 'run',
-      title: `Run ${config.name}`,
-      mode: 'command',
-      keywords: ['run', 'execute'],
-      icon: 'tabler:player-play',
-      subtitle: 'Execute the command',
-      script: config.buildTool === 'vite' ? 'dist/commands/run.js' : 'commands/run.js',
-    });
-  }
-
-  if (!(manifest.rua as Record<string, unknown>).ui) {
-    delete (manifest.rua as Record<string, unknown>).ui;
-  }
-  if (!manifest.permissions) {
-    delete manifest.permissions;
-  }
-
-  return JSON.stringify(manifest, null, 2);
 }
-
-function generatePackageJson(config: ExtensionConfig): string {
-  const pkg: Record<string, unknown> = {
-    name: config.id,
-    version: '0.1.0',
-    private: true,
-    type: 'module',
-    scripts: {} as Record<string, string>,
-    dependencies: {} as Record<string, string>,
-    devDependencies: {} as Record<string, string>,
-  };
-
-  const scripts = pkg.scripts as Record<string, string>;
-  const deps = pkg.dependencies as Record<string, string>;
-  const devDeps = pkg.devDependencies as Record<string, string>;
-
-  // Add rua-api
-  deps['rua-api'] = '^0.1.0';
-
-  if (config.buildTool === 'vite') {
-    scripts.dev = 'vite';
-    scripts.build = 'vite build';
-    scripts.preview = 'vite preview';
-    devDeps['vite'] = '^6.0.0';
-    devDeps['typescript'] = '^5.8.0';
-
-    if (config.framework === 'react') {
-      deps['react'] = '^19.0.0';
-      deps['react-dom'] = '^19.0.0';
-      devDeps['@vitejs/plugin-react'] = '^4.0.0';
-      devDeps['@types/react'] = '^19.0.0';
-      devDeps['@types/react-dom'] = '^19.0.0';
-    } else if (config.framework === 'vue') {
-      deps['vue'] = '^3.5.0';
-      devDeps['@vitejs/plugin-vue'] = '^5.0.0';
-      devDeps['vue-tsc'] = '^2.0.0';
-    } else if (config.framework === 'svelte') {
-      deps['svelte'] = '^5.0.0';
-      devDeps['@sveltejs/vite-plugin-svelte'] = '^4.0.0';
-    }
-  }
-
-  return JSON.stringify(pkg, null, 2);
-}
-
-function generateViteConfig(config: ExtensionConfig): string {
-  let plugins = '';
-  let imports = '';
-
-  if (config.framework === 'react') {
-    imports = `import react from '@vitejs/plugin-react'`;
-    plugins = 'react()';
-  } else if (config.framework === 'vue') {
-    imports = `import vue from '@vitejs/plugin-vue'`;
-    plugins = 'vue()';
-  } else if (config.framework === 'svelte') {
-    imports = `import { svelte } from '@sveltejs/vite-plugin-svelte'`;
-    plugins = 'svelte()';
-  }
-
-  return `import { defineConfig } from 'vite'
-${imports}
-
-export default defineConfig({
-  ${plugins ? `plugins: [${plugins}],` : ''}
-  build: {
-    outDir: 'dist',
-    emptyDirBeforeWrite: true,
-    rollupOptions: {
-      input: {
-        main: 'index.html',
-        init: 'src/init.ts',
-      },
-      output: {
-        entryFileNames: '[name].js',
-      },
-    },
-  },
-})
-`;
-}
-
-function generateTsConfig(config: ExtensionConfig): string {
-  const compilerOptions: Record<string, unknown> = {
-    target: 'ES2022',
-    module: 'ESNext',
-    moduleResolution: 'bundler',
-    strict: true,
-    esModuleInterop: true,
-    skipLibCheck: true,
-    noEmit: true,
-  };
-
-  if (config.framework === 'react') {
-    compilerOptions.jsx = 'react-jsx';
-  }
-
-  return JSON.stringify({ compilerOptions, include: ['src'] }, null, 2);
-}
-
-function generateIndexHtml(config: ExtensionConfig): string {
-  const scriptSrc = config.buildTool === 'vite' ? '/src/main.ts' : 'main.js';
-  const scriptType = config.buildTool === 'vite' ? 'module' : 'text/javascript';
-  
-  let rootElement = '<div id="app"></div>';
-  if (config.framework === 'react') {
-    rootElement = '<div id="root"></div>';
-  }
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${config.name}</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: transparent;
-    }
-    #app, #root { padding: 16px; }
-  </style>
-</head>
-<body>
-  ${rootElement}
-  <script type="${scriptType}" src="${scriptSrc}"></script>
-</body>
-</html>`;
-}
-
-
-function generateMainTs(config: ExtensionConfig): string {
-  if (config.framework === 'react') {
-    return `import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './style.css'
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
-`;
-  }
-
-  if (config.framework === 'vue') {
-    return `import { createApp } from 'vue'
-import App from './App.vue'
-import './style.css'
-
-createApp(App).mount('#app')
-`;
-  }
-
-  if (config.framework === 'svelte') {
-    return `import App from './App.svelte'
-import './style.css'
-
-const app = new App({
-  target: document.getElementById('app')!,
-})
-
-export default app
-`;
-  }
-
-  // Vanilla
-  return `import './style.css'
-
-// Get the current action from URL params
-const params = new URLSearchParams(window.location.search)
-const action = params.get('action')
-
-const app = document.getElementById('app')!
-app.innerHTML = \`
-  <h1>${config.name}</h1>
-  <p>Current action: \${action || 'none'}</p>
-\`
-`;
-}
-
-function generateAppComponent(config: ExtensionConfig): string {
-  if (config.framework === 'react') {
-    return `import { usePluginContext } from 'rua-api'
-
-function App() {
-  const params = new URLSearchParams(window.location.search)
-  const action = params.get('action')
-
-  return (
-    <div className="container">
-      <h1>${config.name}</h1>
-      <p>Current action: {action || 'none'}</p>
-    </div>
-  )
-}
-
-export default App
-`;
-  }
-
-  if (config.framework === 'vue') {
-    return `<script setup lang="ts">
-const params = new URLSearchParams(window.location.search)
-const action = params.get('action')
-</script>
-
-<template>
-  <div class="container">
-    <h1>${config.name}</h1>
-    <p>Current action: {{ action || 'none' }}</p>
-  </div>
-</template>
-
-<style scoped>
-.container {
-  padding: 16px;
-}
-</style>
-`;
-  }
-
-  if (config.framework === 'svelte') {
-    return `<script lang="ts">
-  const params = new URLSearchParams(window.location.search)
-  const action = params.get('action')
-</script>
-
-<div class="container">
-  <h1>${config.name}</h1>
-  <p>Current action: {action || 'none'}</p>
-</div>
-
-<style>
-  .container {
-    padding: 16px;
-  }
-</style>
-`;
-  }
-
-  return '';
-}
-
-function generateStyleCss(): string {
-  return `* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #333;
-  background: transparent;
-}
-
-.container {
-  padding: 16px;
-}
-
-h1 {
-  font-size: 20px;
-  margin-bottom: 8px;
-}
-
-p {
-  color: #666;
-  font-size: 14px;
-}
-
-@media (prefers-color-scheme: dark) {
-  body { color: #fff; }
-  p { color: #aaa; }
-}
-`;
-}
-
-function generateInitTs(config: ExtensionConfig): string {
-  return `/**
- * ${config.name} - Initialization Script
- */
-import type { PluginAPI } from 'rua-api'
-
-export function activate(api: PluginAPI) {
-  console.log(\`[\${api.pluginId}] Extension activated!\`)
-  ${config.permissions.includes('storage') ? `
-  api.storage.set('lastActivated', new Date().toISOString())
-    .catch(err => console.error('Failed to store:', err))` : ''}
-}
-
-export function deactivate() {
-  console.log('[${config.id}] Extension deactivated!')
-}
-`;
-}
-
-function generateReadme(config: ExtensionConfig): string {
-  const pmRun = config.packageManager === 'npm' ? 'npm run' : config.packageManager;
-  
-  return `# ${config.name}
-
-${config.description}
-
-## Development
-
-\`\`\`bash
-# Install dependencies
-${config.packageManager} install
-
-${config.buildTool === 'vite' ? `# Start dev server
-${pmRun} dev
-
-# Build for production
-${pmRun} build
-` : '# No build step required'}
-\`\`\`
-
-## Installation
-
-${config.buildTool === 'vite' 
-  ? '1. Run \`' + pmRun + ' build\` to build the extension\n2. Copy the entire folder to your Rua extensions directory'
-  : '1. Copy this folder to your Rua extensions directory'}
-3. Enable the extension in the Extension Manager
-
-## Permissions
-
-${config.permissions.length > 0 
-  ? config.permissions.map(p => `- \`${p}\``).join('\n')
-  : 'No special permissions required.'}
-
-## License
-
-MIT
-`;
-}
-
 
 async function createExtension(targetDir: string, config: ExtensionConfig) {
+  const templatesDir = getTemplatesDir();
+  const context = createTemplateContext(config);
+  
   fs.mkdirSync(targetDir, { recursive: true });
 
-  // Write manifest.json
-  fs.writeFileSync(path.join(targetDir, 'manifest.json'), generateManifest(config));
+  // Create manifest.json
+  const manifestTemplate = path.join(templatesDir, 'manifest.json.template');
+  const manifestContent = renderTemplate(manifestTemplate, context);
+  fs.writeFileSync(path.join(targetDir, 'manifest.json'), manifestContent);
+
+  // Create .gitignore
+  const gitignoreTemplate = path.join(templatesDir, '.gitignore.template');
+  const gitignoreContent = renderTemplate(gitignoreTemplate, context);
+  fs.writeFileSync(path.join(targetDir, '.gitignore'), gitignoreContent);
+
+  // Create README.md
+  const readmeTemplate = path.join(templatesDir, 'README.md.template');
+  const readmeContent = renderTemplate(readmeTemplate, context);
+  fs.writeFileSync(path.join(targetDir, 'README.md'), readmeContent);
 
   if (config.buildTool === 'vite') {
     // Vite project structure
     fs.mkdirSync(path.join(targetDir, 'src'), { recursive: true });
     
-    fs.writeFileSync(path.join(targetDir, 'package.json'), generatePackageJson(config));
-    fs.writeFileSync(path.join(targetDir, 'vite.config.ts'), generateViteConfig(config));
-    fs.writeFileSync(path.join(targetDir, 'tsconfig.json'), generateTsConfig(config));
-    fs.writeFileSync(path.join(targetDir, 'index.html'), generateIndexHtml(config));
-    fs.writeFileSync(path.join(targetDir, 'src/main.ts'), generateMainTs(config));
-    fs.writeFileSync(path.join(targetDir, 'src/style.css'), generateStyleCss());
-    fs.writeFileSync(path.join(targetDir, 'src/init.ts'), generateInitTs(config));
+    // package.json
+    const packageTemplate = path.join(templatesDir, 'package.json.template');
+    const packageContent = renderTemplate(packageTemplate, context);
+    fs.writeFileSync(path.join(targetDir, 'package.json'), packageContent);
+    
+    // vite.config.ts
+    const viteConfigTemplate = path.join(templatesDir, 'vite.config.ts.template');
+    const viteConfigContent = renderTemplate(viteConfigTemplate, context);
+    fs.writeFileSync(path.join(targetDir, 'vite.config.ts'), viteConfigContent);
+    
+    // tsconfig.json
+    const tsconfigTemplate = path.join(templatesDir, 'tsconfig.json.template');
+    const tsconfigContent = renderTemplate(tsconfigTemplate, context);
+    fs.writeFileSync(path.join(targetDir, 'tsconfig.json'), tsconfigContent);
+    
+    // index.html
+    const indexTemplate = path.join(templatesDir, 'index.html.template');
+    const indexContent = renderTemplate(indexTemplate, context);
+    fs.writeFileSync(path.join(targetDir, 'index.html'), indexContent);
+    
+    // src/main.ts
+    const mainTemplate = path.join(templatesDir, 'src/main.ts.template');
+    const mainContent = renderTemplate(mainTemplate, context);
+    fs.writeFileSync(path.join(targetDir, 'src/main.ts'), mainContent);
+    
+    // src/style.css
+    const styleTemplate = path.join(templatesDir, 'src/style.css.template');
+    const styleContent = renderTemplate(styleTemplate, context);
+    fs.writeFileSync(path.join(targetDir, 'src/style.css'), styleContent);
+    
+    // src/init.ts
+    const initTemplate = path.join(templatesDir, 'src/init.ts.template');
+    const initContent = renderTemplate(initTemplate, context);
+    fs.writeFileSync(path.join(targetDir, 'src/init.ts'), initContent);
 
-    if (config.framework === 'react') {
-      fs.writeFileSync(path.join(targetDir, 'src/App.tsx'), generateAppComponent(config));
-    } else if (config.framework === 'vue') {
-      fs.writeFileSync(path.join(targetDir, 'src/App.vue'), generateAppComponent(config));
-    } else if (config.framework === 'svelte') {
-      fs.writeFileSync(path.join(targetDir, 'src/App.svelte'), generateAppComponent(config));
+    // Framework-specific App component
+    if (config.framework === 'react' && config.template !== 'command') {
+      const appTemplateName = config.styling === 'shadcn' ? 'src/App-shadcn.tsx.template' : 'src/App.tsx.template';
+      const appTemplate = path.join(templatesDir, appTemplateName);
+      const appContent = renderTemplate(appTemplate, context);
+      fs.writeFileSync(path.join(targetDir, 'src/App.tsx'), appContent);
+    } else if (config.framework === 'vue' && config.template !== 'command') {
+      const appTemplate = path.join(templatesDir, 'src/App.vue.template');
+      const appContent = renderTemplate(appTemplate, context);
+      fs.writeFileSync(path.join(targetDir, 'src/App.vue'), appContent);
+    } else if (config.framework === 'svelte' && config.template !== 'command') {
+      const appTemplate = path.join(templatesDir, 'src/App.svelte.template');
+      const appContent = renderTemplate(appTemplate, context);
+      fs.writeFileSync(path.join(targetDir, 'src/App.svelte'), appContent);
+    }
+
+    // Tailwind CSS setup
+    if (config.styling === 'tailwind' || config.styling === 'shadcn') {
+      const tailwindConfigTemplate = path.join(templatesDir, 'tailwind.config.ts.template');
+      if (fs.existsSync(tailwindConfigTemplate)) {
+        const tailwindConfigContent = renderTemplate(tailwindConfigTemplate, context);
+        fs.writeFileSync(path.join(targetDir, 'tailwind.config.ts'), tailwindConfigContent);
+      }
+
+      const postcssConfigTemplate = path.join(templatesDir, 'postcss.config.ts.template');
+      if (fs.existsSync(postcssConfigTemplate)) {
+        const postcssConfigContent = renderTemplate(postcssConfigTemplate, context);
+        fs.writeFileSync(path.join(targetDir, 'postcss.config.ts'), postcssConfigContent);
+      }
+    }
+
+    // shadcn/ui setup
+    if (config.styling === 'shadcn') {
+      const componentsJsonTemplate = path.join(templatesDir, 'components.json.template');
+      if (fs.existsSync(componentsJsonTemplate)) {
+        const componentsJsonContent = renderTemplate(componentsJsonTemplate, context);
+        fs.writeFileSync(path.join(targetDir, 'components.json'), componentsJsonContent);
+      }
+
+      // Create lib/utils.ts for shadcn
+      fs.mkdirSync(path.join(targetDir, 'src/lib'), { recursive: true });
+      const utilsTemplate = path.join(templatesDir, 'src/lib/utils.ts.template');
+      if (fs.existsSync(utilsTemplate)) {
+        const utilsContent = renderTemplate(utilsTemplate, context);
+        fs.writeFileSync(path.join(targetDir, 'src/lib/utils.ts'), utilsContent);
+      }
     }
   } else {
     // Basic project (no build)
-    fs.writeFileSync(path.join(targetDir, 'index.html'), generateIndexHtml(config));
-    fs.writeFileSync(path.join(targetDir, 'init.js'), generateInitTs(config).replace(/: PluginAPI/g, '').replace(/import.*\n/g, ''));
+    const indexTemplate = path.join(templatesDir, 'index.html.template');
+    const indexContent = renderTemplate(indexTemplate, context);
+    fs.writeFileSync(path.join(targetDir, 'index.html'), indexContent);
+    
+    // Simple init.js (no TypeScript)
+    const initTemplate = path.join(templatesDir, 'src/init.ts.template');
+    let initContent = renderTemplate(initTemplate, context);
+    // Convert TypeScript to JavaScript
+    initContent = initContent
+      .replace(/import.*from.*rua-api\/browser.*\n/g, '')
+      .replace(/: RuaAPI/g, '')
+      .replace(/async function init\(\)/g, 'async function init()');
+    fs.writeFileSync(path.join(targetDir, 'init.js'), initContent);
     
     if (config.template === 'command') {
       fs.mkdirSync(path.join(targetDir, 'commands'), { recursive: true });
@@ -505,9 +290,6 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
 `);
     }
   }
-
-  fs.writeFileSync(path.join(targetDir, 'README.md'), generateReadme(config));
-  fs.writeFileSync(path.join(targetDir, '.gitignore'), 'node_modules\ndist\n.DS_Store\n');
 }
 
 async function main() {
@@ -570,6 +352,13 @@ async function main() {
       initial: 0,
     },
     {
+      type: (_, values) => values.buildTool === 'vite' && values.template !== 'command' ? 'select' : null,
+      name: 'styling',
+      message: 'Styling:',
+      choices: STYLING_OPTIONS,
+      initial: 0,
+    },
+    {
       type: 'multiselect',
       name: 'permissions',
       message: 'Permissions (space to select):',
@@ -598,6 +387,7 @@ async function main() {
     packageManager: response.packageManager || 'npm',
     buildTool: response.buildTool || 'none',
     framework: response.framework || 'none',
+    styling: response.styling || 'none',
     permissions: response.permissions || [],
   };
 
@@ -634,6 +424,11 @@ async function main() {
     const pmInstall = config.packageManager === 'npm' ? 'npm install' : `${config.packageManager} install`;
     const pmRun = config.packageManager === 'npm' ? 'npm run' : config.packageManager;
     console.log(`  ${pc.cyan(pmInstall)}`);
+    
+    if (config.styling === 'shadcn') {
+      console.log(`  ${pc.cyan(`npx shadcn@latest add button card badge separator`)}`);
+    }
+    
     console.log(`  ${pc.cyan(`${pmRun} dev`)}`);
   } else {
     console.log(`  ${pc.cyan('# Edit your extension files')}`);

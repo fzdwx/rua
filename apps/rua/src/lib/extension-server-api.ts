@@ -1,85 +1,38 @@
 /**
  * Extension Server API
- * 
- * Combines tauri-api-adapter's server API with Rua-specific APIs.
- * This is exposed to extension iframes via kkrpc.
+ *
+ * Rua-specific APIs exposed to extension iframes via kkrpc.
  */
 
-import { constructServerAPIWithPermissions } from 'tauri-api-adapter';
-import type { AllPermission } from 'tauri-api-adapter/permissions';
 import { invoke } from '@tauri-apps/api/core';
+import type {
+  ExtensionMeta,
+  DynamicAction,
+  RuaServerAPI,
+  RuaHostCallbacks,
+  ExtensionHostInfo
+} from 'rua-api';
 
-/** Extension metadata */
-export interface ExtensionMeta {
-  id: string;
-  name: string;
-  version: string;
-}
+// Re-export types for convenience
+export type { ExtensionMeta, DynamicAction, RuaHostCallbacks, ExtensionHostInfo } from 'rua-api';
 
-/** Notification options */
-export interface NotificationOptions {
-  title: string;
-  body?: string;
-}
-
-/** Dynamic action definition */
-export interface DynamicAction {
-  id: string;
-  name: string;
-  keywords?: string[];
-  icon?: string;
-  subtitle?: string;
-  mode: 'view' | 'command';
-}
-
-/** Callbacks for UI control from host side */
-export interface RuaHostCallbacks {
-  onHideInput?: () => void;
-  onShowInput?: () => void;
-  onClose?: () => void;
-  onSetTitle?: (title: string) => void;
-  onRegisterActions?: (actions: DynamicAction[]) => void;
-  onUnregisterActions?: (actionIds: string[]) => void;
-}
-
-/** Extension info for the host */
-export interface ExtensionHostInfo {
-  id: string;
-  name: string;
-  version: string;
-  permissions: string[];
-}
+/** Alias for RuaServerAPI */
+export type RuaAPI = RuaServerAPI;
 
 /**
- * Rua-specific API methods exposed to extensions
+ * Check if extension has a specific permission
  */
-export interface RuaAPI {
-  // Extension info
-  getExtensionInfo(): Promise<ExtensionMeta>;
-  
-  // Storage API (Rua-specific, per-extension storage)
-  storageGet(key: string): Promise<string | null>;
-  storageSet(key: string, value: string): Promise<void>;
-  storageRemove(key: string): Promise<void>;
-  
-  // UI API
-  uiHideInput(): Promise<void>;
-  uiShowInput(): Promise<void>;
-  uiClose(): Promise<void>;
-  uiSetTitle(title: string): Promise<void>;
-  
-  // Actions API
-  actionsRegister(actions: DynamicAction[]): Promise<void>;
-  actionsUnregister(actionIds: string[]): Promise<void>;
+function hasPermission(extensionInfo: ExtensionHostInfo, permission: string): boolean {
+  return extensionInfo.permissions.includes(permission);
 }
 
 /**
- * Create Rua-specific API implementation
+ * Create Rua API implementation
  */
 export function createRuaAPI(
   extensionInfo: ExtensionHostInfo,
   callbacks: RuaHostCallbacks
-): RuaAPI {
+): RuaServerAPI {
   return {
     async getExtensionInfo(): Promise<ExtensionMeta> {
       return {
@@ -89,7 +42,37 @@ export function createRuaAPI(
       };
     },
 
+    // Clipboard API
+    async clipboardReadText(): Promise<string> {
+      if (!hasPermission(extensionInfo, 'clipboard')) {
+        throw new Error('PERMISSION_DENIED: clipboard permission required');
+      }
+      console.log("read_clipboard get 11111")
+      return await invoke<string>('read_clipboard');
+    },
+
+    async clipboardWriteText(text: string): Promise<void> {
+      if (!hasPermission(extensionInfo, 'clipboard')) {
+        throw new Error('PERMISSION_DENIED: clipboard permission required');
+      }
+      await invoke('write_clipboard', { text });
+    },
+
+    // Notification API
+    async notificationShow(options: { title: string; body?: string }): Promise<void> {
+      if (!hasPermission(extensionInfo, 'notification')) {
+        throw new Error('PERMISSION_DENIED: notification permission required');
+      }
+      await invoke('show_notification', options);
+    },
+
+    // Storage API
     async storageGet(key: string): Promise<string | null> {
+      console.log(extensionInfo)
+      if (!hasPermission(extensionInfo, 'storage')) {
+        throw new Error('PERMISSION_DENIED: storage permission required');
+      }
+      console.log("storege get 11111")
       return await invoke('extension_storage_get', {
         extensionId: extensionInfo.id,
         key,
@@ -97,6 +80,9 @@ export function createRuaAPI(
     },
 
     async storageSet(key: string, value: string): Promise<void> {
+      if (!hasPermission(extensionInfo, 'storage')) {
+        throw new Error('PERMISSION_DENIED: storage permission required');
+      }
       await invoke('extension_storage_set', {
         extensionId: extensionInfo.id,
         key,
@@ -105,12 +91,16 @@ export function createRuaAPI(
     },
 
     async storageRemove(key: string): Promise<void> {
+      if (!hasPermission(extensionInfo, 'storage')) {
+        throw new Error('PERMISSION_DENIED: storage permission required');
+      }
       await invoke('extension_storage_remove', {
         extensionId: extensionInfo.id,
         key,
       });
     },
 
+    // UI API (no permission required)
     async uiHideInput(): Promise<void> {
       callbacks.onHideInput?.();
     },
@@ -127,6 +117,7 @@ export function createRuaAPI(
       callbacks.onSetTitle?.(title);
     },
 
+    // Actions API (no permission required)
     async actionsRegister(actions: DynamicAction[]): Promise<void> {
       callbacks.onRegisterActions?.(actions);
     },
@@ -138,52 +129,13 @@ export function createRuaAPI(
 }
 
 /**
- * Map Rua permissions to tauri-api-adapter permissions
- */
-export function mapRuaPermissionsToTauriPermissions(ruaPermissions: string[]): AllPermission[] {
-  const permissionMap: Record<string, AllPermission[]> = {
-    'clipboard': ['clipboard:read-all', 'clipboard:write-all'],
-    'notification': ['notification:all'],
-    'storage': [], // Handled by Rua-specific API
-    'http': ['fetch:all'],
-    'shell': ['shell:execute', 'shell:open'],
-    'fs': ['fs:read', 'fs:write'],
-    'dialog': ['dialog:all'],
-    'os': ['os:all'],
-  };
-
-  const tauriPermissions: AllPermission[] = [];
-  for (const perm of ruaPermissions) {
-    const mapped = permissionMap[perm];
-    if (mapped) {
-      tauriPermissions.push(...mapped);
-    }
-  }
-  return tauriPermissions;
-}
-
-/**
- * Create the combined server API for extensions
- * Merges tauri-api-adapter APIs with Rua-specific APIs
+ * Create the server API for extensions
  */
 export function createExtensionServerAPI(
   extensionInfo: ExtensionHostInfo,
   callbacks: RuaHostCallbacks
-) {
-  // Map Rua permissions to tauri-api-adapter permissions
-  const tauriPermissions = mapRuaPermissionsToTauriPermissions(extensionInfo.permissions);
-  
-  // Get tauri-api-adapter server API
-  const tauriServerAPI = constructServerAPIWithPermissions(tauriPermissions);
-  
-  // Get Rua-specific API
-  const ruaAPI = createRuaAPI(extensionInfo, callbacks);
-  
-  // Combine both APIs
-  return {
-    ...tauriServerAPI,
-    ...ruaAPI,
-  };
+): RuaServerAPI {
+  return createRuaAPI(extensionInfo, callbacks);
 }
 
-export type ExtensionServerAPI = ReturnType<typeof createExtensionServerAPI>;
+export type ExtensionServerAPI = RuaServerAPI;

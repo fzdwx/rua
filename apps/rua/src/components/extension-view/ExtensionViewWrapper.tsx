@@ -7,7 +7,7 @@
 
 import { usePluginSystem } from '@/contexts/PluginSystemContext';
 import { ExtensionView } from './ExtensionView';
-import type { DynamicAction } from '@/lib/api-bridge';
+import type { DynamicAction } from '@/lib/extension-server-api';
 
 interface ExtensionViewWrapperProps {
   /** The extension's UI entry path with action query param */
