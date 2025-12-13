@@ -38,19 +38,6 @@ export type {
   ExtensionModule,
 } from './api';
 
-// Registry types
-export type {
-  ExtensionInfo,
-  ExtensionState,
-  RegistryState,
-  ExtensionRegistryEvent,
-  ExtensionEventData,
-  IExtensionRegistry,
-} from './extension-registry';
-
-export {
-  REGISTRY_STATE_VERSION,
-} from './extension-registry';
 
 // Rua extension API types
 export type {

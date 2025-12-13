@@ -17,88 +17,16 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import { useFileWatcher, type FileChangeEvent } from '@/hooks/useFileWatcher';
 
-/**
- * Manifest action from extension
- */
-interface ManifestAction {
-  name: string;
-  title: string;
-  mode: 'view' | 'command';
-  keywords?: string[];
-  icon?: string;
-  subtitle?: string;
-  shortcut?: string[];
-  script?: string;
-}
+// Import types from rua-api package
+import type {
+  ExtensionManifest,
+  ExtensionInfo,
+  ManifestDerivedAction,
+  DynamicAction,
+} from 'rua-api';
 
-/**
- * Rua config from manifest
- */
-interface RuaConfig {
-  engineVersion: string;
-  ui?: { entry: string; width?: number; height?: number };
-  init?: string;
-  actions: ManifestAction[];
-}
-
-/**
- * Extension manifest structure
- */
-interface ExtensionManifest {
-  id: string;
-  name: string;
-  version: string;
-  rua: RuaConfig;
-  description?: string;
-  author?: string;
-  homepage?: string;
-  repository?: string;
-  keywords?: string[];
-  icon?: string;
-  permissions?: string[];
-  dependencies?: Record<string, string>;
-}
-
-/**
- * Extension info from backend
- */
-export interface ExtensionInfo {
-  manifest: ExtensionManifest;
-  enabled: boolean;
-  loaded: boolean;
-  path: string;
-  actions: string[];
-  error?: string;
-}
-
-/**
- * Action derived from extension manifest
- */
-export interface ManifestDerivedAction {
-  id: string;
-  name: string;
-  mode: 'view' | 'command';
-  keywords?: string;
-  icon?: string;
-  subtitle?: string;
-  shortcut?: string[];
-  extensionId: string;
-  actionName: string;
-  uiEntry?: string;
-  script?: string;
-}
-
-/**
- * Dynamic action definition
- */
-export interface DynamicAction {
-  id: string;
-  name: string;
-  keywords?: string[];
-  icon?: string;
-  subtitle?: string;
-  mode: 'view' | 'command';
-}
+// Re-export for convenience
+export type { ExtensionInfo, ManifestDerivedAction, DynamicAction };
 
 /**
  * Extension system context value

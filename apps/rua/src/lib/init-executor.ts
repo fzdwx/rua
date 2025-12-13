@@ -7,16 +7,7 @@
 
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { invoke } from '@tauri-apps/api/core';
-
-/** Dynamic action definition */
-export interface DynamicAction {
-  id: string;
-  name: string;
-  keywords?: string[];
-  icon?: string;
-  subtitle?: string;
-  mode: 'view' | 'command';
-}
+import type { DynamicAction } from 'rua-api';
 
 /** API provided to init scripts */
 export interface InitAPI {
