@@ -54,13 +54,7 @@ export interface ManifestDerivedAction {
 /** Event handler type */
 export type EventHandler = (data: unknown) => void;
 
-/**
- * Rua API interface (client-side)
- * This is what extensions use via window.rua
- */
-export interface RuaClientAPI {
-    extension: ExtensionMeta;
-
+export interface RuaAPI {
     clipboard: {
         readText(): Promise<string>;
         writeText(text: string): Promise<void>;
@@ -87,6 +81,15 @@ export interface RuaClientAPI {
         register(actions: DynamicAction[]): Promise<void>;
         unregister(actionIds: string[]): Promise<void>;
     };
+}
+
+
+/**
+ * Rua API interface (client-side)
+ * This is what extensions use via window.rua
+ */
+export interface RuaClientAPI extends RuaAPI {
+    extension: ExtensionMeta;
 
     on(event: string, handler: EventHandler): void;
 
@@ -97,38 +100,9 @@ export interface RuaClientAPI {
  * Rua API methods (server-side / host)
  * These are the raw RPC methods exposed to extensions
  */
-export interface RuaServerAPI {
+export interface RuaServerAPI extends RuaAPI {
     // Extension info
     getExtensionInfo(): Promise<ExtensionMeta>;
-
-    // Clipboard API
-    clipboardReadText(): Promise<string>;
-
-    clipboardWriteText(text: string): Promise<void>;
-
-    // Notification API
-    notificationShow(options: { title: string; body?: string }): Promise<void>;
-
-    // Storage API
-    storageGet(key: string): Promise<string | null>;
-
-    storageSet(key: string, value: string): Promise<void>;
-
-    storageRemove(key: string): Promise<void>;
-
-    // UI API
-    uiHideInput(): Promise<void>;
-
-    uiShowInput(): Promise<void>;
-
-    uiClose(): Promise<void>;
-
-    uiSetTitle(title: string): Promise<void>;
-
-    // Actions API
-    actionsRegister(actions: DynamicAction[]): Promise<void>;
-
-    actionsUnregister(actionIds: string[]): Promise<void>;
 }
 
 /** Callbacks for UI control from host side */

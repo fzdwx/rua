@@ -76,38 +76,32 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
             extension: extensionMeta,
 
             clipboard: {
-                readText: () => hostAPI.clipboardReadText(),
-                writeText: (text) => hostAPI.clipboardWriteText(text),
+                readText: () => hostAPI.clipboard.readText(),
+                writeText: (text) => hostAPI.clipboard.writeText(text),
             },
 
             notification: {
-                show: (options) => hostAPI.notificationShow(options),
+                show: (options) => hostAPI.notification.show(options),
             },
 
             storage: {
                 get: async (key) => {
-                    const value = await hostAPI.storageGet(key);
-                    if (value === null || value === undefined) return null;
-                    try {
-                        return JSON.parse(value);
-                    } catch {
-                        return value as never;
-                    }
+                    return hostAPI.storage.get(key)
                 },
-                set: (key, value) => hostAPI.storageSet(key, JSON.stringify(value)),
-                remove: (key) => hostAPI.storageRemove(key),
+                set: (key, value) => hostAPI.storage.set(key, JSON.stringify(value)),
+                remove: (key) => hostAPI.storage.remove(key),
             },
 
             ui: {
-                hideInput: () => hostAPI.uiHideInput(),
-                showInput: () => hostAPI.uiShowInput(),
-                close: () => hostAPI.uiClose(),
-                setTitle: (title) => hostAPI.uiSetTitle(title),
+                hideInput: () => hostAPI.ui.hideInput(),
+                showInput: () => hostAPI.ui.showInput(),
+                close: () => hostAPI.ui.close(),
+                setTitle: (title) => hostAPI.ui.setTitle(title),
             },
 
             actions: {
-                register: (actions) => hostAPI.actionsRegister(actions),
-                unregister: (actionIds) => hostAPI.actionsUnregister(actionIds),
+                register: (actions) => hostAPI.actions.register(actions),
+                unregister: (actionIds) => hostAPI.actions.unregister(actionIds),
             },
 
             on: (event, handler) => {
