@@ -79,7 +79,7 @@ export function ExtensionView({
     // Build query string with refresh key for cache busting
     const params = new URLSearchParams(queryString || '');
     params.set('_r', String(refreshKey));
-    
+
     return `${baseUrl}?${params.toString()}`;
   }, [uiEntry, refreshKey]);
 
@@ -107,6 +107,10 @@ export function ExtensionView({
       rpcRef.current = null;
     };
   }, [refreshKey]);
+
+  // Store search value in ref so handleIframeLoad can access the latest value
+  const searchRef = useRef(search);
+  searchRef.current = search;
 
   // Setup RPC when iframe loads
   const handleIframeLoad = useCallback(() => {
@@ -143,6 +147,18 @@ export function ExtensionView({
       rpcRef.current = rpc;
 
       console.log(`[ExtensionView] kkrpc connection established for ${extensionId}`);
+
+      // Send initial search value after RPC is established
+      // Use a small delay to ensure the extension has registered its handlers
+      setTimeout(() => {
+        if (rpcRef.current && searchRef.current) {
+          try {
+            rpcRef.current.getAPI().onSearchChange?.(searchRef.current);
+          } catch (err) {
+            console.log('[ExtensionView] Failed to send initial search:', err);
+          }
+        }
+      }, 100);
     } catch (err) {
       console.error('[ExtensionView] Failed to setup RPC:', err);
     }
@@ -170,14 +186,9 @@ export function ExtensionView({
       const clientAPI = rpcRef.current.getAPI();
       // Use try-catch since the extension may not have registered the callback yet
       try {
-        clientAPI.onSearchChange?.(search).catch((err: Error) => {
-          // Silently ignore if method is not registered on client side
-          if (!err.message?.includes('not a function')) {
-            console.warn('[ExtensionView] onSearchChange error:', err);
-          }
-        });
+        clientAPI.onSearchChange?.(search)
       } catch (err) {
-        // Ignore synchronous errors
+          console.log("clientAPI.onSearchChange ",err)
       }
     }
   }, [search]);

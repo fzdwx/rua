@@ -20,6 +20,8 @@ pub struct ManifestAction {
     pub subtitle: Option<String>,
     pub shortcut: Option<Vec<String>>,
     pub script: Option<String>,
+    #[serde(default)]
+    pub query: Option<bool>,
 }
 
 /// Rua-specific configuration in manifest

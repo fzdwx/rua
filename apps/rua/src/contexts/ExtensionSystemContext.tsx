@@ -111,6 +111,7 @@ function convertExtensionToActions(ext: ExtensionInfo): ManifestDerivedAction[] 
             script: action.mode === 'command' && action.script
                 ? `${extPath}/${action.script}`
                 : undefined,
+            query: action.query,
         };
         console.log('[convertExtensionToActions] action:', derivedAction.id, 'uiEntry:', derivedAction.uiEntry);
         return derivedAction;

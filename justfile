@@ -8,12 +8,12 @@ bump version:
     sh bump-version.sh {{version}}
 
 install:
-    jq '.bundle.active = false' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
-    bun tauri-build
-    cargo build --manifest-path src-tauri/Cargo.toml --bin ruactl --release
-    sudo cp src-tauri/target/release/rua /usr/bin/
-    sudo cp src-tauri/target/release/ruactl /usr/bin/
-    jq '.bundle.active = true' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+    jq '.bundle.active = false' apps/rua/src-tauri/tauri.conf.json > apps/rua/src-tauri/tauri.conf.json.tmp && mv apps/rua/src-tauri/tauri.conf.json.tmp apps/rua/src-tauri/tauri.conf.json
+    cd apps/rua && bun tauri build
+    cargo build --manifest-path apps/rua/src-tauri/Cargo.toml --bin ruactl --release
+    sudo cp apps/rua/src-tauri/target/release/rua /usr/bin/
+    sudo cp apps/rua/src-tauri/target/release/ruactl /usr/bin/
+    jq '.bundle.active = true' apps/rua/src-tauri/tauri.conf.json > apps/rua/src-tauri/tauri.conf.json.tmp && mv apps/rua/src-tauri/tauri.conf.json.tmp apps/rua/src-tauri/tauri.conf.json
     @echo "✓ rua and ruactl installed to /usr/bin/"
 
 # Build rua-api package
@@ -41,10 +41,10 @@ publish-all: publish-api publish-ext-cli
     @echo "✓ All packages published to bun"
 
 # Install example extension for testing
-install-example-ext:
-    mkdir -p ~/.local/share/rua/extensions
-    cp -r examples/hello-ext ~/.local/share/rua/extensions/
-    @echo "✓ hello-ext installed to ~/.local/share/rua/extensions/"
+install-example-word:
+    mkdir -p ~/.local/share/like.rua.ai/extensions
+    cp -r examples/hello-word ~/.local/share/like.rua.ai/extensions/
+    @echo "✓ hello-word installed to ~/.local/share/like.rua.ai/extensions/"
 
 # Create and install a test extension
 test-ext name="test-extension":

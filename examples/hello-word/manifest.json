@@ -19,7 +19,8 @@
           "hello-word"
         ],
         "icon": "tabler:star",
-        "subtitle": " rua extension demo 1"
+        "subtitle": " rua extension demo 1",
+        "query": true
       }
     ]
   },

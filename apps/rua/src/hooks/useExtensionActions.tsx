@@ -18,6 +18,7 @@ function convertToAction(
   setRootActionId: (id: string | null) => void,
   setSearch: (search: string) => void
 ): Action {
+  console.log("1111111111",extensionAction)
   return {
     id: extensionAction.id,
     name: extensionAction.name,
@@ -34,6 +35,8 @@ function convertToAction(
     uiEntry: extensionAction.uiEntry,
     // Store extensionId for routing
     item: { extensionId: extensionAction.extensionId },
+    // Pass query flag for showing query input box
+    query: extensionAction.query,
     perform: () => {
       if (extensionAction.mode === 'view') {
         // Clear search input when entering extension view

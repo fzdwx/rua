@@ -49,6 +49,8 @@ export interface ManifestDerivedAction {
     uiEntry?: string;
     /** Script path (for command mode) */
     script?: string;
+    /** If true, shows a query input box when action is active */
+    query?: boolean;
 }
 
 /** Event handler type */

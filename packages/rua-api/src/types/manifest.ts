@@ -43,6 +43,8 @@ export interface ManifestAction {
     shortcut?: string[];
     /** Script to execute for 'command' mode (relative path) */
     script?: string;
+    /** If true, shows a query input box when action is active in command palette */
+    query?: boolean;
 }
 
 /**
