@@ -22,6 +22,35 @@ export interface DynamicAction {
     mode: 'view' | 'command';
 }
 
+/**
+ * Action created from manifest definition
+ * Used when loading actions from extension manifest
+ */
+export interface ManifestDerivedAction {
+    /** Full namespaced ID (extension-id.action-name) */
+    id: string;
+    /** Display title */
+    name: string;
+    /** Action mode */
+    mode: 'view' | 'command';
+    /** Search keywords */
+    keywords?: string;
+    /** Icon */
+    icon?: string;
+    /** Subtitle */
+    subtitle?: string;
+    /** Keyboard shortcut */
+    shortcut?: string[];
+    /** Extension ID */
+    extensionId: string;
+    /** Original action name from manifest */
+    actionName: string;
+    /** UI entry URL (for view mode) */
+    uiEntry?: string;
+    /** Script path (for command mode) */
+    script?: string;
+}
+
 /** Event handler type */
 export type EventHandler = (data: unknown) => void;
 
