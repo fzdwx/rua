@@ -1,0 +1,184 @@
+import { useState, useEffect } from 'react'
+import { initializeRuaAPI, type RuaAPI } from 'rua-api/browser'
+import { Button } from './components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card'
+import { Badge } from './components/ui/badge'
+import { Separator } from './components/ui/separator'
+
+function App() {
+  const params = new URLSearchParams(window.location.search)
+  const action = params.get('action')
+  
+  const [rua, setRua] = useState<RuaAPI | null>(null)
+  const [result, setResult] = useState<string>('API results will appear here...')
+
+  useEffect(() => {
+    // Initialize Rua API (extension info is fetched from host)
+    initializeRuaAPI().then(api => {
+      setRua(api)
+      setResult(`Rua API ready! Extension: ${api.extension.id}`)
+    }).catch(err => {
+      setResult('Failed to initialize: ' + err.message)
+    })
+  }, [])
+
+  const log = (message: string | object) => {
+    const text = typeof message === 'object' ? JSON.stringify(message, null, 2) : message
+    setResult(text)
+    console.log('[{{kebabName}}]', message)
+  }
+
+  {{#hasClipboard}}// Clipboard handlers
+  const handleClipboardRead = async () => {
+    if (!rua) return
+    try {
+      const text = await rua.clipboard.readText()
+      log('Clipboard content: ' + text)
+    } catch (e: unknown) {
+      log('Error: ' + (e as Error).message)
+    }
+  }
+
+  const handleClipboardWrite = async () => {
+    if (!rua) return
+    try {
+      await rua.clipboard.writeText('Hello from {{name}}!')
+      log('Written to clipboard: "Hello from {{name}}!"')
+    } catch (e: unknown) {
+      log('Error: ' + (e as Error).message)
+    }
+  }{{/hasClipboard}}
+
+  {{#hasNotification}}// Notification handler
+  const handleNotify = async () => {
+    if (!rua) return
+    try {
+      await rua.notification.show({
+        title: 'Hello from {{name}}!',
+        body: 'This notification was sent from the {{name}} extension.'
+      })
+      log('Notification sent')
+    } catch (e: unknown) {
+      log('Error: ' + (e as Error).message)
+    }
+  }{{/hasNotification}}
+
+  {{#hasStorage}}// Storage handlers
+  const handleStorageSave = async () => {
+    if (!rua) return
+    try {
+      const timestamp = new Date().toISOString()
+      await rua.storage.set('lastUsed', timestamp)
+      log('Saved timestamp: ' + timestamp)
+    } catch (e: unknown) {
+      log('Error: ' + (e as Error).message)
+    }
+  }
+
+  const handleStorageLoad = async () => {
+    if (!rua) return
+    try {
+      const value = await rua.storage.get<string>('lastUsed')
+      log('Loaded timestamp: ' + (value || 'none'))
+    } catch (e: unknown) {
+      log('Error: ' + (e as Error).message)
+    }
+  }{{/hasStorage}}
+
+  // UI handlers
+  const handleClose = async () => {
+    if (!rua) return
+    try {
+      await rua.ui.close()
+    } catch (e: unknown) {
+      log('Error: ' + (e as Error).message)
+    }
+  }
+
+  return (
+    <div className="p-4 space-y-4 max-w-2xl">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {{name}}
+            <Badge variant="secondary">v0.1.0</Badge>
+          </CardTitle>
+          <CardDescription>
+            Current action: {action || 'none'}
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
+      {{#hasClipboard}}<Card>
+        <CardHeader>
+          <CardTitle className="text-base">Clipboard API</CardTitle>
+          <CardDescription>Read and write to system clipboard</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleClipboardRead}>
+              Read Clipboard
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleClipboardWrite}>
+              Write to Clipboard
+            </Button>
+          </div>
+        </CardContent>
+      </Card>{{/hasClipboard}}
+
+      {{#hasNotification}}<Card>
+        <CardHeader>
+          <CardTitle className="text-base">Notification API</CardTitle>
+          <CardDescription>Show system notifications</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button size="sm" onClick={handleNotify}>
+            Show Notification
+          </Button>
+        </CardContent>
+      </Card>{{/hasNotification}}
+
+      {{#hasStorage}}<Card>
+        <CardHeader>
+          <CardTitle className="text-base">Storage API</CardTitle>
+          <CardDescription>Persistent local storage</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleStorageSave}>
+              Save Timestamp
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleStorageLoad}>
+              Load Timestamp
+            </Button>
+          </div>
+        </CardContent>
+      </Card>{{/hasStorage}}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">UI Control</CardTitle>
+          <CardDescription>Extension window controls</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button size="sm" variant="destructive" onClick={handleClose}>
+            Close Extension
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Result</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <pre className="bg-muted p-3 rounded-md text-xs whitespace-pre-wrap max-h-48 overflow-y-auto border font-mono">
+            {result}
+          </pre>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default App

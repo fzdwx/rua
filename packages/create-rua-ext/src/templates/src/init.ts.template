@@ -1,0 +1,38 @@
+/**
+ * {{name}} - Initialization Script
+ * 
+ * This script runs when the extension is loaded.
+ * It can register dynamic actions and perform initialization.
+ */
+import { initializeRuaAPI } from 'rua-api/browser'
+
+// Initialize when the extension loads
+async function init() {
+  try {
+    // Extension info is automatically fetched from host
+    const rua = await initializeRuaAPI()
+
+    console.log(`[${rua.extension.id}] Extension initialized!`)
+
+    {{#hasStorage}}// Store last activated time
+    await rua.storage.set('lastActivated', new Date().toISOString()){{/hasStorage}}
+
+    // Register a dynamic action (optional)
+    await rua.actions.register([
+      {
+        id: 'dynamic-action',
+        name: 'Dynamic Action',
+        keywords: ['dynamic', '{{kebabName}}'],
+        icon: 'tabler:sparkles',
+        subtitle: 'A dynamically registered action',
+        mode: 'view'
+      }
+    ])
+
+    console.log('[{{kebabName}}] Dynamic action registered!')
+  } catch (err) {
+    console.error('[{{kebabName}}] Failed to initialize:', err)
+  }
+}
+
+init()

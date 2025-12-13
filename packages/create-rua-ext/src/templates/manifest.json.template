@@ -1,0 +1,33 @@
+{
+  "id": "{{id}}",
+  "name": "{{name}}",
+  "version": "0.1.0",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "rua": {
+    "engineVersion": "^0.1.0",
+    {{#hasUI}}"ui": {
+      "entry": "{{uiEntry}}"
+    },{{/hasUI}}
+    "init": "{{initEntry}}",
+    "actions": [
+      {{#isViewExtension}}{
+        "name": "main",
+        "title": "{{name}}",
+        "mode": "view",
+        "keywords": ["{{kebabName}}"],
+        "icon": "tabler:star",
+        "subtitle": "{{description}}"
+      }{{/isViewExtension}}{{#isCommandExtension}}{
+        "name": "run",
+        "title": "Run {{name}}",
+        "mode": "command",
+        "keywords": ["run", "execute"],
+        "icon": "tabler:player-play",
+        "subtitle": "Execute the command",
+        "script": "{{commandScript}}"
+      }{{/isCommandExtension}}
+    ]
+  }{{#hasPermissions}},
+  "permissions": [{{#permissions}}"{{.}}"{{#unless @last}},{{/unless}}{{/permissions}}]{{/hasPermissions}}
+}

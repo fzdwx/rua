@@ -1,0 +1,23 @@
+import { defineConfig } from 'vite'
+{{#useReact}}import react from '@vitejs/plugin-react'{{/useReact}}
+{{#useVue}}import vue from '@vitejs/plugin-vue'{{/useVue}}
+{{#useSvelte}}import { svelte } from '@sveltejs/vite-plugin-svelte'{{/useSvelte}}
+
+export default defineConfig({
+  {{#hasPlugins}}plugins: [{{#useReact}}react(){{/useReact}}{{#useVue}}vue(){{/useVue}}{{#useSvelte}}svelte(){{/useSvelte}}],{{/hasPlugins}}
+  base: './',  // 使用相对路径，确保 ext:// protocol 能正确加载
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        init: 'src/init.ts',
+      },
+      output: {
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name].js',
+        assetFileNames: '[name].[ext]',
+      },
+    },
+  },
+})

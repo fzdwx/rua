@@ -1,0 +1,39 @@
+# {{name}}
+
+{{description}}
+
+## Development
+
+```bash
+# Install dependencies
+{{packageManager}} install
+
+{{#useVite}}# Start dev server
+{{pmRun}} dev
+
+# Build for production
+{{pmRun}} build{{/useVite}}{{^useVite}}# No build step required{{/useVite}}
+```
+
+## Installation
+
+{{#useVite}}1. Run `{{pmRun}} build` to build the extension
+2. Copy the entire folder to your Rua extensions directory{{/useVite}}{{^useVite}}1. Copy this folder to your Rua extensions directory{{/useVite}}
+3. Enable the extension in the Extension Manager
+
+## Permissions
+
+{{#hasPermissions}}{{#permissions}}- `{{.}}`
+{{/permissions}}{{/hasPermissions}}{{^hasPermissions}}No special permissions required.{{/hasPermissions}}
+
+## Features
+
+{{#hasClipboard}}- Clipboard read/write access{{/hasClipboard}}
+{{#hasNotification}}- System notifications{{/hasNotification}}
+{{#hasStorage}}- Local storage for extension data{{/hasStorage}}
+- UI control (hide/show input, close extension)
+- Dynamic action registration
+
+## License
+
+MIT
