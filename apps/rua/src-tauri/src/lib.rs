@@ -12,7 +12,9 @@ mod webpage_info;
 #[cfg(target_os = "linux")]
 mod hyprland;
 
+use std::path::PathBuf;
 use tauri::{App, Manager};
+use tauri::http::{Request, Response};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -43,10 +45,99 @@ fn setup(app: &mut App) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Decode URL-safe base64 string
+fn decode_base64_url_safe(encoded: &str) -> Option<String> {
+    // Convert URL-safe base64 back to standard base64
+    let standard = encoded.replace('-', "+").replace('_', "/");
+    // Add padding if needed
+    let padded = match standard.len() % 4 {
+        2 => format!("{}==", standard),
+        3 => format!("{}=", standard),
+        _ => standard,
+    };
+    // Decode
+    use base64::Engine;
+    base64::engine::general_purpose::STANDARD
+        .decode(&padded)
+        .ok()
+        .and_then(|bytes| String::from_utf8(bytes).ok())
+}
+
+/// Handle custom `ext://` protocol for loading extension files
+/// URL format: ext://BASE64_ENCODED_BASE_DIR/filename
+/// The host part contains the base64-encoded base directory
+fn handle_ext_protocol(
+    _ctx: tauri::UriSchemeContext<'_, tauri::Wry>,
+    request: Request<Vec<u8>>,
+) -> Response<Vec<u8>> {
+    let uri = request.uri();
+    let host = uri.host().unwrap_or("");
+    let path_str = uri.path();
+
+    // Decode URL-encoded path
+    let decoded_path = urlencoding::decode(path_str).unwrap_or_else(|_| path_str.into());
+    let relative_path = decoded_path.trim_start_matches('/');
+    
+    // Decode base directory from host (base64 URL-safe encoded)
+    let file_path = if let Some(base_dir) = decode_base64_url_safe(host) {
+        // Combine base directory with relative path
+        PathBuf::from(&base_dir).join(relative_path)
+    } else {
+        // Fallback: treat path as absolute (for backward compatibility)
+        PathBuf::from(decoded_path.as_ref())
+    };
+
+    serve_file(&file_path)
+}
+
+/// Serve a file from the filesystem
+fn serve_file(file_path: &PathBuf) -> Response<Vec<u8>> {
+    // Read the file
+    match std::fs::read(file_path) {
+        Ok(content) => {
+            // Determine content type based on file extension
+            let content_type = match file_path.extension().and_then(|e| e.to_str()) {
+                Some("html") => "text/html",
+                Some("js") => "application/javascript",
+                Some("mjs") => "application/javascript",
+                Some("css") => "text/css",
+                Some("json") => "application/json",
+                Some("png") => "image/png",
+                Some("jpg") | Some("jpeg") => "image/jpeg",
+                Some("svg") => "image/svg+xml",
+                Some("woff") => "font/woff",
+                Some("woff2") => "font/woff2",
+                Some("ttf") => "font/ttf",
+                _ => "application/octet-stream",
+            };
+
+            Response::builder()
+                .status(200)
+                .header("Content-Type", content_type)
+                .header("Access-Control-Allow-Origin", "*")
+                .body(content)
+                .unwrap()
+        }
+        Err(e) => {
+            eprintln!("[ext://] Failed to read file {:?}: {}", file_path, e);
+            Response::builder()
+                .status(404)
+                .header("Content-Type", "text/plain")
+                .body(format!("File not found: {}", e).into_bytes())
+                .unwrap()
+        }
+    }
+}
+
+/// Handle custom `ext://` protocol for loading extension files (old signature for reference)
+#[allow(dead_code)]
+fn handle_ext_protocol_old() {}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
+        .register_uri_scheme_protocol("ext", handle_ext_protocol)
         .setup(|app| {
             setup(app)?;
             Ok(())

@@ -8,7 +8,6 @@
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Icon } from '@iconify/react';
-import { convertFileSrc } from '@tauri-apps/api/core';
 import { RPCChannel, IframeParentIO } from 'kkrpc/browser';
 import { createExtensionServerAPI, type DynamicAction, type ExtensionServerAPI } from '@/lib/extension-server-api';
 
@@ -54,23 +53,31 @@ export function ExtensionView({
   const [error, setError] = useState<string | null>(null);
   const [_title, setTitle] = useState(extensionName);
 
-  // Convert file path to asset URL for Tauri
-  // Handle query params separately since convertFileSrc doesn't support them
-  // Use useMemo to preserve URL parameters across refreshes
-  const assetUrl = useMemo(() => {
+  // Convert file path to custom ext:// protocol URL
+  // Format: ext://BASE64_ENCODED_BASE_DIR/filename?query
+  // This allows Rust to resolve relative paths correctly
+  const extUrl = useMemo(() => {
     if (!uiEntry) return '';
 
     // Split path and query params
     const [filePath, queryString] = uiEntry.split('?');
 
-    // Convert file path to asset URL
-    const baseUrl = convertFileSrc(filePath);
+    // Get the directory and filename
+    const lastSlash = filePath.lastIndexOf('/');
+    const baseDir = filePath.substring(0, lastSlash);
+    const fileName = filePath.substring(lastSlash + 1);
+
+    // Encode base directory as URL-safe base64 in the host
+    const encodedBaseDir = btoa(baseDir).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+    // Use custom ext:// protocol - base dir in host, filename in path
+    const baseUrl = `ext://${encodedBaseDir}/${fileName}`;
 
     // Append query params if present
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
   }, [uiEntry]);
 
-  console.log('[ExtensionView] uiEntry:', uiEntry, 'assetUrl:', assetUrl, 'refreshKey:', refreshKey);
+  console.log('[ExtensionView] uiEntry:', uiEntry, 'extUrl:', extUrl, 'refreshKey:', refreshKey);
 
   // Handle close with input visibility reset
   const handleClose = useCallback(() => {
@@ -165,7 +172,7 @@ export function ExtensionView({
           <iframe
             key={`extension-iframe-${refreshKey}`}
             ref={iframeRef}
-            src={assetUrl}
+            src={extUrl}
             className="w-full h-full border-0"
             sandbox="allow-scripts allow-same-origin allow-forms"
             title={extensionName}

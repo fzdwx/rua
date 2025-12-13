@@ -1,0 +1,33 @@
+{
+  "id": "fzdwx.hello-word",
+  "name": "hello-word",
+  "version": "0.1.0",
+  "description": " rua extension demo 1",
+  "author": "fzdwx",
+  "rua": {
+    "engineVersion": "^0.1.0",
+    "ui": {
+      "entry": "dist/index.html"
+    },
+    "init": "dist/init.js",
+    "actions": [
+      {
+        "name": "main",
+        "title": "hello-word",
+        "mode": "view",
+        "keywords": [
+          "hello-word"
+        ],
+        "icon": "tabler:star",
+        "subtitle": " rua extension demo 1"
+      }
+    ]
+  },
+  "permissions": [
+    "clipboard",
+    "notification",
+    "storage",
+    "http",
+    "shell"
+  ]
+}
