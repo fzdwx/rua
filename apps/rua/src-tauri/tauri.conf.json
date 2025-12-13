@@ -4,7 +4,7 @@
   "version": "0.2.6",
   "identifier": "like.rua.ai",
   "build": {
-    "beforeDevCommand": "bun dev",
+    "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1421",
     "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist"

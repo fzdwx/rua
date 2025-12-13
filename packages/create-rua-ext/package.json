@@ -1,0 +1,40 @@
+{
+  "name": "create-rua-ext",
+  "version": "0.1.0",
+  "description": "CLI tool to create Rua extension templates",
+  "type": "module",
+  "bin": {
+    "create-rua-ext": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "dev": "bun run src/index.ts"
+  },
+  "keywords": [
+    "rua",
+    "extension",
+    "cli",
+    "scaffold",
+    "template"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "dependencies": {
+    "prompts": "^2.4.2",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/prompts": "^2.4.9",
+    "@types/node": "^24.9.1",
+    "typescript": "~5.8.3"
+  }
+}

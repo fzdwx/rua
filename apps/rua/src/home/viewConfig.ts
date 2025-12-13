@@ -9,7 +9,11 @@ import {
     QuickLinkCreator,
     QuickLinkView
 } from "@/components/quick-link";
+import {PluginManagerView} from "@/components/plugin-manager";
 import {ViewContext} from "./viewContext";
+
+// Plugin manager action ID
+export const pluginManagerId = "manage-plugins";
 
 // View configuration type
 export interface ViewConfig {
@@ -105,6 +109,20 @@ export function createViewConfigs(
                 onReturn: () => {
                     context.setRootActionId(null);
                     context.setSearch("");
+                },
+            }),
+        },
+        {
+            key: "plugin-manager",
+            match: (id) => id === pluginManagerId,
+            component: PluginManagerView,
+            getProps: (context) => ({
+                onClose: () => {
+                    context.setRootActionId(null);
+                    context.setSearch("");
+                    setTimeout(() => {
+                        context.inputRef.current?.focus();
+                    }, 50);
                 },
             }),
         },
