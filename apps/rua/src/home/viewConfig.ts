@@ -9,7 +9,7 @@ import {
     QuickLinkCreator,
     QuickLinkView
 } from "@/components/quick-link";
-import {PluginManagerView} from "@/components/plugin-manager";
+import {ExtensionManagerView} from "@/components/extension-manager";
 import {ExtensionViewWrapper} from "@/components/extension-view";
 import {ViewContext} from "./viewContext";
 
@@ -119,7 +119,7 @@ export function createViewConfigs(
         {
             key: "extension-manager",
             match: (id) => id === extensionManagerId,
-            component: PluginManagerView,
+            component: ExtensionManagerView,
             getProps: (context) => ({
                 onClose: () => {
                     context.setRootActionId(null);
@@ -132,28 +132,28 @@ export function createViewConfigs(
         },
         {
             key: "extension-view",
-            // Match any action that has a dot (pluginId.actionName format)
+            // Match any action that has a dot (extensionId.actionName format)
             match: (id) => id !== null && id.includes('.') && !id.startsWith('quick-link'),
             component: ExtensionViewWrapper,
             getProps: (context) => {
                 // Get extension info from the current root action
                 // Note: currentRootAction comes from allActions which includes uiEntry
-                // pluginId is stored in item.pluginId
+                // extensionId is stored in item.extensionId
                 const action = context.currentRootAction as any;
-                // Try to get pluginId from item, or extract from action id (format: pluginId.actionName)
-                let pluginId = action?.item?.pluginId;
-                if (!pluginId && action?.id) {
-                    // Extract pluginId from action id (e.g., "fzdwx.hello-word.main" -> "fzdwx.hello-word")
+                // Try to get extensionId from item, or extract from action id (format: extensionId.actionName)
+                let extensionId = action?.item?.extensionId;
+                if (!extensionId && action?.id) {
+                    // Extract extensionId from action id (e.g., "fzdwx.hello-word.main" -> "fzdwx.hello-word")
                     const parts = action.id.split('.');
                     if (parts.length >= 2) {
-                        pluginId = parts.slice(0, -1).join('.');
+                        extensionId = parts.slice(0, -1).join('.');
                     }
                 }
-                console.log('[ExtensionView] action:', action, 'uiEntry:', action?.uiEntry, 'pluginId:', pluginId);
+                console.log('[ExtensionView] action:', action, 'uiEntry:', action?.uiEntry, 'extensionId:', extensionId);
                 return {
                     uiEntry: action?.uiEntry || '',
                     extensionName: action?.name || 'Extension',
-                    extensionId: pluginId,
+                    extensionId: extensionId,
                     onReturn: () => {
                         // Reset input visibility when closing
                         context.setExtensionInputHidden?.(false);

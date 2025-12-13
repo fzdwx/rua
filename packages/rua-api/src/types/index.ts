@@ -4,8 +4,8 @@
 
 // Manifest types
 export type {
-  PluginManifest,
-  PluginPermission,
+  ExtensionManifest,
+  ExtensionPermission,
   ActionMode,
   ManifestAction,
   RuaConfig,
@@ -22,7 +22,7 @@ export {
 export type {
   ActionContext,
   ViewProps,
-  PluginAction,
+  ExtensionAction,
   RegisteredAction,
   ManifestDerivedAction,
 } from './action';
@@ -34,29 +34,28 @@ export type {
   NotificationAPI,
   StorageAPI,
   EventHandler,
-  PluginAPI,
-  PluginModule,
+  ExtensionAPI,
+  ExtensionModule,
 } from './api';
 
 // Registry types
 export type {
-  PluginInfo,
-  PluginState,
+  ExtensionInfo,
+  ExtensionState,
   RegistryState,
-  PluginRegistryEvent,
-  PluginEventData,
-  IPluginRegistry,
-} from './registry';
+  ExtensionRegistryEvent,
+  ExtensionEventData,
+  IExtensionRegistry,
+} from './extension-registry';
 
 export {
   REGISTRY_STATE_VERSION,
-} from './registry';
+} from './extension-registry';
 
 // Rua extension API types
 export type {
   ExtensionMeta,
   DynamicAction,
-  EventHandler as RuaEventHandler,
   RuaClientAPI,
   RuaServerAPI,
   RuaHostCallbacks,

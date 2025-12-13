@@ -3,6 +3,6 @@
  */
 
 export {
-  PluginRegistry,
+  ExtensionRegistry,
   type RegistryStorage,
-} from './plugin-registry';
+} from './extension-registry';

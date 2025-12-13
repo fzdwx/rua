@@ -2,10 +2,10 @@
  * Extension View Wrapper Component
  *
  * Wraps ExtensionView to provide dev mode hot reload support
- * by connecting to the PluginSystemContext.
+ * by connecting to the ExtensionSystemContext.
  */
 
-import { usePluginSystem } from '@/contexts/PluginSystemContext';
+import { useExtensionSystem } from '@/contexts/ExtensionSystemContext.tsx';
 import { ExtensionView } from './ExtensionView';
 import type { DynamicAction } from '@/lib/extension-server-api';
 
@@ -23,7 +23,7 @@ interface ExtensionViewWrapperProps {
 }
 
 /**
- * Wrapper component that connects ExtensionView to PluginSystemContext
+ * Wrapper component that connects ExtensionView to ExtensionSystemContext
  * for dev mode hot reload support.
  */
 export function ExtensionViewWrapper({
@@ -33,26 +33,26 @@ export function ExtensionViewWrapper({
   onReturn,
   onInputVisibilityChange,
 }: ExtensionViewWrapperProps) {
-  const { devRefreshKey, plugins, registerDynamicActions, unregisterDynamicActions } = usePluginSystem();
-  
+  const { devRefreshKey, extensions, registerDynamicActions, unregisterDynamicActions } = useExtensionSystem();
+
   // Find the extension to get its permissions and version
-  const extension = plugins.find(p => p.manifest.id === extensionId);
+  const extension = extensions.find(p => p.manifest.id === extensionId);
   const permissions = extension?.manifest.permissions;
   const extensionVersion = extension?.manifest.version;
-  
+
   // Handle dynamic action registration
   const handleRegisterActions = (actions: DynamicAction[]) => {
     if (extensionId) {
       registerDynamicActions?.(extensionId, actions);
     }
   };
-  
+
   const handleUnregisterActions = (actionIds: string[]) => {
     if (extensionId) {
       unregisterDynamicActions?.(extensionId, actionIds);
     }
   };
-  
+
   return (
     <ExtensionView
       uiEntry={uiEntry}

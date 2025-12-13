@@ -1,24 +1,24 @@
 /**
- * Manifest module exports
+ * Manifest utilities - consolidated module
+ * 
+ * Handles validation, serialization, and formatting of extension manifests.
  */
 
-export {
-  validateManifest,
-  parseManifest,
+// Re-export everything from individual modules
+export { 
+  validateManifest, 
+  parseManifest, 
+  formatManifest, 
+  formatManifestCompact, 
+  formatManifestJson,
   ManifestValidationError,
   type ValidationResult,
+  type FormatOptions
 } from './validator';
 
-export {
-  serializeManifest,
-  deserializeManifest,
-  readManifestFile,
-  writeManifestFile,
+export { 
+  serializeManifest, 
+  deserializeManifest, 
+  readManifestFile, 
+  writeManifestFile 
 } from './serializer';
-
-export {
-  formatManifest,
-  formatManifestCompact,
-  formatManifestJson,
-  type FormatOptions,
-} from './formatter';

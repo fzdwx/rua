@@ -6,9 +6,10 @@
  */
 
 import type {
-  PluginManifest,
-  PluginPermission,
+  ExtensionManifest,
+  ExtensionPermission,
   ActionMode,
+  ManifestAction,
 } from '../types/manifest';
 
 import {
@@ -36,7 +37,7 @@ export class ManifestValidationError extends Error {
 export interface ValidationResult {
   valid: boolean;
   errors: ManifestValidationError[];
-  manifest?: PluginManifest;
+  manifest?: ExtensionManifest;
 }
 
 /**
@@ -273,7 +274,7 @@ function validatePermissions(permissions: unknown): ManifestValidationError[] {
         `permissions[${index}]`,
         perm
       ));
-    } else if (!VALID_PERMISSIONS.includes(perm as PluginPermission)) {
+    } else if (!VALID_PERMISSIONS.includes(perm as ExtensionPermission)) {
       errors.push(new ManifestValidationError(
         `permissions[${index}] must be one of: ${VALID_PERMISSIONS.join(', ')}`,
         `permissions[${index}]`,
@@ -362,7 +363,7 @@ export function validateManifest(data: unknown): ValidationResult {
   return {
     valid: true,
     errors: [],
-    manifest: data as PluginManifest,
+    manifest: data as ExtensionManifest,
   };
 }
 
@@ -386,4 +387,119 @@ export function parseManifest(json: string): ValidationResult {
       )],
     };
   }
+}
+
+// ===== FORMATTING UTILITIES =====
+
+/**
+ * Format options for manifest display
+ */
+export interface FormatOptions {
+  includeActions?: boolean;
+  includePermissions?: boolean;
+  includeDependencies?: boolean;
+  useColors?: boolean;
+}
+
+const defaultFormatOptions: FormatOptions = {
+  includeActions: true,
+  includePermissions: true,
+  includeDependencies: false,
+  useColors: false,
+};
+
+/**
+ * Format a single action for display
+ */
+function formatAction(action: ManifestAction, indent = '  '): string {
+  const lines: string[] = [];
+  lines.push(`${indent}• ${action.title} (${action.name})`);
+  lines.push(`${indent}  Mode: ${action.mode}`);
+  
+  if (action.keywords && action.keywords.length > 0) {
+    lines.push(`${indent}  Keywords: ${action.keywords.join(', ')}`);
+  }
+  
+  if (action.subtitle) {
+    lines.push(`${indent}  Subtitle: ${action.subtitle}`);
+  }
+  
+  if (action.shortcut && action.shortcut.length > 0) {
+    lines.push(`${indent}  Shortcut: ${action.shortcut.join('+')}`);
+  }
+  
+  if (action.script) {
+    lines.push(`${indent}  Script: ${action.script}`);
+  }
+  
+  return lines.join('\n');
+}
+
+/**
+ * Format a manifest for human-readable display
+ */
+export function formatManifest(
+  manifest: ExtensionManifest,
+  options: FormatOptions = {}
+): string {
+  const opts = { ...defaultFormatOptions, ...options };
+  const lines: string[] = [];
+
+  // Header
+  lines.push(`Extension: ${manifest.name}`);
+  lines.push(`ID: ${manifest.id}`);
+  lines.push(`Version: ${manifest.version}`);
+
+  // Optional metadata
+  if (manifest.description) {
+    lines.push(`Description: ${manifest.description}`);
+  }
+
+  if (manifest.author) {
+    lines.push(`Author: ${manifest.author}`);
+  }
+
+  // Rua config
+  lines.push(`Engine Version: ${manifest.rua.engineVersion}`);
+
+  if (manifest.rua.ui) {
+    lines.push(`UI Entry: ${manifest.rua.ui.entry}`);
+  }
+
+  // Permissions
+  if (opts.includePermissions && manifest.permissions && manifest.permissions.length > 0) {
+    lines.push('');
+    lines.push('Permissions:');
+    manifest.permissions.forEach(perm => {
+      lines.push(`  • ${perm}`);
+    });
+  }
+
+  // Actions
+  if (opts.includeActions && manifest.rua.actions.length > 0) {
+    lines.push('');
+    lines.push(`Actions (${manifest.rua.actions.length}):`);
+    manifest.rua.actions.forEach(action => {
+      lines.push(formatAction(action));
+    });
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Format manifest as a compact single-line summary
+ */
+export function formatManifestCompact(manifest: ExtensionManifest): string {
+  const actionCount = manifest.rua.actions.length;
+  const permCount = manifest.permissions?.length ?? 0;
+  
+  return `${manifest.name} v${manifest.version} (${manifest.id}) - ${actionCount} action(s), ${permCount} permission(s)`;
+}
+
+/**
+ * Format manifest for JSON display (pretty printed)
+ */
+export function formatManifestJson(manifest: ExtensionManifest): string {
+  return JSON.stringify(manifest, null, 2);
 }

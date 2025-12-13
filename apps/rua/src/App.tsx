@@ -1,7 +1,7 @@
 import Home from "./home/Home";
 import {ActionUsageProvider} from "@/hooks/useActionUsage";
 import {WeatherConfigProvider} from "@/hooks/useWeatherConfig";
-import {PluginSystemProvider} from "@/contexts/PluginSystemContext";
+import {PluginSystemProvider} from "@/contexts/ExtensionSystemContext.tsx";
 
 
 function AppContent() {

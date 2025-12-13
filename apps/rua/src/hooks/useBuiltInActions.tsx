@@ -14,6 +14,7 @@ import {extensionManagerId} from "@/home/viewConfig";
  */
 export function useBuiltInActions(
     setRootActionId: (rootActionId: (ActionId | null)) => void,
+    setSearch: (search: string) => void,
     refreshKey: number = 0 // Used to force refresh when quick links are updated
 ): Action[] {
     const {getUsageCount, incrementUsage} = useActionUsage();
@@ -44,7 +45,7 @@ export function useBuiltInActions(
             deleteQuickLink
         ));
 
-        // Plugin manager action
+        // Extension manager action
         actions.push({
             id: extensionManagerId,
             name: "Manage Extension",
@@ -55,7 +56,12 @@ export function useBuiltInActions(
             usageCount: getUsageCount(extensionManagerId),
             perform: () => {
                 incrementUsage(extensionManagerId);
-                setRootActionId(extensionManagerId);
+                // Clear search input before entering extension view
+                setSearch("");
+                // Use setTimeout to ensure search is cleared before setting root action
+                setTimeout(() => {
+                    setRootActionId(extensionManagerId);
+                }, 0);
             },
         });
 
@@ -68,5 +74,5 @@ export function useBuiltInActions(
         // etc.
 
         return actions;
-    }, [getUsageCount, incrementUsage, quickLinks, setRootActionId, deleteQuickLink, refreshKey]);
+    }, [getUsageCount, incrementUsage, quickLinks, setRootActionId, setSearch, deleteQuickLink, refreshKey]);
 }

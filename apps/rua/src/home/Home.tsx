@@ -10,7 +10,7 @@ import {
 } from "@/command";
 import {useApplications} from "@/hooks/useApplications";
 import {useBuiltInActions} from "@/hooks/useBuiltInActions";
-import {usePluginActionsForPalette} from "@/hooks/usePluginActions";
+import {useExtensionActionsForPalette} from "@/hooks/useExtensionActions";
 import {useTheme} from "@/hooks/useTheme";
 import {Icon} from "@iconify/react";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
@@ -42,15 +42,15 @@ export default function Home() {
 
     // Get built-in actions (static actions like translate)
     // refreshKey forces re-computation when quick links are updated
-    const builtInActions = useBuiltInActions(setRootActionId, refreshKey);
+    const builtInActions = useBuiltInActions(setRootActionId, setSearch, refreshKey);
 
-    // Get plugin/extension actions
-    const pluginActions = usePluginActionsForPalette(setRootActionId);
+    // Get extension actions
+    const extensionActions = useExtensionActionsForPalette(setRootActionId, setSearch);
 
-    // Combine all actions (built-in actions first for priority, then plugins, then applications)
+    // Combine all actions (built-in actions first for priority, then extensions, then applications)
     const allActions = useMemo(() => {
-        return [...builtInActions, ...pluginActions, ...applicationActions];
-    }, [builtInActions, pluginActions, applicationActions]);
+        return [...builtInActions, ...extensionActions, ...applicationActions];
+    }, [builtInActions, extensionActions, applicationActions]);
 
     // Handle window focus - respect disableSearchFocus flag
     useEffect(() => {

@@ -1,17 +1,17 @@
 /**
- * Plugin Manifest Types
+ * Extension Manifest Types
  * 
- * Defines the structure of plugin manifest.json files.
+ * Defines the structure of extension manifest.json files.
  * Based on Requirements 3.1, 3.2
  * 
  * Design inspired by KunKun extensions: https://docs.kunkun.sh/extensions/
  */
 
 /**
- * Available plugin permissions
- * Plugins must declare required permissions in their manifest
+ * Available extension permissions
+ * Extensions must declare required permissions in their manifest
  */
-export type PluginPermission =
+export type ExtensionPermission =
   | 'clipboard'      // Read/write clipboard
   | 'notification'   // Show system notifications
   | 'storage'        // Local storage access
@@ -28,11 +28,11 @@ export type ActionMode =
 /**
  * Action definition in manifest
  * 
- * Each plugin can define multiple actions in the manifest.
+ * Each extension can define multiple actions in the manifest.
  * Actions with mode 'view' will load the UI entry with ?action={name} parameter.
  */
 export interface ManifestAction {
-  /** Action identifier (unique within plugin) */
+  /** Action identifier (unique within extension) */
   name: string;
   /** Display title shown in command palette */
   title: string;
@@ -51,7 +51,7 @@ export interface ManifestAction {
 }
 
 /**
- * Rua-specific plugin configuration
+ * Rua-specific extension configuration
  */
 export interface RuaConfig {
   /** Minimum required Rua engine version */
@@ -68,17 +68,17 @@ export interface RuaConfig {
   };
   
   /** 
-   * Initialization script executed when plugin loads
+   * Initialization script executed when extension loads
    * Can be used for background tasks, registering shortcuts, etc.
    */
   init?: string;
   
-  /** Actions defined by this plugin */
+  /** Actions defined by this extension */
   actions: ManifestAction[];
 }
 
 /**
- * Plugin manifest structure (manifest.json)
+ * Extension manifest structure (manifest.json)
  * 
  * Required fields: id, name, version, rua
  * Optional fields provide additional metadata and configuration
@@ -86,8 +86,8 @@ export interface RuaConfig {
  * @example
  * ```json
  * {
- *   "id": "author.my-plugin",
- *   "name": "My Plugin",
+ *   "id": "author.my-extension",
+ *   "name": "My Extension",
  *   "version": "1.0.0",
  *   "rua": {
  *     "engineVersion": "^0.1.0",
@@ -112,9 +112,9 @@ export interface RuaConfig {
  * }
  * ```
  */
-export interface PluginManifest {
+export interface ExtensionManifest {
   // Required fields
-  /** Unique plugin identifier, format: author.plugin-name */
+  /** Unique extension identifier, format: author.extension-name */
   id: string;
   /** Display name shown in UI */
   name: string;
@@ -125,22 +125,22 @@ export interface PluginManifest {
   rua: RuaConfig;
 
   // Optional metadata
-  /** Plugin description */
+  /** Extension description */
   description?: string;
-  /** Plugin author name or email */
+  /** Extension author name or email */
   author?: string;
-  /** Plugin homepage URL */
+  /** Extension homepage URL */
   homepage?: string;
-  /** Plugin repository URL */
+  /** Extension repository URL */
   repository?: string;
-  /** Search keywords for the plugin */
+  /** Search keywords for the extension */
   keywords?: string[];
-  /** Plugin icon path or iconify icon name (e.g., "tabler:puzzle") */
+  /** Extension icon path or iconify icon name (e.g., "tabler:puzzle") */
   icon?: string;
 
   // Permissions
-  /** Required permissions for plugin functionality */
-  permissions?: PluginPermission[];
+  /** Required permissions for extension functionality */
+  permissions?: ExtensionPermission[];
 
   // Dependencies
   /** External package dependencies */
@@ -148,9 +148,9 @@ export interface PluginManifest {
 }
 
 /**
- * Required fields in a plugin manifest
+ * Required fields in an extension manifest
  */
-export const REQUIRED_MANIFEST_FIELDS: (keyof PluginManifest)[] = [
+export const REQUIRED_MANIFEST_FIELDS: (keyof ExtensionManifest)[] = [
   'id',
   'name', 
   'version',
@@ -168,7 +168,7 @@ export const REQUIRED_RUA_FIELDS: (keyof RuaConfig)[] = [
 /**
  * All valid permission values
  */
-export const VALID_PERMISSIONS: PluginPermission[] = [
+export const VALID_PERMISSIONS: ExtensionPermission[] = [
   'clipboard',
   'notification',
   'storage',

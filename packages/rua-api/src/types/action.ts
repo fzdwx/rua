@@ -1,7 +1,7 @@
 /**
- * Plugin Action Types
+ * Extension Action Types
  * 
- * Defines the structure for plugin-registered actions.
+ * Defines the structure for extension-registered actions.
  * Based on Requirements 4.1
  */
 
@@ -38,15 +38,15 @@ export interface ViewProps {
 }
 
 /**
- * Plugin action definition
+ * Extension action definition
  * 
- * Actions are the primary way plugins extend the command palette.
+ * Actions are the primary way extensions extend the command palette.
  * Each action can have an execute function and/or a custom view.
  */
-export interface PluginAction {
+export interface ExtensionAction {
   /** 
-   * Action ID (will be prefixed with plugin ID)
-   * e.g., "search" becomes "my-plugin.search"
+   * Action ID (will be prefixed with extension ID)
+   * e.g., "search" becomes "my-extension.search"
    */
   id: string;
   
@@ -70,7 +70,7 @@ export interface PluginAction {
   
   /** 
    * Parent action ID for nested actions
-   * Use full ID including plugin prefix
+   * Use full ID including extension prefix
    */
   parent?: string;
   
@@ -100,21 +100,21 @@ export interface PluginAction {
 /**
  * Internal action representation with full namespaced ID
  */
-export interface RegisteredAction extends Omit<PluginAction, 'id'> {
-  /** Full namespaced ID (plugin-id.action-id) */
+export interface RegisteredAction extends Omit<ExtensionAction, 'id'> {
+  /** Full namespaced ID (extension-id.action-id) */
   id: string;
   /** Original action ID without namespace */
   originalId: string;
-  /** Plugin ID that registered this action */
-  pluginId: string;
+  /** Extension ID that registered this action */
+  extensionId: string;
 }
 
 /**
  * Action created from manifest definition
- * Used when loading actions from plugin manifest
+ * Used when loading actions from extension manifest
  */
 export interface ManifestDerivedAction {
-  /** Full namespaced ID (plugin-id.action-name) */
+  /** Full namespaced ID (extension-id.action-name) */
   id: string;
   /** Display title */
   name: string;
@@ -128,8 +128,8 @@ export interface ManifestDerivedAction {
   subtitle?: string;
   /** Keyboard shortcut */
   shortcut?: string[];
-  /** Plugin ID */
-  pluginId: string;
+  /** Extension ID */
+  extensionId: string;
   /** Original action name from manifest */
   actionName: string;
   /** UI entry URL (for view mode) */

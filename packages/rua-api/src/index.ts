@@ -23,8 +23,7 @@ export * from './loader';
 // Export API utilities
 export * from './api';
 
-// Export components
-export * from './components';
+// Components removed - not currently used
 
 // Export browser API for extensions
 export * from './browser';

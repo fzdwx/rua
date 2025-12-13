@@ -1,12 +1,12 @@
 /**
- * Plugin API Types
+ * Extension API Types
  * 
- * Defines the API interface exposed to plugins.
+ * Defines the API interface exposed to extensions.
  * Based on Requirements 5.1, 5.3
  */
 
 import type { ComponentType } from 'react';
-import type { PluginAction, ViewProps } from './action';
+import type { ExtensionAction, ViewProps } from './action';
 
 /**
  * Notification options
@@ -43,7 +43,7 @@ export interface NotificationAPI {
 /**
  * Storage API
  * Requires 'storage' permission
- * Data is namespaced per plugin
+ * Data is namespaced per extension
  */
 export interface StorageAPI {
   /** Get a value from storage */
@@ -52,9 +52,9 @@ export interface StorageAPI {
   set<T>(key: string, value: T): Promise<void>;
   /** Remove a value from storage */
   remove(key: string): Promise<void>;
-  /** List all keys in plugin's namespace */
+  /** List all keys in extension's namespace */
   keys(): Promise<string[]>;
-  /** Clear all plugin data */
+  /** Clear all extension data */
   clear(): Promise<void>;
 }
 
@@ -64,19 +64,19 @@ export interface StorageAPI {
 export type EventHandler<T = unknown> = (data: T) => void;
 
 /**
- * Main Plugin API interface
+ * Main Extension API interface
  * 
- * This is the primary interface plugins use to interact with the host application.
+ * This is the primary interface extensions use to interact with the host application.
  * API methods are permission-gated based on manifest declarations.
  */
-export interface PluginAPI {
-  /** Plugin ID */
-  readonly pluginId: string;
+export interface ExtensionAPI {
+  /** Extension ID */
+  readonly extensionId: string;
 
   // Action registration
   /** Register one or more actions */
-  registerActions(actions: PluginAction[]): void;
-  /** Unregister actions by their IDs (without plugin prefix) */
+  registerActions(actions: ExtensionAction[]): void;
+  /** Unregister actions by their IDs (without extension prefix) */
   unregisterActions(actionIds: string[]): void;
 
   // View registration
@@ -101,13 +101,13 @@ export interface PluginAPI {
 }
 
 /**
- * Plugin module interface
+ * Extension module interface
  * 
- * Plugins must export an activate function and optionally a deactivate function.
+ * Extensions must export an activate function and optionally a deactivate function.
  */
-export interface PluginModule {
-  /** Called when plugin is loaded */
-  activate(api: PluginAPI): void | Promise<void>;
-  /** Called when plugin is unloaded (optional) */
+export interface ExtensionModule {
+  /** Called when extension is loaded */
+  activate(api: ExtensionAPI): void | Promise<void>;
+  /** Called when extension is unloaded (optional) */
   deactivate?(): void | Promise<void>;
 }

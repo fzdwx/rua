@@ -1,7 +1,7 @@
 {
   "name": "rua-api",
   "version": "0.3.2",
-  "description": "Plugin API for Rua command palette",
+  "description": "Extension API for Rua command palette",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -23,7 +23,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "bun run build"
   },
   "keywords": [
     "rua",

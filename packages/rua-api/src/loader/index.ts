@@ -3,8 +3,8 @@
  */
 
 export {
-  PluginLoader,
-  type LoadedPlugin,
+  ExtensionLoader,
+  type LoadedExtension,
   type LoadResult,
-  type PluginLoaderOptions,
-} from './plugin-loader';
+  type ExtensionLoaderOptions,
+} from './extension-loader';

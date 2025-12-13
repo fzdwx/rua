@@ -1,21 +1,21 @@
 /**
- * Plugin API Implementation
- * 
- * Provides the API interface for plugins to interact with the host application.
+ * Extension API Implementation
+ *
+ * Provides the API interface for extensions to interact with the host application.
  * Based on Requirements 4.1, 4.2, 4.3, 5.1, 5.3
  */
 
-import type { ComponentType } from 'react';
+import type {ComponentType} from 'react';
 import type {
-  PluginAPI,
   ClipboardAPI,
-  NotificationAPI,
-  StorageAPI,
-  NotificationOptions,
   EventHandler,
-} from '../types/api';
-import type { PluginAction, ViewProps, RegisteredAction } from '../types/action';
-import type { PluginManifest, PluginPermission } from '../types/manifest';
+  ExtensionAPI,
+  NotificationAPI,
+  NotificationOptions,
+  StorageAPI,
+} from '../types';
+import type {ExtensionAction, RegisteredAction, ViewProps} from '../types';
+import type {ExtensionManifest, ExtensionPermission} from '../types';
 
 /**
  * Action store interface for registering/unregistering actions
@@ -55,20 +55,20 @@ export interface PlatformAPIs {
 }
 
 /**
- * Plugin API factory options
+ * Extension API factory options
  */
-export interface PluginAPIOptions {
-  pluginId: string;
-  manifest: PluginManifest;
+export interface ExtensionAPIOptions {
+  extensionId: string;
+  manifest: ExtensionManifest;
   actionStore: ActionStore;
   viewStore?: ViewStore;
   platformAPIs?: PlatformAPIs;
 }
 
 /**
- * Event emitter for plugin events
+ * Event emitter for extension events
  */
-class PluginEventEmitter {
+class ExtensionEventEmitter {
   private listeners: Map<string, Set<EventHandler>> = new Map();
 
   on<T>(event: string, handler: EventHandler<T>): void {
@@ -87,16 +87,16 @@ class PluginEventEmitter {
       try {
         handler(data);
       } catch (e) {
-        console.error(`Error in plugin event handler for ${event}:`, e);
+        console.error(`Error in extension event handler for ${event}:`, e);
       }
     });
   }
 }
 
 /**
- * Check if plugin has a specific permission
+ * Check if extension has a specific permission
  */
-function hasPermission(manifest: PluginManifest, permission: PluginPermission): boolean {
+function hasPermission(manifest: ExtensionManifest, permission: ExtensionPermission): boolean {
   return manifest.permissions?.includes(permission) ?? false;
 }
 
@@ -104,8 +104,8 @@ function hasPermission(manifest: PluginManifest, permission: PluginPermission): 
  * Create a permission-gated API wrapper
  */
 function createPermissionGate<T>(
-  manifest: PluginManifest,
-  permission: PluginPermission,
+  manifest: ExtensionManifest,
+  permission: ExtensionPermission,
   api: T | undefined,
   apiName: string
 ): T {
@@ -138,15 +138,15 @@ function createDummyAPI(apiName: string): Record<string, () => Promise<never>> {
  * Create an API that denies access due to missing permission
  */
 function createPermissionDeniedAPI(
-  pluginId: string,
-  permission: PluginPermission,
+  extensionId: string,
+  permission: ExtensionPermission,
   apiName: string
 ): Record<string, () => Promise<never>> {
   return new Proxy({}, {
     get: (_, method) => {
       return async () => {
         console.warn(
-          `Plugin ${pluginId} attempted to use ${apiName}.${String(method)} without '${permission}' permission`
+          `Extension ${extensionId} attempted to use ${apiName}.${String(method)} without '${permission}' permission`
         );
         throw new Error(`Permission denied: '${permission}' permission required for ${apiName}`);
       };
@@ -155,11 +155,11 @@ function createPermissionDeniedAPI(
 }
 
 /**
- * Create Plugin API instance
+ * Create Extension API instance
  */
-export function createPluginAPI(options: PluginAPIOptions): PluginAPI {
-  const { pluginId, manifest, actionStore, viewStore, platformAPIs } = options;
-  const emitter = new PluginEventEmitter();
+export function createExtensionAPI(options: ExtensionAPIOptions): ExtensionAPI {
+  const { extensionId, manifest, actionStore, viewStore, platformAPIs } = options;
+  const emitter = new ExtensionEventEmitter();
   const registeredActionIds: Set<string> = new Set();
 
   // Clipboard API with permission check
@@ -182,35 +182,35 @@ export function createPluginAPI(options: PluginAPIOptions): PluginAPI {
   let storage: StorageAPI;
   if (hasPermission(manifest, 'storage') && platformAPIs?.storage) {
     storage = {
-      get: <T>(key: string) => platformAPIs.storage!.get(pluginId, key) as Promise<T | null>,
-      set: <T>(key: string, value: T) => platformAPIs.storage!.set(pluginId, key, value),
-      remove: (key: string) => platformAPIs.storage!.remove(pluginId, key),
-      keys: () => platformAPIs.storage!.keys(pluginId),
-      clear: () => platformAPIs.storage!.clear(pluginId),
+      get: <T>(key: string) => platformAPIs.storage!.get(extensionId, key) as Promise<T | null>,
+      set: <T>(key: string, value: T) => platformAPIs.storage!.set(extensionId, key, value),
+      remove: (key: string) => platformAPIs.storage!.remove(extensionId, key),
+      keys: () => platformAPIs.storage!.keys(extensionId),
+      clear: () => platformAPIs.storage!.clear(extensionId),
     };
   } else {
     storage = createDummyAPI('storage') as unknown as StorageAPI;
   }
 
-  const api: PluginAPI = {
-    pluginId,
+  return {
+    extensionId: extensionId,
 
-    registerActions(actions: PluginAction[]): void {
+    registerActions(actions: ExtensionAction[]): void {
       const registeredActions: RegisteredAction[] = [];
 
       for (const action of actions) {
         // Create namespaced ID
-        const namespacedId = `${pluginId}.${action.id}`;
+        const namespacedId = `${extensionId}.${action.id}`;
 
         // Validate parent if specified
         if (action.parent) {
-          const parentId = action.parent.includes('.') 
-            ? action.parent 
-            : `${pluginId}.${action.parent}`;
-          
+          const parentId = action.parent.includes('.')
+              ? action.parent
+              : `${extensionId}.${action.parent}`;
+
           if (!actionStore.has(parentId) && !registeredActionIds.has(parentId)) {
             console.error(
-              `Plugin ${pluginId}: Cannot register action '${action.id}' - parent '${action.parent}' not found`
+                `Extension ${extensionId}: Cannot register action '${action.id}' - parent '${action.parent}' not found`
             );
             continue;
           }
@@ -220,10 +220,10 @@ export function createPluginAPI(options: PluginAPIOptions): PluginAPI {
           ...action,
           id: namespacedId,
           originalId: action.id,
-          pluginId,
-          parent: action.parent 
-            ? (action.parent.includes('.') ? action.parent : `${pluginId}.${action.parent}`)
-            : undefined,
+          extensionId: extensionId,
+          parent: action.parent
+              ? (action.parent.includes('.') ? action.parent : `${extensionId}.${action.parent}`)
+              : undefined,
         };
 
         registeredActions.push(registered);
@@ -236,21 +236,21 @@ export function createPluginAPI(options: PluginAPIOptions): PluginAPI {
     },
 
     unregisterActions(actionIds: string[]): void {
-      const namespacedIds = actionIds.map(id => 
-        id.includes('.') ? id : `${pluginId}.${id}`
+      const namespacedIds = actionIds.map(id =>
+          id.includes('.') ? id : `${extensionId}.${id}`
       );
-      
+
       actionStore.unregister(namespacedIds);
       namespacedIds.forEach(id => registeredActionIds.delete(id));
     },
 
     registerView(actionId: string, component: ComponentType<ViewProps>): void {
       if (!viewStore) {
-        console.warn(`Plugin ${pluginId}: View store not available`);
+        console.warn(`Extension ${extensionId}: View store not available`);
         return;
       }
 
-      const namespacedId = actionId.includes('.') ? actionId : `${pluginId}.${actionId}`;
+      const namespacedId = actionId.includes('.') ? actionId : `${extensionId}.${actionId}`;
       viewStore.register(namespacedId, component);
     },
 
@@ -270,15 +270,13 @@ export function createPluginAPI(options: PluginAPIOptions): PluginAPI {
       emitter.emit(event, data);
     },
   };
-
-  return api;
 }
 
 /**
- * Get all action IDs registered by a plugin API instance
- * This is useful for cleanup when unloading a plugin
+ * Get all action IDs registered by an extension API instance
+ * This is useful for cleanup when unloading an extension
  */
-export function getRegisteredActionIds(_api: PluginAPI): string[] {
+export function getRegisteredActionIds(_api: ExtensionAPI): string[] {
   // This would need to be tracked internally
   // For now, return empty array - actual implementation would track this
   return [];

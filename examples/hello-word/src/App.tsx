@@ -118,7 +118,7 @@ function App() {
     <div className="container">
       <div>
         <h1>👋 Hello World!</h1>
-        <p>Current action: {action || 'none'}</p>
+        <p>Current action 123123: {action || 'none'}</p>
       </div>
 
       <div className="section">

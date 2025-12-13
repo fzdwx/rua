@@ -1,6 +1,6 @@
 /**
  * Extension System Context
- * 
+ *
  * Provides extension system access throughout the application.
  * Based on Requirements 8.1
  */
@@ -82,7 +82,7 @@ export interface ManifestDerivedAction {
   icon?: string;
   subtitle?: string;
   shortcut?: string[];
-  pluginId: string;
+  extensionId: string;
   actionName: string;
   uiEntry?: string;
   script?: string;
@@ -103,15 +103,15 @@ export interface DynamicAction {
 /**
  * Extension system context value
  */
-export interface PluginSystemContextValue {
+export interface ExtensionSystemContextValue {
   /** Whether the extension system is initialized */
   initialized: boolean;
   /** Whether extensions are currently loading */
   loading: boolean;
   /** All installed extensions */
-  plugins: ExtensionInfo[];
+  extensions: ExtensionInfo[];
   /** All actions from enabled extensions */
-  pluginActions: ManifestDerivedAction[];
+  extensionActions: ManifestDerivedAction[];
   /** Extensions directory path */
   extensionsPath: string | null;
   /** Development extension path (for live preview) */
@@ -129,18 +129,18 @@ export interface PluginSystemContextValue {
   /** Unregister dynamic actions for an extension */
   unregisterDynamicActions: (extensionId: string, actionIds?: string[]) => void;
   /** Install an extension from path */
-  installPlugin: (path: string) => Promise<void>;
+  installExtension: (path: string) => Promise<void>;
   /** Uninstall an extension */
-  uninstallPlugin: (pluginId: string) => Promise<void>;
+  uninstallExtension: (extensionId: string) => Promise<void>;
   /** Enable an extension */
-  enablePlugin: (pluginId: string) => Promise<void>;
+  enableExtension: (extensionId: string) => Promise<void>;
   /** Disable an extension */
-  disablePlugin: (pluginId: string) => Promise<void>;
+  disableExtension: (extensionId: string) => Promise<void>;
   /** Reload all extensions */
-  reloadPlugins: () => Promise<void>;
+  reloadExtensions: () => Promise<void>;
 }
 
-const PluginSystemContext = createContext<PluginSystemContextValue | null>(null);
+const ExtensionSystemContext = createContext<ExtensionSystemContextValue | null>(null);
 
 /**
  * Props for PluginSystemProvider
@@ -155,9 +155,9 @@ export interface PluginSystemProviderProps {
 function convertExtensionToActions(ext: ExtensionInfo): ManifestDerivedAction[] {
   const { manifest, path: extPath } = ext;
   const uiEntry = manifest.rua.ui?.entry;
-  
+
   console.log('[convertExtensionToActions] ext:', ext.manifest.id, 'path:', extPath, 'uiEntry:', uiEntry);
-  
+
   return manifest.rua.actions.map((action) => {
     const derivedAction = {
       id: `${manifest.id}.${action.name}`,
@@ -167,9 +167,9 @@ function convertExtensionToActions(ext: ExtensionInfo): ManifestDerivedAction[] 
       icon: action.icon,
       subtitle: action.subtitle,
       shortcut: action.shortcut,
-      pluginId: manifest.id,
+      extensionId: manifest.id,
       actionName: action.name,
-      uiEntry: action.mode === 'view' && uiEntry 
+      uiEntry: action.mode === 'view' && uiEntry
         ? `${extPath}/${uiEntry}?action=${action.name}`
         : undefined,
       script: action.mode === 'command' && action.script
@@ -210,22 +210,22 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
     }
     return null;
   });
-  
+
   // Dev mode hot reload state
   const [devRefreshKey, setDevRefreshKey] = useState(0);
-  
+
   // Dynamic actions registered by extensions at runtime
   const [dynamicActions, setDynamicActions] = useState<Map<string, DynamicAction[]>>(new Map());
-  
+
   // Track if we should start watching after initial load
   const shouldStartWatchingRef = useRef(false);
-  
+
   // File change handler - increment refresh key to trigger hot reload
   const handleFileChange = useCallback((event: FileChangeEvent) => {
-    console.log('[PluginSystemContext] File changed:', event.path);
+    console.log('[ExtensionSystemContext] File changed:', event.path);
     setDevRefreshKey(prev => prev + 1);
   }, []);
-  
+
   // File watcher hook
   const { isWatching, startWatching, stopWatching } = useFileWatcher({
     onFileChange: handleFileChange,
@@ -235,14 +235,14 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
   const loadExtensions = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Get extensions path
       const path = await invoke<string>('get_extensions_path');
       setExtensionsPath(path);
-      
+
       // Get all installed extensions
       const extensions = await invoke<ExtensionInfo[]>('get_extensions');
-      
+
       // Load dev extension if path is set
       let allExtensions = [...extensions];
       if (devExtensionPath) {
@@ -255,15 +255,15 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
           allExtensions.unshift(devExt);
         }
       }
-      
+
       setPlugins(allExtensions);
-      
+
       // Convert enabled extensions to actions
       const actions = allExtensions
         .filter(ext => ext.enabled && !ext.error)
         .flatMap(convertExtensionToActions);
       setPluginActions(actions);
-      
+
       setInitialized(true);
     } catch (error) {
       console.error('Failed to load extensions:', error);
@@ -282,7 +282,7 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
         console.error('Failed to stop file watcher:', error);
       }
     }
-    
+
     setDevExtensionPathState(path);
     if (path) {
       localStorage.setItem('rua:devExtensionPath', path);
@@ -300,27 +300,27 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
   useEffect(() => {
     loadExtensions();
   }, [loadExtensions]);
-  
+
   // Start/stop file watcher based on dev extension path
   useEffect(() => {
     // Only start watching after initial load is complete
     if (!initialized) return;
-    
+
     const setupWatcher = async () => {
       if (devExtensionPath && shouldStartWatchingRef.current) {
         try {
           await startWatching(devExtensionPath);
-          console.log('[PluginSystemContext] Started watching:', devExtensionPath);
+          console.log('[ExtensionSystemContext] Started watching:', devExtensionPath);
           shouldStartWatchingRef.current = false;
         } catch (error) {
           console.error('Failed to start file watcher:', error);
         }
       }
     };
-    
+
     setupWatcher();
   }, [initialized, devExtensionPath, startWatching]);
-  
+
   // Start watching on initial load if dev path is set
   useEffect(() => {
     if (initialized && devExtensionPath && !isWatching) {
@@ -331,7 +331,7 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
   }, [initialized, devExtensionPath, isWatching, startWatching]);
 
   // Install extension
-  const installPlugin = useCallback(async (path: string) => {
+  const installExtension = useCallback(async (path: string) => {
     try {
       await invoke('install_extension', { sourcePath: path });
       await loadExtensions();
@@ -342,7 +342,7 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
   }, [loadExtensions]);
 
   // Uninstall extension
-  const uninstallPlugin = useCallback(async (pluginId: string) => {
+  const uninstallExtension = useCallback(async (pluginId: string) => {
     try {
       // Clean up dynamic actions when extension is uninstalled
       setDynamicActions(prev => {
@@ -359,7 +359,7 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
   }, [loadExtensions]);
 
   // Enable extension
-  const enablePlugin = useCallback(async (pluginId: string) => {
+  const enableExtension = useCallback(async (pluginId: string) => {
     try {
       await invoke('enable_extension', { extensionId: pluginId });
       await loadExtensions();
@@ -370,7 +370,7 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
   }, [loadExtensions]);
 
   // Disable extension
-  const disablePlugin = useCallback(async (pluginId: string) => {
+  const disableExtension = useCallback(async (pluginId: string) => {
     try {
       // Clean up dynamic actions when extension is disabled
       setDynamicActions(prev => {
@@ -387,13 +387,13 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
   }, [loadExtensions]);
 
   // Reload all extensions
-  const reloadPlugins = useCallback(async () => {
+  const reloadExtensions = useCallback(async () => {
     await loadExtensions();
   }, [loadExtensions]);
 
   // Register dynamic actions for an extension
   const registerDynamicActions = useCallback((extensionId: string, actions: DynamicAction[]) => {
-    console.log('[PluginSystemContext] Registering dynamic actions for:', extensionId, actions);
+    console.log('[ExtensionSystemContext] Registering dynamic actions for:', extensionId, actions);
     setDynamicActions(prev => {
       const newMap = new Map(prev);
       const existing = newMap.get(extensionId) || [];
@@ -414,7 +414,7 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
 
   // Unregister dynamic actions for an extension
   const unregisterDynamicActions = useCallback((extensionId: string, actionIds?: string[]) => {
-    console.log('[PluginSystemContext] Unregistering dynamic actions for:', extensionId, actionIds);
+    console.log('[ExtensionSystemContext] Unregistering dynamic actions for:', extensionId, actionIds);
     setDynamicActions(prev => {
       const newMap = new Map(prev);
       if (!actionIds) {
@@ -434,11 +434,11 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
     });
   }, []);
 
-  const value: PluginSystemContextValue = {
+  const value: ExtensionSystemContextValue = {
     initialized,
     loading,
-    plugins,
-    pluginActions,
+    extensions: plugins,
+    extensionActions: pluginActions,
     extensionsPath,
     devExtensionPath,
     setDevExtensionPath,
@@ -447,35 +447,27 @@ export function PluginSystemProvider({ children }: PluginSystemProviderProps) {
     dynamicActions,
     registerDynamicActions,
     unregisterDynamicActions,
-    installPlugin,
-    uninstallPlugin,
-    enablePlugin,
-    disablePlugin,
-    reloadPlugins,
+    installExtension,
+    uninstallExtension,
+    enableExtension,
+    disableExtension,
+    reloadExtensions,
   };
 
   return (
-    <PluginSystemContext.Provider value={value}>
+    <ExtensionSystemContext.Provider value={value}>
       {children}
-    </PluginSystemContext.Provider>
+    </ExtensionSystemContext.Provider>
   );
 }
 
 /**
  * Hook to access extension system
  */
-export function usePluginSystem(): PluginSystemContextValue {
-  const context = useContext(PluginSystemContext);
+export function useExtensionSystem(): ExtensionSystemContextValue {
+  const context = useContext(ExtensionSystemContext);
   if (!context) {
-    throw new Error('usePluginSystem must be used within a PluginSystemProvider');
+    throw new Error('useExtensionSystem must be used within a ExtensionSystemContext');
   }
   return context;
-}
-
-/**
- * Hook to get extension actions
- */
-export function usePluginActions(): ManifestDerivedAction[] {
-  const { pluginActions } = usePluginSystem();
-  return pluginActions;
 }

@@ -3,10 +3,10 @@
  */
 
 export {
-  createPluginAPI,
+  createExtensionAPI,
   getRegisteredActionIds,
   type ActionStore,
   type ViewStore,
   type PlatformAPIs,
-  type PluginAPIOptions,
-} from './plugin-api';
+  type ExtensionAPIOptions,
+} from './extension-api';
