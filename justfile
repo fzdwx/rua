@@ -56,3 +56,9 @@ test-ext name="test-extension":
 # Run Rua in development mode
 dev:
     bun run --cwd apps/rua tauri dev
+
+# Rebuild rua-api and hello-word example for testing
+rebuild-example:
+    cd packages/rua-api && bun run build
+    cd examples/hello-word && bun run build
+    @echo "✓ rua-api and hello-word rebuilt"

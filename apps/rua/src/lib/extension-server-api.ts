@@ -14,7 +14,7 @@ import type {
 } from 'rua-api';
 
 // Re-export types for convenience
-export type { ExtensionMeta, DynamicAction, RuaHostCallbacks, ExtensionHostInfo } from 'rua-api';
+export type { ExtensionMeta, DynamicAction, RuaHostCallbacks, RuaClientCallbacks, ExtensionHostInfo } from 'rua-api';
 
 /** Alias for RuaServerAPI */
 export type RuaAPI = RuaServerAPI;

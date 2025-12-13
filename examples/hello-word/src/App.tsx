@@ -8,12 +8,19 @@ function App() {
   const [rua, setRua] = useState<RuaAPI | null>(null)
   const [result, setResult] = useState<string>('API results will appear here...')
   const [counter, setCounter] = useState(0)
+  const [searchQuery, setSearchQuery] = useState<string>('')
 
   useEffect(() => {
     // Initialize Rua API (extension info is fetched from host)
     initializeRuaAPI().then(api => {
       setRua(api)
       setResult(`Rua API ready! Extension: ${api.extension.id}`)
+      
+      // Listen for search input changes
+      api.on('search-change', (query) => {
+        setSearchQuery(query as string)
+        console.log('[hello-word] Search changed:', query)
+      })
     }).catch(err => {
       setResult('Failed to initialize: ' + err.message)
     })
@@ -118,7 +125,8 @@ function App() {
     <div className="container">
       <div>
         <h1>👋 Hello World!</h1>
-        <p>Current action 123123: {action || 'none'}</p>
+        <p>Current action: {action || 'none'}</p>
+        <p>Search query: <strong>{searchQuery || '(empty)'}</strong></p>
       </div>
 
       <div className="section">

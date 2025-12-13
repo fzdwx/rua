@@ -20,6 +20,8 @@ interface ExtensionViewWrapperProps {
   onReturn: () => void;
   /** Callback when extension requests input visibility change */
   onInputVisibilityChange?: (visible: boolean) => void;
+  /** Current search input value */
+  search?: string;
 }
 
 /**
@@ -32,6 +34,7 @@ export function ExtensionViewWrapper({
   extensionId,
   onReturn,
   onInputVisibilityChange,
+  search,
 }: ExtensionViewWrapperProps) {
   const { devRefreshKey, extensions, registerDynamicActions, unregisterDynamicActions } = useExtensionSystem();
 
@@ -65,6 +68,7 @@ export function ExtensionViewWrapper({
       onRegisterActions={handleRegisterActions}
       onUnregisterActions={handleUnregisterActions}
       refreshKey={devRefreshKey}
+      search={search}
     />
   );
 }

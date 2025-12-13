@@ -141,6 +141,12 @@ export interface RuaHostCallbacks {
     onUnregisterActions?: (actionIds: string[]) => void;
 }
 
+/** Client-side callbacks that host can invoke */
+export interface RuaClientCallbacks {
+    /** Called when search input value changes */
+    onSearchChange?: (query: string) => void;
+}
+
 /** Extension info for the host */
 export interface ExtensionHostInfo {
     id: string;

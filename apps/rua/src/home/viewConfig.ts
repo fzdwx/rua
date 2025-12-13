@@ -154,6 +154,7 @@ export function createViewConfigs(
                     uiEntry: action?.uiEntry || '',
                     extensionName: action?.name || 'Extension',
                     extensionId: extensionId,
+                    search: context.search,
                     onReturn: () => {
                         // Reset input visibility when closing
                         context.setExtensionInputHidden?.(false);

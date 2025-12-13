@@ -19,6 +19,7 @@ export type {
     RuaClientAPI,
     RuaServerAPI,
     RuaHostCallbacks,
+    RuaClientCallbacks,
     ExtensionHostInfo,
     ManifestDerivedAction,
 } from './rua';

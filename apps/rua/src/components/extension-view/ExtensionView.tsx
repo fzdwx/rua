@@ -9,7 +9,7 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Icon } from '@iconify/react';
 import { RPCChannel, IframeParentIO } from 'kkrpc/browser';
-import { createExtensionServerAPI, type DynamicAction, type ExtensionServerAPI } from '@/lib/extension-server-api';
+import { createExtensionServerAPI, type DynamicAction, type ExtensionServerAPI, type RuaClientCallbacks } from '@/lib/extension-server-api';
 
 interface ExtensionViewProps {
   /** The extension's UI entry path with action query param */
@@ -32,6 +32,8 @@ interface ExtensionViewProps {
   onUnregisterActions?: (actionIds: string[]) => void;
   /** Refresh key for hot reload - changing this forces iframe remount */
   refreshKey?: number;
+  /** Current search input value */
+  search?: string;
 }
 
 export function ExtensionView({
@@ -45,10 +47,11 @@ export function ExtensionView({
   onRegisterActions,
   onUnregisterActions,
   refreshKey = 0,
+  search = '',
 }: ExtensionViewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const ioRef = useRef<IframeParentIO | null>(null);
-  const rpcRef = useRef<RPCChannel<ExtensionServerAPI, object> | null>(null);
+  const rpcRef = useRef<RPCChannel<ExtensionServerAPI, RuaClientCallbacks> | null>(null);
   const [_loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [_title, setTitle] = useState(extensionName);
@@ -73,9 +76,12 @@ export function ExtensionView({
     // Use custom ext:// protocol - base dir in host, filename in path
     const baseUrl = `ext://${encodedBaseDir}/${fileName}`;
 
-    // Append query params if present
-    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
-  }, [uiEntry]);
+    // Build query string with refresh key for cache busting
+    const params = new URLSearchParams(queryString || '');
+    params.set('_r', String(refreshKey));
+    
+    return `${baseUrl}?${params.toString()}`;
+  }, [uiEntry, refreshKey]);
 
   console.log('[ExtensionView] uiEntry:', uiEntry, 'extUrl:', extUrl, 'refreshKey:', refreshKey);
 
@@ -133,7 +139,7 @@ export function ExtensionView({
       );
 
       // Create RPC channel with exposed API
-      const rpc = new RPCChannel<ExtensionServerAPI, object>(io, { expose: serverAPI });
+      const rpc = new RPCChannel<ExtensionServerAPI, RuaClientCallbacks>(io, { expose: serverAPI });
       rpcRef.current = rpc;
 
       console.log(`[ExtensionView] kkrpc connection established for ${extensionId}`);
@@ -157,6 +163,24 @@ export function ExtensionView({
       iframe.removeEventListener('error', handleError);
     };
   }, [refreshKey]);
+
+  // Notify extension when search changes
+  useEffect(() => {
+    if (rpcRef.current) {
+      const clientAPI = rpcRef.current.getAPI();
+      // Use try-catch since the extension may not have registered the callback yet
+      try {
+        clientAPI.onSearchChange?.(search).catch((err: Error) => {
+          // Silently ignore if method is not registered on client side
+          if (!err.message?.includes('not a function')) {
+            console.warn('[ExtensionView] onSearchChange error:', err);
+          }
+        });
+      } catch (err) {
+        // Ignore synchronous errors
+      }
+    }
+  }, [search]);
 
   return (
     <div className="flex flex-col h-full">
