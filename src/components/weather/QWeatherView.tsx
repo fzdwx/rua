@@ -1,9 +1,9 @@
 import {Icon} from "@iconify/react";
 import {Footer} from "@/command";
-import {Kbd, KbdGroup} from "@/components/ui/Kbd";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/Card";
-import {Badge} from "@/components/ui/Badge";
-import {Separator} from "@/components/ui/Separator";
+import {Kbd, KbdGroup} from "@/components/ui/kbd";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
+import {Separator} from "@/components/ui/separator";
 import {WeatherConfig} from "@/hooks/useWeatherConfig.tsx";
 import {
     fetchQWeatherDaily,
@@ -137,7 +137,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
         <>
             <div className="p-2.5 space-y-2.5 overflow-y-auto flex-1">
                 {/* Current weather card */}
-                <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
+                <Card className="border-0 bg-[var(--gray3)] hover:shadow-md transition-shadow">
                     <CardContent className="p-3">
                         {/* Main row: city (left), temperature (center), sunrise/sunset (right) */}
                         <div className="flex items-center justify-between mb-3">
@@ -229,10 +229,10 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
 
                 {/* Daily forecast */}
                 {weatherData.daily && weatherData.daily.length > 0 && (
-                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
+                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-md transition-shadow">
                         <CardHeader className="pb-2 pt-2.5 px-3">
                             <CardTitle className="text-sm flex items-center gap-2">
-                                <Icon icon="tabler:calendar-week" style={{fontSize: "16px"}} />
+                                <Icon icon="tabler:calendar-week" className="size-4" />
                                 7日天气预报
                             </CardTitle>
                         </CardHeader>
@@ -248,10 +248,10 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
 
                 {/* Life indices */}
                 {weatherData.indices && weatherData.indices.length > 0 && (
-                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
+                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-md transition-shadow">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm flex items-center gap-2">
-                                <Icon icon="tabler:bulb" style={{fontSize: "16px"}} />
+                                <Icon icon="tabler:bulb" className="size-4" />
                                 生活指数
                             </CardTitle>
                         </CardHeader>
@@ -284,7 +284,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
 
             <Footer
                 current={null}
-                icon={<Icon icon="tabler:cloud" style={{fontSize: "20px"}}/>}
+                icon={<Icon icon="tabler:cloud" className="size-5" />}
                 actions={() => []}
                 content={() => (
                     <div className="text-[11px] text-center text-gray-10">
@@ -294,7 +294,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
                 rightElement={
                     <div className='flex items-center gap-3 pr-6 flex-shrink-0'>
                         <div className="flex items-center gap-1.5 text-xs text-gray-11">
-                            <Icon icon="tabler:settings" style={{fontSize: "20px"}}/>
+                            <Icon icon="tabler:settings" className="size-5" />
                             <KbdGroup className="gap-1">
                                 <Kbd>Ctrl</Kbd>
                                 <Kbd>K</Kbd>
@@ -313,7 +313,7 @@ export function QWeatherView({weatherData, isDefaultCity}: QWeatherViewProps) {
 function WeatherStat({icon, label, value}: {icon: string, label: string, value: string}) {
     return (
         <div className="flex items-center gap-1.5">
-            <Icon icon={icon} className="text-gray-11" style={{fontSize: "14px"}} />
+            <Icon icon={icon} className="text-gray-11 size-3.5" />
             <div className="flex flex-col">
                 <span className="text-[10px] text-gray-10">{label}</span>
                 <span className="text-xs font-medium text-gray-12">{value}</span>

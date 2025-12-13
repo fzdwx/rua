@@ -96,14 +96,10 @@ export function useApplications() {
                         <img
                             src={iconSrc}
                             alt={app.name}
-                            style={{
-                                width: "24px",
-                                height: "24px",
-                                objectFit: "contain"
-                            }}
+                            className="size-6 object-contain"
                         />
                     ) : (
-                        <div style={{fontSize: "20px"}}>📦</div>
+                        <div className="text-xl">📦</div>
                     ),
                     item: app,
                     kind: "application",

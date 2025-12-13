@@ -3,12 +3,12 @@ import {QuickLink, QuickLinkOpenType, useQuickLinks} from "@/hooks/useQuickLinks
 import {Footer} from "@/command";
 import {Icon} from "@iconify/react";
 import {useKeyPress} from "ahooks";
-import {Label} from "@/components/ui/Label.tsx";
-import {Input} from "@/components/ui/Input.tsx";
-import {Kbd, KbdGroup} from "@/components/ui/Kbd.tsx";
+import {Label} from "@/components/ui/label";
+import {Input} from "@/components/ui/input";
+import {Kbd, KbdGroup} from "@/components/ui/kbd";
 import {getFaviconUrl} from "@/utils/favicon.ts";
-import {Badge} from "@/components/ui/Badge";
-import {Button} from "@/components/ui/Button";
+import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
 import {Switch} from "@/components/ui/switch";
 import {
     Select,
@@ -16,7 +16,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/Select";
+} from "@/components/ui/select";
 
 interface QuickLinkCreatorProps {
     onLoadingChange?: (loading: boolean) => void;
@@ -436,7 +436,7 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
 
             <Footer
                 current={null}
-                icon={<Icon icon="tabler:link-plus" style={{fontSize: "20px"}}/>}
+                icon={<Icon icon="tabler:link-plus" className="size-5" />}
                 actions={() => []}
                 content={() => <div/>}
                 rightElement={

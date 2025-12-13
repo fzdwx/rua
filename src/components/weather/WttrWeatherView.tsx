@@ -1,9 +1,9 @@
 import {Icon} from "@iconify/react";
 import {Footer} from "@/command";
-import {Kbd, KbdGroup} from "@/components/ui/Kbd";
-import {Card, CardContent} from "@/components/ui/Card";
-import {Badge} from "@/components/ui/Badge";
-import {Separator} from "@/components/ui/Separator";
+import {Kbd, KbdGroup} from "@/components/ui/kbd";
+import {Card, CardContent} from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
+import {Separator} from "@/components/ui/separator";
 import {WeatherData} from "@/components/weather/index.tsx";
 
 interface WttrWeatherData {
@@ -87,7 +87,7 @@ export function WttrWeatherView({weatherData, isCurrentLocation}: WttrWeatherVie
         <>
             <div className="p-3 space-y-3 overflow-y-auto flex-1">
                 {/* Weather card */}
-                <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
+                <Card className="border-0 bg-[var(--gray3)] hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
                         <div className="flex items-start gap-4 mb-4">
                             <div className="text-5xl">{getWeatherIcon(weatherData.condition)}</div>
@@ -142,7 +142,7 @@ export function WttrWeatherView({weatherData, isCurrentLocation}: WttrWeatherVie
 
             <Footer
                 current={null}
-                icon={<Icon icon="tabler:cloud" style={{fontSize: "20px"}}/>}
+                icon={<Icon icon="tabler:cloud" className="size-5" />}
                 actions={() => []}
                 content={() => (
                     <div className="text-[11px] text-center text-gray-10">
@@ -171,7 +171,7 @@ export function WttrWeatherView({weatherData, isCurrentLocation}: WttrWeatherVie
 function WeatherStat({icon, label, value}: {icon: string, label: string, value: string}) {
     return (
         <div className="flex items-center gap-2">
-            <Icon icon={icon} className="text-gray-11" style={{fontSize: "16px"}} />
+            <Icon icon={icon} className="text-gray-11 size-4" />
             <span className="text-xs text-gray-11">{label}</span>
             <span className="text-xs font-medium ml-auto text-gray-12">{value}</span>
         </div>

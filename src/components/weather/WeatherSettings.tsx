@@ -1,15 +1,15 @@
 import * as React from "react";
 import {useWeatherConfig} from "@/hooks/useWeatherConfig";
-import {Label} from "@/components/ui/Label";
-import {Input} from "@/components/ui/Input";
-import {Button} from "@/components/ui/Button";
+import {Label} from "@/components/ui/label";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
 import {useKeyPress} from "ahooks";
 import {clearQWeatherCache} from "./hefeng/qweather-cache.ts";
 import {Footer} from "@/command";
 import {Icon} from "@iconify/react";
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/Card";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/Select";
-import {Alert, AlertDescription, AlertTitle} from "@/components/ui/Alert";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 
 interface WeatherSettingsProps {
     onClose?: () => void;
@@ -92,10 +92,10 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
         <>
             <div className="p-4 space-y-4 overflow-y-auto flex-1">
                 {/* Provider selection card */}
-                <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
+                <Card className="border-0 bg-[var(--gray3)] hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
                         <CardTitle className="text-sm flex items-center gap-2">
-                            <Icon icon="tabler:cloud-cog" style={{fontSize: "16px"}} />
+                            <Icon icon="tabler:cloud-cog" className="size-4" />
                             数据来源
                         </CardTitle>
                     </CardHeader>
@@ -121,10 +121,10 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
 
                 {/* QWeather configuration card */}
                 {provider === "qweather" && (
-                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
+                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-md transition-shadow">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm flex items-center gap-2">
-                                <Icon icon="tabler:key" style={{fontSize: "16px"}} />
+                                <Icon icon="tabler:key" className="size-4" />
                                 和风天气配置
                             </CardTitle>
                             <CardDescription>
@@ -192,10 +192,10 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
 
                 {/* Cache management card */}
                 {provider === "qweather" && (
-                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
+                    <Card className="border-0 bg-[var(--gray3)] hover:shadow-md transition-shadow">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm flex items-center gap-2">
-                                <Icon icon="tabler:database" style={{fontSize: "16px"}} />
+                                <Icon icon="tabler:database" className="size-4" />
                                 缓存管理
                             </CardTitle>
                             <CardDescription>
@@ -209,7 +209,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
                                 size="sm"
                                 className="w-full"
                             >
-                                <Icon icon="tabler:trash" className="mr-2" style={{fontSize: "14px"}}/>
+                                <Icon icon="tabler:trash" className="mr-2 size-3.5" />
                                 清除缓存
                             </Button>
                         </CardContent>
@@ -237,7 +237,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
 
             <Footer
                 current={null}
-                icon={<Icon icon="tabler:settings" style={{fontSize: "20px"}}/>}
+                icon={<Icon icon="tabler:settings" className="size-5" />}
                 actions={() => []}
                 content={() => (
                     <div className="text-[11px] text-gray-10">
@@ -252,7 +252,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
                             size="sm"
                             className="whitespace-nowrap"
                         >
-                            <Icon icon="tabler:device-floppy" className="mr-1.5" style={{fontSize: "14px"}}/>
+                            <Icon icon="tabler:device-floppy" className="mr-1.5 size-3.5" />
                             保存
                         </Button>
                         {onClose && (
@@ -262,7 +262,7 @@ export function WeatherSettings({onClose}: WeatherSettingsProps) {
                                 size="sm"
                                 className="whitespace-nowrap"
                             >
-                                <Icon icon="tabler:x" className="mr-1.5" style={{fontSize: "14px"}}/>
+                                <Icon icon="tabler:x" className="mr-1.5 size-3.5" />
                                 取消
                             </Button>
                         )}

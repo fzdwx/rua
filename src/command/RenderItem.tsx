@@ -1,7 +1,7 @@
 import React from "react";
 import {ActionImpl} from "./action";
 import {ActionId} from "./types";
-import {Kbd} from "@/components/ui/Kbd.tsx";
+import {Kbd} from "@/components/ui/kbd";
 import {motion} from "motion/react";
 
 const RenderItem = React.forwardRef(

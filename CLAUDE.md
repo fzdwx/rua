@@ -226,65 +226,77 @@ border-[var(--gray6)]    // 边框色
 
 #### 3. 阴影系统
 
-使用 Raycast 风格的精致阴影：
+使用标准 Tailwind CSS 阴影类：
 
 ```typescript
-shadow-raycast          // 基础阴影
-shadow-raycast-sm       // 小阴影
-shadow-raycast-md       // 中等阴影
-shadow-raycast-lg       // 大阴影
-shadow-raycast-hover    // Hover 状态的阴影增强
+shadow-sm               // 小阴影
+shadow-md               // 中等阴影（推荐用于 hover 状态）
+shadow-lg               // 大阴影
 ```
 
 **使用场景**：
-- Card 组件：默认使用 `shadow-raycast`，hover 时使用 `hover:shadow-raycast-hover`
-- 弹出层（Select、Popover）：使用 `shadow-raycast-md`
-- 按钮：hover 时使用 `hover:shadow-raycast-hover`
+- Card 组件：hover 时使用 `hover:shadow-md transition-shadow`
+- 弹出层（Select、Popover）：使用 `shadow-md`
+- 按钮：hover 时使用 `hover:shadow-md`
+
+**⚠️ 禁止使用**：
+- ❌ `shadow-raycast`、`shadow-raycast-hover` 等自定义类（未定义）
 
 #### 4. 圆角系统
 
-统一的圆角值：
+使用标准 Tailwind CSS 圆角类：
 
 ```typescript
-rounded-raycast         // 0.5rem (8px) - 默认圆角
-rounded-raycast-sm      // 0.375rem (6px)
-rounded-raycast-md      // 0.625rem (10px)
-rounded-raycast-lg      // 0.75rem (12px)
+rounded-sm              // 0.125rem (2px)
+rounded-md              // 0.375rem (6px) - 默认圆角
+rounded-lg              // 0.5rem (8px)
+rounded-xl              // 0.75rem (12px)
 ```
 
 **使用规范**：
-- Card 组件：使用 `rounded-raycast`
+- Card 组件：使用 `rounded-lg`
 - 按钮：使用 `rounded-md`（shadcn/ui 默认）
 - 输入框：使用 `rounded-md`
 
+**⚠️ 禁止使用**：
+- ❌ `rounded-raycast` 等自定义类（未定义）
+
 #### 5. 过渡动画
 
-统一的过渡时间和缓动函数：
+使用标准 Tailwind CSS 过渡类：
 
 ```typescript
-duration-raycast-fast   // 150ms - 快速交互
-duration-raycast        // 200ms - 标准过渡
-duration-raycast-slow   // 300ms - 慢速过渡
+transition-all duration-150   // 快速交互
+transition-all duration-200   // 标准过渡
+transition-shadow             // 仅阴影过渡（推荐配合 hover:shadow-md）
+transition-colors             // 仅颜色过渡
 ```
 
 **使用规范**：
-- 按钮、输入框：使用 `transition-all duration-raycast-fast`
-- Card hover：使用 `transition-all duration-raycast`
-- 页面切换：使用 `duration-raycast` 或 `duration-raycast-slow`
+- 按钮、输入框：使用 `transition-colors duration-150`
+- Card hover：使用 `transition-shadow` 配合 `hover:shadow-md`
+- 页面切换：使用 `duration-200` 或 `duration-300`
+
+**⚠️ 禁止使用**：
+- ❌ `duration-raycast`、`duration-raycast-fast` 等自定义类（未定义）
 
 #### 6. 模糊效果
 
-弹出层使用 backdrop blur：
+使用标准 Tailwind CSS backdrop blur 类：
 
 ```typescript
-backdrop-blur-raycast      // 12px
-backdrop-blur-raycast-sm   // 8px
-backdrop-blur-raycast-lg   // 16px
+backdrop-blur-sm        // 4px
+backdrop-blur           // 8px
+backdrop-blur-md        // 12px
+backdrop-blur-lg        // 16px
 ```
 
 **使用场景**：
-- Select 下拉菜单：使用 `backdrop-blur-raycast`
-- Popover、Modal：使用 `backdrop-blur-raycast` 或 `backdrop-blur-raycast-lg`
+- Select 下拉菜单：使用 `backdrop-blur-md`
+- Popover、Modal：使用 `backdrop-blur-md` 或 `backdrop-blur-lg`
+
+**⚠️ 禁止使用**：
+- ❌ `backdrop-blur-raycast` 等自定义类（未定义）
 
 #### 7. 动画库
 
@@ -336,8 +348,8 @@ import { motion, AnimatePresence } from "motion/react"
 #### 9. 交互反馈
 
 **Hover 效果**：
-- Card：`hover:shadow-raycast-hover` + 轻微缩放 `hover:scale-[1.01]`
-- 按钮：`hover:shadow-raycast-hover` + `active:scale-[0.98]`
+- Card：`hover:shadow-md transition-shadow` + 轻微缩放 `hover:scale-[1.01]`
+- 按钮：`hover:shadow-md` + `active:scale-[0.98]`
 - 输入框：`hover:bg-[var(--gray4)]`
 
 **Focus 状态**：
@@ -363,14 +375,14 @@ import { motion, AnimatePresence } from "motion/react"
 
 ```typescript
 // Card 组件
-<Card className="border-0 bg-[var(--gray3)] hover:shadow-raycast-hover">
+<Card className="border-0 bg-[var(--gray3)] hover:shadow-md transition-shadow">
   <CardContent className="p-3">
     {/* 内容 */}
   </CardContent>
 </Card>
 
 // Button 组件
-<Button variant="outline" className="hover:shadow-raycast-hover">
+<Button variant="outline" className="hover:shadow-md">
   按钮文本
 </Button>
 
@@ -382,7 +394,7 @@ import { motion, AnimatePresence } from "motion/react"
   <SelectTrigger className="bg-[var(--gray3)] hover:bg-[var(--gray4)]">
     <SelectValue />
   </SelectTrigger>
-  <SelectContent className="backdrop-blur-raycast">
+  <SelectContent className="backdrop-blur-md">
     {/* 选项 */}
   </SelectContent>
 </Select>
@@ -395,6 +407,8 @@ import { motion, AnimatePresence } from "motion/react"
 - ❌ 不要使用纯白色背景（使用 `bg-[var(--gray3)]` 等）
 - ❌ 不要在 `src/command/` 目录下的组件中使用 shadcn/ui 组件
 - ❌ 不要破坏 `ResultsRender` 的内部布局结构
+- ❌ 不要使用未定义的自定义 CSS 类（如 `shadow-raycast-*`、`rounded-raycast-*`、`duration-raycast-*`、`backdrop-blur-raycast-*`）
+- ❌ 只使用标准 Tailwind CSS 类或在 `global.css`/`command.css` 中已定义的 CSS 变量
 
 ## Window Management & Global Shortcuts
 

@@ -6,10 +6,10 @@ import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useKeyPress} from "ahooks";
 import {invoke} from "@tauri-apps/api/core";
 import {motion} from "motion/react";
-import {Card, CardContent, CardHeader} from "@/components/ui/Card";
-import {Button} from "@/components/ui/Button";
-import {Alert, AlertDescription} from "@/components/ui/Alert";
-import {Badge} from "@/components/ui/Badge";
+import {Card, CardContent, CardHeader} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {Alert, AlertDescription} from "@/components/ui/alert";
+import {Badge} from "@/components/ui/badge";
 import {Loader2, AlertCircle, Info, ExternalLink, Terminal} from "lucide-react";
 
 /**
@@ -174,7 +174,7 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.2, delay: 0.05 }}
                 >
-                <Card className="mb-4 border-none hover:shadow-raycast-hover">
+                <Card className="mb-4 border-none hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
                         <div className="flex items-start gap-4">
                             <motion.div
@@ -250,7 +250,7 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.2, delay: 0.1 }}
             >
-                <Card className="mb-4 hover:shadow-raycast-hover">
+                <Card className="mb-4 hover:shadow-md transition-shadow">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 mb-2">
                             {openType === "shell" ? (

@@ -44,7 +44,7 @@ export function getQuickLinkActions(
         id: quickLinkEditId,
         name: "编辑快捷指令",
         subtitle: "编辑快捷指令",
-        icon: <Icon icon="tabler:edit" style={{fontSize: "20px"}}/>,
+        icon: <Icon icon="tabler:edit" className="size-5" />,
         keywords: "edit,quick,link,编辑,快捷,指令",
         kind: "built-in",
         query: false,
@@ -63,7 +63,7 @@ export function getQuickLinkActions(
         id: quickLinkCreatorId,
         name: "创建快捷指令",
         subtitle: "创建和管理快捷指令",
-        icon: <Icon icon="tabler:link-plus" style={{fontSize: "20px"}}/>,
+        icon: <Icon icon="tabler:link-plus" className="size-5" />,
         keywords: "create,quick,link,创建,快捷,指令,链接,管理",
         kind: "built-in",
         query: false,
@@ -95,11 +95,7 @@ export function getQuickLinkActions(
                     <img
                         src={link.icon}
                         alt={link.name}
-                        style={{
-                            width: "20px",
-                            height: "20px",
-                            objectFit: "contain"
-                        }}
+                        className="size-5 object-contain"
                         onError={(e) => {
                             // If image fails to load, replace with default icon or favicon
                             const target = e.target as HTMLImageElement;
@@ -114,7 +110,7 @@ export function getQuickLinkActions(
             } else {
                 // Use emoji or custom text icon - show first character if too long
                 const displayText = link.icon.length > 2 ? link.icon.substring(0, 1) : link.icon;
-                iconElement = <div style={{fontSize: "20px"}}>{displayText}</div>;
+                iconElement = <div className="text-xl">{displayText}</div>;
             }
         } else if (link.iconUrl) {
             // Use auto-fetched favicon
@@ -122,16 +118,12 @@ export function getQuickLinkActions(
                 <img
                     src={link.iconUrl}
                     alt={link.name}
-                    style={{
-                        width: "20px",
-                        height: "20px",
-                        objectFit: "contain"
-                    }}
+                    className="size-5 object-contain"
                 />
             );
         } else {
             // Default icon
-            iconElement = <Icon icon="tabler:link" style={{fontSize: "20px"}}/>;
+            iconElement = <Icon icon="tabler:link" className="size-5" />;
         }
 
         // Add main action with footer action for delete
@@ -158,7 +150,7 @@ export function getQuickLinkActions(
                         id: `${actionId}-edit`,
                         name: "编辑",
                         subtitle: "编辑此快捷指令",
-                        icon: <Icon icon="tabler:edit" style={{fontSize: "20px"}}/>,
+                        icon: <Icon icon="tabler:edit" className="size-5" />,
                         keywords: "edit,modify,编辑,修改",
                         hideSearchBox: true, // Hide search box when editing
                         disableSearchFocus: true, // Prevent auto-focus to search box when editing
@@ -179,7 +171,7 @@ export function getQuickLinkActions(
                         id: `${actionId}-delete`,
                         name: "删除",
                         subtitle: "删除此快捷指令",
-                        icon: <Icon icon="tabler:trash" style={{fontSize: "20px"}}/>,
+                        icon: <Icon icon="tabler:trash" className="size-5" />,
                         keywords: "delete,remove,删除,移除",
                         perform: () => {
                             // Close the popover first

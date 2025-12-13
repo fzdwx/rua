@@ -5,8 +5,8 @@ import {useWeatherConfig, WeatherConfig} from "@/hooks/useWeatherConfig";
 import {WeatherSettings} from "./WeatherSettings";
 import {getWeatherFromWttr, WttrWeatherView} from "./WttrWeatherView";
 import {getWeatherFromQWeather, QWeatherView} from "./QWeatherView";
-import {Kbd, KbdGroup} from "@/components/ui/Kbd";
-import {Alert, AlertDescription, AlertTitle} from "@/components/ui/Alert";
+import {Kbd, KbdGroup} from "@/components/ui/kbd";
+import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {useKeyPress} from "ahooks";
 import { motion } from "motion/react";
 
@@ -92,7 +92,7 @@ export function getWeatherAction(getUsageCount: (actionId: ActionId) => number, 
         name: "天气",
         subtitle: "查看当前位置天气，或输入城市名查询",
         keywords: "weather,天气,climate,temperature,tianqi",
-        icon: <div style={{fontSize: "20px"}}>🌤️</div>,
+        icon: <div className="text-xl">🌤️</div>,
         kind: "built-in",
         query: false,  // Enable query input for this action
         usageCount: weatherUsageCount,
@@ -209,7 +209,7 @@ export function WeatherView({search, onLoadingChange, onRequestFocusInput, onRet
                 </div>
                 <Footer
                     current={null}
-                    icon={<Icon icon="tabler:cloud" style={{fontSize: "20px"}}/>}
+                    icon={<Icon icon="tabler:cloud" className="size-5" />}
                     actions={() => []}
                     content={() => (
                         <div className="text-[11px] text-center text-gray-10">
@@ -250,7 +250,7 @@ export function WeatherView({search, onLoadingChange, onRequestFocusInput, onRet
 
                 <Footer
                     current={null}
-                    icon={<Icon icon="tabler:cloud" style={{fontSize: "20px"}}/>}
+                    icon={<Icon icon="tabler:cloud" className="size-5" />}
                     actions={() => []}
                     content={() => <div/>}
                     rightElement={

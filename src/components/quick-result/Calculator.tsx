@@ -1,5 +1,5 @@
 import {useMemo} from "react";
-import {Card, CardContent} from "@/components/ui/Card";
+import {Card, CardContent} from "@/components/ui/card";
 
 interface CalculatorProps {
     expression: string;
