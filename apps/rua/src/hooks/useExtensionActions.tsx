@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { Icon } from '@iconify/react';
 import type { Action } from '@/command';
 import { useExtensionSystem, type ManifestDerivedAction, type DynamicAction } from '@/contexts/ExtensionSystemContext';
+import { notifyActionTriggered } from '@/lib/background-executor';
 
 /**
  * Convert a ManifestDerivedAction to an Action for the command palette
@@ -87,6 +88,9 @@ function convertDynamicToAction(
         // Clear search input when entering extension view
         setSearch("");
         setRootActionId(fullId);
+      } else if (dynamicAction.mode === 'command') {
+        // For command mode, notify the extension's background script
+        notifyActionTriggered(extensionId, dynamicAction.id);
       }
     },
   };

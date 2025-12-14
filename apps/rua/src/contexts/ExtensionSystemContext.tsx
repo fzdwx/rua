@@ -350,6 +350,7 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
         }
 
         // If stopping dev mode, clean up the dev extension's background script
+        // and uninstall the dev extension from extensions directory if it exists
         if (!path && devExtensionPath) {
             // Find the dev extension to get its ID for cleanup
             const devExt = plugins.find(p => p.manifest.name.startsWith('[DEV]'));
@@ -360,6 +361,22 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
                     newMap.delete(devExt.manifest.id);
                     return newMap;
                 });
+
+                // Always try to uninstall the extension from extensions directory
+                // This handles the case where the dev extension was installed or
+                // there's a leftover directory from a previous installation
+                if (extensionsPath) {
+                    try {
+                        await invoke('uninstall_extension', {
+                            extensionId: devExt.manifest.id,
+                            extensionPath: `${extensionsPath}/${devExt.manifest.id}`,
+                        });
+                        console.log('[ExtensionSystemContext] Cleaned up dev extension from extensions directory:', devExt.manifest.id);
+                    } catch (error) {
+                        // Ignore errors - the directory might not exist
+                        console.log('[ExtensionSystemContext] No installed copy to clean up for:', devExt.manifest.id);
+                    }
+                }
             }
         }
 
@@ -374,7 +391,7 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
         }
         // Note: loadExtensions will be called automatically via useEffect
         // because it depends on devExtensionPath
-    }, [isWatching, stopWatching, devExtensionPath, plugins]);
+    }, [isWatching, stopWatching, devExtensionPath, plugins, extensionsPath]);
 
     // Initialize extension system
     useEffect(() => {
@@ -409,6 +426,55 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
             });
         }
     }, [initialized, devExtensionPath, isWatching, startWatching]);
+
+    // Reload dev extension's background script when files change
+    useEffect(() => {
+        // Skip initial render (devRefreshKey starts at 0)
+        if (devRefreshKey === 0 || !devExtensionPath || !initialized) return;
+
+        const reloadDevBackgroundScript = async () => {
+            // Find the dev extension
+            const devExt = plugins.find(p => p.manifest.name.startsWith('[DEV]'));
+            if (!devExt) return;
+
+            // Find background action
+            const backgroundAction = devExt.manifest.rua.actions.find(
+                (action: ManifestAction) => action.mode === 'background'
+            );
+
+            if (!backgroundAction?.script) return;
+
+            console.log('[ExtensionSystemContext] Reloading dev background script for:', devExt.manifest.id);
+
+            // Clean up existing background script
+            cleanupBackgroundExtension(devExt.manifest.id);
+            setDynamicActions(prev => {
+                const newMap = new Map(prev);
+                newMap.delete(devExt.manifest.id);
+                return newMap;
+            });
+
+            // Re-execute background script
+            try {
+                const { permissions, parsedPermissions } = parseManifestPermissions(devExt.manifest.permissions || []);
+
+                await executeBackgroundScript(
+                    devExt.manifest.id,
+                    devExt.path,
+                    backgroundAction.script,
+                    devExt.manifest.name,
+                    devExt.manifest.version,
+                    permissions,
+                    parsedPermissions
+                );
+                console.log('[ExtensionSystemContext] Dev background script reloaded successfully');
+            } catch (error) {
+                console.error('[ExtensionSystemContext] Failed to reload dev background script:', error);
+            }
+        };
+
+        reloadDevBackgroundScript();
+    }, [devRefreshKey, devExtensionPath, initialized, plugins]);
 
     // Install extension
     const installExtension = useCallback(async (path: string) => {

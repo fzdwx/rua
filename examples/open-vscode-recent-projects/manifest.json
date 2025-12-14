@@ -1,8 +1,8 @@
 {
   "id": "fzdwx.open-vscode-recent-projects",
-  "name": "open-vscode-recent-projects",
+  "name": "Open VSCode Recent Projects",
   "version": "0.1.0",
-  "description": " Open VsCode Recent Projects",
+  "description": "Open VSCode Recent Projects",
   "author": "fzdwx",
   "rua": {
     "engineVersion": "^0.1.0",
@@ -17,15 +17,14 @@
   },
   "permissions": [
     "storage",
+    "notification",
     {
       "permission": "shell",
       "allow": [
         {
           "cmd": {
             "program": "code",
-            "args": [
-              ".+"
-            ]
+            "args": [".+"]
           }
         }
       ]
@@ -39,34 +38,10 @@
       ]
     },
     {
-      "permission": "fs:read-dir",
-      "allow": [
-        {
-          "path": "$HOME/**"
-        }
-      ]
-    },
-    {
-      "permission": "fs:write",
-      "allow": [
-        {
-          "path": "$HOME/**"
-        }
-      ]
-    },
-    {
       "permission": "fs:exists",
       "allow": [
         {
-          "path": "$HOME/**"
-        }
-      ]
-    },
-    {
-      "permission": "fs:stat",
-      "allow": [
-        {
-          "path": "$HOME/**"
+          "path": "/**"
         }
       ]
     }

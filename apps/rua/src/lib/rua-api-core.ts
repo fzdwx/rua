@@ -121,17 +121,14 @@ export const apiCore = {
             return path;
         }
 
-        // Get base directory path
         const basePath = getBaseDirectoryPath(baseDir);
         if (!basePath) {
             return path;
         }
 
-        // Join base path with relative path
         return `${basePath}/${path}`;
     },
 };
-
 
 /**
  * Get the actual path for a base directory
@@ -165,6 +162,7 @@ function getBaseDirectoryPath(baseDir: string): string | null {
             return null;
     }
 }
+
 
 /**
  * Check if a simple permission is present
@@ -221,7 +219,6 @@ export function hasShellPermission(extensionInfo: ExtensionHostInfo, program: st
     });
 }
 
-
 /**
  * Check if extension has permission for a specific path
  */
@@ -249,11 +246,12 @@ export function hasPathPermission(extensionInfo: ExtensionHostInfo, permission: 
 
 /**
  * Check if a path matches a pattern
+ * Both path and pattern may contain $HOME which should be treated as equivalent
  */
 function pathMatches(path: string, pattern: string): boolean {
-    const expandedPattern = expandPath(pattern);
-
-    const regexPattern = expandedPattern
+    // Convert glob pattern to regex
+    // Escape special regex chars except * and ?
+    const regexPattern = pattern
         .replace(/[.+^${}()|[\]\\]/g, '\\$&')
         .replace(/\*\*/g, '<<<GLOBSTAR>>>')
         .replace(/\*/g, '[^/]*')
@@ -261,18 +259,6 @@ function pathMatches(path: string, pattern: string): boolean {
 
     const regex = new RegExp(`^${regexPattern}$`);
     return regex.test(path);
-}
-
-/**
- * Expand environment variables in path
- */
-function expandPath(path: string): string {
-    const home = typeof process !== 'undefined' ? process.env.HOME : '';
-    const appData = typeof process !== 'undefined' ? process.env.APPDATA : '';
-
-    return path
-        .replace(/\$HOME/g, home || '')
-        .replace(/\$APPDATA/g, appData || '');
 }
 
 /**

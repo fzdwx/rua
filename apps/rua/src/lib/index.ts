@@ -21,6 +21,7 @@ export {
   executeBackgroundScript,
   notifyActivate as notifyBackgroundActivate,
   notifyDeactivate as notifyBackgroundDeactivate,
+  notifyActionTriggered as notifyBackgroundActionTriggered,
   cleanupExtension as cleanupBackgroundExtension,
   setBackgroundCallbacks,
   getLoadedBackgroundExtensions,
@@ -30,6 +31,7 @@ export {
   type BackgroundScriptState,
   type BackgroundScriptCallbacks,
   type MainContextRuaAPI,
+  type ActionTriggeredData,
 } from './background-executor';
 
 // Re-export shared types from rua-api

@@ -24,6 +24,12 @@ export type { FileStat, DirEntry, ShellResult } from './rua-api-core';
 /** Timeout for script initialization (5 seconds) */
 const SCRIPT_TIMEOUT = 5000;
 
+/** Action triggered event data */
+export interface ActionTriggeredData {
+    actionId: string;
+    context?: unknown;
+}
+
 /** State for a loaded background script */
 export interface BackgroundScriptState {
     extensionId: string;
@@ -32,6 +38,7 @@ export interface BackgroundScriptState {
     error?: string;
     activateCallbacks: Set<() => void>;
     deactivateCallbacks: Set<() => void>;
+    actionTriggeredCallbacks: Set<(data: ActionTriggeredData) => void>;
     registeredActions: string[];
 }
 
@@ -84,7 +91,9 @@ export interface MainContextRuaAPI {
     };
 
     on(event: 'activate' | 'deactivate', callback: () => void): void;
+    on(event: 'action-triggered', callback: (data: ActionTriggeredData) => void): void;
     off(event: 'activate' | 'deactivate', callback: () => void): void;
+    off(event: 'action-triggered', callback: (data: ActionTriggeredData) => void): void;
 }
 
 // Registry of loaded background scripts
@@ -243,19 +252,23 @@ export function createMainContextRuaAPI(
             },
         },
 
-        on(event: 'activate' | 'deactivate', callback: () => void): void {
+        on(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: ActionTriggeredData) => void)): void {
             if (event === 'activate') {
-                state.activateCallbacks.add(callback);
+                state.activateCallbacks.add(callback as () => void);
             } else if (event === 'deactivate') {
-                state.deactivateCallbacks.add(callback);
+                state.deactivateCallbacks.add(callback as () => void);
+            } else if (event === 'action-triggered') {
+                state.actionTriggeredCallbacks.add(callback as (data: ActionTriggeredData) => void);
             }
         },
 
-        off(event: 'activate' | 'deactivate', callback: () => void): void {
+        off(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: ActionTriggeredData) => void)): void {
             if (event === 'activate') {
-                state.activateCallbacks.delete(callback);
+                state.activateCallbacks.delete(callback as () => void);
             } else if (event === 'deactivate') {
-                state.deactivateCallbacks.delete(callback);
+                state.deactivateCallbacks.delete(callback as () => void);
+            } else if (event === 'action-triggered') {
+                state.actionTriggeredCallbacks.delete(callback as (data: ActionTriggeredData) => void);
             }
         },
     };
@@ -306,6 +319,7 @@ export async function executeBackgroundScript(
         loaded: false,
         activateCallbacks: new Set(),
         deactivateCallbacks: new Set(),
+        actionTriggeredCallbacks: new Set(),
         registeredActions: [],
     };
 
@@ -408,6 +422,43 @@ export async function notifyDeactivate(): Promise<void> {
                 })()
             );
         }
+    }
+
+    await Promise.allSettled(promises);
+}
+
+/**
+ * Notify an extension that one of its dynamic actions was triggered
+ * @param extensionId - The extension ID
+ * @param actionId - The action ID (without extension prefix)
+ * @param context - Optional context data
+ */
+export async function notifyActionTriggered(
+    extensionId: string,
+    actionId: string,
+    context?: unknown
+): Promise<void> {
+    const state = backgroundScripts.get(extensionId);
+    if (!state?.loaded) {
+        console.warn('[BackgroundExecutor] Cannot notify action-triggered: extension not loaded:', extensionId);
+        return;
+    }
+
+    console.log('[BackgroundExecutor] Notifying action-triggered:', extensionId, actionId);
+
+    const data: ActionTriggeredData = { actionId, context };
+    const promises: Promise<void>[] = [];
+
+    for (const callback of state.actionTriggeredCallbacks) {
+        promises.push(
+            (async () => {
+                try {
+                    callback(data);
+                } catch (error) {
+                    console.warn('[BackgroundExecutor] Failed to notify action-triggered:', extensionId, error);
+                }
+            })()
+        );
     }
 
     await Promise.allSettled(promises);

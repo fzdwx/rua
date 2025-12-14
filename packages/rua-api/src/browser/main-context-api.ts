@@ -111,10 +111,10 @@ export interface MainContextRuaAPI {
     };
 
     /** Register an event handler for lifecycle events */
-    on(event: 'activate' | 'deactivate', callback: () => void): void;
+    on(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: { actionId: string; context?: unknown }) => void)): void;
 
     /** Unregister an event handler */
-    off(event: 'activate' | 'deactivate', callback: () => void): void;
+    off(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: { actionId: string; context?: unknown }) => void)): void;
 }
 
 // Extend Window interface for global variables set by the executor
