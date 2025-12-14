@@ -80,13 +80,30 @@
         "vite": "^6.0.0",
       },
     },
-    "examples/open-vscode-recent-projects": {
-      "name": "fzdwx.open-vscode-recent-projects",
-      "version": "0.1.0",
+    "examples/icon-formats-demo": {
+      "name": "icon-formats-demo",
+      "version": "1.0.0",
       "dependencies": {
         "rua-api": "workspace:*",
       },
       "devDependencies": {
+        "typescript": "^5.7.2",
+        "vite": "^6.0.3",
+      },
+    },
+    "examples/open-vscode-recent-projects": {
+      "name": "fzdwx.open-vscode-recent-projects",
+      "version": "0.1.0",
+      "dependencies": {
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
+        "rua-api": "workspace:*",
+        "valibot": "^1.0.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.6",
+        "@types/react-dom": "^19.1.5",
+        "@vitejs/plugin-react": "^4.5.2",
         "typescript": "^5.8.0",
         "vite": "^7.0.4",
       },
@@ -1007,6 +1024,8 @@
     "https-proxy-agent": ["https-proxy-agent@7.0.6", "https://registry.npmmirror.com/https-proxy-agent/-/https-proxy-agent-7.0.6.tgz", { "dependencies": { "agent-base": "^7.1.2", "debug": "4" } }, "sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw=="],
 
     "human-signals": ["human-signals@8.0.1", "https://registry.npmmirror.com/human-signals/-/human-signals-8.0.1.tgz", {}, "sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ=="],
+
+    "icon-formats-demo": ["icon-formats-demo@workspace:examples/icon-formats-demo"],
 
     "iconv-lite": ["iconv-lite@0.6.3", "https://registry.npmmirror.com/iconv-lite/-/iconv-lite-0.6.3.tgz", { "dependencies": { "safer-buffer": ">= 2.1.2 < 3.0.0" } }, "sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw=="],
 
