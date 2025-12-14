@@ -78,6 +78,11 @@ const PERMISSIONS = [
   { title: 'Storage', value: 'storage', description: 'Local storage access' },
   { title: 'HTTP', value: 'http', description: 'Make HTTP requests' },
   { title: 'Shell', value: 'shell', description: 'Execute shell commands' },
+  { title: 'FS Read', value: 'fs:read', description: 'Read files from file system' },
+  { title: 'FS Read Dir', value: 'fs:read-dir', description: 'Read directory contents' },
+  { title: 'FS Write', value: 'fs:write', description: 'Write files to file system' },
+  { title: 'FS Exists', value: 'fs:exists', description: 'Check if file exists' },
+  { title: 'FS Stat', value: 'fs:stat', description: 'Get file metadata' },
 ];
 
 function toKebabCase(str: string): string {
@@ -85,6 +90,48 @@ function toKebabCase(str: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+/**
+ * Generate permissions JSON string with detailed configs for shell and fs permissions
+ */
+function generatePermissionsJson(permissions: string[]): string {
+  const result: (string | object)[] = [];
+  
+  for (const perm of permissions) {
+    if (perm === 'shell') {
+      // Shell permission with example allow rules
+      result.push({
+        permission: 'shell',
+        allow: [
+          {
+            cmd: {
+              program: 'echo',
+              args: ['.+']
+            }
+          }
+        ]
+      });
+    } else if (perm.startsWith('fs:')) {
+      // FS permissions with example allow rules
+      result.push({
+        permission: perm,
+        allow: [
+          {
+            path: '$HOME/**'
+          }
+        ]
+      });
+    } else {
+      // Simple permissions (clipboard, notification, storage, http)
+      result.push(perm);
+    }
+  }
+  
+  // Format with proper indentation
+  const lines = JSON.stringify(result, null, 4).split('\n');
+  // Remove first '[' and last ']', adjust indentation
+  return lines.slice(1, -1).map(line => line.slice(4)).join('\n    ');
 }
 
 function getTemplatesDir(): string {
@@ -154,6 +201,13 @@ function createTemplateContext(config: ExtensionConfig) {
     hasStorage: config.permissions.includes('storage'),
     hasHttp: config.permissions.includes('http'),
     hasShell: config.permissions.includes('shell'),
+    hasFsRead: config.permissions.includes('fs:read'),
+    hasFsReadDir: config.permissions.includes('fs:read-dir'),
+    hasFsWrite: config.permissions.includes('fs:write'),
+    hasFsExists: config.permissions.includes('fs:exists'),
+    hasFsStat: config.permissions.includes('fs:stat'),
+    // Generate permissions JSON with detailed configs for shell and fs
+    permissionsJson: generatePermissionsJson(config.permissions),
     
     // File paths
     uiEntry: useVite ? 'dist/index.html' : 'index.html',

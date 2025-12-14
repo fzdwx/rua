@@ -6,6 +6,10 @@
 export type {
     ExtensionManifest,
     ExtensionPermission,
+    SimplePermission,
+    DetailedPermission,
+    PathPermissionRule,
+    ShellCommandRule,
     ActionMode,
     ManifestAction,
     RuaConfig,
@@ -22,4 +26,8 @@ export type {
     RuaClientCallbacks,
     ExtensionHostInfo,
     ManifestDerivedAction,
+    FileStat,
+    DirEntry,
+    ShellResult,
+    ParsedPermission,
 } from './rua';

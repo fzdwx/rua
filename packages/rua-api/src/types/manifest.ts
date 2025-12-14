@@ -3,15 +3,55 @@
  */
 
 /**
- * Available extension permissions
- * Extensions must declare required permissions in their manifest
+ * Simple permission string
  */
-export type ExtensionPermission =
+export type SimplePermission =
     | 'clipboard'      // Read/write clipboard
     | 'notification'   // Show system notifications
     | 'storage'        // Local storage access
     | 'http'           // HTTP requests
-    | 'shell';         // Shell command execution
+    | 'shell'          // Shell command execution (deprecated, use detailed config)
+    | 'fs:read'        // Read files
+    | 'fs:read-dir'    // Read directories
+    | 'fs:write'       // Write files
+    | 'fs:exists'      // Check file existence
+    | 'fs:stat';       // Get file metadata
+
+/**
+ * Path-based permission rule
+ */
+export interface PathPermissionRule {
+    /** Path pattern, supports $HOME, $APPDATA, ** wildcards */
+    path: string;
+}
+
+/**
+ * Shell command permission rule
+ */
+export interface ShellCommandRule {
+    cmd: {
+        /** Program name */
+        program: string;
+        /** Allowed arguments (regex patterns) */
+        args?: string[];
+    };
+}
+
+/**
+ * Detailed permission with allow rules
+ */
+export interface DetailedPermission {
+    /** Permission identifier */
+    permission: string;
+    /** Allowed paths or commands */
+    allow?: (PathPermissionRule | ShellCommandRule)[];
+}
+
+/**
+ * Available extension permissions
+ * Can be a simple string or detailed configuration with allow rules
+ */
+export type ExtensionPermission = SimplePermission | DetailedPermission;
 
 /**
  * Action mode determines how the action is displayed

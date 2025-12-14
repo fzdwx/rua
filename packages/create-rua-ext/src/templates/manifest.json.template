@@ -29,5 +29,7 @@
       }{{/isCommandExtension}}
     ]
   }{{#hasPermissions}},
-  "permissions": [{{#permissions}}"{{.}}"{{#unless @last}},{{/unless}}{{/permissions}}]{{/hasPermissions}}
+  "permissions": [
+    {{{permissionsJson}}}
+  ]{{/hasPermissions}}
 }

@@ -10,6 +10,7 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Icon } from '@iconify/react';
 import { RPCChannel, IframeParentIO } from 'kkrpc/browser';
 import { createExtensionServerAPI, type DynamicAction, type ExtensionServerAPI, type RuaClientCallbacks } from '@/lib/extension-server-api';
+import type { ParsedPermission } from 'rua-api';
 
 interface ExtensionViewProps {
   /** The extension's UI entry path with action query param */
@@ -20,8 +21,10 @@ interface ExtensionViewProps {
   extensionId?: string;
   /** Extension version */
   extensionVersion?: string;
-  /** Extension permissions */
+  /** Extension permissions (simple strings) */
   permissions?: string[];
+  /** Parsed permissions with allow rules */
+  parsedPermissions?: ParsedPermission[];
   /** Callback when user wants to return */
   onReturn: () => void;
   /** Callback when extension requests input visibility change */
@@ -42,6 +45,7 @@ export function ExtensionView({
   extensionId = 'unknown',
   extensionVersion = '0.0.0',
   permissions = [],
+  parsedPermissions = [],
   onReturn,
   onInputVisibilityChange,
   onRegisterActions,
@@ -131,6 +135,7 @@ export function ExtensionView({
           name: extensionName,
           version: extensionVersion,
           permissions,
+          parsedPermissions,
         },
         {
           onHideInput: () => onInputVisibilityChange?.(false),
@@ -162,7 +167,7 @@ export function ExtensionView({
     } catch (err) {
       console.error('[ExtensionView] Failed to setup RPC:', err);
     }
-  }, [extensionId, extensionName, extensionVersion, permissions, onInputVisibilityChange, handleClose, onRegisterActions, onUnregisterActions]);
+  }, [extensionId, extensionName, extensionVersion, permissions, parsedPermissions, onInputVisibilityChange, handleClose, onRegisterActions, onUnregisterActions]);
 
   useEffect(() => {
     const iframe = iframeRef.current;

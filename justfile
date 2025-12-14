@@ -57,11 +57,13 @@ test-ext name="test-extension":
 dev:
     bun run --cwd apps/rua tauri dev
 
-create-ext:
-    cd packages/create-rua-ext && bunx create-rua-ext
-
 # Rebuild rua-api and hello-word example for testing
 rebuild-example:
     cd packages/rua-api && bun run build
     cd examples/hello-word && bun run build
     @echo "✓ rua-api and hello-word rebuilt"
+
+# Create a new extension in examples directory using create-rua-ext
+new-example name:
+    cd examples && bun ../packages/create-rua-ext/dist/index.js {{name}}
+    @echo "✓ Extension {{name}} created in examples/"

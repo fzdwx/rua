@@ -108,6 +108,23 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
                 remove: (key) => hostAPI.storageRemove(key),
             },
 
+            fs: {
+                readTextFile: (path) => hostAPI.fsReadTextFile(path),
+                readBinaryFile: async (path) => {
+                    const data = await hostAPI.fsReadBinaryFile(path);
+                    return new Uint8Array(data);
+                },
+                writeTextFile: (path, contents) => hostAPI.fsWriteTextFile(path, contents),
+                writeBinaryFile: (path, contents) => hostAPI.fsWriteBinaryFile(path, Array.from(contents)),
+                readDir: (path) => hostAPI.fsReadDir(path),
+                exists: (path) => hostAPI.fsExists(path),
+                stat: (path) => hostAPI.fsStat(path),
+            },
+
+            shell: {
+                execute: (program, args = []) => hostAPI.shellExecute(program, args),
+            },
+
             ui: {
                 hideInput: () => hostAPI.uiHideInput(),
                 showInput: () => hostAPI.uiShowInput(),

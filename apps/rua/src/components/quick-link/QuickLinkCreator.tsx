@@ -6,7 +6,6 @@ import {useKeyPress, useDebounceFn} from "ahooks";
 import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import {Kbd, KbdGroup} from "@/components/ui/kbd";
-import {getFaviconUrl} from "@/utils/favicon.ts";
 import {Button} from "@/components/ui/button";
 import {Switch} from "@/components/ui/switch";
 import {invoke} from "@tauri-apps/api/core";
@@ -126,22 +125,6 @@ export function QuickLinkCreator({onLoadingChange, onReturn, editQuickLink}: Qui
         }, 150);
         return () => clearTimeout(timer);
     }, []);
-
-    // Auto-fetch favicon when URL changes (only for URL type)
-    React.useEffect(() => {
-        if (openType !== "url" || !url.trim()) {
-            setIconUrl(null);
-            return;
-        }
-
-        try {
-            new URL(url);
-            const faviconUrl = getFaviconUrl(url);
-            setIconUrl(faviconUrl);
-        } catch {
-            setIconUrl(null);
-        }
-    }, [url, openType]);
 
     // Add Ctrl+Enter shortcut
     useKeyPress('ctrl.enter', (e) => {

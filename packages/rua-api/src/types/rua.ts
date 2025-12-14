@@ -56,6 +56,42 @@ export interface ManifestDerivedAction {
 /** Event handler type */
 export type EventHandler = (data: unknown) => void;
 
+/** Shell command execution result */
+export interface ShellResult {
+    /** Whether the command succeeded */
+    success: boolean;
+    /** Standard output */
+    stdout: string;
+    /** Standard error */
+    stderr: string;
+    /** Exit code (null if process was killed) */
+    exitCode: number | null;
+}
+
+/** File stat information */
+export interface FileStat {
+    /** File size in bytes */
+    size: number;
+    /** Whether it's a file */
+    isFile: boolean;
+    /** Whether it's a directory */
+    isDirectory: boolean;
+    /** Last modified time (Unix timestamp in ms) */
+    mtime: number;
+    /** Creation time (Unix timestamp in ms) */
+    ctime: number;
+}
+
+/** Directory entry */
+export interface DirEntry {
+    /** Entry name */
+    name: string;
+    /** Whether it's a file */
+    isFile: boolean;
+    /** Whether it's a directory */
+    isDirectory: boolean;
+}
+
 /**
  * Rua API interface (client-side)
  * This is what extensions use via window.rua
@@ -76,6 +112,28 @@ export interface RuaClientAPI {
         get<T>(key: string): Promise<T | null>;
         set<T>(key: string, value: T): Promise<void>;
         remove(key: string): Promise<void>;
+    };
+
+    fs: {
+        /** Read file contents as text (requires fs:read permission) */
+        readTextFile(path: string): Promise<string>;
+        /** Read file contents as binary (requires fs:read permission) */
+        readBinaryFile(path: string): Promise<Uint8Array>;
+        /** Write text to file (requires fs:write permission) */
+        writeTextFile(path: string, contents: string): Promise<void>;
+        /** Write binary data to file (requires fs:write permission) */
+        writeBinaryFile(path: string, contents: Uint8Array): Promise<void>;
+        /** Read directory contents (requires fs:read-dir permission) */
+        readDir(path: string): Promise<DirEntry[]>;
+        /** Check if file/directory exists (requires fs:exists permission) */
+        exists(path: string): Promise<boolean>;
+        /** Get file/directory metadata (requires fs:stat permission) */
+        stat(path: string): Promise<FileStat>;
+    };
+
+    shell: {
+        /** Execute a shell command (requires shell permission with matching allow rules) */
+        execute(program: string, args?: string[]): Promise<ShellResult>;
     };
 
     ui: {
@@ -118,6 +176,24 @@ export interface RuaServerAPI {
 
     storageRemove(key: string): Promise<void>;
 
+    // File System API
+    fsReadTextFile(path: string): Promise<string>;
+
+    fsReadBinaryFile(path: string): Promise<number[]>;
+
+    fsWriteTextFile(path: string, contents: string): Promise<void>;
+
+    fsWriteBinaryFile(path: string, contents: number[]): Promise<void>;
+
+    fsReadDir(path: string): Promise<DirEntry[]>;
+
+    fsExists(path: string): Promise<boolean>;
+
+    fsStat(path: string): Promise<FileStat>;
+
+    // Shell API
+    shellExecute(program: string, args: string[]): Promise<ShellResult>;
+
     // UI API
     uiHideInput(): Promise<void>;
 
@@ -149,10 +225,23 @@ export interface RuaClientCallbacks {
     onSearchChange?: (query: string) => void;
 }
 
+/** Parsed permission with allow rules */
+export interface ParsedPermission {
+    /** Permission identifier (e.g., 'fs:read', 'shell:execute') */
+    permission: string;
+    /** Allowed paths (for fs permissions) */
+    allowPaths?: string[];
+    /** Allowed shell commands (for shell permission) */
+    allowCommands?: Array<{ program: string; args?: string[] }>;
+}
+
 /** Extension info for the host */
 export interface ExtensionHostInfo {
     id: string;
     name: string;
     version: string;
+    /** Simple permission strings for backward compatibility */
     permissions: string[];
+    /** Detailed parsed permissions with allow rules */
+    parsedPermissions?: ParsedPermission[];
 }

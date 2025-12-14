@@ -1,7 +1,6 @@
 import * as React from "react";
 import {QuickLink} from "@/hooks/useQuickLinks.tsx";
 import {openUrl} from "@tauri-apps/plugin-opener";
-import {readClipboard} from "@/utils/clipboard";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {useKeyPress} from "ahooks";
 import {invoke} from "@tauri-apps/api/core";
@@ -67,7 +66,7 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
             // Replace {selection} with clipboard content
             if (url.includes('{selection}')) {
                 try {
-                    const clipboardText = await readClipboard();
+                    const clipboardText = await invoke<string>("read_clipboard");
                     const selectionValue = clipboardText || '';
                     // For URL type, encode the value; for shell, use raw value
                     url = url.replace(/\{selection\}/g, openType === "url" ? encodeURIComponent(selectionValue) : selectionValue);
@@ -102,9 +101,14 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
 
                 if (waitForCompletion) {
                     // Execute and wait for completion
-                    const result = await invoke<{success: boolean, stdout: string, stderr: string, exit_code: number | null}>(
+                    const result = await invoke<{
+                        success: boolean,
+                        stdout: string,
+                        stderr: string,
+                        exit_code: number | null
+                    }>(
                         "execute_shell_command",
-                        { command: finalUrl }
+                        {command: finalUrl}
                     );
 
                     // Log the result for debugging
@@ -118,7 +122,7 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
                     // Execute in background without waiting
                     const result = await invoke<string>(
                         "execute_shell_command_async",
-                        { command: finalUrl }
+                        {command: finalUrl}
                     );
                     console.log("Shell command started in background:", result);
                 }
@@ -161,198 +165,201 @@ export function QuickLinkView({quickLink, search, onLoadingChange, onReturn}: Qu
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            initial={{opacity: 0, y: 20}}
+            animate={{opacity: 1, y: 0}}
+            exit={{opacity: 0, y: -20}}
+            transition={{duration: 0.2, ease: "easeOut"}}
             className="flex items-center justify-center p-6 overflow-y-auto flex-1"
         >
             <div className="w-full max-w-2xl">
                 {/* Header Card with link info */}
                 <motion.div
-                    initial={{ scale: 0.95 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 0.2, delay: 0.05 }}
+                    initial={{scale: 0.95}}
+                    animate={{scale: 1}}
+                    transition={{duration: 0.2, delay: 0.05}}
                 >
-                <Card className="mb-4 border-none hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-start gap-4">
-                            <motion.div
-                                className="flex-shrink-0"
-                                initial={{ rotate: -10 }}
-                                animate={{ rotate: 0 }}
-                                transition={{ duration: 0.3, delay: 0.1 }}
-                            >
-                                <div className="w-12 h-12 flex items-center justify-center text-3xl overflow-hidden">
-                                    {(() => {
-                                        // If custom icon is provided
-                                        if (quickLink.icon) {
-                                            // Check if it's a URL
-                                            if (isUrl(quickLink.icon)) {
-                                                // If previous load failed, show fallback
-                                                if (iconLoadError) {
-                                                    return quickLink.iconUrl ? (
+                    <Card className="mb-4 border-none hover:shadow-md transition-shadow">
+                        <CardHeader className="pb-3">
+                            <div className="flex items-start gap-4">
+                                <motion.div
+                                    className="flex-shrink-0"
+                                    initial={{rotate: -10}}
+                                    animate={{rotate: 0}}
+                                    transition={{duration: 0.3, delay: 0.1}}
+                                >
+                                    <div
+                                        className="w-12 h-12 flex items-center justify-center text-3xl overflow-hidden">
+                                        {(() => {
+                                            // If custom icon is provided
+                                            if (quickLink.icon) {
+                                                // Check if it's a URL
+                                                if (isUrl(quickLink.icon)) {
+                                                    // If previous load failed, show fallback
+                                                    if (iconLoadError) {
+                                                        return quickLink.iconUrl ? (
+                                                            <img
+                                                                src={quickLink.iconUrl}
+                                                                alt={quickLink.name}
+                                                                className="w-12 h-12 object-contain"
+                                                                onError={() => {
+                                                                }}
+                                                            />
+                                                        ) : "🔗";
+                                                    }
+                                                    // Try to load as image
+                                                    return (
                                                         <img
-                                                            src={quickLink.iconUrl}
+                                                            src={quickLink.icon}
                                                             alt={quickLink.name}
                                                             className="w-12 h-12 object-contain"
-                                                            onError={() => {}}
+                                                            onError={() => setIconLoadError(true)}
                                                         />
-                                                    ) : "🔗";
+                                                    );
                                                 }
-                                                // Try to load as image
+                                                // It's an emoji or text - show first character if too long
+                                                const displayText = quickLink.icon.length > 2 ? quickLink.icon.substring(0, 1) : quickLink.icon;
+                                                return <span className="select-none">{displayText}</span>;
+                                            }
+                                            // No custom icon, show auto-fetched favicon or default
+                                            if (quickLink.iconUrl) {
                                                 return (
                                                     <img
-                                                        src={quickLink.icon}
+                                                        src={quickLink.iconUrl}
                                                         alt={quickLink.name}
                                                         className="w-12 h-12 object-contain"
-                                                        onError={() => setIconLoadError(true)}
+                                                        onError={() => {
+                                                        }}
                                                     />
                                                 );
                                             }
-                                            // It's an emoji or text - show first character if too long
-                                            const displayText = quickLink.icon.length > 2 ? quickLink.icon.substring(0, 1) : quickLink.icon;
-                                            return <span className="select-none">{displayText}</span>;
-                                        }
-                                        // No custom icon, show auto-fetched favicon or default
-                                        if (quickLink.iconUrl) {
-                                            return (
-                                                <img
-                                                    src={quickLink.iconUrl}
-                                                    alt={quickLink.name}
-                                                    className="w-12 h-12 object-contain"
-                                                    onError={() => {}}
-                                                />
-                                            );
-                                        }
-                                        return "🔗";
-                                    })()}
+                                            return "🔗";
+                                        })()}
+                                    </div>
+                                </motion.div>
+                                <div className="flex-1 min-w-0">
+                                    <h2 className="text-xl font-semibold truncate">
+                                        {quickLink.name}
+                                    </h2>
+                                    {quickLink.subtitle && (
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            {quickLink.subtitle}
+                                        </p>
+                                    )}
                                 </div>
-                            </motion.div>
-                            <div className="flex-1 min-w-0">
-                                <h2 className="text-xl font-semibold truncate">
-                                    {quickLink.name}
-                                </h2>
-                                {quickLink.subtitle && (
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                        {quickLink.subtitle}
-                                    </p>
-                                )}
                             </div>
-                        </div>
-                    </CardHeader>
-                </Card>
-            </motion.div>
+                        </CardHeader>
+                    </Card>
+                </motion.div>
 
-            {/* URL/Command preview */}
-            <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2, delay: 0.1 }}
-            >
-                <Card className="mb-4 hover:shadow-md transition-shadow">
-                    <CardContent className="pt-6">
-                        <div className="flex items-center gap-2 mb-2">
-                            {openType === "shell" ? (
-                                <Terminal className="w-4 h-4 text-muted-foreground" />
-                            ) : (
-                                <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                            )}
-                            <span className="text-xs font-medium text-muted-foreground">
+                {/* URL/Command preview */}
+                <motion.div
+                    initial={{opacity: 0, x: -20}}
+                    animate={{opacity: 1, x: 0}}
+                    transition={{duration: 0.2, delay: 0.1}}
+                >
+                    <Card className="mb-4 hover:shadow-md transition-shadow">
+                        <CardContent className="pt-6">
+                            <div className="flex items-center gap-2 mb-2">
+                                {openType === "shell" ? (
+                                    <Terminal className="w-4 h-4 text-muted-foreground"/>
+                                ) : (
+                                    <ExternalLink className="w-4 h-4 text-muted-foreground"/>
+                                )}
+                                <span className="text-xs font-medium text-muted-foreground">
                                 {openType === "shell" ? "将要执行的命令" : "将要打开的链接"}
                             </span>
-                        </div>
-                        <code className="block text-sm font-mono break-all bg-muted p-3 rounded-md">
-                            {finalUrl}
-                        </code>
-                    </CardContent>
-                </Card>
-            </motion.div>
-
-            {/* Help text for placeholders */}
-            {hasPlaceholders && (
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.2, delay: 0.15 }}
-                >
-                    <Alert className="mb-4">
-                        <Info className="h-4 w-4" />
-                        <AlertDescription className="text-sm">
-                            <div className="font-medium mb-2">变量说明</div>
-                            <div className="space-y-1.5 text-xs">
-                                {quickLink.url.includes('{query}') && (
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="secondary" className="font-mono text-xs">
-                                            query
-                                        </Badge>
-                                        <span>在搜索框中输入的内容</span>
-                                    </div>
-                                )}
-                                {quickLink.url.includes('{selection}') && (
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="secondary" className="font-mono text-xs">
-                                            selection
-                                        </Badge>
-                                        <span>剪贴板中的文本内容</span>
-                                    </div>
-                                )}
                             </div>
-                        </AlertDescription>
-                    </Alert>
+                            <code className="block text-sm font-mono break-all bg-muted p-3 rounded-md">
+                                {finalUrl}
+                            </code>
+                        </CardContent>
+                    </Card>
                 </motion.div>
-            )}
 
-            {/* Error message */}
-            {error && (
+                {/* Help text for placeholders */}
+                {hasPlaceholders && (
+                    <motion.div
+                        initial={{opacity: 0, x: -20}}
+                        animate={{opacity: 1, x: 0}}
+                        transition={{duration: 0.2, delay: 0.15}}
+                    >
+                        <Alert className="mb-4">
+                            <Info className="h-4 w-4"/>
+                            <AlertDescription className="text-sm">
+                                <div className="font-medium mb-2">变量说明</div>
+                                <div className="space-y-1.5 text-xs">
+                                    {quickLink.url.includes('{query}') && (
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="secondary" className="font-mono text-xs">
+                                                query
+                                            </Badge>
+                                            <span>在搜索框中输入的内容</span>
+                                        </div>
+                                    )}
+                                    {quickLink.url.includes('{selection}') && (
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="secondary" className="font-mono text-xs">
+                                                selection
+                                            </Badge>
+                                            <span>剪贴板中的文本内容</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </AlertDescription>
+                        </Alert>
+                    </motion.div>
+                )}
+
+                {/* Error message */}
+                {error && (
+                    <motion.div
+                        initial={{opacity: 0, scale: 0.95}}
+                        animate={{opacity: 1, scale: 1}}
+                        transition={{duration: 0.2}}
+                    >
+                        <Alert variant="destructive" className="mb-4">
+                            <AlertCircle className="h-4 w-4"/>
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    </motion.div>
+                )}
+
+                {/* Open button */}
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{opacity: 0, y: 10}}
+                    animate={{opacity: 1, y: 0}}
+                    transition={{duration: 0.2, delay: 0.2}}
                 >
-                    <Alert variant="destructive" className="mb-4">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
+                    <Button
+                        onClick={handleOpen}
+                        disabled={isLoading || hasUnresolvedPlaceholders}
+                        className="w-full h-11 text-base font-medium"
+                        size="lg"
+                    >
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                {openType === "shell" ? "执行中..." : "打开中..."}
+                            </>
+                        ) : hasUnresolvedPlaceholders ? (
+                            "请填写必需参数"
+                        ) : (
+                            <>
+                                {openType === "shell" ? (
+                                    <>
+                                        <Terminal className="mr-2 h-4 w-4"/>
+                                        执行命令
+                                    </>
+                                ) : (
+                                    <>
+                                        <ExternalLink className="mr-2 h-4 w-4"/>
+                                        打开链接
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </Button>
                 </motion.div>
-            )}
-
-            {/* Open button */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: 0.2 }}
-            >
-                <Button
-                    onClick={handleOpen}
-                    disabled={isLoading || hasUnresolvedPlaceholders}
-                    className="w-full h-11 text-base font-medium"
-                    size="lg"
-                >
-                    {isLoading ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {openType === "shell" ? "执行中..." : "打开中..."}
-                        </>
-                    ) : hasUnresolvedPlaceholders ? (
-                        "请填写必需参数"
-                    ) : (
-                        <>
-                            {openType === "shell" ? (
-                                <>
-                                    <Terminal className="mr-2 h-4 w-4" />
-                                    执行命令
-                                </>
-                            ) : (
-                                <>
-                                    <ExternalLink className="mr-2 h-4 w-4" />
-                                    打开链接
-                                </>
-                            )}
-                        </>
-                    )}
-                </Button>
-            </motion.div>
             </div>
         </motion.div>
     );

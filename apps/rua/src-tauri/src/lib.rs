@@ -3,6 +3,7 @@ mod clipboard;
 mod extensions;
 mod extension_storage;
 mod file_watcher;
+mod fs_api;
 mod notification;
 mod proxy;
 mod control_server;
@@ -217,6 +218,13 @@ pub fn run() {
             extension_storage::extension_storage_get,
             extension_storage::extension_storage_set,
             extension_storage::extension_storage_remove,
+            fs_api::fs_read_text_file,
+            fs_api::fs_read_binary_file,
+            fs_api::fs_write_text_file,
+            fs_api::fs_write_binary_file,
+            fs_api::fs_read_dir,
+            fs_api::fs_exists,
+            fs_api::fs_stat,
             #[cfg(target_os = "linux")]
             hyprland::focus_window_hyprland,
             #[cfg(target_os = "linux")]
