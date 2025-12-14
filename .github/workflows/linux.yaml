@@ -23,6 +23,25 @@ jobs:
     steps:
       - run: echo ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commit log
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            # If no previous tag, get all commits
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" -20)
+          else
+            # Get commits between previous tag and current
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD)
+          fi
+          # Handle multiline output
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
@@ -59,8 +78,10 @@ jobs:
           projectPath: apps/rua
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: 'App v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
+          releaseBody: |
+            ## Changes
+            ${{ steps.changelog.outputs.changelog }}
+          releaseDraft: false
           prerelease: true
           args: ${{ matrix.args }}
 
