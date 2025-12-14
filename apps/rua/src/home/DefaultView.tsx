@@ -1,8 +1,8 @@
 import {ActionImpl, Footer, RenderItem, ResultsRender} from "@/command";
 import {QuickResult} from "@/components/quick-result";
-import {Icon} from "@iconify/react";
 import {RefObject} from "react";
 import {motion} from "motion/react";
+import iconSvg from "@/assets/icon.svg";
 
 interface DefaultViewProps {
     search: string;
@@ -95,7 +95,7 @@ export function DefaultView({
             {/* Footer with theme toggle and dynamic actions */}
             <Footer
                 current={activeMainAction}
-                icon={<Icon icon="tabler:command" style={{fontSize: "20px"}}/>}
+                icon={<img src={iconSvg} alt="Rua" style={{width: "20px", height: "20px"}}/>}
                 content={() => (
                     <div/>
                 )}

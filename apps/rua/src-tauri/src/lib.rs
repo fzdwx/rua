@@ -15,6 +15,8 @@ mod hyprland;
 use std::path::PathBuf;
 use tauri::{App, Manager};
 use tauri::http::{Request, Response};
+use tauri::tray::{TrayIconBuilder, MouseButton, MouseButtonState, TrayIconEvent};
+use tauri::menu::{Menu, MenuItem};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -31,6 +33,9 @@ fn setup(app: &mut App) -> anyhow::Result<()> {
         .handle()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build());
 
+    // Setup system tray
+    setup_tray(app)?;
+
     // Start the control server in a separate thread
     let app_handle = app.handle().clone();
     std::thread::spawn(move || {
@@ -41,6 +46,43 @@ fn setup(app: &mut App) -> anyhow::Result<()> {
             }
         });
     });
+
+    Ok(())
+}
+
+fn setup_tray(app: &App) -> anyhow::Result<()> {
+    let show_item = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
+    let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+
+    let _tray = TrayIconBuilder::new()
+        .icon(app.default_window_icon().unwrap().clone())
+        .menu(&menu)
+        .menu_on_left_click(false)
+        .on_menu_event(|app, event| {
+            match event.id.as_ref() {
+                "show" => {
+                    if let Some(window) = app.get_webview_window("main") {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    }
+                }
+                "quit" => {
+                    app.exit(0);
+                }
+                _ => {}
+            }
+        })
+        .on_tray_icon_event(|tray, event| {
+            if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
+                let app = tray.app_handle();
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+        })
+        .build(app)?;
 
     Ok(())
 }
@@ -137,6 +179,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            // When another instance tries to start, show and focus the existing window
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .register_uri_scheme_protocol("ext", handle_ext_protocol)
         .setup(|app| {
             setup(app)?;
