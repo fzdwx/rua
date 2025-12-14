@@ -38,13 +38,13 @@ just build
 
 For detailed documentation, including:
 
-- 📖 [Installation Guide](https://fzdwx.github.io/rua/docs/getting-started/installation)
-- 🔌 [Extension Development](https://fzdwx.github.io/rua/docs/extensions/create-rua-ext)
-- 📚 [API Reference](https://fzdwx.github.io/rua/docs/api/overview)
-- 🛠️ [ruactl CLI Tool](https://fzdwx.github.io/rua/docs/user-guide/ruactl)
-- 🤝 [Contributing Guide](https://fzdwx.github.io/rua/docs/contributing/development-setup)
+- 📖 [Installation Guide](https://rua-docs.vercel.app/docs/getting-started/installation)
+- 🔌 [Extension Development](https://rua-docs.vercel.app/docs/extensions/create-rua-ext)
+- 📚 [API Reference](https://rua-docs.vercel.app/docs/api/overview)
+- 🛠️ [ruactl CLI Tool](https://rua-docs.vercel.app/docs/user-guide/ruactl)
+- 🤝 [Contributing Guide](https://rua-docs.vercel.app/docs/contributing/development-setup)
 
-Visit the **[Rua Documentation](https://fzdwx.github.io/rua)** website.
+Visit the **[Rua Documentation](https://rua-docs.vercel.app)** website.
 
 ## Create an Extension
 
@@ -55,7 +55,7 @@ bun install
 bun run build
 ```
 
-See the [Extension Development Guide](https://fzdwx.github.io/rua/docs/extensions/create-rua-ext) for more details.
+See the [Extension Development Guide](https://rua-docs.vercel.app/docs/extensions/create-rua-ext) for more details.
 
 ## License
 
