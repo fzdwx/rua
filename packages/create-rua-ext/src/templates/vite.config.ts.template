@@ -11,9 +11,9 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
-        main: 'index.html',
-        init: 'src/init.ts',
-      },
+{{#hasView}}        main: 'index.html',
+{{/hasView}}{{#hasBackground}}        init: 'src/init.ts',
+{{/hasBackground}}      },
       output: {
         entryFileNames: '[name].js',
         chunkFileNames: '[name].js',

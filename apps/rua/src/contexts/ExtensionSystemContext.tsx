@@ -12,13 +12,25 @@ import {
     type ReactNode,
 } from 'react';
 import {invoke} from '@tauri-apps/api/core';
+import {toast} from 'sonner';
 import {useFileWatcher, type FileChangeEvent} from '@/hooks/useFileWatcher';
+import {
+    executeBackgroundScript,
+    setBackgroundCallbacks,
+    notifyActivate as notifyActivateBackground,
+    notifyDeactivate as notifyDeactivateBackground,
+    cleanupExtension as cleanupBackgroundExtension,
+    isBackgroundScriptLoaded,
+} from '@/lib/background-executor';
 
 // Import types from rua-api package
 import {
     ManifestAction,
     ManifestDerivedAction,
-    DynamicAction, ExtensionManifest,
+    DynamicAction,
+    ExtensionManifest,
+    ExtensionPermission,
+    ParsedPermission,
 } from 'rua-api';
 
 /**
@@ -67,13 +79,17 @@ export interface ExtensionSystemContextValue {
     /** Install an extension from path */
     installExtension: (path: string) => Promise<void>;
     /** Uninstall an extension */
-    uninstallExtension: (extensionId: string) => Promise<void>;
+    uninstallExtension: (extensionId: string, extensionPath?: string) => Promise<void>;
     /** Enable an extension */
     enableExtension: (extensionId: string) => Promise<void>;
     /** Disable an extension */
     disableExtension: (extensionId: string) => Promise<void>;
     /** Reload all extensions */
     reloadExtensions: () => Promise<void>;
+    /** Notify all extensions that the main window is activated */
+    notifyActivate: () => Promise<void>;
+    /** Notify all extensions that the main window is deactivated */
+    notifyDeactivate: () => Promise<void>;
 }
 
 const ExtensionSystemContext = createContext<ExtensionSystemContextValue | null>(null);
@@ -86,7 +102,58 @@ export interface PluginSystemProviderProps {
 }
 
 /**
+ * Parse manifest permissions into simple strings and detailed parsed permissions
+ */
+function parseManifestPermissions(manifestPermissions: ExtensionPermission[]): {
+    permissions: string[];
+    parsedPermissions: ParsedPermission[];
+} {
+    const permissions: string[] = [];
+    const parsedPermissions: ParsedPermission[] = [];
+
+    for (const perm of manifestPermissions) {
+        if (typeof perm === 'string') {
+            // Simple permission string
+            permissions.push(perm);
+            parsedPermissions.push({ permission: perm });
+        } else {
+            // Detailed permission with allow rules
+            permissions.push(perm.permission);
+            const parsed: ParsedPermission = { permission: perm.permission };
+
+            if (perm.allow) {
+                const allowPaths: string[] = [];
+                const allowCommands: Array<{ program: string; args?: string[] }> = [];
+
+                for (const rule of perm.allow) {
+                    if ('path' in rule) {
+                        allowPaths.push(rule.path);
+                    } else if ('cmd' in rule) {
+                        allowCommands.push({
+                            program: rule.cmd.program,
+                            args: rule.cmd.args,
+                        });
+                    }
+                }
+
+                if (allowPaths.length > 0) {
+                    parsed.allowPaths = allowPaths;
+                }
+                if (allowCommands.length > 0) {
+                    parsed.allowCommands = allowCommands;
+                }
+            }
+
+            parsedPermissions.push(parsed);
+        }
+    }
+
+    return { permissions, parsedPermissions };
+}
+
+/**
  * Convert extension info to derived actions
+ * Filters out background actions as they are not user-facing
  */
 function convertExtensionToActions(ext: ExtensionInfo): ManifestDerivedAction[] {
     const {manifest, path: extPath} = ext;
@@ -94,11 +161,16 @@ function convertExtensionToActions(ext: ExtensionInfo): ManifestDerivedAction[] 
 
     console.log('[convertExtensionToActions] ext:', ext.manifest.id, 'path:', extPath, 'uiEntry:', uiEntry);
 
-    return manifest.rua.actions.map((action: ManifestAction) => {
-        const derivedAction = {
+    // Filter out background actions - they run automatically and shouldn't appear in action list
+    const userFacingActions = manifest.rua.actions.filter(
+        (action: ManifestAction) => action.mode !== 'background'
+    );
+
+    return userFacingActions.map((action: ManifestAction) => {
+        const derivedAction: ManifestDerivedAction = {
             id: `${manifest.id}.${action.name}`,
             name: action.title,
-            mode: action.mode,
+            mode: action.mode as 'view',
             keywords: action.keywords?.join(' '),
             icon: action.icon,
             subtitle: action.subtitle,
@@ -107,9 +179,6 @@ function convertExtensionToActions(ext: ExtensionInfo): ManifestDerivedAction[] 
             actionName: action.name,
             uiEntry: action.mode === 'view' && uiEntry
                 ? `${extPath}/${uiEntry}?action=${action.name}`
-                : undefined,
-            script: action.mode === 'command' && action.script
-                ? `${extPath}/${action.script}`
                 : undefined,
             query: action.query,
         };
@@ -126,8 +195,7 @@ async function loadDevExtension(devPath: string): Promise<ExtensionInfo | null> 
         const ext = await invoke<ExtensionInfo>('load_dev_extension', {devPath});
         return ext;
     } catch (error) {
-        console.error('Failed to load dev extension:', error);
-        return null;
+        throw error;
     }
 }
 
@@ -168,8 +236,22 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
         onFileChange: handleFileChange,
     });
 
+    // Register dynamic actions callback (called from init scripts)
+    const registerDynamicActionsRef = useRef<((extensionId: string, actions: DynamicAction[]) => void) | undefined>(undefined);
+    const unregisterDynamicActionsRef = useRef<((extensionId: string, actionIds: string[]) => void) | undefined>(undefined);
+
+    // Track if loadExtensions is currently running to prevent duplicate calls
+    const loadingRef = useRef(false);
+
     // Load extensions from backend
     const loadExtensions = useCallback(async () => {
+        // Prevent duplicate calls
+        if (loadingRef.current) {
+            console.log('[ExtensionSystemContext] loadExtensions already running, skipping');
+            return;
+        }
+        loadingRef.current = true;
+
         try {
             setLoading(true);
 
@@ -183,13 +265,22 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
             // Load dev extension if path is set
             let allExtensions = [...extensions];
             if (devExtensionPath) {
-                const devExt = await loadDevExtension(devExtensionPath);
-                if (devExt) {
-                    // Remove any existing extension with same ID
-                    allExtensions = allExtensions.filter(e => e.manifest.id !== devExt.manifest.id);
-                    // Add dev extension with a marker
-                    devExt.manifest.name = `[DEV] ${devExt.manifest.name}`;
-                    allExtensions.unshift(devExt);
+                try {
+                    const devExt = await loadDevExtension(devExtensionPath);
+                    if (devExt) {
+                        // Remove any existing extension with same ID
+                        allExtensions = allExtensions.filter(e => e.manifest.id !== devExt.manifest.id);
+                        // Add dev extension with a marker
+                        devExt.manifest.name = `[DEV] ${devExt.manifest.name}`;
+                        allExtensions.unshift(devExt);
+                    }
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    toast.error(`Failed to load dev extension: ${errorMessage}`);
+                    console.error('Failed to load dev extension:', error);
+                    // Clear the invalid dev path
+                    localStorage.removeItem('rua:devExtensionPath');
+                    setDevExtensionPathState(null);
                 }
             }
 
@@ -201,11 +292,49 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
                 .flatMap(convertExtensionToActions);
             setPluginActions(actions);
 
+            // Execute background scripts for enabled extensions (only if not already loaded)
+            for (const ext of allExtensions) {
+                if (!ext.enabled || ext.error) continue;
+
+                // Find background action (at most one per extension)
+                const backgroundAction = ext.manifest.rua.actions.find(
+                    (action: ManifestAction) => action.mode === 'background'
+                );
+
+                // Execute background script if present and not already loaded
+                if (backgroundAction?.script) {
+                    // Skip if already loaded
+                    if (isBackgroundScriptLoaded(ext.manifest.id)) {
+                        console.log('[ExtensionSystemContext] Background script already loaded for:', ext.manifest.id);
+                        continue;
+                    }
+
+                    console.log('[ExtensionSystemContext] Executing background script for:', ext.manifest.id);
+                    try {
+                        // Extract permissions from manifest
+                        const { permissions, parsedPermissions } = parseManifestPermissions(ext.manifest.permissions || []);
+
+                        await executeBackgroundScript(
+                            ext.manifest.id,
+                            ext.path,
+                            backgroundAction.script,
+                            ext.manifest.name,
+                            ext.manifest.version,
+                            permissions,
+                            parsedPermissions
+                        );
+                    } catch (error) {
+                        console.error(`[ExtensionSystemContext] Failed to execute background script for ${ext.manifest.id}:`, error);
+                    }
+                }
+            }
+
             setInitialized(true);
         } catch (error) {
             console.error('Failed to load extensions:', error);
         } finally {
             setLoading(false);
+            loadingRef.current = false;
         }
     }, [devExtensionPath]);
 
@@ -220,6 +349,20 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
             }
         }
 
+        // If stopping dev mode, clean up the dev extension's background script
+        if (!path && devExtensionPath) {
+            // Find the dev extension to get its ID for cleanup
+            const devExt = plugins.find(p => p.manifest.name.startsWith('[DEV]'));
+            if (devExt) {
+                cleanupBackgroundExtension(devExt.manifest.id);
+                setDynamicActions(prev => {
+                    const newMap = new Map(prev);
+                    newMap.delete(devExt.manifest.id);
+                    return newMap;
+                });
+            }
+        }
+
         setDevExtensionPathState(path);
         if (path) {
             localStorage.setItem('rua:devExtensionPath', path);
@@ -231,7 +374,7 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
         }
         // Note: loadExtensions will be called automatically via useEffect
         // because it depends on devExtensionPath
-    }, [isWatching, stopWatching]);
+    }, [isWatching, stopWatching, devExtensionPath, plugins]);
 
     // Initialize extension system
     useEffect(() => {
@@ -279,15 +422,17 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
     }, [loadExtensions]);
 
     // Uninstall extension
-    const uninstallExtension = useCallback(async (pluginId: string) => {
+    const uninstallExtension = useCallback(async (pluginId: string, pluginPath?: string) => {
         try {
-            // Clean up dynamic actions when extension is uninstalled
+            // Clean up dynamic actions and init state when extension is uninstalled
             setDynamicActions(prev => {
                 const newMap = new Map(prev);
                 newMap.delete(pluginId);
                 return newMap;
             });
-            await invoke('uninstall_extension', {extensionId: pluginId});
+            // Clean up background script state
+            cleanupBackgroundExtension(pluginId);
+            await invoke('uninstall_extension', {extensionId: pluginId, extensionPath: pluginPath});
             await loadExtensions();
         } catch (error) {
             console.error('Failed to uninstall extension:', error);
@@ -309,12 +454,14 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
     // Disable extension
     const disableExtension = useCallback(async (pluginId: string) => {
         try {
-            // Clean up dynamic actions when extension is disabled
+            // Clean up dynamic actions and init state when extension is disabled
             setDynamicActions(prev => {
                 const newMap = new Map(prev);
                 newMap.delete(pluginId);
                 return newMap;
             });
+            // Clean up background script state
+            cleanupBackgroundExtension(pluginId);
             await invoke('disable_extension', {extensionId: pluginId});
             await loadExtensions();
         } catch (error) {
@@ -371,6 +518,33 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
         });
     }, []);
 
+    // Set up action callbacks for background-executor
+    useEffect(() => {
+        registerDynamicActionsRef.current = registerDynamicActions;
+        unregisterDynamicActionsRef.current = (extensionId: string, actionIds: string[]) => {
+            unregisterDynamicActions(extensionId, actionIds);
+        };
+        // Set callbacks for background-executor (main context)
+        setBackgroundCallbacks({
+            onRegisterActions: (extId, actions) => registerDynamicActionsRef.current?.(extId, actions),
+            onUnregisterActions: (extId, actionIds) => unregisterDynamicActionsRef.current?.(extId, actionIds),
+        });
+
+        // Cleanup on unmount
+        return () => {
+            setBackgroundCallbacks(null);
+        };
+    }, [registerDynamicActions, unregisterDynamicActions]);
+
+    // Notify functions that call background executor
+    const notifyActivate = useCallback(async () => {
+        await notifyActivateBackground();
+    }, []);
+
+    const notifyDeactivate = useCallback(async () => {
+        await notifyDeactivateBackground();
+    }, []);
+
     const value: ExtensionSystemContextValue = {
         initialized,
         loading,
@@ -389,6 +563,8 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
         enableExtension,
         disableExtension,
         reloadExtensions,
+        notifyActivate,
+        notifyDeactivate,
     };
 
     return (

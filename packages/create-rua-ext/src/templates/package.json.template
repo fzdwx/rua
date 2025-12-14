@@ -4,33 +4,33 @@
   "private": true,
   "type": "module",
   "scripts": {
-    {{#useVite}}"dev": "vite",
+    {{#useVite}}"dev": "vite build --watch",
     "build": "vite build",
     "preview": "vite preview"{{/useVite}}{{^useVite}}"start": "echo 'No build step required'"{{/useVite}}
   },
   "dependencies": {
     "rua-api": "^0.1.0"{{#useReact}},
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"{{/useReact}}{{#useVue}},
-    "vue": "^3.5.0"{{/useVue}}{{#useSvelte}},
-    "svelte": "^5.0.0"{{/useSvelte}}{{#useShadcn}},
-    "class-variance-authority": "^0.7.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"{{/useReact}}{{#useVue}},
+    "vue": "^3.5.13"{{/useVue}}{{#useSvelte}},
+    "svelte": "^5.33.0"{{/useSvelte}}{{#useShadcn}},
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.460.0",
-    "tailwind-merge": "^2.5.4"{{/useShadcn}}
+    "lucide-react": "^0.511.0",
+    "tailwind-merge": "^3.3.0"{{/useShadcn}}
   }{{#useVite}},
   "devDependencies": {
-    "vite": "^6.0.0",
-    "typescript": "^5.8.0"{{#useReact}},
-    "@vitejs/plugin-react": "^4.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"{{/useReact}}{{#useVue}},
-    "@vitejs/plugin-vue": "^5.0.0",
-    "vue-tsc": "^2.0.0"{{/useVue}}{{#useSvelte}},
-    "@sveltejs/vite-plugin-svelte": "^4.0.0"{{/useSvelte}}{{#useTailwind}},
-    "@tailwindcss/vite": "^4.1.0",
-    "tailwindcss": "^4.1.0"{{/useTailwind}}{{#useShadcn}},
-    "@types/node": "^22.9.1",
+    "vite": "^7.0.0",
+    "typescript": "^5.8.3"{{#useReact}},
+    "@vitejs/plugin-react": "^4.5.2",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5"{{/useReact}}{{#useVue}},
+    "@vitejs/plugin-vue": "^5.2.4",
+    "vue-tsc": "^2.2.10"{{/useVue}}{{#useSvelte}},
+    "@sveltejs/vite-plugin-svelte": "^5.0.3"{{/useSvelte}}{{#useTailwind}},
+    "@tailwindcss/vite": "^4.1.8",
+    "tailwindcss": "^4.1.8"{{/useTailwind}}{{#useShadcn}},
+    "@types/node": "^24.0.3",
     "tailwindcss-animate": "^1.0.7"{{/useShadcn}}
   }{{/useVite}}
 }

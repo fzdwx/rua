@@ -1,0 +1,18 @@
+{
+  "name": "fzdwx.open-vscode-recent-projects",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "rua-api": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^7.0.4",
+    "typescript": "^5.8.0"
+  }
+}

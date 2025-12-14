@@ -116,7 +116,6 @@ my-extension/
 | `author` | string | 作者信息 |
 | `homepage` | string | 主页 URL |
 | `rua.ui.entry` | string | UI 入口文件（view 模式需要） |
-| `rua.init` | string | 初始化脚本路径 |
 | `permissions` | array | 权限声明 |
 
 ## Action 定义
@@ -149,19 +148,6 @@ extension://author.my-extension/index.html?action=my-view
 ```javascript
 const params = new URLSearchParams(window.location.search);
 const action = params.get('action'); // "my-view"
-```
-
-### Command 模式
-
-执行脚本命令：
-
-```json
-{
-  "name": "my-command",
-  "title": "Run My Command",
-  "mode": "command",
-  "script": "commands/my-command.js"
-}
 ```
 
 ### Query 支持

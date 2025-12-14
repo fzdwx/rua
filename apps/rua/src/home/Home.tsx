@@ -21,6 +21,7 @@ import React from "react";
 import {AnimatedView} from "./AnimatedView";
 import {createViewConfigs} from "./viewConfig";
 import {ViewContext} from "./viewContext";
+import {useExtensionSystem} from "@/contexts/ExtensionSystemContext";
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -33,6 +34,7 @@ export default function Home() {
     const lastActiveMainActionRef = useRef<ActionImpl | null>(null); // Store last active main action for passing data to edit action
     const {theme, toggleTheme} = useTheme();
     const {incrementUsage} = useActionUsage();
+    const {notifyActivate, notifyDeactivate} = useExtensionSystem();
 
     // Initialize action store
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
@@ -54,7 +56,7 @@ export default function Home() {
 
     // Handle window focus - respect disableSearchFocus flag
     useEffect(() => {
-        let unlisten: (() => void) | undefined;
+        let unlistenFocus: (() => void) | undefined;
         getCurrentWebviewWindow().listen('tauri://focus', () => {
             // Check if current root action has disableSearchFocus flag
             const currentAction = allActions.find(a => a.id === state.rootActionId);
@@ -64,12 +66,37 @@ export default function Home() {
                 inputRef.current?.focus();
             }
         }).then(unlistenFn => {
-            unlisten = unlistenFn;
+            unlistenFocus = unlistenFn;
         });
         return () => {
-            unlisten?.();
+            unlistenFocus?.();
         };
     }, [state.rootActionId, allActions]);
+
+    // Handle window show/hide - notify extensions
+    useEffect(() => {
+        let unlistenShow: (() => void) | undefined;
+        let unlistenHide: (() => void) | undefined;
+        
+        // Listen for window-shown event (custom event from control_server)
+        getCurrentWebviewWindow().listen('rua://window-shown', () => {
+            notifyActivate();
+        }).then(unlistenFn => {
+            unlistenShow = unlistenFn;
+        });
+        
+        // Listen for window-hidden event (custom event from control_server)
+        getCurrentWebviewWindow().listen('rua://window-hidden', () => {
+            notifyDeactivate();
+        }).then(unlistenFn => {
+            unlistenHide = unlistenFn;
+        });
+        
+        return () => {
+            unlistenShow?.();
+            unlistenHide?.();
+        };
+    }, [notifyActivate, notifyDeactivate]);
 
     // Register actions when they change
     useRegisterActions(allActions, [allActions]);

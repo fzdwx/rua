@@ -5,29 +5,26 @@
   "description": "{{description}}",
   "author": "{{author}}",
   "rua": {
-    "engineVersion": "^0.1.0",
-    {{#hasUI}}"ui": {
+    "engineVersion": "^0.1.0"{{#hasView}},
+    "ui": {
       "entry": "{{uiEntry}}"
-    },{{/hasUI}}
-    "init": "{{initEntry}}",
+    }{{/hasView}},
     "actions": [
-      {{#isViewExtension}}{
+{{#hasBackground}}      {
+        "name": "background",
+        "title": "Background",
+        "mode": "background",
+        "script": "{{initEntry}}"
+      }{{#hasView}},{{/hasView}}
+{{/hasBackground}}{{#hasView}}      {
         "name": "main",
         "title": "{{name}}",
         "mode": "view",
         "keywords": ["{{kebabName}}"],
         "icon": "tabler:star",
         "subtitle": "{{description}}"
-      }{{/isViewExtension}}{{#isCommandExtension}}{
-        "name": "run",
-        "title": "Run {{name}}",
-        "mode": "command",
-        "keywords": ["run", "execute"],
-        "icon": "tabler:player-play",
-        "subtitle": "Execute the command",
-        "script": "{{commandScript}}"
-      }{{/isCommandExtension}}
-    ]
+      }
+{{/hasView}}    ]
   }{{#hasPermissions}},
   "permissions": [
     {{{permissionsJson}}}

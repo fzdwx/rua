@@ -47,7 +47,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
         // Event handlers map
         const eventHandlers = new Map<string, EventHandler[]>();
 
-        // Create kkrpc IO and channel
+        // Create kkrpc IO and channel with all callbacks
         const io = new IframeChildIO();
         const rpc = new RPCChannel(io, {
             expose: {
@@ -66,6 +66,26 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
                     handlers.forEach((handler) => {
                         try {
                             handler(query);
+                        } catch (e) {
+                            console.error('[Rua API] Event handler error:', e);
+                        }
+                    });
+                },
+                onActivate: async () => {
+                    const handlers = eventHandlers.get('activate') || [];
+                    handlers.forEach((handler) => {
+                        try {
+                            handler(undefined);
+                        } catch (e) {
+                            console.error('[Rua API] Event handler error:', e);
+                        }
+                    });
+                },
+                onDeactivate: async () => {
+                    const handlers = eventHandlers.get('deactivate') || [];
+                    handlers.forEach((handler) => {
+                        try {
+                            handler(undefined);
                         } catch (e) {
                             console.error('[Rua API] Event handler error:', e);
                         }

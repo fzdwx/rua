@@ -32,7 +32,7 @@ export interface ManifestDerivedAction {
     /** Display title */
     name: string;
     /** Action mode */
-    mode: 'view' | 'command';
+    mode: 'view';
     /** Search keywords */
     keywords?: string;
     /** Icon */
@@ -47,8 +47,6 @@ export interface ManifestDerivedAction {
     actionName: string;
     /** UI entry URL (for view mode) */
     uiEntry?: string;
-    /** Script path (for command mode) */
-    script?: string;
     /** If true, shows a query input box when action is active */
     query?: boolean;
 }
@@ -223,6 +221,10 @@ export interface RuaHostCallbacks {
 export interface RuaClientCallbacks {
     /** Called when search input value changes */
     onSearchChange?: (query: string) => void;
+    /** Called when the main window is activated (shown) */
+    onActivate?: () => void;
+    /** Called when the main window is deactivated (hidden) */
+    onDeactivate?: () => void;
 }
 
 /** Parsed permission with allow rules */

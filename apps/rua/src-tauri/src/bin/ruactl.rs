@@ -48,7 +48,6 @@ struct ExtensionManifest {
 struct RuaConfig {
     engine_version: String,
     ui: Option<UiConfig>,
-    init: Option<String>,
     actions: Vec<ManifestAction>,
 }
 
@@ -231,16 +230,12 @@ fn parse_manifest(dir: &Path) -> Result<ExtensionManifest, Vec<String>> {
     }
 }
 
-/// Get referenced files from manifest (ui.entry, init, action scripts)
+/// Get referenced files from manifest (ui.entry, action scripts)
 fn get_referenced_files(manifest: &ExtensionManifest) -> Vec<String> {
     let mut files = Vec::new();
 
     if let Some(ui) = &manifest.rua.ui {
         files.push(ui.entry.clone());
-    }
-
-    if let Some(init) = &manifest.rua.init {
-        files.push(init.clone());
     }
 
     for action in &manifest.rua.actions {

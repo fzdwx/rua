@@ -1,0 +1,74 @@
+{
+  "id": "fzdwx.open-vscode-recent-projects",
+  "name": "open-vscode-recent-projects",
+  "version": "0.1.0",
+  "description": " Open VsCode Recent Projects",
+  "author": "fzdwx",
+  "rua": {
+    "engineVersion": "^0.1.0",
+    "actions": [
+      {
+        "name": "background",
+        "title": "Background",
+        "mode": "background",
+        "script": "dist/init.js"
+      }
+    ]
+  },
+  "permissions": [
+    "storage",
+    {
+      "permission": "shell",
+      "allow": [
+        {
+          "cmd": {
+            "program": "code",
+            "args": [
+              ".+"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "permission": "fs:read",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        }
+      ]
+    },
+    {
+      "permission": "fs:read-dir",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        }
+      ]
+    },
+    {
+      "permission": "fs:write",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        }
+      ]
+    },
+    {
+      "permission": "fs:exists",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        }
+      ]
+    },
+    {
+      "permission": "fs:stat",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        }
+      ]
+    }
+  ]
+}

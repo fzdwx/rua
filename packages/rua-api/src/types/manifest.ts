@@ -54,24 +54,52 @@ export interface DetailedPermission {
 export type ExtensionPermission = SimplePermission | DetailedPermission;
 
 /**
- * Action mode determines how the action is displayed
+ * Action mode determines how the action is executed and displayed.
+ *
+ * - `view`: Opens a custom UI view in the extension panel
+ * - `background`: Runs automatically when rua starts, executing in the main program context.
+ *   Background actions are used for initialization, registering dynamic actions, and
+ *   responding to application lifecycle events. Each extension can have at most one
+ *   background action.
  */
 export type ActionMode =
     | 'view'           // Opens a custom UI view
-    | 'command';       // Executes a command without UI
+    | 'background';    // Runs automatically on startup in main context
 
 /**
  * Action definition in manifest
  *
  * Each extension can define multiple actions in the manifest.
  * Actions with mode 'view' will load the UI entry with ?action={name} parameter.
+ *
+ * **Background Actions:**
+ * - Actions with `mode: 'background'` run automatically when rua starts
+ * - Background actions MUST have a `script` field pointing to the JavaScript file
+ * - Each extension can have at most ONE background action
+ * - Background scripts execute in the main program context (not in an iframe)
+ * - Use background actions for initialization, registering dynamic actions, and
+ *   responding to application lifecycle events (activate/deactivate)
+ *
+ * @example
+ * ```json
+ * {
+ *   "name": "background-init",
+ *   "title": "Background Initializer",
+ *   "mode": "background",
+ *   "script": "dist/background.js"
+ * }
+ * ```
  */
 export interface ManifestAction {
     /** Action identifier (unique within extension) */
     name: string;
     /** Display title shown in command palette */
     title: string;
-    /** Action mode: 'view' for UI, 'command' for script execution */
+    /**
+     * Action mode:
+     * - 'view': Opens a custom UI view
+     * - 'background': Runs automatically on startup (requires `script` field)
+     */
     mode: ActionMode;
     /** Search keywords for this action */
     keywords?: string[];
@@ -81,7 +109,10 @@ export interface ManifestAction {
     subtitle?: string;
     /** Keyboard shortcut */
     shortcut?: string[];
-    /** Script to execute for 'command' mode (relative path) */
+    /**
+     * Script to execute (relative path to JavaScript file).
+     * Required for 'background' mode. This script runs automatically when rua starts.
+     */
     script?: string;
     /** If true, shows a query input box when action is active in command palette */
     query?: boolean;
@@ -104,12 +135,6 @@ export interface RuaConfig {
         height?: number;
     };
 
-    /**
-     * Initialization script executed when extension loads
-     * Can be used for background tasks, registering shortcuts, etc.
-     */
-    init?: string;
-
     /** Actions defined by this extension */
     actions: ManifestAction[];
 }
@@ -131,8 +156,13 @@ export interface RuaConfig {
  *     "ui": {
  *       "entry": "index.html"
  *     },
- *     "init": "init.js",
  *     "actions": [
+ *       {
+ *         "name": "background-init",
+ *         "title": "Background Initializer",
+ *         "mode": "background",
+ *         "script": "dist/background.js"
+ *       },
  *       {
  *         "name": "open-baidu",
  *         "title": "打开百度",

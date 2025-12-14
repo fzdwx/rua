@@ -7,7 +7,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::Mutex;
 
 const SERVER_PORT: u16 = 7777;
@@ -46,6 +46,8 @@ async fn toggle_window(State(state): State<AppState>) -> impl IntoResponse {
                                         }),
                                     );
                                 }
+                                // Emit window-hidden event
+                                let _ = window.emit("rua://window-hidden", ());
                                 return (
                                     StatusCode::OK,
                                     Json(Response {
@@ -65,6 +67,8 @@ async fn toggle_window(State(state): State<AppState>) -> impl IntoResponse {
                                 if let Err(e) = window.set_focus() {
                                     eprintln!("Failed to focus window: {}", e);
                                 }
+                                // Emit window-shown event (window is now visible on current workspace)
+                                let _ = window.emit("rua://window-shown", ());
                                 return (
                                     StatusCode::OK,
                                     Json(Response {
@@ -85,6 +89,8 @@ async fn toggle_window(State(state): State<AppState>) -> impl IntoResponse {
                                         }),
                                     );
                                 }
+                                // Emit window-hidden event
+                                let _ = window.emit("rua://window-hidden", ());
                                 return (
                                     StatusCode::OK,
                                     Json(Response {
@@ -108,6 +114,8 @@ async fn toggle_window(State(state): State<AppState>) -> impl IntoResponse {
                                 }),
                             );
                         }
+                        // Emit window-hidden event
+                        let _ = window.emit("rua://window-hidden", ());
                         (
                             StatusCode::OK,
                             Json(Response {
@@ -142,6 +150,8 @@ async fn toggle_window(State(state): State<AppState>) -> impl IntoResponse {
                     if let Err(e) = window.set_focus() {
                         eprintln!("Failed to focus window: {}", e);
                     }
+                    // Emit window-shown event
+                    let _ = window.emit("rua://window-shown", ());
                     (
                         StatusCode::OK,
                         Json(Response {

@@ -18,7 +18,6 @@ function convertToAction(
   setRootActionId: (id: string | null) => void,
   setSearch: (search: string) => void
 ): Action {
-  console.log("1111111111",extensionAction)
   return {
     id: extensionAction.id,
     name: extensionAction.name,
@@ -43,10 +42,6 @@ function convertToAction(
         setSearch("");
         // For view mode, set root action to show the extension view
         setRootActionId(extensionAction.id);
-      } else if (extensionAction.mode === 'command' && extensionAction.script) {
-        // For command mode, execute the script
-        // TODO: Implement script execution via Tauri
-        console.log(`Execute script: ${extensionAction.script}`);
       }
     },
   };

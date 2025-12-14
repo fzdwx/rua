@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
  * create-rua-ext CLI
- * 
+ *
  * A CLI tool to scaffold Rua extension projects.
- * 
+ *
  * Usage:
  *   bunx create-rua-ext
  *   bunx create-rua-ext my-extension
@@ -24,7 +24,8 @@ interface ExtensionConfig {
   id: string;
   description: string;
   author: string;
-  template: 'basic' | 'view' | 'command';
+  template: 'basic' | 'view';
+  extensionType: 'background' | 'view' | 'both';
   packageManager: 'npm' | 'bun' | 'pnpm' | 'yarn';
   buildTool: 'vite' | 'none';
   framework: 'none' | 'react' | 'vue' | 'svelte';
@@ -41,17 +42,19 @@ const TEMPLATES = {
     name: 'View Extension',
     description: 'Extension with UI framework and build tool',
   },
-  command: {
-    name: 'Command Extension',
-    description: 'Command-only actions (no UI)',
-  },
 };
 
+const EXTENSION_TYPES = [
+  { title: 'Both (Background + View)', value: 'both', description: 'Background script and UI view' },
+  { title: 'View Only', value: 'view', description: 'UI view without background script' },
+  { title: 'Background Only', value: 'background', description: 'Background script without UI view' },
+];
+
 const PACKAGE_MANAGERS = [
-  { title: 'npm', value: 'npm' },
-  { title: 'bun', value: 'bun' },
   { title: 'pnpm', value: 'pnpm' },
+  { title: 'bun', value: 'bun' },
   { title: 'yarn', value: 'yarn' },
+  { title: 'npm', value: 'npm' },
 ];
 
 const BUILD_TOOLS = [
@@ -97,7 +100,7 @@ function toKebabCase(str: string): string {
  */
 function generatePermissionsJson(permissions: string[]): string {
   const result: (string | object)[] = [];
-  
+
   for (const perm of permissions) {
     if (perm === 'shell') {
       // Shell permission with example allow rules
@@ -127,7 +130,7 @@ function generatePermissionsJson(permissions: string[]): string {
       result.push(perm);
     }
   }
-  
+
   // Format with proper indentation
   const lines = JSON.stringify(result, null, 4).split('\n');
   // Remove first '[' and last ']', adjust indentation
@@ -139,7 +142,7 @@ function getTemplatesDir(): string {
   // In production, they should be in the same directory as the built JS
   const devTemplatesDir = path.join(__dirname, '../src/templates');
   const prodTemplatesDir = path.join(__dirname, 'templates');
-  
+
   if (fs.existsSync(devTemplatesDir)) {
     return devTemplatesDir;
   }
@@ -154,7 +157,8 @@ function renderTemplate(templatePath: string, context: any): string {
 
 function createTemplateContext(config: ExtensionConfig) {
   const kebabName = toKebabCase(config.name);
-  const hasUI = config.template !== 'command';
+  const hasBackground = config.extensionType === 'background' || config.extensionType === 'both';
+  const hasView = config.extensionType === 'view' || config.extensionType === 'both';
   const useVite = config.buildTool === 'vite';
   const pmRun = config.packageManager === 'npm' ? 'npm run' : config.packageManager;
 
@@ -165,12 +169,13 @@ function createTemplateContext(config: ExtensionConfig) {
     description: config.description,
     author: config.author,
     kebabName,
-    
-    // Template flags
-    isViewExtension: config.template === 'basic' || config.template === 'view',
-    isCommandExtension: config.template === 'command',
-    hasUI,
-    
+
+    // Extension type flags
+    hasBackground,
+    hasView,
+    isViewExtension: hasView,
+    hasUI: hasView,
+
     // Build tool flags
     useVite,
     useVanilla: config.framework === 'none',
@@ -178,12 +183,12 @@ function createTemplateContext(config: ExtensionConfig) {
     useVue: config.framework === 'vue',
     useSvelte: config.framework === 'svelte',
     hasPlugins: config.framework !== 'none',
-    
+
     // Styling flags
     useTailwind: config.styling === 'tailwind' || config.styling === 'shadcn',
     useShadcn: config.styling === 'shadcn',
     useNoStyling: config.styling === 'none',
-    
+
     // Package manager
     packageManager: config.packageManager,
     pmRun,
@@ -192,7 +197,7 @@ function createTemplateContext(config: ExtensionConfig) {
     useNpm: config.packageManager === 'npm',
     usePnpm: config.packageManager === 'pnpm',
     useYarn: config.packageManager === 'yarn',
-    
+
     // Permissions
     permissions: config.permissions,
     hasPermissions: config.permissions.length > 0,
@@ -208,12 +213,11 @@ function createTemplateContext(config: ExtensionConfig) {
     hasFsStat: config.permissions.includes('fs:stat'),
     // Generate permissions JSON with detailed configs for shell and fs
     permissionsJson: generatePermissionsJson(config.permissions),
-    
+
     // File paths
     uiEntry: useVite ? 'dist/index.html' : 'index.html',
     initEntry: useVite ? 'dist/init.js' : 'init.js',
-    commandScript: useVite ? 'dist/commands/run.js' : 'commands/run.js',
-    scriptSrc: useVite ? '/src/main.ts' : 'main.js',
+    scriptSrc: useVite ? (config.framework === 'react' ? '/src/main.tsx' : '/src/main.ts') : 'main.js',
     scriptType: useVite ? 'module' : 'text/javascript',
   };
 }
@@ -221,7 +225,7 @@ function createTemplateContext(config: ExtensionConfig) {
 async function createExtension(targetDir: string, config: ExtensionConfig) {
   const templatesDir = getTemplatesDir();
   const context = createTemplateContext(config);
-  
+
   fs.mkdirSync(targetDir, { recursive: true });
 
   // Create manifest.json
@@ -242,56 +246,64 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
   if (config.buildTool === 'vite') {
     // Vite project structure
     fs.mkdirSync(path.join(targetDir, 'src'), { recursive: true });
-    
+
     // package.json
     const packageTemplate = path.join(templatesDir, 'package.json.template');
     const packageContent = renderTemplate(packageTemplate, context);
     fs.writeFileSync(path.join(targetDir, 'package.json'), packageContent);
-    
+
     // vite.config.ts
     const viteConfigTemplate = path.join(templatesDir, 'vite.config.ts.template');
     const viteConfigContent = renderTemplate(viteConfigTemplate, context);
     fs.writeFileSync(path.join(targetDir, 'vite.config.ts'), viteConfigContent);
-    
+
     // tsconfig.json
     const tsconfigTemplate = path.join(templatesDir, 'tsconfig.json.template');
     const tsconfigContent = renderTemplate(tsconfigTemplate, context);
     fs.writeFileSync(path.join(targetDir, 'tsconfig.json'), tsconfigContent);
-    
-    // index.html
-    const indexTemplate = path.join(templatesDir, 'index.html.template');
-    const indexContent = renderTemplate(indexTemplate, context);
-    fs.writeFileSync(path.join(targetDir, 'index.html'), indexContent);
-    
-    // src/main.ts
-    const mainTemplate = path.join(templatesDir, 'src/main.ts.template');
-    const mainContent = renderTemplate(mainTemplate, context);
-    fs.writeFileSync(path.join(targetDir, 'src/main.ts'), mainContent);
-    
-    // src/style.css
-    const styleTemplate = path.join(templatesDir, 'src/style.css.template');
-    const styleContent = renderTemplate(styleTemplate, context);
-    fs.writeFileSync(path.join(targetDir, 'src/style.css'), styleContent);
-    
-    // src/init.ts
-    const initTemplate = path.join(templatesDir, 'src/init.ts.template');
-    const initContent = renderTemplate(initTemplate, context);
-    fs.writeFileSync(path.join(targetDir, 'src/init.ts'), initContent);
 
-    // Framework-specific App component
-    if (config.framework === 'react' && config.template !== 'command') {
-      const appTemplateName = config.styling === 'shadcn' ? 'src/App-shadcn.tsx.template' : 'src/App.tsx.template';
-      const appTemplate = path.join(templatesDir, appTemplateName);
-      const appContent = renderTemplate(appTemplate, context);
-      fs.writeFileSync(path.join(targetDir, 'src/App.tsx'), appContent);
-    } else if (config.framework === 'vue' && config.template !== 'command') {
-      const appTemplate = path.join(templatesDir, 'src/App.vue.template');
-      const appContent = renderTemplate(appTemplate, context);
-      fs.writeFileSync(path.join(targetDir, 'src/App.vue'), appContent);
-    } else if (config.framework === 'svelte' && config.template !== 'command') {
-      const appTemplate = path.join(templatesDir, 'src/App.svelte.template');
-      const appContent = renderTemplate(appTemplate, context);
-      fs.writeFileSync(path.join(targetDir, 'src/App.svelte'), appContent);
+    // View files (index.html, main.ts, style.css, App component)
+    const hasView = config.extensionType === 'view' || config.extensionType === 'both';
+    if (hasView) {
+      // index.html
+      const indexTemplate = path.join(templatesDir, 'index.html.template');
+      const indexContent = renderTemplate(indexTemplate, context);
+      fs.writeFileSync(path.join(targetDir, 'index.html'), indexContent);
+
+      // src/main.tsx for React, src/main.ts for others
+      const mainTemplate = path.join(templatesDir, 'src/main.ts.template');
+      const mainContent = renderTemplate(mainTemplate, context);
+      const mainFileName = config.framework === 'react' ? 'src/main.tsx' : 'src/main.ts';
+      fs.writeFileSync(path.join(targetDir, mainFileName), mainContent);
+
+      // src/style.css
+      const styleTemplate = path.join(templatesDir, 'src/style.css.template');
+      const styleContent = renderTemplate(styleTemplate, context);
+      fs.writeFileSync(path.join(targetDir, 'src/style.css'), styleContent);
+
+      // Framework-specific App component
+      if (config.framework === 'react') {
+        const appTemplateName = config.styling === 'shadcn' ? 'src/App-shadcn.tsx.template' : 'src/App.tsx.template';
+        const appTemplate = path.join(templatesDir, appTemplateName);
+        const appContent = renderTemplate(appTemplate, context);
+        fs.writeFileSync(path.join(targetDir, 'src/App.tsx'), appContent);
+      } else if (config.framework === 'vue') {
+        const appTemplate = path.join(templatesDir, 'src/App.vue.template');
+        const appContent = renderTemplate(appTemplate, context);
+        fs.writeFileSync(path.join(targetDir, 'src/App.vue'), appContent);
+      } else if (config.framework === 'svelte') {
+        const appTemplate = path.join(templatesDir, 'src/App.svelte.template');
+        const appContent = renderTemplate(appTemplate, context);
+        fs.writeFileSync(path.join(targetDir, 'src/App.svelte'), appContent);
+      }
+    }
+
+    // Background script (init.ts)
+    const hasBackground = config.extensionType === 'background' || config.extensionType === 'both';
+    if (hasBackground) {
+      const initTemplate = path.join(templatesDir, 'src/init.ts.template');
+      const initContent = renderTemplate(initTemplate, context);
+      fs.writeFileSync(path.join(targetDir, 'src/init.ts'), initContent);
     }
 
     // Tailwind CSS v4 uses @tailwindcss/vite plugin, no config files needed
@@ -318,7 +330,7 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
     const indexTemplate = path.join(templatesDir, 'index.html.template');
     const indexContent = renderTemplate(indexTemplate, context);
     fs.writeFileSync(path.join(targetDir, 'index.html'), indexContent);
-    
+
     // Simple init.js (no TypeScript)
     const initTemplate = path.join(templatesDir, 'src/init.ts.template');
     let initContent = renderTemplate(initTemplate, context);
@@ -328,14 +340,6 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
       .replace(/: RuaAPI/g, '')
       .replace(/async function init\(\)/g, 'async function init()');
     fs.writeFileSync(path.join(targetDir, 'init.js'), initContent);
-    
-    if (config.template === 'command') {
-      fs.mkdirSync(path.join(targetDir, 'commands'), { recursive: true });
-      fs.writeFileSync(path.join(targetDir, 'commands/run.js'), `export default function execute(api) {
-  console.log('[${config.id}] Command executed!')
-}
-`);
-    }
   }
 
   // Create GitHub Action workflow for Vite projects
@@ -378,6 +382,13 @@ async function main() {
     },
     {
       type: 'select',
+      name: 'extensionType',
+      message: 'Extension type:',
+      choices: EXTENSION_TYPES,
+      initial: 0,
+    },
+    {
+      type: 'select',
       name: 'template',
       message: 'Template:',
       choices: Object.entries(TEMPLATES).map(([value, { name, description }]) => ({
@@ -395,7 +406,7 @@ async function main() {
       initial: 0,
     },
     {
-      type: (_, values) => values.buildTool === 'vite' && values.template !== 'command' ? 'select' : null,
+      type: (_, values) => values.buildTool === 'vite' && values.extensionType !== 'background' ? 'select' : null,
       name: 'framework',
       message: 'UI Framework:',
       choices: FRAMEWORKS,
@@ -406,10 +417,10 @@ async function main() {
       name: 'packageManager',
       message: 'Package manager:',
       choices: PACKAGE_MANAGERS,
-      initial: 0,
+      initial: 1,
     },
     {
-      type: (_, values) => values.buildTool === 'vite' && values.template !== 'command' ? 'select' : null,
+      type: (_, values) => values.buildTool === 'vite' && values.extensionType !== 'background' ? 'select' : null,
       name: 'styling',
       message: 'Styling:',
       choices: STYLING_OPTIONS,
@@ -431,7 +442,7 @@ async function main() {
 
   extName = extName || response.name;
   const kebabName = toKebabCase(extName);
-  const extId = response.author 
+  const extId = response.author
     ? `${toKebabCase(response.author)}.${kebabName}`
     : kebabName;
 
@@ -441,6 +452,7 @@ async function main() {
     description: response.description,
     author: response.author,
     template: response.template || 'basic',
+    extensionType: response.extensionType || 'both',
     packageManager: response.packageManager || 'npm',
     buildTool: response.buildTool || 'none',
     framework: response.framework || 'none',
@@ -476,16 +488,16 @@ async function main() {
   console.log();
   console.log('Next steps:');
   console.log(`  ${pc.cyan('cd')} ${kebabName}`);
-  
+
   if (config.buildTool === 'vite') {
     const pmInstall = config.packageManager === 'npm' ? 'npm install' : `${config.packageManager} install`;
     const pmRun = config.packageManager === 'npm' ? 'npm run' : config.packageManager;
     console.log(`  ${pc.cyan(pmInstall)}`);
-    
+
     if (config.styling === 'shadcn') {
       console.log(`  ${pc.cyan(`npx shadcn@latest add button card badge separator`)}`);
     }
-    
+
     console.log(`  ${pc.cyan(`${pmRun} dev`)}`);
   } else {
     console.log(`  ${pc.cyan('# Edit your extension files')}`);

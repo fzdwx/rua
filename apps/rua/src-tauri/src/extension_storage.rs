@@ -15,15 +15,15 @@ fn get_storage_dir(app: &AppHandle, extension_id: &str) -> Result<PathBuf, Strin
         .path()
         .app_data_dir()
         .map_err(|e| format!("Failed to get app data dir: {}", e))?;
-    
+
     let storage_dir = app_data_dir.join("extensions").join(extension_id);
-    
+
     // Create directory if it doesn't exist
     if !storage_dir.exists() {
         fs::create_dir_all(&storage_dir)
             .map_err(|e| format!("Failed to create storage dir: {}", e))?;
     }
-    
+
     Ok(storage_dir)
 }
 
@@ -36,14 +36,14 @@ fn get_storage_path(app: &AppHandle, extension_id: &str) -> Result<PathBuf, Stri
 /// Load storage data for an extension
 fn load_storage(app: &AppHandle, extension_id: &str) -> Result<HashMap<String, Value>, String> {
     let storage_path = get_storage_path(app, extension_id)?;
-    
+
     if !storage_path.exists() {
         return Ok(HashMap::new());
     }
-    
+
     let content = fs::read_to_string(&storage_path)
         .map_err(|e| format!("Failed to read storage: {}", e))?;
-    
+
     serde_json::from_str(&content)
         .map_err(|e| format!("Failed to parse storage: {}", e))
 }
@@ -52,10 +52,10 @@ fn load_storage(app: &AppHandle, extension_id: &str) -> Result<HashMap<String, V
 /// Save storage data for an extension
 fn save_storage(app: &AppHandle, extension_id: &str, data: &HashMap<String, Value>) -> Result<(), String> {
     let storage_path = get_storage_path(app, extension_id)?;
-    
+
     let content = serde_json::to_string_pretty(data)
         .map_err(|e| format!("Failed to serialize storage: {}", e))?;
-    
+
     fs::write(&storage_path, content)
         .map_err(|e| format!("Failed to write storage: {}", e))
 }
@@ -68,7 +68,7 @@ pub async fn extension_storage_get(
     key: String,
 ) -> Result<Option<String>, String> {
     let storage = load_storage(&app, &extension_id)?;
-    
+
     match storage.get(&key) {
         Some(value) => {
             let json_str = serde_json::to_string(value)
@@ -88,10 +88,10 @@ pub async fn extension_storage_set(
     value: String,
 ) -> Result<(), String> {
     let mut storage = load_storage(&app, &extension_id)?;
-    
+
     let parsed_value: Value = serde_json::from_str(&value)
-        .map_err(|e| format!("Failed to parse value: {}", e))?;
-    
+        .map_err(|e| format!("[extension_storage_set]{} extID: {}, key: {} : value: {}", e,extension_id,key,value))?;
+
     storage.insert(key, parsed_value);
     save_storage(&app, &extension_id, &storage)
 }

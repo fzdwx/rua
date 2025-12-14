@@ -53,19 +53,25 @@ fn setup(app: &mut App) -> anyhow::Result<()> {
 
 fn setup_tray(app: &App) -> anyhow::Result<()> {
     let show_item = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
+    let devtools_item = MenuItem::with_id(app, "devtools", "DevTools", true, None::<&str>)?;
     let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+    let menu = Menu::with_items(app, &[&show_item, &devtools_item, &quit_item])?;
 
     let _tray = TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
-        .menu_on_left_click(false)
+        .show_menu_on_left_click(false)
         .on_menu_event(|app, event| {
             match event.id.as_ref() {
                 "show" => {
                     if let Some(window) = app.get_webview_window("main") {
                         let _ = window.show();
                         let _ = window.set_focus();
+                    }
+                }
+                "devtools" => {
+                    if let Some(window) = app.get_webview_window("main") {
+                        let _ = window.open_devtools();
                     }
                 }
                 "quit" => {
@@ -120,7 +126,7 @@ fn handle_ext_protocol(
     // Decode URL-encoded path
     let decoded_path = urlencoding::decode(path_str).unwrap_or_else(|_| path_str.into());
     let relative_path = decoded_path.trim_start_matches('/');
-    
+
     // Decode base directory from host (base64 URL-safe encoded)
     let file_path = if let Some(base_dir) = decode_base64_url_safe(host) {
         // Combine base directory with relative path

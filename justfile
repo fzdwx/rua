@@ -64,6 +64,7 @@ rebuild-example:
     @echo "✓ rua-api and hello-word rebuilt"
 
 # Create a new extension in examples directory using create-rua-ext
-new-example name:
+new-ext name:
+    cd packages/create-rua-ext && bun run build
     cd examples && bun ../packages/create-rua-ext/dist/index.js {{name}}
     @echo "✓ Extension {{name}} created in examples/"

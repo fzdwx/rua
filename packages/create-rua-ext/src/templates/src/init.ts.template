@@ -1,35 +1,59 @@
 /**
- * {{name}} - Initialization Script
- * 
- * This script runs when the extension is loaded.
- * It can register dynamic actions and perform initialization.
+ * {{name}} - Background Script
+ *
+ * This script runs automatically when the rua application starts.
+ * It executes in the main program context (not in an iframe).
+ *
+ * Background scripts can:
+ * - Register dynamic actions that appear in the command palette
+ * - Respond to lifecycle events (activate/deactivate)
+ * - Persist data using extension storage
+ *
+ * Lifecycle events:
+ * - 'activate': Called when main window is shown
+ * - 'deactivate': Called when main window is hidden
  */
-import { initializeRuaAPI } from 'rua-api/browser'
+import { createMainContextRuaAPI } from 'rua-api/browser'
 
-// Initialize when the extension loads
+// Initialize when the background script loads
 async function init() {
   try {
-    // Extension info is automatically fetched from host
-    const rua = await initializeRuaAPI()
+    // Get the Rua API for background scripts
+    // The API is injected by the background executor before this script runs
+    const rua = createMainContextRuaAPI()
 
-    console.log(`[${rua.extension.id}] Extension initialized!`)
+    console.log(`[${rua.extension.id}] Background script initialized!`)
 
     {{#hasStorage}}// Store last activated time
-    await rua.storage.set('lastActivated', new Date().toISOString()){{/hasStorage}}
+    await rua.storage.set('lastActivated', new Date().toISOString())
+    {{/hasStorage}}
 
-    // Register a dynamic action (optional)
-    await rua.actions.register([
-      {
-        id: 'dynamic-action',
-        name: 'Dynamic Action',
-        keywords: ['dynamic', '{{kebabName}}'],
-        icon: 'tabler:sparkles',
-        subtitle: 'A dynamically registered action',
-        mode: 'view'
-      }
-    ])
+    // Listen for main window activation (shown)
+    rua.on('activate', async () => {
+      console.log('[{{kebabName}}] Main window activated!')
 
-    console.log('[{{kebabName}}] Dynamic action registered!')
+      // Register dynamic actions when window is shown
+      await rua.actions.register([
+        {
+          id: 'dynamic-action',
+          name: 'Dynamic Action',
+          keywords: ['dynamic', '{{kebabName}}'],
+          icon: 'tabler:sparkles',
+          subtitle: 'A dynamically registered action',
+          mode: 'view'
+        }
+      ])
+    })
+
+    // Listen for main window deactivation (hidden)
+    rua.on('deactivate', async () => {
+      console.log('[{{kebabName}}] Main window deactivated!')
+
+      // Optionally unregister actions when window is hidden
+      // await rua.actions.unregister(['dynamic-action'])
+    })
+
+    console.log('[{{kebabName}}] Lifecycle handlers registered!')
   } catch (err) {
     console.error('[{{kebabName}}] Failed to initialize:', err)
   }

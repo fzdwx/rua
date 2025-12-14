@@ -164,7 +164,7 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
           <p className="mt-2 text-sm text-red-500">{error}</p>
         )}
         <p className="mt-2 text-xs text-gray-500">
-          Install from GitHub: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">github:owner/repo</code> or <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">github:owner/repo@v1.0.0</code>
+          GitHub: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">github:owner/repo</code> or local path: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">/path/to/extension</code>
         </p>
       </div>
 
@@ -229,7 +229,7 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
                       {extension.enabled ? 'Enabled' : 'Disabled'}
                     </button>
                     <button
-                      onClick={() => uninstallExtension(extension.manifest.id)}
+                      onClick={() => uninstallExtension(extension.manifest.id, extension.path)}
                       className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                       title="Uninstall"
                     >
