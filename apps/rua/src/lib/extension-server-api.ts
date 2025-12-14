@@ -166,7 +166,7 @@ export function createRuaAPI(
         async osPlatform(): Promise<string> {
             // Tauri provides platform info via navigator.userAgent or we can detect it
             const platform = navigator.platform.toLowerCase();
-            if (platform.includes('win')) return 'win32';
+            if (platform.includes('win')) return 'window';
             if (platform.includes('mac')) return 'darwin';
             if (platform.includes('linux')) return 'linux';
             return platform;

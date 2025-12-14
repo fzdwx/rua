@@ -81,9 +81,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 # Create git tag
 echo "🏷️  Creating tag v${NEW_VERSION}..."
-git tag -a "v${NEW_VERSION}" -m "${RELEASE_NOTES}
-
-🤖 Generated with Claude Code"
+git tag -a "v${NEW_VERSION}" -m "${RELEASE_NOTES}"
 
 echo ""
 echo "✅ Version bumped successfully!"
