@@ -1,13 +1,13 @@
 use std::collections::HashSet;
 use std::fs::{self, File};
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process;
 
 use regex::Regex;
 use serde::Deserialize;
 use zip::write::SimpleFileOptions;
-use zip::ZipWriter;
+use zip::{ZipArchive, ZipWriter};
 
 const SERVER_URL: &str = "http://127.0.0.1:7777";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -127,7 +127,13 @@ fn print_usage() {
     println!("    health              Check if Rua is running");
     println!("    pack [path]         Package extension into .rua format");
     println!("    validate [path]     Validate extension manifest");
+    println!("    install <source>    Install extension from GitHub or local .rua file");
     println!("    help                Print this help message");
+    println!();
+    println!("INSTALL SOURCES:");
+    println!("    github:owner/repo   Install latest release from GitHub");
+    println!("    github:owner/repo@v1.0.0  Install specific version from GitHub");
+    println!("    /path/to/ext.rua    Install from local .rua file");
     println!();
     println!("OPTIONS:");
     println!("    --dry-run           (pack) List files without creating archive");
@@ -509,6 +515,258 @@ fn pack(path: Option<&str>, dry_run: bool) {
     process::exit(0);
 }
 
+/// Get extensions directory
+fn get_extensions_dir() -> Result<PathBuf, String> {
+    let home = std::env::var("HOME").map_err(|_| "HOME not set")?;
+    let extensions_dir = PathBuf::from(home)
+        .join(".local/share/like.rua.ai/extensions");
+    
+    if !extensions_dir.exists() {
+        fs::create_dir_all(&extensions_dir)
+            .map_err(|e| format!("Failed to create extensions dir: {}", e))?;
+    }
+    
+    Ok(extensions_dir)
+}
+
+/// GitHub release asset info
+#[derive(Deserialize, Debug)]
+struct GitHubAsset {
+    name: String,
+    browser_download_url: String,
+}
+
+/// GitHub release info
+#[derive(Deserialize, Debug)]
+struct GitHubRelease {
+    tag_name: String,
+    assets: Vec<GitHubAsset>,
+}
+
+/// Parse GitHub source string (github:owner/repo or github:owner/repo@version)
+fn parse_github_source(source: &str) -> Option<(String, String, Option<String>)> {
+    let source = source.strip_prefix("github:")?;
+    
+    let (repo_part, version) = if let Some(idx) = source.find('@') {
+        let (repo, ver) = source.split_at(idx);
+        (repo, Some(ver[1..].to_string()))
+    } else {
+        (source, None)
+    };
+    
+    let parts: Vec<&str> = repo_part.split('/').collect();
+    if parts.len() != 2 {
+        return None;
+    }
+    
+    Some((parts[0].to_string(), parts[1].to_string(), version))
+}
+
+/// Download file from URL
+fn download_file(url: &str) -> Result<Vec<u8>, String> {
+    let client = reqwest::blocking::Client::builder()
+        .user_agent("ruactl")
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+    
+    let response = client.get(url).send()
+        .map_err(|e| format!("Failed to download: {}", e))?;
+    
+    if !response.status().is_success() {
+        return Err(format!("Download failed with status: {}", response.status()));
+    }
+    
+    response.bytes()
+        .map(|b| b.to_vec())
+        .map_err(|e| format!("Failed to read response: {}", e))
+}
+
+/// Fetch GitHub release info
+fn fetch_github_release(owner: &str, repo: &str, version: Option<&str>) -> Result<GitHubRelease, String> {
+    let url = match version {
+        Some(v) => format!("https://api.github.com/repos/{}/{}/releases/tags/{}", owner, repo, v),
+        None => format!("https://api.github.com/repos/{}/{}/releases/latest", owner, repo),
+    };
+    
+    let client = reqwest::blocking::Client::builder()
+        .user_agent("ruactl")
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+    
+    let response = client.get(&url).send()
+        .map_err(|e| format!("Failed to fetch release info: {}", e))?;
+    
+    if !response.status().is_success() {
+        return Err(format!("Failed to fetch release: {}", response.status()));
+    }
+    
+    response.json::<GitHubRelease>()
+        .map_err(|e| format!("Failed to parse release info: {}", e))
+}
+
+/// Extract .rua archive to extensions directory
+fn extract_rua_archive(archive_data: &[u8], extensions_dir: &Path) -> Result<String, String> {
+    let cursor = std::io::Cursor::new(archive_data);
+    let mut archive = ZipArchive::new(cursor)
+        .map_err(|e| format!("Failed to open archive: {}", e))?;
+    
+    // First, read manifest.json to get extension ID
+    let manifest_content = {
+        let mut manifest_file = archive.by_name("manifest.json")
+            .map_err(|_| "manifest.json not found in archive")?;
+        let mut content = String::new();
+        manifest_file.read_to_string(&mut content)
+            .map_err(|e| format!("Failed to read manifest: {}", e))?;
+        content
+    };
+    
+    let manifest: serde_json::Value = serde_json::from_str(&manifest_content)
+        .map_err(|e| format!("Failed to parse manifest: {}", e))?;
+    
+    let ext_id = manifest.get("id")
+        .and_then(|v| v.as_str())
+        .ok_or("Extension ID not found in manifest")?;
+    
+    let target_dir = extensions_dir.join(ext_id);
+    
+    // Remove existing if present
+    if target_dir.exists() {
+        fs::remove_dir_all(&target_dir)
+            .map_err(|e| format!("Failed to remove existing extension: {}", e))?;
+    }
+    
+    fs::create_dir_all(&target_dir)
+        .map_err(|e| format!("Failed to create extension dir: {}", e))?;
+    
+    // Extract all files
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)
+            .map_err(|e| format!("Failed to read archive entry: {}", e))?;
+        
+        let file_path = match file.enclosed_name() {
+            Some(p) => target_dir.join(p),
+            None => continue,
+        };
+        
+        if file.is_dir() {
+            fs::create_dir_all(&file_path)
+                .map_err(|e| format!("Failed to create directory: {}", e))?;
+        } else {
+            if let Some(parent) = file_path.parent() {
+                fs::create_dir_all(parent)
+                    .map_err(|e| format!("Failed to create parent directory: {}", e))?;
+            }
+            
+            let mut outfile = File::create(&file_path)
+                .map_err(|e| format!("Failed to create file: {}", e))?;
+            
+            std::io::copy(&mut file, &mut outfile)
+                .map_err(|e| format!("Failed to write file: {}", e))?;
+        }
+    }
+    
+    Ok(ext_id.to_string())
+}
+
+/// Install command
+fn install(source: &str) {
+    println!("ℹ Installing extension from {}", source);
+    
+    let extensions_dir = match get_extensions_dir() {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("✗ {}", e);
+            process::exit(1);
+        }
+    };
+    
+    let archive_data: Vec<u8>;
+    let source_desc: String;
+    
+    if source.starts_with("github:") {
+        // GitHub source
+        let (owner, repo, version) = match parse_github_source(source) {
+            Some(v) => v,
+            None => {
+                eprintln!("✗ Invalid GitHub source format. Use: github:owner/repo or github:owner/repo@version");
+                process::exit(1);
+            }
+        };
+        
+        println!("  Fetching release info from {}/{}...", owner, repo);
+        
+        let release = match fetch_github_release(&owner, &repo, version.as_deref()) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("✗ {}", e);
+                process::exit(1);
+            }
+        };
+        
+        // Find .rua asset
+        let rua_asset = release.assets.iter()
+            .find(|a| a.name.ends_with(".rua"));
+        
+        let asset = match rua_asset {
+            Some(a) => a,
+            None => {
+                eprintln!("✗ No .rua file found in release {}", release.tag_name);
+                process::exit(1);
+            }
+        };
+        
+        println!("  Downloading {}...", asset.name);
+        
+        archive_data = match download_file(&asset.browser_download_url) {
+            Ok(d) => d,
+            Err(e) => {
+                eprintln!("✗ {}", e);
+                process::exit(1);
+            }
+        };
+        
+        source_desc = format!("{}/{} {}", owner, repo, release.tag_name);
+    } else if source.ends_with(".rua") {
+        // Local .rua file
+        let path = PathBuf::from(source);
+        if !path.exists() {
+            eprintln!("✗ File not found: {}", source);
+            process::exit(1);
+        }
+        
+        archive_data = match fs::read(&path) {
+            Ok(d) => d,
+            Err(e) => {
+                eprintln!("✗ Failed to read file: {}", e);
+                process::exit(1);
+            }
+        };
+        
+        source_desc = path.file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| source.to_string());
+    } else {
+        eprintln!("✗ Unknown source format. Use github:owner/repo or path/to/extension.rua");
+        process::exit(1);
+    }
+    
+    println!("  Extracting...");
+    
+    let ext_id = match extract_rua_archive(&archive_data, &extensions_dir) {
+        Ok(id) => id,
+        Err(e) => {
+            eprintln!("✗ {}", e);
+            process::exit(1);
+        }
+    };
+    
+    println!("✓ Extension installed successfully");
+    println!("  ID: {}", ext_id);
+    println!("  Source: {}", source_desc);
+    println!("  Location: {}", extensions_dir.join(&ext_id).display());
+    process::exit(0);
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
@@ -537,6 +795,18 @@ fn main() {
             }
 
             pack(path, dry_run);
+        }
+        "install" => {
+            let source = args.get(2);
+            match source {
+                Some(s) => install(s),
+                None => {
+                    eprintln!("✗ Missing source argument");
+                    eprintln!("Usage: ruactl install github:owner/repo");
+                    eprintln!("       ruactl install /path/to/extension.rua");
+                    process::exit(1);
+                }
+            }
         }
         "help" | "--help" | "-h" => {
             print_usage();

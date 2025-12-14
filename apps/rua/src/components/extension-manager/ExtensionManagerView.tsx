@@ -17,7 +17,6 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
   const {
     extensions,
     loading,
-    extensionsPath,
     enableExtension,
     disableExtension,
     uninstallExtension,
@@ -145,7 +144,7 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
             type="text"
             value={installPath}
             onChange={(e) => setInstallPath(e.target.value)}
-            placeholder="Extension path (e.g., /path/to/my-extension)"
+            placeholder="github:owner/repo or /path/to/extension"
             className="flex-1 px-3 py-1.5 text-sm border rounded bg-transparent border-gray-300 dark:border-gray-600 focus:outline-none focus:border-blue-500"
           />
           <button
@@ -164,11 +163,9 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
         {error && (
           <p className="mt-2 text-sm text-red-500">{error}</p>
         )}
-        {extensionsPath && (
-          <p className="mt-2 text-xs text-gray-500">
-            Extensions directory: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{extensionsPath}</code>
-          </p>
-        )}
+        <p className="mt-2 text-xs text-gray-500">
+          Install from GitHub: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">github:owner/repo</code> or <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">github:owner/repo@v1.0.0</code>
+        </p>
       </div>
 
       {/* Extension List */}

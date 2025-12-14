@@ -1,0 +1,58 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup {{packageManager}}
+        {{#useBun}}uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest{{/useBun}}{{#useNpm}}uses: actions/setup-node@v4
+        with:
+          node-version: '20'{{/useNpm}}{{#usePnpm}}uses: pnpm/action-setup@v2
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'{{/usePnpm}}{{#useYarn}}uses: actions/setup-node@v4
+        with:
+          node-version: '20'{{/useYarn}}
+
+      - name: Install ruactl
+        run: |
+          curl -fsSL https://github.com/fzdwx/rua/releases/latest/download/ruactl-linux-x86_64.tar.gz | tar -xz
+          chmod +x ruactl
+          sudo mv ruactl /usr/local/bin/
+
+      - name: Install dependencies
+        run: {{pmInstall}}
+
+      - name: Build
+        run: {{pmRun}} build
+
+      - name: Package extension
+        run: ruactl pack
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension
+          path: '*.rua'
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: '*.rua'
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

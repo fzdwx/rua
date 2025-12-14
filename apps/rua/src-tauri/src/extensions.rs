@@ -238,9 +238,199 @@ pub async fn get_extensions(app: AppHandle) -> Result<Vec<ExtensionInfo>, String
     Ok(extensions)
 }
 
-/// Install extension from a path (copy to extensions directory)
+/// GitHub release asset info
+#[derive(Debug, Deserialize)]
+struct GitHubAsset {
+    name: String,
+    browser_download_url: String,
+}
+
+/// GitHub release info
+#[derive(Debug, Deserialize)]
+struct GitHubRelease {
+    tag_name: String,
+    assets: Vec<GitHubAsset>,
+}
+
+/// Parse GitHub source string (github:owner/repo or github:owner/repo@version)
+fn parse_github_source(source: &str) -> Option<(String, String, Option<String>)> {
+    let source = source.strip_prefix("github:")?;
+    
+    let (repo_part, version) = if let Some(idx) = source.find('@') {
+        let (repo, ver) = source.split_at(idx);
+        (repo, Some(ver[1..].to_string()))
+    } else {
+        (source, None)
+    };
+    
+    let parts: Vec<&str> = repo_part.split('/').collect();
+    if parts.len() != 2 {
+        return None;
+    }
+    
+    Some((parts[0].to_string(), parts[1].to_string(), version))
+}
+
+/// Fetch GitHub release info
+async fn fetch_github_release(owner: &str, repo: &str, version: Option<&str>) -> Result<GitHubRelease, String> {
+    let url = match version {
+        Some(v) => format!("https://api.github.com/repos/{}/{}/releases/tags/{}", owner, repo, v),
+        None => format!("https://api.github.com/repos/{}/{}/releases/latest", owner, repo),
+    };
+    
+    let client = reqwest::Client::new();
+    let response = client.get(&url)
+        .header("User-Agent", "rua")
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch release info: {}", e))?;
+    
+    if !response.status().is_success() {
+        return Err(format!("Failed to fetch release: {}", response.status()));
+    }
+    
+    response.json::<GitHubRelease>()
+        .await
+        .map_err(|e| format!("Failed to parse release info: {}", e))
+}
+
+/// Download file from URL
+async fn download_file(url: &str) -> Result<Vec<u8>, String> {
+    let client = reqwest::Client::new();
+    let response = client.get(url)
+        .header("User-Agent", "rua")
+        .send()
+        .await
+        .map_err(|e| format!("Failed to download: {}", e))?;
+    
+    if !response.status().is_success() {
+        return Err(format!("Download failed with status: {}", response.status()));
+    }
+    
+    response.bytes()
+        .await
+        .map(|b| b.to_vec())
+        .map_err(|e| format!("Failed to read response: {}", e))
+}
+
+/// Extract .rua archive to extensions directory
+fn extract_rua_archive(archive_data: &[u8], extensions_dir: &PathBuf) -> Result<(String, ExtensionManifest), String> {
+    use std::io::{Cursor, Read};
+    use zip::ZipArchive;
+    
+    let cursor = Cursor::new(archive_data);
+    let mut archive = ZipArchive::new(cursor)
+        .map_err(|e| format!("Failed to open archive: {}", e))?;
+    
+    // First, read manifest.json to get extension ID
+    let manifest_content = {
+        let mut manifest_file = archive.by_name("manifest.json")
+            .map_err(|_| "manifest.json not found in archive")?;
+        let mut content = String::new();
+        manifest_file.read_to_string(&mut content)
+            .map_err(|e| format!("Failed to read manifest: {}", e))?;
+        content
+    };
+    
+    let manifest: ExtensionManifest = serde_json::from_str(&manifest_content)
+        .map_err(|e| format!("Failed to parse manifest: {}", e))?;
+    
+    let ext_id = &manifest.id;
+    let target_dir = extensions_dir.join(ext_id);
+    
+    // Remove existing if present
+    if target_dir.exists() {
+        fs::remove_dir_all(&target_dir)
+            .map_err(|e| format!("Failed to remove existing extension: {}", e))?;
+    }
+    
+    fs::create_dir_all(&target_dir)
+        .map_err(|e| format!("Failed to create extension dir: {}", e))?;
+    
+    // Extract all files
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)
+            .map_err(|e| format!("Failed to read archive entry: {}", e))?;
+        
+        let file_path = match file.enclosed_name() {
+            Some(p) => target_dir.join(p),
+            None => continue,
+        };
+        
+        if file.is_dir() {
+            fs::create_dir_all(&file_path)
+                .map_err(|e| format!("Failed to create directory: {}", e))?;
+        } else {
+            if let Some(parent) = file_path.parent() {
+                fs::create_dir_all(parent)
+                    .map_err(|e| format!("Failed to create parent directory: {}", e))?;
+            }
+            
+            let mut outfile = fs::File::create(&file_path)
+                .map_err(|e| format!("Failed to create file: {}", e))?;
+            
+            std::io::copy(&mut file, &mut outfile)
+                .map_err(|e| format!("Failed to write file: {}", e))?;
+        }
+    }
+    
+    Ok((ext_id.clone(), manifest))
+}
+
+/// Install extension from a path or GitHub (copy to extensions directory)
 #[tauri::command]
 pub async fn install_extension(app: AppHandle, source_path: String) -> Result<ExtensionInfo, String> {
+    let extensions_dir = get_extensions_dir(&app)?;
+    
+    // Check if it's a GitHub source
+    if source_path.starts_with("github:") {
+        let (owner, repo, version) = parse_github_source(&source_path)
+            .ok_or("Invalid GitHub source format. Use: github:owner/repo or github:owner/repo@version")?;
+        
+        let release = fetch_github_release(&owner, &repo, version.as_deref()).await?;
+        
+        // Find .rua asset
+        let rua_asset = release.assets.iter()
+            .find(|a| a.name.ends_with(".rua"))
+            .ok_or(format!("No .rua file found in release {}", release.tag_name))?;
+        
+        let archive_data = download_file(&rua_asset.browser_download_url).await?;
+        
+        let (ext_id, manifest) = extract_rua_archive(&archive_data, &extensions_dir)?;
+        
+        // Update registry
+        let mut registry = load_registry(&app)?;
+        let now = chrono::Utc::now().to_rfc3339();
+        
+        registry.extensions.insert(ext_id.clone(), ExtensionState {
+            id: ext_id.clone(),
+            enabled: true,
+            installed_at: now.clone(),
+            updated_at: now,
+            version: manifest.version.clone(),
+        });
+        
+        save_registry(&app, &registry)?;
+        
+        let target = extensions_dir.join(&ext_id);
+        let action_ids: Vec<String> = manifest
+            .rua
+            .actions
+            .iter()
+            .map(|a| format!("{}.{}", manifest.id, a.name))
+            .collect();
+        
+        return Ok(ExtensionInfo {
+            manifest,
+            enabled: true,
+            loaded: true,
+            path: target.to_string_lossy().to_string(),
+            actions: action_ids,
+            error: None,
+        });
+    }
+    
+    // Local path installation
     let source = PathBuf::from(&source_path);
     
     if !source.exists() {
@@ -252,7 +442,6 @@ pub async fn install_extension(app: AppHandle, source_path: String) -> Result<Ex
     let ext_id = &manifest.id;
     
     // Get target directory
-    let extensions_dir = get_extensions_dir(&app)?;
     let target = extensions_dir.join(ext_id);
     
     // Remove existing if present

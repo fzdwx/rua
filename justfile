@@ -57,8 +57,8 @@ test-ext name="test-extension":
 dev:
     bun run --cwd apps/rua tauri dev
 
-crate-ext:
-    cd packages/create-rua-ext
+create-ext:
+    cd packages/create-rua-ext && bunx create-rua-ext
 
 # Rebuild rua-api and hello-word example for testing
 rebuild-example:

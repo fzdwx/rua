@@ -283,6 +283,16 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
 `);
     }
   }
+
+  // Create GitHub Action workflow for Vite projects
+  if (config.buildTool === 'vite') {
+    fs.mkdirSync(path.join(targetDir, '.github/workflows'), { recursive: true });
+    const workflowTemplate = path.join(templatesDir, '.github/workflows/release.yml.template');
+    if (fs.existsSync(workflowTemplate)) {
+      const workflowContent = renderTemplate(workflowTemplate, context);
+      fs.writeFileSync(path.join(targetDir, '.github/workflows/release.yml'), workflowContent);
+    }
+  }
 }
 
 async function main() {
