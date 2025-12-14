@@ -330,6 +330,15 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
             }
 
             setInitialized(true);
+            
+            // Notify all extensions that the window is activated on initial load
+            // This ensures extensions receive the activate event even if the window
+            // was already shown when they were loaded
+            setTimeout(() => {
+                notifyActivateBackground().catch(error => {
+                    console.error('[ExtensionSystemContext] Failed to notify activate on init:', error);
+                });
+            }, 100);
         } catch (error) {
             console.error('Failed to load extensions:', error);
         } finally {
