@@ -1,0 +1,52 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["../../packages/rua-api/src/index.ts"],
+  "tsconfig": "../../packages/rua-api/tsconfig.json",
+  "out": "./generated-api-docs",
+  "plugin": ["typedoc-plugin-markdown"],
+  "readme": "none",
+  "excludeExternals": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "skipErrorChecking": true,
+  "sort": ["source-order"],
+  "kindSortOrder": [
+    "Document",
+    "Project",
+    "Module",
+    "Namespace",
+    "Enum",
+    "EnumMember",
+    "Class",
+    "Interface",
+    "TypeAlias",
+    "Constructor",
+    "Property",
+    "Variable",
+    "Function",
+    "Method",
+    "Accessor",
+    "GetSignature",
+    "SetSignature",
+    "CallSignature",
+    "ConstructorSignature"
+  ],
+  "categorizeByGroup": false,
+  "defaultCategory": "Other",
+  "categoryOrder": [
+    "Core API",
+    "Types",
+    "Utilities",
+    "*",
+    "Other"
+  ],
+  "gitRevision": "main",
+  "gitRemote": "origin",
+  "includeVersion": true,
+  "markedOptions": {
+    "mangle": false
+  },
+  "theme": "markdown",
+  "hideGenerator": true,
+  "customCss": "./typedoc-custom.css"
+}

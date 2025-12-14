@@ -1,0 +1,99 @@
+---
+title: Project Structure
+description: Understanding Rua's codebase organization and file structure
+icon: FolderTree
+---
+
+# Project Structure
+
+This document provides a comprehensive overview of Rua's codebase organization.
+
+## Repository Overview
+
+```
+rua/
+├── apps/                      # Applications
+│   ├── rua/                   # Main Tauri application
+│   │   ├── src/               # React frontend source
+│   │   │   ├── command/       # Command palette components
+│   │   │   ├── components/    # UI components
+│   │   │   ├── contexts/      # React contexts
+│   │   │   ├── home/          # Home view components
+│   │   │   ├── hooks/         # Custom React hooks
+│   │   │   └── lib/           # Utility libraries
+│   │   └── src-tauri/         # Rust backend
+│   │       └── src/           # Rust source files
+│   └── docs/                  # Documentation site (Fumadocs)
+├── packages/                  # Shared packages
+│   ├── rua-api/               # Extension API package
+│   │   └── src/
+│   │       ├── browser/       # Browser-side API implementation
+│   │       └── types/         # TypeScript type definitions
+│   └── create-rua-ext/        # CLI for creating extensions
+├── examples/                  # Example extensions
+│   ├── hello-word/            # Basic extension example
+│   ├── icon-formats-demo/     # Icon formats demonstration
+│   └── open-vscode-recent-projects/  # VSCode integration example
+├── .github/                   # GitHub workflows and templates
+├── justfile                   # Task runner configuration
+├── package.json               # Workspace configuration
+├── install-ruactl.sh          # ruactl installation script
+└── README.md                  # Project overview
+```
+
+## Main Application (`apps/rua`)
+
+The core Rua application built with Tauri (Rust backend + React frontend).
+
+### Frontend (`src/`)
+
+| Directory | Description |
+|-----------|-------------|
+| `command/` | Command palette UI and logic |
+| `components/` | Reusable UI components (weather, translate, quick-link, etc.) |
+| `contexts/` | React context providers |
+| `home/` | Home view and animated views |
+| `hooks/` | Custom React hooks (useApplications, useTheme, etc.) |
+| `lib/` | Utility functions and API helpers |
+
+### Backend (`src-tauri/src/`)
+
+| File | Description |
+|------|-------------|
+| `applications.rs` | System application discovery |
+| `clipboard.rs` | Clipboard operations |
+| `control_server.rs` | HTTP server for ruactl |
+| `extensions.rs` | Extension loading and management |
+| `extension_storage.rs` | Extension data persistence |
+| `fs_api.rs` | File system API |
+| `shell_executor.rs` | Shell command execution |
+
+## Packages
+
+### `rua-api`
+
+The extension API package that extensions use to interact with Rua:
+
+- `browser/rua-api.ts` - View mode API (iframe communication via kkrpc)
+- `browser/main-context-api.ts` - Background mode API (direct access)
+- `types/rua.ts` - TypeScript interfaces and types
+
+### `create-rua-ext`
+
+CLI tool for scaffolding new extensions with templates for React, Vue, and Svelte.
+
+## Example Extensions
+
+| Example | Description |
+|---------|-------------|
+| `hello-word` | Basic extension demonstrating view mode |
+| `icon-formats-demo` | Shows different icon format support |
+| `open-vscode-recent-projects` | Opens recent VSCode projects |
+
+## Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `justfile` | Task automation (build, install, dev) |
+| `package.json` | Bun workspace configuration |
+| `install-ruactl.sh` | Script to install ruactl CLI |

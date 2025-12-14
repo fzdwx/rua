@@ -1,0 +1,610 @@
+---
+title: Creating Extensions with create-rua-ext
+description: Learn how to use the create-rua-ext CLI tool to scaffold new extensions
+icon: Plus
+---
+
+# Creating Extensions with create-rua-ext
+
+The `create-rua-ext` CLI tool is the fastest way to scaffold new Rua extensions with modern tooling, best practices, and your preferred tech stack built-in.
+
+## Quick Start
+
+Create a new extension in seconds:
+
+<Tabs items={['bun', 'npm', 'yarn', 'pnpm']}>
+  <Tab value="bun">
+```bash
+# Interactive mode (recommended)
+bunx create-rua-ext
+
+# With extension name
+bunx create-rua-ext my-awesome-extension
+```
+  </Tab>
+  <Tab value="npm">
+```bash
+# Interactive mode (recommended)
+npx create-rua-ext
+
+# With extension name
+npx create-rua-ext my-extension
+```
+  </Tab>
+  <Tab value="yarn">
+```bash
+# Interactive mode (recommended)
+yarn create rua-ext
+
+# With extension name
+yarn create rua-ext my-extension
+```
+  </Tab>
+  <Tab value="pnpm">
+```bash
+# Interactive mode (recommended)
+pnpm create rua-ext
+
+# With extension name
+pnpm create rua-ext my-extension
+```
+  </Tab>
+</Tabs>
+
+## Interactive Setup Wizard
+
+The CLI provides a friendly interactive setup that guides you through all configuration options:
+
+1. **Extension Metadata**
+   - Extension name (converted to kebab-case)
+   - Description for the extension
+   - Author information
+
+2. **Extension Type**
+   Choose how your extension will run:
+   - **Both**: Background script + UI view (most common)
+   - **View Only**: UI interface without background processing
+   - **Background Only**: Headless extension with system access
+
+3. **Template Selection**
+   - **Basic**: Simple HTML/JS without build tools
+   - **View Extension**: Modern setup with build tools and frameworks
+
+4. **Development Stack**
+   - Build tool (Vite or none)
+   - UI framework (React, Vue, Svelte, or vanilla)
+   - Package manager (bun, npm, yarn, or pnpm)
+   - Styling (Tailwind CSS, shadcn/ui, or none)
+
+5. **Permissions**
+   Select which system APIs your extension needs access to
+
+## Extension Types Explained
+
+### Background Extensions
+
+Background extensions run in the main Rua process and have full access to system APIs, including the Actions API for registering dynamic commands.
+
+<Callout type="info">
+  Background mode is the only mode that supports the Actions API for registering dynamic actions in the command palette.
+</Callout>
+
+**Use Cases**:
+- System monitoring and automation
+- File system operations
+- Shell command execution
+- Data processing and caching
+- Registering dynamic actions
+
+**Example Structure**:
+```
+my-extension/
+├── manifest.json
+├── init.js          # Background script entry point
+└── README.md
+```
+
+**Sample Background Script**:
+```typescript
+import { createMainContextRuaAPI } from 'rua-api/browser';
+
+// Get the API instance (synchronous in background mode)
+const rua = createMainContextRuaAPI();
+
+// Register a command (only available in background mode)
+await rua.actions.register([{
+  id: 'system-info',
+  name: 'Show System Info',
+  mode: 'command',
+  keywords: ['system', 'info', 'stats']
+}]);
+
+// Handle command execution
+rua.on('action-triggered', async ({ actionId }) => {
+  if (actionId === 'system-info') {
+    const platform = await rua.os.platform();
+    await rua.notification.show({
+      title: 'System Info',
+      body: `Platform: ${platform}`
+    });
+  }
+});
+```
+
+### View Extensions
+
+View extensions provide custom user interfaces that appear when users interact with them. They use `initializeRuaAPI()` and cannot register dynamic actions.
+
+**Use Cases**:
+- Custom search interfaces
+- Configuration panels
+- Data visualization
+- Interactive tools and calculators
+
+**Example Structure**:
+```
+my-extension/
+├── manifest.json
+├── index.html       # UI entry point
+├── src/
+│   ├── main.tsx     # React app entry
+│   ├── App.tsx      # Main component
+│   └── style.css    # Styles
+├── package.json
+└── vite.config.ts
+```
+
+**Sample View Component**:
+```tsx
+import { useEffect, useState } from 'react';
+import { initializeRuaAPI } from 'rua-api/browser';
+
+function App() {
+  const [rua, setRua] = useState(null);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    // Use initializeRuaAPI for view mode extensions
+    initializeRuaAPI().then(setRua);
+  }, []);
+
+  const handleSearch = async () => {
+    if (rua && query) {
+      // Perform search logic
+      await rua.ui.setTitle(`Searching: ${query}`);
+    }
+  };
+
+  return (
+    <div className="p-4">
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Enter search query..."
+        className="w-full p-2 border rounded"
+      />
+      <button onClick={handleSearch} className="mt-2 px-4 py-2 bg-blue-500 text-white rounded">
+        Search
+      </button>
+    </div>
+  );
+}
+```
+
+### Hybrid Extensions (Both)
+
+Combine background processing with custom UI for the most powerful extensions.
+
+**Use Cases**:
+- File managers with custom UI
+- Development tools with dashboards
+- System utilities with configuration interfaces
+- Complex workflows requiring both automation and user interaction
+
+**API Usage in Hybrid Extensions**:
+```typescript
+// In background script (init.ts) - use createMainContextRuaAPI
+import { createMainContextRuaAPI } from 'rua-api/browser';
+const rua = createMainContextRuaAPI();
+await rua.actions.register([...]); // Actions API available
+
+// In view component (App.tsx) - use initializeRuaAPI
+import { initializeRuaAPI } from 'rua-api/browser';
+const rua = await initializeRuaAPI();
+await rua.ui.setTitle('...'); // UI API available
+```
+
+## Framework Options
+
+### React Extensions
+
+Perfect for complex UIs with state management and component reusability.
+
+**Generated Features**:
+- TypeScript setup
+- Vite for fast development
+- Hot module replacement
+- Modern React patterns (hooks, context)
+
+**Example App Component**:
+```tsx
+import { useState, useEffect } from 'react';
+import { initializeRuaAPI } from 'rua-api/browser';
+
+export function App() {
+  const [rua, setRua] = useState(null);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    initializeRuaAPI().then(api => {
+      setRua(api);
+      // Load initial data
+      api.storage.get('myData').then(setData);
+    });
+  }, []);
+
+  return (
+    <div className="app">
+      <h1>My Extension</h1>
+      {/* Your UI here */}
+    </div>
+  );
+}
+```
+
+### Vue Extensions
+
+Great for developers familiar with Vue's template syntax and composition API.
+
+**Generated Features**:
+- Vue 3 with Composition API
+- TypeScript support
+- Vite integration
+- Single File Components
+
+### Svelte Extensions
+
+Lightweight and performant with minimal boilerplate.
+
+**Generated Features**:
+- Svelte with TypeScript
+- Vite integration
+- Reactive statements
+- Minimal bundle size
+
+### Vanilla Extensions
+
+Pure HTML/CSS/JavaScript for maximum control and minimal overhead.
+
+**Generated Features**:
+- No build step required
+- Direct browser APIs
+- Minimal file structure
+- Fast loading
+
+## Styling Options
+
+### No Styling
+
+Pure CSS with complete control over styling.
+
+### Tailwind CSS
+
+Utility-first CSS framework for rapid UI development.
+
+**Generated Features**:
+- Tailwind CSS v4 with Vite plugin
+- Automatic purging
+- Custom design tokens
+- Responsive utilities
+
+**Example Usage**:
+```tsx
+<div className="flex items-center space-x-4 p-4 bg-gray-100 rounded-lg">
+  <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+    Click me
+  </button>
+</div>
+```
+
+### shadcn/ui
+
+Tailwind CSS + pre-built accessible components.
+
+**Generated Features**:
+- Tailwind CSS setup
+- shadcn/ui component library
+- Accessible components
+- Customizable design system
+
+**Example Usage**:
+```tsx
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+<Card>
+  <CardHeader>
+    <CardTitle>Extension Settings</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <Button variant="outline">Save Settings</Button>
+  </CardContent>
+</Card>
+```
+
+## Permission System
+
+The CLI helps you configure permissions for system access:
+
+### Available Permissions
+
+**Basic Permissions:**
+- **clipboard**: Read/write clipboard content
+- **notification**: Show system notifications
+- **storage**: Local data persistence
+- **http**: Make HTTP requests
+
+**File System Permissions:**
+- **fs:read**: Read files from file system
+- **fs:read-dir**: Read directory contents
+- **fs:write**: Write files to file system
+- **fs:exists**: Check if files exist
+- **fs:stat**: Get file metadata
+
+**Advanced Permissions:**
+- **shell**: Execute shell commands (with restrictions)
+
+### Permission Configuration
+
+The CLI automatically generates appropriate permission configurations:
+
+```json
+{
+  "permissions": [
+    "clipboard",
+    "storage",
+    {
+      "permission": "fs:read",
+      "allow": [
+        { "path": "$HOME/Documents/**" }
+      ]
+    },
+    {
+      "permission": "shell",
+      "allow": [
+        {
+          "cmd": {
+            "program": "echo",
+            "args": [".+"]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Generated Project Structure
+
+### Basic Extension (No Build)
+
+```
+my-extension/
+├── manifest.json    # Extension configuration
+├── index.html       # UI entry point (if view extension)
+├── init.js          # Background script (if background extension)
+├── .gitignore       # Git ignore rules
+└── README.md        # Documentation
+```
+
+### Modern Extension (With Vite)
+
+```
+my-extension/
+├── manifest.json         # Extension configuration
+├── package.json          # Dependencies and scripts
+├── vite.config.ts        # Vite configuration
+├── tsconfig.json         # TypeScript configuration
+├── index.html            # HTML entry point
+├── src/
+│   ├── main.tsx          # Application entry
+│   ├── App.tsx           # Main component
+│   ├── style.css         # Styles
+│   └── init.ts           # Background script (if needed)
+├── .github/workflows/    # CI/CD workflows
+├── .gitignore           # Git ignore rules
+└── README.md            # Documentation
+```
+
+## Development Workflow
+
+After creating your extension:
+
+1. **Navigate to extension directory**
+   ```bash
+   cd my-extension
+   ```
+
+2. **Install dependencies** (for Vite projects)
+
+<Tabs items={['bun', 'npm', 'yarn', 'pnpm']}>
+  <Tab value="bun">
+```bash
+bun install
+```
+  </Tab>
+  <Tab value="npm">
+```bash
+npm install
+```
+  </Tab>
+  <Tab value="yarn">
+```bash
+yarn install
+```
+  </Tab>
+  <Tab value="pnpm">
+```bash
+pnpm install
+```
+  </Tab>
+</Tabs>
+
+3. **Start development server**
+
+<Tabs items={['bun', 'npm', 'yarn', 'pnpm']}>
+  <Tab value="bun">
+```bash
+bun run dev
+```
+  </Tab>
+  <Tab value="npm">
+```bash
+npm run dev
+```
+  </Tab>
+  <Tab value="yarn">
+```bash
+yarn dev
+```
+  </Tab>
+  <Tab value="pnpm">
+```bash
+pnpm dev
+```
+  </Tab>
+</Tabs>
+
+4. **Load extension in Rua**
+   - Open Rua
+   - Go to Extensions → Developer Mode
+   - Click "Load Extension" and select your extension directory
+
+## Build and Distribution
+
+### Building for Production
+
+<Tabs items={['bun', 'npm', 'yarn', 'pnpm']}>
+  <Tab value="bun">
+```bash
+bun run build
+```
+  </Tab>
+  <Tab value="npm">
+```bash
+npm run build
+```
+  </Tab>
+  <Tab value="yarn">
+```bash
+yarn build
+```
+  </Tab>
+  <Tab value="pnpm">
+```bash
+pnpm build
+```
+  </Tab>
+</Tabs>
+
+The built files will be in the `dist/` directory.
+
+### Extension Package Structure
+
+```
+dist/
+├── index.html       # Built UI
+├── assets/          # Bundled CSS/JS
+│   ├── index.js     # Main bundle
+│   └── index.css    # Styles
+└── init.js          # Background script (if applicable)
+```
+
+### Publishing Your Extension
+
+1. **Test thoroughly** in development mode
+2. **Build for production** with the build command
+3. **Create release package** with manifest.json and dist/ files
+4. **Submit to Rua Extension Store** (coming soon)
+
+## Advanced Configuration
+
+### Custom Templates
+
+You can modify the generated templates to fit your needs:
+
+```typescript
+// vite.config.ts - Custom Vite configuration
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        background: 'src/init.ts'
+      }
+    }
+  }
+});
+```
+
+### Environment Variables
+
+```typescript
+// Access environment variables in your extension
+const isDev = import.meta.env.DEV;
+const apiUrl = import.meta.env.VITE_API_URL;
+```
+
+## Troubleshooting
+
+### Common Issues
+
+<Accordions>
+  <Accordion title="Permission denied errors">
+    Make sure your manifest.json includes the required permissions:
+    ```json
+    {
+      "permissions": ["clipboard", "storage"]
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Actions API not available">
+    The Actions API is only available in background mode. Make sure:
+    - Your extension has a background script (`init.ts` or `init.js`)
+    - You're using `createMainContextRuaAPI()` instead of `initializeRuaAPI()`
+    - Your manifest.json has an action with `"mode": "background"`
+  </Accordion>
+  
+  <Accordion title="Build errors with Vite">
+    Check your dependencies and ensure TypeScript types are correct:
+    ```bash
+    bun install
+    bun run types:check
+    ```
+  </Accordion>
+  
+  <Accordion title="Hot reload not working">
+    Restart the development server and reload the extension in Rua:
+    ```bash
+    bun run dev
+    ```
+  </Accordion>
+</Accordions>
+
+## Next Steps
+
+After creating your extension:
+
+1. **[Learn about Extension Manifests](/docs/extensions/manifest)** - Configure your extension properly
+2. **[Understand Permissions](/docs/extensions/permissions)** - Set up secure system access
+3. **[Explore the API](/docs/api/overview)** - Use Rua's powerful extension APIs
+4. **[Debug Your Extension](/docs/extensions/debugging)** - Tools and techniques for debugging
+
+<Callout type="tip">
+  **Pro Tip**: Start with a simple extension and gradually add features. The CLI makes it easy to experiment with different configurations.
+</Callout>

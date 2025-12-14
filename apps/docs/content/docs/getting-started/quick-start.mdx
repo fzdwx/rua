@@ -1,0 +1,67 @@
+---
+title: Quick Start
+description: Get up and running with Rua in 5 minutes
+icon: Zap
+---
+
+# Quick Start
+
+Get Rua running in a few minutes.
+
+## 1. Install
+
+Download from [GitHub Releases](https://github.com/fzdwx/rua/releases):
+
+- **Rua**: `rua_x.x.x_amd64.deb` / `rua-x.x.x-1.x86_64.rpm` / `rua_x.x.x_amd64.AppImage`
+- **ruactl**: `ruactl-linux-x86_64.tar.gz` (required)
+
+```bash
+# Install Rua (Debian/Ubuntu)
+sudo dpkg -i rua_0.4.2_amd64.deb
+
+# Install ruactl
+tar -xzf ruactl-linux-x86_64.tar.gz
+mkdir -p ~/.local/bin && mv ruactl ~/.local/bin/
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+See [Installation Guide](/docs/user-guide/installation) for other methods.
+
+## 2. Start Rua
+
+```bash
+rua
+```
+
+## 3. Set Up Shortcut
+
+Configure your window manager to call `ruactl toggle`. Example for Hyprland:
+
+```bash
+# ~/.config/hypr/hyprland.conf
+bind = ALT, Space, exec, ruactl toggle
+```
+
+See [ruactl Guide](/docs/user-guide/ruactl) for other window managers.
+
+## 4. Use Rua
+
+Press your shortcut to open Rua, then:
+
+- **Type** to search applications
+- **↑/↓** to navigate
+- **Enter** to launch
+- **Escape** to close
+
+## Verify
+
+```bash
+ruactl health   # Check Rua is running
+ruactl toggle   # Toggle window
+```
+
+## Next Steps
+
+- [ruactl Guide](/docs/user-guide/ruactl) - All commands and window manager configs
+- [Create Extensions](/docs/extensions/create-rua-ext) - Build your own extensions

@@ -1,0 +1,483 @@
+---
+title: API Overview
+description: Introduction to the Rua Extension API
+icon: Code
+---
+
+# API Overview
+
+The Rua Extension API provides a comprehensive set of interfaces for creating powerful extensions that integrate seamlessly with the Rua ecosystem. The API is designed to be secure, intuitive, and feature-rich while maintaining strict permission controls.
+
+## Extension Modes and APIs
+
+Rua supports two extension execution modes, each with its own API initialization method:
+
+| Mode | API Function | Use Case |
+|------|-------------|----------|
+| **View Mode** | `initializeRuaAPI()` | Extensions with UI running in iframes |
+| **Background Mode** | `createMainContextRuaAPI()` | Extensions running in the main application context |
+
+<Callout type="warning">
+  **Important**: The Actions API is only available in background mode. View mode extensions cannot register dynamic actions.
+</Callout>
+
+## Getting Started
+
+### Installation
+
+<Tabs items={['bun', 'npm', 'yarn', 'pnpm']}>
+  <Tab value="bun">
+```bash
+bun add rua-api
+```
+  </Tab>
+  <Tab value="npm">
+```bash
+npm install rua-api
+```
+  </Tab>
+  <Tab value="yarn">
+```bash
+yarn add rua-api
+```
+  </Tab>
+  <Tab value="pnpm">
+```bash
+pnpm add rua-api
+```
+  </Tab>
+</Tabs>
+
+### View Mode Usage
+
+Use `initializeRuaAPI()` for extensions that provide a custom UI in an iframe:
+
+```typescript
+import { initializeRuaAPI } from 'rua-api/browser';
+
+// Initialize the API (call once per extension)
+const rua = await initializeRuaAPI();
+
+// Access extension metadata
+console.log('Extension ID:', rua.extension.id);
+console.log('Extension Name:', rua.extension.name);
+
+// Use the APIs
+await rua.clipboard.writeText('Hello, Rua!');
+const text = await rua.clipboard.readText();
+```
+
+### Background Mode Usage
+
+Use `createMainContextRuaAPI()` for extensions that run in the main application context:
+
+```typescript
+import { createMainContextRuaAPI } from 'rua-api/browser';
+
+// Get the API instance (synchronous, no await needed)
+const rua = createMainContextRuaAPI();
+
+// Register dynamic actions (only available in background mode)
+await rua.actions.register([
+  {
+    id: 'my-action',
+    name: 'My Custom Action',
+    mode: 'command',
+    keywords: ['custom', 'action']
+  }
+]);
+
+// Listen for action triggers
+rua.on('action-triggered', async ({ actionId }) => {
+  if (actionId === 'my-action') {
+    await rua.notification.show({
+      title: 'Action Triggered',
+      body: 'My custom action was executed!'
+    });
+  }
+});
+```
+
+### Extension Context
+
+Both APIs provide access to your extension's metadata:
+
+```typescript
+// View mode
+const rua = await initializeRuaAPI();
+const { id, name, version } = rua.extension;
+
+// Background mode
+const rua = createMainContextRuaAPI();
+const { id, name, version } = rua.extension;
+
+console.log(`${name} v${version} (${id})`);
+```
+
+## API Availability by Mode
+
+| API | View Mode | Background Mode |
+|-----|-----------|-----------------|
+| Clipboard | ✅ | ✅ |
+| Storage | ✅ | ✅ |
+| File System | ✅ | ✅ |
+| Notification | ✅ | ✅ |
+| Shell | ✅ | ✅ |
+| UI | ✅ | ❌ |
+| OS | ✅ | ✅ |
+| Events | ✅ | ✅ |
+| **Actions** | ❌ | ✅ |
+
+## Core APIs
+
+<Cards>
+  <Card title="Clipboard API" href="/docs/api/clipboard">
+    Read and write clipboard content with system integration
+  </Card>
+  <Card title="Storage API" href="/docs/api/storage">
+    Persistent key-value storage with JSON serialization
+  </Card>
+  <Card title="File System API" href="/docs/api/filesystem">
+    Secure file operations with permission-based access
+  </Card>
+  <Card title="Events API" href="/docs/api/events">
+    Event-driven programming with system and custom events
+  </Card>
+</Cards>
+
+## Additional APIs
+
+### Notification API
+
+Display system notifications to users:
+
+```typescript
+await rua.notification.show({
+  title: 'Task Complete',
+  body: 'Your operation finished successfully'
+});
+```
+
+### Shell API
+
+Execute system commands with proper permissions:
+
+```typescript
+const result = await rua.shell.execute('git', ['status']);
+console.log('Git status:', result.stdout);
+```
+
+### UI API (View Mode Only)
+
+Control the Rua interface programmatically:
+
+```typescript
+// Only available in view mode extensions
+const rua = await initializeRuaAPI();
+
+// Hide the input field
+await rua.ui.hideInput();
+
+// Set custom title
+await rua.ui.setTitle('My Extension');
+
+// Close the interface
+await rua.ui.close();
+```
+
+### Actions API (Background Mode Only)
+
+Register dynamic actions that appear in the command palette:
+
+```typescript
+// Only available in background mode extensions
+import { createMainContextRuaAPI } from 'rua-api/browser';
+
+const rua = createMainContextRuaAPI();
+
+await rua.actions.register([
+  {
+    id: 'my-action',
+    name: 'My Custom Action',
+    mode: 'command',
+    keywords: ['custom', 'action'],
+    icon: 'tabler:star'
+  }
+]);
+
+// Handle action triggers
+rua.on('action-triggered', async ({ actionId }) => {
+  if (actionId === 'my-action') {
+    // Perform action logic
+  }
+});
+
+// Unregister actions when no longer needed
+await rua.actions.unregister(['my-action']);
+```
+
+### OS API
+
+Get system information:
+
+```typescript
+const platform = await rua.os.platform();
+console.log('Running on:', platform); // 'linux', 'darwin', 'win32'
+```
+
+## API Architecture
+
+### Extension Modes
+
+The Rua API supports different extension execution modes:
+
+- **View Mode**: Extensions with UI components running in iframes. Use `initializeRuaAPI()` to initialize. Cannot register dynamic actions.
+- **Background Mode**: Extensions running in the main application context. Use `createMainContextRuaAPI()` to initialize. Has full access including Actions API.
+
+### Communication Layer
+
+**View Mode** uses **kkrpc** (Kiro RPC) for secure communication between extensions and the host application:
+
+```typescript
+// View mode extensions run in sandboxed iframes
+// All API calls are proxied through RPC
+const rua = await initializeRuaAPI();
+const result = await rua.clipboard.readText(); // RPC call to host
+```
+
+**Background Mode** runs directly in the main window context without RPC:
+
+```typescript
+// Background mode extensions run in the main context
+// API calls are direct function calls
+const rua = createMainContextRuaAPI();
+const result = await rua.clipboard.readText(); // Direct call
+```
+
+### Permission System
+
+All API access is controlled through a comprehensive permission system:
+
+```json
+{
+  "permissions": [
+    "clipboard",
+    "storage",
+    {
+      "permission": "fs:read",
+      "allow": [
+        { "path": "$HOME/Documents/**" }
+      ]
+    },
+    {
+      "permission": "fs:write",
+      "allow": [
+        { "path": "$HOME/Documents/**" }
+      ]
+    }
+  ]
+}
+```
+
+## TypeScript Support
+
+The API is fully typed with TypeScript for excellent developer experience:
+
+```typescript
+import type { RuaClientAPI, ExtensionMeta, DynamicAction } from 'rua-api';
+import type { MainContextRuaAPI } from 'rua-api/browser';
+
+// View mode - type-safe API usage
+const viewRua: RuaClientAPI = await initializeRuaAPI();
+
+// Background mode - type-safe API usage
+const bgRua: MainContextRuaAPI = createMainContextRuaAPI();
+
+// Typed storage operations
+interface UserSettings {
+  theme: 'light' | 'dark';
+  language: string;
+}
+
+const settings = await rua.storage.get<UserSettings>('settings');
+```
+
+## Error Handling
+
+All API methods return promises and should be wrapped in try-catch blocks:
+
+```typescript
+try {
+  const data = await rua.fs.readTextFile('config.json', {
+    baseDir: 'appConfig'
+  });
+  const config = JSON.parse(data);
+} catch (error) {
+  if (error.message.includes('permission')) {
+    console.error('Permission denied - check manifest');
+  } else if (error.message.includes('not found')) {
+    console.error('File not found');
+  } else {
+    console.error('Operation failed:', error);
+  }
+}
+```
+
+## Best Practices
+
+### 1. Initialize Once
+
+```typescript
+// View mode - Good: Initialize once and reuse
+const rua = await initializeRuaAPI();
+
+// Background mode - Good: Get instance once
+const rua = createMainContextRuaAPI();
+
+// Bad: Don't initialize multiple times
+```
+
+### 2. Choose the Right Mode
+
+```typescript
+// Use view mode for UI-focused extensions
+// manifest.json: { "actions": [{ "mode": "view", ... }] }
+import { initializeRuaAPI } from 'rua-api/browser';
+const rua = await initializeRuaAPI();
+
+// Use background mode for system automation and dynamic actions
+// manifest.json: { "actions": [{ "mode": "background", ... }] }
+import { createMainContextRuaAPI } from 'rua-api/browser';
+const rua = createMainContextRuaAPI();
+```
+
+### 3. Handle Permissions
+
+```typescript
+// Always declare required permissions in manifest.json
+{
+  "permissions": ["clipboard", "storage"]
+}
+
+// Handle permission errors gracefully
+try {
+  await rua.clipboard.writeText(text);
+} catch (error) {
+  if (error.message.includes('permission')) {
+    // Guide user to enable permissions
+  }
+}
+```
+
+### 4. Use TypeScript
+
+```typescript
+// Define interfaces for your data
+interface ExtensionConfig {
+  apiKey: string;
+  refreshInterval: number;
+}
+
+// Use typed storage operations
+const config = await rua.storage.get<ExtensionConfig>('config');
+```
+
+### 5. Clean Up Resources
+
+```typescript
+// Remove event listeners when done
+const handler = (query) => console.log(query);
+rua.on('search-change', handler);
+
+// Later...
+rua.off('search-change', handler);
+```
+
+## Migration Guide
+
+### From v0.0.x to v0.1.x
+
+The API has been restructured for better organization:
+
+```typescript
+// Old (v0.0.x)
+import { RuaAPI } from 'rua-api';
+
+// New (v0.1.x) - View mode
+import { initializeRuaAPI } from 'rua-api/browser';
+const rua = await initializeRuaAPI();
+
+// New (v0.1.x) - Background mode
+import { createMainContextRuaAPI } from 'rua-api/browser';
+const rua = createMainContextRuaAPI();
+```
+
+## Examples
+
+### View Mode: Custom Search Interface
+
+```typescript
+import { initializeRuaAPI } from 'rua-api/browser';
+
+const rua = await initializeRuaAPI();
+
+// Listen for search input changes
+rua.on('search-change', async (query) => {
+  // Perform search and update UI
+  const results = await performSearch(query);
+  renderResults(results);
+});
+
+// Update the title based on results
+await rua.ui.setTitle('Search Results');
+```
+
+### Background Mode: Text Processor with Dynamic Actions
+
+```typescript
+import { createMainContextRuaAPI } from 'rua-api/browser';
+
+const rua = createMainContextRuaAPI();
+
+// Register text processing actions
+await rua.actions.register([
+  {
+    id: 'uppercase',
+    name: 'Convert to Uppercase',
+    mode: 'command',
+    keywords: ['text', 'upper', 'case']
+  },
+  {
+    id: 'lowercase',
+    name: 'Convert to Lowercase',
+    mode: 'command',
+    keywords: ['text', 'lower', 'case']
+  }
+]);
+
+// Handle action triggers
+rua.on('action-triggered', async ({ actionId }) => {
+  const text = await rua.clipboard.readText();
+
+  switch (actionId) {
+    case 'uppercase':
+      await rua.clipboard.writeText(text.toUpperCase());
+      break;
+    case 'lowercase':
+      await rua.clipboard.writeText(text.toLowerCase());
+      break;
+  }
+
+  await rua.notification.show({
+    title: 'Text Converted',
+    body: `Text converted to ${actionId}`
+  });
+});
+```
+
+## Next Steps
+
+- Explore the [Extension Development Guide](/docs/extensions/create-rua-ext)
+- Learn about [Permissions System](/docs/extensions/permissions)
+- Check out [Example Extensions](https://github.com/fzdwx/rua/tree/main/examples)
+- Read the [API Reference](/docs/api) for detailed documentation

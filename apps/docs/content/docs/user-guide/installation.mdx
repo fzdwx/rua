@@ -1,0 +1,269 @@
+---
+title: Installation Guide
+description: Complete installation guide for Rua command palette launcher
+icon: Download
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+# Installation Guide
+
+This guide covers all available methods to install Rua on your Linux system.
+
+## System Requirements
+
+- **Operating System**: Linux (x86_64)
+- **Display**: X11 or Wayland
+
+## Installation Methods
+
+### Method 1: Download from GitHub Releases (Recommended)
+
+Download the appropriate package for your system from [GitHub Releases](https://github.com/fzdwx/rua/releases):
+
+| Package | Description |
+|---------|-------------|
+| `rua_x.x.x_amd64.deb` | Debian/Ubuntu package |
+| `rua-x.x.x-1.x86_64.rpm` | Fedora/RHEL package |
+| `rua_x.x.x_amd64.AppImage` | Portable AppImage |
+| `ruactl-linux-x86_64.tar.gz` | ruactl command line tool |
+
+#### Install Rua
+
+<Tabs items={['Debian/Ubuntu', 'Fedora/RHEL', 'AppImage']}>
+  <Tab value="Debian/Ubuntu">
+```bash
+sudo dpkg -i rua_0.4.2_amd64.deb
+```
+  </Tab>
+  <Tab value="Fedora/RHEL">
+```bash
+sudo rpm -i rua-0.4.2-1.x86_64.rpm
+```
+  </Tab>
+  <Tab value="AppImage">
+```bash
+chmod +x rua_0.4.2_amd64.AppImage
+./rua_0.4.2_amd64.AppImage
+```
+  </Tab>
+</Tabs>
+
+#### Install ruactl (Required)
+
+ruactl is required to toggle the Rua window. You must install it alongside Rua.
+
+```bash
+# Download and extract
+wget https://github.com/fzdwx/rua/releases/latest/download/ruactl-linux-x86_64.tar.gz
+tar -xzf ruactl-linux-x86_64.tar.gz
+
+# Install to ~/.local/bin
+mkdir -p ~/.local/bin
+mv ruactl ~/.local/bin/
+chmod +x ~/.local/bin/ruactl
+```
+
+Add `~/.local/bin` to your PATH by adding this line to `~/.bashrc` or `~/.zshrc`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+### Method 2: Build from Source
+
+#### Prerequisites
+
+<Tabs items={['Ubuntu/Debian', 'Fedora', 'Arch Linux']}>
+  <Tab value="Ubuntu/Debian">
+```bash
+sudo apt update
+sudo apt install -y libwebkit2gtk-4.1-dev \
+  build-essential \
+  curl \
+  wget \
+  file \
+  libxdo-dev \
+  libssl-dev \
+  libayatana-appindicator3-dev \
+  librsvg2-dev
+```
+  </Tab>
+  <Tab value="Fedora">
+```bash
+sudo dnf install -y webkit2gtk4.1-devel \
+  openssl-devel \
+  curl \
+  wget \
+  file \
+  libxdo-devel \
+  libappindicator-gtk3-devel \
+  librsvg2-devel
+```
+  </Tab>
+  <Tab value="Arch Linux">
+```bash
+sudo pacman -S webkit2gtk-4.1 \
+  base-devel \
+  curl \
+  wget \
+  file \
+  openssl \
+  libxdo \
+  libappindicator-gtk3 \
+  librsvg
+```
+  </Tab>
+</Tabs>
+
+Install Rust and Bun:
+
+```bash
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+```
+
+#### Build Process
+
+```bash
+# Clone the repository
+git clone https://github.com/fzdwx/rua.git
+cd rua
+
+# Install dependencies
+bun install
+
+# Build the application (using justfile)
+just build
+
+# Or build manually
+cd apps/rua
+bun run tauri build
+```
+
+#### Install Built Binaries
+
+```bash
+# Install both rua and ruactl to /usr/bin (requires sudo)
+just install
+
+# Or install ruactl only to ~/.local/bin
+./install-ruactl.sh
+```
+
+## Post-Installation Setup
+
+### Set Up Keyboard Shortcut
+
+Rua doesn't register a global shortcut automatically. You need to configure your window manager to call `ruactl toggle`.
+
+#### Hyprland
+
+Add to `~/.config/hypr/hyprland.conf`:
+
+```bash
+bind = ALT, Space, exec, ruactl toggle
+```
+
+#### i3/Sway
+
+Add to your config:
+
+```bash
+bindsym $mod+space exec ruactl toggle
+```
+
+#### GNOME
+
+Use Settings → Keyboard → Custom Shortcuts:
+- Name: "Toggle Rua"
+- Command: `ruactl toggle`
+- Shortcut: `Alt+Space`
+
+#### KDE
+
+Use System Settings → Shortcuts → Custom Shortcuts:
+- Command: `ruactl toggle`
+- Shortcut: Your preference
+
+### Verify Installation
+
+```bash
+# Start Rua
+rua
+
+# Check if Rua is running
+ruactl health
+
+# Toggle Rua window
+ruactl toggle
+```
+
+## Troubleshooting
+
+### ruactl: command not found
+
+Make sure `~/.local/bin` is in your PATH:
+
+```bash
+echo $PATH | grep ".local/bin"
+
+# If not found, add to your shell config
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### ruactl: Connection refused
+
+Rua must be running for ruactl to work:
+
+```bash
+# Start Rua first
+rua
+
+# Then try ruactl
+ruactl health
+```
+
+### Missing Dependencies (Build from Source)
+
+Check for missing shared libraries:
+
+```bash
+ldd /usr/bin/rua | grep "not found"
+```
+
+Install any missing libraries using your package manager.
+
+## Uninstallation
+
+### Package Manager
+
+```bash
+# Debian/Ubuntu
+sudo apt remove rua
+
+# Fedora/RHEL
+sudo rpm -e rua
+```
+
+### Manual Removal
+
+```bash
+# Remove binaries
+sudo rm /usr/bin/rua
+rm ~/.local/bin/ruactl
+
+# Remove data (optional)
+rm -rf ~/.local/share/rua/
+```
+
+## Next Steps
+
+- [Quick Start](/docs/getting-started/quick-start) - Get started with Rua
+- [ruactl Guide](/docs/user-guide/ruactl) - Learn all ruactl commands
+- [Create Extensions](/docs/extensions/create-rua-ext) - Build your own extensions

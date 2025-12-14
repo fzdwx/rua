@@ -1,0 +1,474 @@
+---
+title: File System API
+description: Safe file system access with permissions for Rua extensions
+icon: FolderOpen
+---
+
+# File System API
+
+The File System API provides secure access to the local file system, allowing extensions to read and write files with proper permission controls.
+
+## Overview
+
+The file system API offers comprehensive file operations while maintaining security through a permission-based system. All operations are scoped to specific base directories to prevent unauthorized access.
+
+```typescript
+import { BaseDirectory } from 'rua-api/browser';
+
+// Read a text file
+const content = await rua.fs.readTextFile('config.json', { 
+  baseDir: BaseDirectory.AppConfig 
+});
+
+// Write a text file
+await rua.fs.writeTextFile('output.txt', 'Hello, World!', {
+  baseDir: BaseDirectory.Desktop
+});
+```
+
+## Base Directories
+
+File operations are restricted to predefined base directories for security:
+
+```typescript
+enum BaseDirectory {
+  Audio = 'Audio',
+  Cache = 'Cache',
+  Config = 'Config',
+  Data = 'Data',
+  Desktop = 'Desktop',
+  Document = 'Document',
+  Download = 'Download',
+  Executable = 'Executable',
+  Font = 'Font',
+  Home = 'Home',
+  Picture = 'Picture',
+  Public = 'Public',
+  Runtime = 'Runtime',
+  Template = 'Template',
+  Video = 'Video',
+  Resource = 'Resource',
+  App = 'App',
+  Log = 'Log',
+  Temp = 'Temp',
+  AppConfig = 'AppConfig',
+  AppData = 'AppData',
+  AppLocalData = 'AppLocalData',
+  AppCache = 'AppCache',
+  AppLog = 'AppLog'
+}
+```
+
+## Methods
+
+### readTextFile(path, options?)
+
+Reads the contents of a text file.
+
+```typescript
+readTextFile(path: string, options?: FsOptions): Promise<string>
+```
+
+**Parameters:**
+- `path` (string): Relative path to the file
+- `options` (FsOptions, optional): File operation options
+
+**Returns:** A promise that resolves to the file content as a string.
+
+**Example:**
+```typescript
+try {
+  const config = await rua.fs.readTextFile('settings.json', {
+    baseDir: BaseDirectory.AppConfig
+  });
+  const settings = JSON.parse(config);
+  console.log('Settings loaded:', settings);
+} catch (error) {
+  console.error('Failed to read config:', error);
+}
+```
+
+### readBinaryFile(path, options?)
+
+Reads the contents of a binary file.
+
+```typescript
+readBinaryFile(path: string, options?: FsOptions): Promise<Uint8Array>
+```
+
+**Parameters:**
+- `path` (string): Relative path to the file
+- `options` (FsOptions, optional): File operation options
+
+**Returns:** A promise that resolves to the file content as a Uint8Array.
+
+**Example:**
+```typescript
+const imageData = await rua.fs.readBinaryFile('logo.png', {
+  baseDir: BaseDirectory.Resource
+});
+
+// Convert to base64 for display
+const base64 = btoa(String.fromCharCode(...imageData));
+const dataUrl = `data:image/png;base64,${base64}`;
+```
+
+### writeTextFile(path, contents, options?)
+
+Writes text content to a file.
+
+```typescript
+writeTextFile(path: string, contents: string, options?: FsOptions): Promise<void>
+```
+
+**Parameters:**
+- `path` (string): Relative path to the file
+- `contents` (string): Text content to write
+- `options` (FsOptions, optional): File operation options
+
+**Returns:** A promise that resolves when the operation completes.
+
+**Example:**
+```typescript
+const reportData = {
+  timestamp: new Date().toISOString(),
+  results: ['success', 'warning', 'error']
+};
+
+await rua.fs.writeTextFile('report.json', JSON.stringify(reportData, null, 2), {
+  baseDir: BaseDirectory.Document
+});
+```
+
+### writeBinaryFile(path, contents, options?)
+
+Writes binary content to a file.
+
+```typescript
+writeBinaryFile(path: string, contents: Uint8Array, options?: FsOptions): Promise<void>
+```
+
+**Parameters:**
+- `path` (string): Relative path to the file
+- `contents` (Uint8Array): Binary content to write
+- `options` (FsOptions, optional): File operation options
+
+**Returns:** A promise that resolves when the operation completes.
+
+**Example:**
+```typescript
+// Save downloaded image
+const response = await fetch('https://example.com/image.jpg');
+const arrayBuffer = await response.arrayBuffer();
+const uint8Array = new Uint8Array(arrayBuffer);
+
+await rua.fs.writeBinaryFile('downloaded-image.jpg', uint8Array, {
+  baseDir: BaseDirectory.Download
+});
+```
+
+### readDir(path, options?)
+
+Lists the contents of a directory.
+
+```typescript
+readDir(path: string, options?: FsOptions): Promise<DirEntry[]>
+```
+
+**Parameters:**
+- `path` (string): Relative path to the directory
+- `options` (FsOptions, optional): File operation options
+
+**Returns:** A promise that resolves to an array of directory entries.
+
+**Example:**
+```typescript
+const entries = await rua.fs.readDir('projects', {
+  baseDir: BaseDirectory.Document
+});
+
+entries.forEach(entry => {
+  console.log(`${entry.name} (${entry.isFile ? 'file' : 'directory'})`);
+});
+```
+
+### exists(path, options?)
+
+Checks if a file or directory exists.
+
+```typescript
+exists(path: string, options?: FsOptions): Promise<boolean>
+```
+
+**Parameters:**
+- `path` (string): Relative path to check
+- `options` (FsOptions, optional): File operation options
+
+**Returns:** A promise that resolves to true if the path exists, false otherwise.
+
+**Example:**
+```typescript
+const configExists = await rua.fs.exists('config.json', {
+  baseDir: BaseDirectory.AppConfig
+});
+
+if (!configExists) {
+  // Create default config
+  await rua.fs.writeTextFile('config.json', '{}', {
+    baseDir: BaseDirectory.AppConfig
+  });
+}
+```
+
+### stat(path, options?)
+
+Gets detailed information about a file or directory.
+
+```typescript
+stat(path: string, options?: FsOptions): Promise<FileStat>
+```
+
+**Parameters:**
+- `path` (string): Relative path to the file or directory
+- `options` (FsOptions, optional): File operation options
+
+**Returns:** A promise that resolves to file statistics.
+
+**Example:**
+```typescript
+const stats = await rua.fs.stat('large-file.dat', {
+  baseDir: BaseDirectory.Data
+});
+
+console.log(`File size: ${stats.size} bytes`);
+console.log(`Modified: ${new Date(stats.mtime)}`);
+console.log(`Is directory: ${stats.isDir}`);
+```
+
+## Types
+
+### FsOptions
+
+```typescript
+interface FsOptions {
+  baseDir?: BaseDirectory;
+}
+```
+
+### DirEntry
+
+```typescript
+interface DirEntry {
+  name: string;
+  isFile: boolean;
+  isDir: boolean;
+  isSymlink: boolean;
+}
+```
+
+### FileStat
+
+```typescript
+interface FileStat {
+  isFile: boolean;
+  isDir: boolean;
+  isSymlink: boolean;
+  size: number;
+  mtime: number;
+  atime: number;
+  birthtime: number;
+}
+```
+
+## Permissions
+
+File system access requires specific permissions in your extension manifest:
+
+```json
+{
+  "permissions": [
+    {
+      "fs": {
+        "scope": ["$APPCONFIG", "$DOCUMENT/myapp/*"],
+        "allow": ["read", "write"]
+      }
+    }
+  ]
+}
+```
+
+### Permission Scopes
+
+- `$APPCONFIG`: Application configuration directory
+- `$DOCUMENT`: User documents directory
+- `$DESKTOP`: User desktop directory
+- `$DOWNLOAD`: User downloads directory
+- Custom paths with wildcards
+
+### Permission Actions
+
+- `read`: Allow reading files and directories
+- `write`: Allow writing and creating files
+- `delete`: Allow deleting files and directories
+
+## Use Cases
+
+### Configuration Management
+
+```typescript
+class ConfigManager {
+  private configPath = 'app-config.json';
+  private baseDir = BaseDirectory.AppConfig;
+
+  async load<T>(defaults: T): Promise<T> {
+    try {
+      const exists = await rua.fs.exists(this.configPath, { baseDir: this.baseDir });
+      if (!exists) {
+        await this.save(defaults);
+        return defaults;
+      }
+
+      const content = await rua.fs.readTextFile(this.configPath, { baseDir: this.baseDir });
+      return { ...defaults, ...JSON.parse(content) };
+    } catch (error) {
+      console.error('Failed to load config:', error);
+      return defaults;
+    }
+  }
+
+  async save<T>(config: T): Promise<void> {
+    try {
+      await rua.fs.writeTextFile(
+        this.configPath,
+        JSON.stringify(config, null, 2),
+        { baseDir: this.baseDir }
+      );
+    } catch (error) {
+      console.error('Failed to save config:', error);
+      throw error;
+    }
+  }
+}
+```
+
+### File Processing
+
+```typescript
+class FileProcessor {
+  async processTextFiles(directory: string): Promise<void> {
+    const entries = await rua.fs.readDir(directory, {
+      baseDir: BaseDirectory.Document
+    });
+
+    for (const entry of entries) {
+      if (entry.isFile && entry.name.endsWith('.txt')) {
+        await this.processTextFile(`${directory}/${entry.name}`);
+      }
+    }
+  }
+
+  private async processTextFile(path: string): Promise<void> {
+    const content = await rua.fs.readTextFile(path, {
+      baseDir: BaseDirectory.Document
+    });
+
+    // Process content (e.g., convert to uppercase)
+    const processed = content.toUpperCase();
+
+    // Save processed file
+    const outputPath = path.replace('.txt', '_processed.txt');
+    await rua.fs.writeTextFile(outputPath, processed, {
+      baseDir: BaseDirectory.Document
+    });
+  }
+}
+```
+
+### Backup System
+
+```typescript
+class BackupManager {
+  async createBackup(sourcePath: string): Promise<string> {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupPath = `backup_${timestamp}.json`;
+
+    try {
+      // Check if source exists
+      const exists = await rua.fs.exists(sourcePath, {
+        baseDir: BaseDirectory.AppData
+      });
+
+      if (!exists) {
+        throw new Error(`Source file not found: ${sourcePath}`);
+      }
+
+      // Read source file
+      const content = await rua.fs.readTextFile(sourcePath, {
+        baseDir: BaseDirectory.AppData
+      });
+
+      // Write backup
+      await rua.fs.writeTextFile(backupPath, content, {
+        baseDir: BaseDirectory.AppData
+      });
+
+      return backupPath;
+    } catch (error) {
+      console.error('Backup failed:', error);
+      throw error;
+    }
+  }
+
+  async listBackups(): Promise<string[]> {
+    const entries = await rua.fs.readDir('.', {
+      baseDir: BaseDirectory.AppData
+    });
+
+    return entries
+      .filter(entry => entry.isFile && entry.name.startsWith('backup_'))
+      .map(entry => entry.name)
+      .sort()
+      .reverse(); // Most recent first
+  }
+}
+```
+
+## Error Handling
+
+File system operations can fail for various reasons:
+
+```typescript
+try {
+  const content = await rua.fs.readTextFile('config.json', {
+    baseDir: BaseDirectory.AppConfig
+  });
+} catch (error) {
+  if (error.message.includes('permission')) {
+    console.error('Permission denied - check manifest permissions');
+  } else if (error.message.includes('not found')) {
+    console.error('File not found - creating default');
+    await createDefaultConfig();
+  } else if (error.message.includes('access')) {
+    console.error('File access denied - file may be locked');
+  } else {
+    console.error('File operation failed:', error);
+  }
+}
+```
+
+## Best Practices
+
+1. **Use appropriate base directories**: Choose the most suitable base directory for your use case
+2. **Handle permissions properly**: Declare all required permissions in your manifest
+3. **Implement error handling**: Always handle file operation errors gracefully
+4. **Validate file paths**: Ensure paths are safe and don't contain dangerous characters
+5. **Use atomic operations**: For critical data, consider using temporary files and atomic moves
+6. **Respect user privacy**: Only access files that are necessary for your extension's functionality
+
+## Security Considerations
+
+- File system access is restricted to declared base directories
+- All file paths are validated to prevent directory traversal attacks
+- Extensions cannot access system files or other applications' data
+- Binary file operations are sandboxed to prevent malicious code execution
+- Always validate file content before processing to prevent injection attacks

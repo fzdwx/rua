@@ -1,0 +1,830 @@
+---
+title: Build Process
+description: Complete guide to the build and release process for Rua
+icon: Cog
+---
+
+# Build Process
+
+This guide covers the complete build and release process for Rua, including development builds, testing, packaging, and distribution.
+
+## Build System Overview
+
+Rua uses a multi-layered build system:
+
+- **Just**: Task runner for common development tasks
+- **Cargo**: Rust package manager and build tool
+- **Tauri**: Cross-platform application framework
+- **Vite**: Frontend build tool and development server
+- **Bun**: JavaScript runtime and package manager
+
+## Development Builds
+
+### Quick Development Build
+
+```bash
+# Build all components for development
+just build
+
+# Build specific components
+just build-frontend    # React frontend only
+just build-backend     # Rust backend only
+just build-docs        # Documentation site
+```
+
+### Development Server
+
+```bash
+# Start development server with hot reload
+just dev
+
+# Start with specific configuration
+RUST_LOG=debug just dev
+
+# Start documentation server
+just dev-docs
+```
+
+The development server provides:
+- Hot module replacement for frontend changes
+- Automatic Rust recompilation
+- Debug logging and development tools
+- Live reload for configuration changes
+
+### Build Modes
+
+#### Debug Mode (Default)
+
+```bash
+# Debug build with full debugging information
+cargo build
+
+# Or using just
+just build-debug
+```
+
+Debug builds include:
+- Debug symbols and stack traces
+- Detailed logging output
+- Development-only features
+- Faster compilation times
+- Larger binary sizes
+
+#### Release Mode
+
+```bash
+# Optimized release build
+cargo build --release
+
+# Or using just
+just build-release
+```
+
+Release builds provide:
+- Full optimizations enabled
+- Minimal binary size
+- No debug symbols
+- Production performance
+- Longer compilation times
+
+## Build Configuration
+
+### Cargo Configuration
+
+The main Cargo configuration is in `apps/rua/src-tauri/Cargo.toml`:
+
+```toml
+[package]
+name = "rua"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tauri = { version = "2.0", features = ["api-all"] }
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
+```
+
+### Tauri Configuration
+
+Tauri build settings in `apps/rua/src-tauri/tauri.conf.json`:
+
+```json
+{
+  "build": {
+    "beforeBuildCommand": "bun run build",
+    "beforeDevCommand": "bun run dev",
+    "devPath": "http://localhost:5173",
+    "distDir": "../dist"
+  },
+  "package": {
+    "productName": "Rua",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      },
+      "clipboard": {
+        "all": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "dev.rua.app",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ]
+    }
+  }
+}
+```
+
+### Frontend Build Configuration
+
+Vite configuration in `apps/rua/vite.config.ts`:
+
+```typescript
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  clearScreen: false,
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
+  envPrefix: ['VITE_', 'TAURI_'],
+  build: {
+    target: 'esnext',
+    minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
+    sourcemap: !!process.env.TAURI_DEBUG,
+  },
+});
+```
+
+## Testing in Builds
+
+### Automated Testing
+
+```bash
+# Run all tests
+just test
+
+# Run specific test suites
+just test-unit          # Unit tests only
+just test-integration   # Integration tests
+just test-e2e          # End-to-end tests
+
+# Run tests with coverage
+just test-coverage
+```
+
+### Test Configuration
+
+#### Rust Tests
+
+```toml
+# Cargo.toml test configuration
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.0"
+assert_matches = "1.5"
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"
+```
+
+#### Frontend Tests
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "c8": "^8.0.0"
+  }
+}
+```
+
+### Continuous Integration
+
+GitHub Actions workflow (`.github/workflows/ci.yml`):
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install Bun
+        run: curl -fsSL https://bun.sh/install | bash
+      
+      - name: Install dependencies
+        run: bun install
+      
+      - name: Run linting
+        run: just lint
+      
+      - name: Run tests
+        run: just test
+      
+      - name: Build application
+        run: just build-release
+```
+
+## Packaging
+
+### Local Packaging
+
+```bash
+# Package for current platform
+just package
+
+# Package for specific target
+just package --target x86_64-unknown-linux-gnu
+
+# Package with debug information
+just package-debug
+```
+
+### Cross-Platform Packaging
+
+#### Linux Targets
+
+```bash
+# x86_64 Linux (most common)
+just package --target x86_64-unknown-linux-gnu
+
+# ARM64 Linux
+just package --target aarch64-unknown-linux-gnu
+
+# Create AppImage
+just package-appimage
+
+# Create .deb package
+just package-deb
+
+# Create .rpm package
+just package-rpm
+```
+
+#### Package Formats
+
+**AppImage** (Universal Linux):
+```bash
+# Build AppImage
+just package-appimage
+
+# The result will be in target/release/bundle/appimage/
+```
+
+**Debian Package**:
+```bash
+# Build .deb package
+just package-deb
+
+# Install locally for testing
+sudo dpkg -i target/release/bundle/deb/rua_0.1.0_amd64.deb
+```
+
+**RPM Package**:
+```bash
+# Build .rpm package
+just package-rpm
+
+# Install locally for testing
+sudo rpm -i target/release/bundle/rpm/rua-0.1.0-1.x86_64.rpm
+```
+
+### Package Configuration
+
+#### Debian Package
+
+Configuration in `apps/rua/src-tauri/tauri.conf.json`:
+
+```json
+{
+  "tauri": {
+    "bundle": {
+      "deb": {
+        "depends": [
+          "libwebkit2gtk-4.0-37",
+          "libgtk-3-0",
+          "libayatana-appindicator3-1"
+        ],
+        "section": "utils",
+        "priority": "optional",
+        "changelog": "debian/changelog",
+        "description": "Modern command palette launcher for Linux",
+        "homepage": "https://rua.dev",
+        "maintainer": "Rua Team <team@rua.dev>"
+      }
+    }
+  }
+}
+```
+
+#### RPM Package
+
+```json
+{
+  "tauri": {
+    "bundle": {
+      "rpm": {
+        "depends": [
+          "webkit2gtk3",
+          "gtk3",
+          "libappindicator-gtk3"
+        ],
+        "license": "MIT",
+        "summary": "Modern command palette launcher for Linux",
+        "description": "Rua is a fast, extensible command palette launcher built with Tauri and React.",
+        "homepage": "https://rua.dev"
+      }
+    }
+  }
+}
+```
+
+## Release Process
+
+### Version Management
+
+#### Semantic Versioning
+
+Rua follows [Semantic Versioning](https://semver.org/):
+
+- **MAJOR**: Breaking changes
+- **MINOR**: New features (backward compatible)
+- **PATCH**: Bug fixes (backward compatible)
+
+#### Version Bumping
+
+```bash
+# Bump version automatically
+just bump-version patch   # 0.1.0 -> 0.1.1
+just bump-version minor   # 0.1.0 -> 0.2.0
+just bump-version major   # 0.1.0 -> 1.0.0
+
+# Manual version update
+just set-version 1.2.3
+```
+
+The version bump script updates:
+- `package.json` files
+- `Cargo.toml` files
+- `tauri.conf.json`
+- Documentation versions
+
+### Release Workflow
+
+#### 1. Prepare Release
+
+```bash
+# Create release branch
+git checkout -b release/v1.2.3
+
+# Update version
+just bump-version minor
+
+# Update changelog
+just update-changelog
+
+# Commit changes
+git add .
+git commit -m "chore: prepare release v1.2.3"
+```
+
+#### 2. Build and Test
+
+```bash
+# Run full test suite
+just test-all
+
+# Build release packages
+just build-release-all
+
+# Test packages locally
+just test-packages
+```
+
+#### 3. Create Release
+
+```bash
+# Push release branch
+git push origin release/v1.2.3
+
+# Create pull request for review
+gh pr create --title "Release v1.2.3" --body "Release notes..."
+
+# After approval, merge to main
+git checkout main
+git merge release/v1.2.3
+
+# Tag release
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+### Automated Release
+
+GitHub Actions workflow for releases (`.github/workflows/release.yml`):
+
+```yaml
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        arch: [x86_64, aarch64]
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup build environment
+        run: |
+          # Install dependencies
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+      
+      - name: Build release
+        run: |
+          just build-release --target ${{ matrix.arch }}-unknown-linux-gnu
+          just package --target ${{ matrix.arch }}-unknown-linux-gnu
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: rua-${{ matrix.arch }}
+          path: target/release/bundle/
+  
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+      
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            rua-x86_64/**/*
+            rua-aarch64/**/*
+          generate_release_notes: true
+```
+
+## Distribution
+
+### Package Repositories
+
+#### Arch User Repository (AUR)
+
+```bash
+# Update AUR package
+git clone ssh://aur@aur.archlinux.org/rua-bin.git
+cd rua-bin
+
+# Update PKGBUILD
+vim PKGBUILD
+
+# Update checksums
+updpkgsums
+
+# Test build
+makepkg -si
+
+# Commit and push
+git add .
+git commit -m "Update to v1.2.3"
+git push
+```
+
+#### Debian Repository
+
+```bash
+# Build for multiple architectures
+just build-deb-all
+
+# Sign packages
+debsign target/release/bundle/deb/*.deb
+
+# Upload to repository
+dput ppa:rua-team/rua target/release/bundle/deb/*.changes
+```
+
+#### Flatpak
+
+```bash
+# Build Flatpak
+flatpak-builder build-dir org.rua.Rua.yml --force-clean
+
+# Test Flatpak
+flatpak-builder --run build-dir org.rua.Rua.yml rua
+
+# Submit to Flathub
+# (Follow Flathub submission process)
+```
+
+### Installation Script
+
+The installation script (`install-ruactl.sh`) provides automated installation:
+
+```bash
+#!/bin/bash
+set -e
+
+# Detect architecture
+ARCH=$(uname -m)
+case $ARCH in
+    x86_64) ARCH="x86_64" ;;
+    aarch64|arm64) ARCH="aarch64" ;;
+    *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+esac
+
+# Download and install
+DOWNLOAD_URL="https://github.com/rua-org/rua/releases/latest/download/rua-linux-${ARCH}.tar.gz"
+INSTALL_DIR="/usr/local/bin"
+
+echo "Downloading Rua for $ARCH..."
+curl -L "$DOWNLOAD_URL" | tar -xz -C /tmp
+
+echo "Installing to $INSTALL_DIR..."
+sudo mv /tmp/rua "$INSTALL_DIR/"
+sudo chmod +x "$INSTALL_DIR/rua"
+
+echo "Setting up desktop integration..."
+# Desktop integration code...
+
+echo "Rua installed successfully!"
+echo "Run 'rua' to get started."
+```
+
+## Build Optimization
+
+### Compilation Optimization
+
+#### Rust Optimizations
+
+```toml
+[profile.release]
+opt-level = 3           # Maximum optimization
+lto = true             # Link-time optimization
+codegen-units = 1      # Single codegen unit for better optimization
+panic = "abort"        # Smaller binary size
+strip = true           # Remove debug symbols
+```
+
+#### Frontend Optimizations
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  build: {
+    target: 'esnext',
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          utils: ['lodash', 'date-fns'],
+        },
+      },
+    },
+  },
+});
+```
+
+### Binary Size Optimization
+
+```bash
+# Use cargo-bloat to analyze binary size
+cargo install cargo-bloat
+cargo bloat --release --crates
+
+# Use upx to compress binary (optional)
+upx --best target/release/rua
+
+# Strip debug symbols manually
+strip target/release/rua
+```
+
+### Build Performance
+
+#### Parallel Builds
+
+```bash
+# Use all CPU cores
+export CARGO_BUILD_JOBS=$(nproc)
+
+# Or set in .cargo/config.toml
+[build]
+jobs = 8
+```
+
+#### Incremental Compilation
+
+```bash
+# Enable incremental compilation
+export CARGO_INCREMENTAL=1
+
+# Use sccache for caching
+cargo install sccache
+export RUSTC_WRAPPER=sccache
+```
+
+## Troubleshooting Builds
+
+### Common Build Issues
+
+#### Missing Dependencies
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install -y \
+  libwebkit2gtk-4.0-dev \
+  build-essential \
+  curl \
+  wget \
+  libssl-dev \
+  libgtk-3-dev \
+  libayatana-appindicator3-dev \
+  librsvg2-dev
+
+# Check for missing libraries
+ldd target/release/rua
+```
+
+#### Rust Compilation Errors
+
+```bash
+# Update Rust toolchain
+rustup update
+
+# Clean build cache
+cargo clean
+
+# Check for conflicting dependencies
+cargo tree --duplicates
+```
+
+#### Frontend Build Errors
+
+```bash
+# Clear node modules
+rm -rf node_modules
+bun install
+
+# Clear Bun cache
+bun pm cache rm
+
+# Check for TypeScript errors
+bun run type-check
+```
+
+### Build Environment Issues
+
+#### Docker Build Environment
+
+```dockerfile
+# Dockerfile for consistent builds
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    wget \
+    libssl-dev \
+    libgtk-3-dev \
+    libwebkit2gtk-4.0-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
+
+WORKDIR /app
+COPY . .
+RUN bun install && just build-release
+```
+
+#### GitHub Codespaces
+
+```json
+{
+  "name": "Rua Development",
+  "image": "mcr.microsoft.com/devcontainers/rust:1-1-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  "postCreateCommand": "curl -fsSL https://bun.sh/install | bash && bun install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tauri-apps.tauri-vscode"
+      ]
+    }
+  }
+}
+```
+
+## Performance Monitoring
+
+### Build Time Analysis
+
+```bash
+# Time the build process
+time just build-release
+
+# Analyze compilation time
+cargo build --release --timings
+
+# Profile build performance
+cargo install cargo-llvm-lines
+cargo llvm-lines
+```
+
+### Binary Analysis
+
+```bash
+# Analyze binary size
+cargo install cargo-bloat
+cargo bloat --release
+
+# Check dependencies
+cargo tree
+
+# Analyze unused dependencies
+cargo install cargo-udeps
+cargo +nightly udeps
+```
+
+## Next Steps
+
+- **[Development Setup](/docs/contributing/development-setup)** - Set up your development environment
+- **[Code Style Guide](/docs/contributing/code-style)** - Learn the coding standards
+- **[Extension Development](/docs/extensions/create-rua-ext)** - Create extensions for Rua

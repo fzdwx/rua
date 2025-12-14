@@ -1,0 +1,252 @@
+---
+title: Installation
+description: Install Rua on your Linux system
+icon: Download
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+# Installation
+
+Rua is designed for Linux systems. You need to install both **Rua** (the main application) and **ruactl** (the command-line control tool).
+
+## Prerequisites
+
+Before installing Rua, ensure your system has the required dependencies:
+
+<Tabs items={['Ubuntu/Debian', 'Fedora', 'Arch Linux']}>
+  <Tab value="Ubuntu/Debian">
+    ```bash
+    sudo apt update
+    sudo apt install xclip libwebkit2gtk-4.1-0
+    ```
+  </Tab>
+  <Tab value="Fedora">
+    ```bash
+    sudo dnf install xclip webkit2gtk4.1
+    ```
+  </Tab>
+  <Tab value="Arch Linux">
+    ```bash
+    sudo pacman -S xclip webkit2gtk-4.1
+    ```
+  </Tab>
+</Tabs>
+
+## Method 1: Download from GitHub Releases (Recommended)
+
+Download the latest release from [GitHub Releases](https://github.com/fzdwx/rua/releases).
+
+### Available Packages
+
+| Package | Description |
+|---------|-------------|
+| `rua_x.x.x_amd64.deb` | Debian/Ubuntu package |
+| `rua-x.x.x-1.x86_64.rpm` | Fedora/RHEL package |
+| `rua_x.x.x_amd64.AppImage` | Portable AppImage |
+| `ruactl-linux-x86_64.tar.gz` | ruactl CLI tool (required) |
+
+### Install Rua
+
+<Tabs items={['Debian/Ubuntu', 'Fedora/RHEL', 'AppImage']}>
+  <Tab value="Debian/Ubuntu">
+    ```bash
+    # Download and install
+    wget https://github.com/fzdwx/rua/releases/latest/download/rua_0.4.2_amd64.deb
+    sudo dpkg -i rua_0.4.2_amd64.deb
+    ```
+  </Tab>
+  <Tab value="Fedora/RHEL">
+    ```bash
+    # Download and install
+    wget https://github.com/fzdwx/rua/releases/latest/download/rua-0.4.2-1.x86_64.rpm
+    sudo rpm -i rua-0.4.2-1.x86_64.rpm
+    ```
+  </Tab>
+  <Tab value="AppImage">
+    ```bash
+    # Download and make executable
+    wget https://github.com/fzdwx/rua/releases/latest/download/rua_0.4.2_amd64.AppImage
+    chmod +x rua_0.4.2_amd64.AppImage
+    
+    # Run directly or move to a convenient location
+    mv rua_0.4.2_amd64.AppImage ~/.local/bin/rua
+    ```
+  </Tab>
+</Tabs>
+
+### Install ruactl (Required)
+
+ruactl is required to toggle the Rua window from keyboard shortcuts.
+
+```bash
+# Download and extract
+wget https://github.com/fzdwx/rua/releases/latest/download/ruactl-linux-x86_64.tar.gz
+tar -xzf ruactl-linux-x86_64.tar.gz
+
+# Install to ~/.local/bin
+mkdir -p ~/.local/bin
+mv ruactl ~/.local/bin/
+chmod +x ~/.local/bin/ruactl
+```
+
+Add `~/.local/bin` to your PATH by adding this to `~/.bashrc` or `~/.zshrc`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Then reload your shell:
+
+```bash
+source ~/.bashrc  # or source ~/.zshrc
+```
+
+## Method 2: Build from Source
+
+For the latest features or to contribute to development:
+
+### Install Build Dependencies
+
+```bash
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+```
+
+### Clone and Build
+
+```bash
+git clone https://github.com/fzdwx/rua.git
+cd rua
+```
+
+Install dependencies:
+
+<Tabs items={['bun', 'npm', 'yarn', 'pnpm']}>
+  <Tab value="bun">
+    ```bash
+    bun install
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npm install
+    ```
+  </Tab>
+  <Tab value="yarn">
+    ```bash
+    yarn install
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm install
+    ```
+  </Tab>
+</Tabs>
+
+Build and install:
+
+```bash
+# Build the project
+just build
+
+# Install rua and ruactl to /usr/bin (requires sudo)
+just install
+
+# Or install ruactl to ~/.local/bin only
+./install-ruactl.sh
+```
+
+## Post-Installation Setup
+
+### Set Up Keyboard Shortcut
+
+Rua doesn't have a built-in global shortcut. You need to configure your window manager to run `ruactl toggle`.
+
+**Hyprland** - Add to `~/.config/hypr/hyprland.conf`:
+```bash
+bind = ALT, Space, exec, ruactl toggle
+```
+
+**i3/Sway** - Add to your config:
+```bash
+bindsym $mod+space exec ruactl toggle
+```
+
+**GNOME** - Use Settings → Keyboard → Custom Shortcuts
+
+**KDE** - Use System Settings → Shortcuts → Custom Shortcuts
+
+### Verify Installation
+
+```bash
+# Check Rua version
+rua --version
+
+# Start Rua
+rua
+
+# In another terminal, check if Rua is running
+ruactl health
+
+# Toggle Rua window
+ruactl toggle
+```
+
+## Troubleshooting
+
+### WebKit Errors
+
+If you see WebKit-related errors, ensure the WebKit library is installed:
+
+<Tabs items={['Ubuntu/Debian', 'Fedora', 'Arch Linux']}>
+  <Tab value="Ubuntu/Debian">
+    ```bash
+    sudo apt install libwebkit2gtk-4.1-0
+    ```
+  </Tab>
+  <Tab value="Fedora">
+    ```bash
+    sudo dnf install webkit2gtk4.1
+    ```
+  </Tab>
+  <Tab value="Arch Linux">
+    ```bash
+    sudo pacman -S webkit2gtk-4.1
+    ```
+  </Tab>
+</Tabs>
+
+### ruactl Connection Errors
+
+If `ruactl` shows connection errors:
+
+1. Make sure Rua is running: `pgrep rua`
+2. Check if port 7777 is in use: `ss -tlnp | grep 7777`
+3. Start Rua first, then use ruactl
+
+### Command Not Found
+
+If `ruactl` is not found:
+
+```bash
+# Check if it exists
+ls -la ~/.local/bin/ruactl
+
+# Check PATH
+echo $PATH | grep ".local/bin"
+
+# Reload shell config
+source ~/.bashrc
+```
+
+## Next Steps
+
+- [Quick Start](/docs/getting-started/quick-start) - Learn basic usage
+- [Configuration](/docs/user-guide/configuration) - Customize Rua
+- [ruactl Guide](/docs/user-guide/ruactl) - Learn all ruactl commands

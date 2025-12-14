@@ -1,0 +1,13 @@
+{
+  "title": "API Reference",
+  "description": "Complete API documentation for developers",
+  "icon": "Code",
+  "pages": [
+    "overview",
+    "clipboard",
+    "storage",
+    "filesystem",
+    "events",
+    "generated"
+  ]
+}

@@ -1,0 +1,808 @@
+---
+title: Extension Manifest
+description: Complete guide to configuring your extension with manifest.json
+icon: FileText
+---
+
+# Extension Manifest
+
+The `manifest.json` file is the heart of every Rua extension. It defines your extension's metadata, capabilities, permissions, and how it integrates with the Rua ecosystem.
+
+## Basic Structure
+
+Every extension must include a `manifest.json` file in its root directory:
+
+```json
+{
+  "id": "author.extension-name",
+  "name": "My Extension",
+  "version": "1.0.0",
+  "description": "A helpful extension for Rua",
+  "rua": {
+    "engineVersion": "^0.4.0",
+    "ui": {
+      "entry": "dist/index.html"
+    },
+    "actions": [
+      {
+        "name": "main",
+        "title": "My Action",
+        "mode": "view",
+        "keywords": ["my", "action"],
+        "icon": "tabler:star"
+      }
+    ]
+  },
+  "permissions": ["clipboard", "storage"]
+}
+```
+
+## Required Fields
+
+### Basic Metadata
+
+**Identity Configuration:**
+```json
+{
+  "id": "author.extension-name",
+  "name": "My Extension"
+}
+```
+
+**id**: Unique identifier for your extension
+- Format: `author.extension-name` or `extension-name`
+- Must be lowercase with hyphens
+- Cannot be changed after publication
+
+**name**: Human-readable extension name
+- Displayed in the extension manager
+- Should be descriptive and concise
+
+**Versioning Configuration:**
+```json
+{
+  "version": "1.0.0"
+}
+```
+
+**version**: Semantic version number
+- Format: `MAJOR.MINOR.PATCH`
+- Used for update detection
+- Must follow [semver](https://semver.org/) specification
+
+**Description Configuration:**
+```json
+{
+  "description": "A helpful extension for Rua"
+}
+```
+
+**description**: Brief explanation of what your extension does
+- Shown in extension store and manager
+- Keep under 100 characters
+- Should clearly explain the extension's purpose
+
+### Rua Configuration
+
+The `rua` object contains Rua-specific configuration:
+
+```json
+{
+  "rua": {
+    "engineVersion": "^0.4.0",
+    "ui": {
+      "entry": "dist/index.html"
+    },
+    "background": {
+      "entry": "dist/init.js"
+    },
+    "actions": [...],
+    "settings": {...}
+  }
+}
+```
+
+#### Engine Version
+
+```json
+{
+  "engineVersion": "^0.4.0"
+}
+```
+
+Specifies the minimum Rua version required:
+- Use semver ranges (`^0.4.0`, `>=0.4.0`, `~0.4.0`)
+- Ensures compatibility with Rua features
+- Extensions won't load on incompatible versions
+
+#### UI Configuration
+
+```json
+{
+  "ui": {
+    "entry": "dist/index.html",
+    "width": 600,
+    "height": 400,
+    "resizable": true,
+    "theme": "auto"
+  }
+}
+```
+
+**entry**: Path to the main HTML file for view extensions
+**width/height**: Default window dimensions (optional)
+**resizable**: Whether the extension window can be resized
+**theme**: Default theme (`light`, `dark`, `auto`)
+
+#### Background Script
+
+```json
+{
+  "background": {
+    "entry": "dist/init.js",
+    "persistent": true
+  }
+}
+```
+
+**entry**: Path to the background script
+**persistent**: Whether the script should stay loaded (default: true)
+
+## Actions Configuration
+
+Actions define how users can interact with your extension:
+
+### Basic Action
+
+```json
+{
+  "name": "search",
+  "title": "Search Files",
+  "mode": "view",
+  "keywords": ["search", "find", "files"],
+  "icon": "tabler:search"
+}
+```
+
+### Action Properties
+
+**Core Properties:**
+- **name**: Unique identifier for the action
+  - Used internally to identify the action
+  - Must be unique within the extension
+
+- **title**: Display name for the action
+  - Shown in search results
+  - Should be descriptive and concise
+
+- **keywords**: Array of search terms
+  - Used for fuzzy matching
+  - Include synonyms and related terms
+
+**UI Properties:**
+- **icon**: Icon identifier
+  - Format: `tabler:icon-name` for Tabler icons
+  - Format: `lucide:icon-name` for Lucide icons
+  - Custom icons: `./path/to/icon.svg`
+
+- **description**: Optional detailed description
+  - Shown in search results
+  - Provides additional context
+
+**Behavior Properties:**
+- **mode**: How the action behaves
+  - `view`: Opens a custom UI
+  - `command`: Executes immediately
+  - `background`: Runs in background
+
+- **query**: Whether to show query input
+  - `true`: Shows input box for user queries
+  - `false`: No input (default)
+
+### Action Modes
+
+#### View Mode
+
+Opens a custom user interface:
+
+```json
+{
+  "name": "calculator",
+  "title": "Calculator",
+  "mode": "view",
+  "keywords": ["calc", "math", "calculator"],
+  "icon": "tabler:calculator",
+  "query": true
+}
+```
+
+**Use Cases**:
+- Custom search interfaces
+- Configuration panels
+- Interactive tools
+- Data visualization
+
+#### Command Mode
+
+Executes immediately without UI:
+
+```json
+{
+  "name": "timestamp",
+  "title": "Copy Timestamp",
+  "mode": "command",
+  "keywords": ["time", "timestamp", "date"],
+  "icon": "tabler:clock"
+}
+```
+
+**Use Cases**:
+- Quick utilities
+- System commands
+- Data transformations
+- Clipboard operations
+
+#### Background Mode
+
+Runs in the background process:
+
+```json
+{
+  "name": "monitor",
+  "title": "System Monitor",
+  "mode": "background",
+  "keywords": ["system", "monitor", "stats"],
+  "icon": "tabler:activity"
+}
+```
+
+**Use Cases**:
+- System monitoring
+- Automated tasks
+- Data collection
+- Background processing
+
+### Query Support
+
+Enable query input for user-provided data:
+
+```json
+{
+  "name": "web-search",
+  "title": "Search Web",
+  "mode": "view",
+  "keywords": ["web", "search", "google"],
+  "icon": "tabler:world",
+  "query": true,
+  "queryPlaceholder": "Enter search terms..."
+}
+```
+
+When `query: true`, users can type before selecting your action:
+- The query is passed to your extension
+- Listen for `search-change` events in your code
+- Use for search, calculations, or any user input
+
+## Permissions System
+
+Permissions control what system APIs your extension can access:
+
+### Simple Permissions
+
+```json
+{
+  "permissions": [
+    "clipboard",
+    "notification", 
+    "storage",
+    "http"
+  ]
+}
+```
+
+### Detailed Permissions
+
+For fine-grained control, use detailed permission objects:
+
+```json
+{
+  "permissions": [
+    "clipboard",
+    {
+      "permission": "fs:read",
+      "allow": [
+        { "path": "$HOME/Documents/**" },
+        { "path": "$HOME/Downloads/**" }
+      ]
+    },
+    {
+      "permission": "shell",
+      "allow": [
+        {
+          "cmd": {
+            "program": "git",
+            "args": ["status", "log", "diff"]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Available Permissions
+
+**Basic Permissions:**
+- **clipboard**: Read and write clipboard content
+  ```json
+  "clipboard"
+  ```
+
+- **storage**: Local data persistence
+  ```json
+  "storage"
+  ```
+
+- **notification**: Show system notifications
+  ```json
+  "notification"
+  ```
+
+**File System Permissions:**
+- **fs:read**: Read files
+  ```json
+  {
+    "permission": "fs:read",
+    "allow": [
+      { "path": "$HOME/Documents/**" }
+    ]
+  }
+  ```
+
+- **fs:write**: Write files
+  ```json
+  {
+    "permission": "fs:write", 
+    "allow": [
+      { "path": "$HOME/temp/**" }
+    ]
+  }
+  ```
+
+- **fs:read-dir**: List directory contents
+- **fs:exists**: Check if files exist
+- **fs:stat**: Get file metadata
+
+**Network Permissions:**
+- **http**: Make HTTP requests
+  ```json
+  {
+    "permission": "http",
+    "allow": [
+      { "url": "https://api.example.com/**" }
+    ]
+  }
+  ```
+
+**System Permissions:**
+- **shell**: Execute shell commands
+  ```json
+  {
+    "permission": "shell",
+    "allow": [
+      {
+        "cmd": {
+          "program": "echo",
+          "args": [".+"]
+        }
+      }
+    ]
+  }
+  ```
+
+### Path Variables
+
+Use these variables in file system permissions:
+
+- `$HOME`: User's home directory
+- `$DESKTOP`: Desktop directory
+- `$DOCUMENTS`: Documents directory
+- `$DOWNLOADS`: Downloads directory
+- `$PICTURES`: Pictures directory
+- `$MUSIC`: Music directory
+- `$VIDEOS`: Videos directory
+
+## Extension Settings
+
+Define configurable settings for your extension:
+
+```json
+{
+  "rua": {
+    "settings": {
+      "apiKey": {
+        "type": "string",
+        "title": "API Key",
+        "description": "Your service API key",
+        "default": "",
+        "required": true,
+        "secret": true
+      },
+      "maxResults": {
+        "type": "number",
+        "title": "Maximum Results",
+        "description": "Number of results to show",
+        "default": 10,
+        "min": 1,
+        "max": 100
+      },
+      "enableNotifications": {
+        "type": "boolean",
+        "title": "Enable Notifications",
+        "description": "Show desktop notifications",
+        "default": true
+      },
+      "theme": {
+        "type": "select",
+        "title": "Theme",
+        "description": "Extension theme",
+        "default": "auto",
+        "options": [
+          { "value": "light", "label": "Light" },
+          { "value": "dark", "label": "Dark" },
+          { "value": "auto", "label": "Auto" }
+        ]
+      }
+    }
+  }
+}
+```
+
+### Setting Types
+
+**Basic Types:**
+- **string**: Text input
+  ```json
+  {
+    "type": "string",
+    "default": "default value",
+    "placeholder": "Enter text...",
+    "secret": false
+  }
+  ```
+
+- **number**: Numeric input
+  ```json
+  {
+    "type": "number", 
+    "default": 10,
+    "min": 0,
+    "max": 100,
+    "step": 1
+  }
+  ```
+
+- **boolean**: Checkbox
+  ```json
+  {
+    "type": "boolean",
+    "default": true
+  }
+  ```
+
+**Advanced Types:**
+- **select**: Dropdown selection
+  ```json
+  {
+    "type": "select",
+    "default": "option1",
+    "options": [
+      { "value": "option1", "label": "Option 1" },
+      { "value": "option2", "label": "Option 2" }
+    ]
+  }
+  ```
+
+- **multiselect**: Multiple selection
+  ```json
+  {
+    "type": "multiselect",
+    "default": ["option1"],
+    "options": [...]
+  }
+  ```
+
+- **file**: File picker
+  ```json
+  {
+    "type": "file",
+    "accept": ".json,.txt",
+    "directory": false
+  }
+  ```
+
+**Validation Options:**
+- **required**: Must have a value
+  ```json
+  {
+    "required": true
+  }
+  ```
+
+- **pattern**: Regex validation
+  ```json
+  {
+    "pattern": "^[a-zA-Z0-9]+$",
+    "patternError": "Only alphanumeric characters allowed"
+  }
+  ```
+
+- **secret**: Hide value in UI
+  ```json
+  {
+    "secret": true
+  }
+  ```
+
+## Advanced Configuration
+
+### Multiple Entry Points
+
+For complex extensions with multiple interfaces:
+
+```json
+{
+  "rua": {
+    "ui": {
+      "entry": "dist/index.html"
+    },
+    "background": {
+      "entry": "dist/background.js"
+    },
+    "actions": [
+      {
+        "name": "main",
+        "title": "Main Interface",
+        "mode": "view",
+        "entry": "dist/main.html"
+      },
+      {
+        "name": "settings",
+        "title": "Settings",
+        "mode": "view", 
+        "entry": "dist/settings.html"
+      }
+    ]
+  }
+}
+```
+
+### Conditional Actions
+
+Actions that appear based on context:
+
+```json
+{
+  "name": "git-status",
+  "title": "Git Status",
+  "mode": "command",
+  "keywords": ["git", "status"],
+  "icon": "tabler:git-branch",
+  "condition": {
+    "fileExists": ".git"
+  }
+}
+```
+
+### Keyboard Shortcuts
+
+Define global shortcuts for your actions:
+
+```json
+{
+  "rua": {
+    "shortcuts": {
+      "calculator": "Ctrl+Alt+C",
+      "timestamp": "Ctrl+Alt+T"
+    }
+  }
+}
+```
+
+## Validation and Testing
+
+### Manifest Validation
+
+Rua automatically validates your manifest:
+
+```bash
+# Check manifest validity
+rua validate-extension ./my-extension
+
+# Detailed validation output
+rua validate-extension ./my-extension --verbose
+```
+
+### Common Validation Errors
+
+#### Invalid Extension ID
+
+Extension IDs must be lowercase with hyphens:
+```json
+// ❌ Invalid
+"id": "MyExtension"
+
+// ✅ Valid  
+"id": "my-extension"
+```
+
+#### Missing Entry Point
+
+Entry points must exist:
+```json
+// Make sure the file exists
+"ui": {
+  "entry": "dist/index.html"  // This file must exist
+}
+```
+
+#### Invalid Permissions
+
+Check permission syntax:
+```json
+// ❌ Invalid
+"permissions": ["invalid-permission"]
+
+// ✅ Valid
+"permissions": ["clipboard", "storage"]
+```
+
+## Best Practices
+
+### Naming Conventions
+
+- **Extension ID**: Use reverse domain notation (`com.company.extension`)
+- **Action names**: Use kebab-case (`search-files`, `copy-timestamp`)
+- **Keywords**: Include synonyms and common misspellings
+
+### Performance Optimization
+
+- **Lazy loading**: Only load resources when needed
+- **Minimal permissions**: Request only necessary permissions
+- **Efficient keywords**: Use specific, relevant keywords
+
+### User Experience
+
+- **Clear titles**: Make action titles descriptive
+- **Helpful descriptions**: Explain what each action does
+- **Appropriate icons**: Use recognizable, relevant icons
+
+### Security
+
+- **Minimal permissions**: Follow principle of least privilege
+- **Input validation**: Validate all user inputs
+- **Secure defaults**: Use safe default settings
+
+## Migration Guide
+
+### Updating Manifest Version
+
+When updating your extension:
+
+1. **Increment version** following semver
+2. **Update engineVersion** if using new features
+3. **Add migration notes** in your README
+4. **Test thoroughly** with the new manifest
+
+### Breaking Changes
+
+If making breaking changes:
+
+```json
+{
+  "version": "2.0.0",
+  "rua": {
+    "engineVersion": "^0.5.0",
+    "migration": {
+      "from": "1.x.x",
+      "guide": "https://example.com/migration-guide"
+    }
+  }
+}
+```
+
+## Examples
+
+### Simple Calculator Extension
+
+```json
+{
+  "id": "calculator",
+  "name": "Calculator",
+  "version": "1.0.0",
+  "description": "Simple calculator for quick math",
+  "rua": {
+    "engineVersion": "^0.4.0",
+    "ui": {
+      "entry": "index.html"
+    },
+    "actions": [
+      {
+        "name": "calc",
+        "title": "Calculator",
+        "mode": "view",
+        "keywords": ["calc", "calculator", "math"],
+        "icon": "tabler:calculator",
+        "query": true,
+        "queryPlaceholder": "Enter calculation..."
+      }
+    ]
+  },
+  "permissions": ["clipboard"]
+}
+```
+
+### File Manager Extension
+
+```json
+{
+  "id": "file-manager",
+  "name": "File Manager", 
+  "version": "1.2.0",
+  "description": "Browse and manage files",
+  "rua": {
+    "engineVersion": "^0.4.0",
+    "ui": {
+      "entry": "dist/index.html",
+      "width": 800,
+      "height": 600,
+      "resizable": true
+    },
+    "background": {
+      "entry": "dist/background.js"
+    },
+    "actions": [
+      {
+        "name": "browse",
+        "title": "Browse Files",
+        "mode": "view",
+        "keywords": ["files", "browse", "folder"],
+        "icon": "tabler:folder"
+      },
+      {
+        "name": "recent",
+        "title": "Recent Files",
+        "mode": "view", 
+        "keywords": ["recent", "history"],
+        "icon": "tabler:history"
+      }
+    ],
+    "settings": {
+      "defaultPath": {
+        "type": "file",
+        "title": "Default Directory",
+        "directory": true,
+        "default": "$HOME"
+      },
+      "showHidden": {
+        "type": "boolean",
+        "title": "Show Hidden Files",
+        "default": false
+      }
+    }
+  },
+  "permissions": [
+    {
+      "permission": "fs:read",
+      "allow": [{ "path": "$HOME/**" }]
+    },
+    {
+      "permission": "fs:read-dir", 
+      "allow": [{ "path": "$HOME/**" }]
+    },
+    "storage"
+  ]
+}
+```
+
+The manifest.json file is your extension's blueprint. Take time to configure it properly, and your extension will integrate seamlessly with Rua's ecosystem.

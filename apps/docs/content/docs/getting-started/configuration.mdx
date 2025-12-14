@@ -1,0 +1,501 @@
+---
+title: Configuration
+description: Customize Rua to fit your workflow
+icon: Settings
+---
+
+# Configuration
+
+Rua is highly customizable to fit your specific workflow and preferences. This guide covers all available configuration options and how to set them up.
+
+## Accessing Settings
+
+There are several ways to access Rua's configuration:
+
+### Through Rua Interface
+1. Launch Rua
+2. Type `settings` and press `Enter`
+3. Navigate through the settings interface
+
+### Configuration File
+Rua stores its configuration in a JSON file located at:
+```
+~/.config/rua/config.json
+```
+
+You can edit this file directly with any text editor:
+```bash
+nano ~/.config/rua/config.json
+```
+
+### Command Line
+Some settings can be configured via command line:
+```bash
+rua --config theme=dark
+rua --config search.fuzzy=true
+```
+
+## General Settings
+
+### Appearance
+
+**Theme Configuration:**
+- `dark` - Dark theme (default)
+- `light` - Light theme  
+- `auto` - Follow system theme
+
+```json
+{
+  "appearance": {
+    "theme": "dark",
+    "accentColor": "#3b82f6"
+  }
+}
+```
+
+**Window Settings:**
+```json
+{
+  "window": {
+    "width": 600,
+    "height": 400,
+    "position": "center",
+    "alwaysOnTop": true,
+    "hideOnBlur": true,
+    "transparency": 0.95
+  }
+}
+```
+
+**Font Configuration:**
+```json
+{
+  "fonts": {
+    "family": "Inter",
+    "size": 14,
+    "weight": "normal"
+  }
+}
+```
+
+### Behavior
+
+#### Startup Settings
+```json
+{
+  "startup": {
+    "launchAtBoot": true,
+    "minimizeToTray": true,
+    "showWelcome": false
+  }
+}
+```
+
+#### Search Behavior
+```json
+{
+  "search": {
+    "fuzzyMatching": true,
+    "caseSensitive": false,
+    "maxResults": 10,
+    "searchDelay": 100,
+    "includeHidden": false,
+    "prioritizeFrequent": true
+  }
+}
+```
+
+## Keyboard Shortcuts
+
+### Global Shortcuts
+
+Configure system-wide shortcuts to launch Rua:
+
+```json
+{
+  "shortcuts": {
+    "global": {
+      "toggle": "Super+Space",
+      "quickLaunch": "Super+R"
+    }
+  }
+}
+```
+
+**Popular Global Shortcut Combinations**:
+- `Super+Space` (recommended)
+- `Ctrl+Alt+Space`
+- `Alt+F2`
+- `Ctrl+Shift+P`
+
+### Application Shortcuts
+
+Shortcuts that work within Rua:
+
+```json
+{
+  "shortcuts": {
+    "app": {
+      "close": "Escape",
+      "settings": "Ctrl+comma",
+      "extensions": "Ctrl+e",
+      "refresh": "F5",
+      "copy": "Ctrl+c",
+      "paste": "Ctrl+v"
+    }
+  }
+}
+```
+
+### Custom Shortcuts
+
+Create custom shortcuts for specific actions:
+
+```json
+{
+  "shortcuts": {
+    "custom": {
+      "Ctrl+1": "launch firefox",
+      "Ctrl+2": "launch code",
+      "Ctrl+t": "launch terminal"
+    }
+  }
+}
+```
+
+## Search Configuration
+
+### Application Discovery
+
+Configure where Rua looks for applications:
+
+```json
+{
+  "applications": {
+    "scanPaths": [
+      "/usr/share/applications",
+      "/usr/local/share/applications",
+      "~/.local/share/applications",
+      "~/Applications"
+    ],
+    "excludePatterns": [
+      "*-usercreated-*",
+      "wine-*"
+    ],
+    "customApps": {
+      "my-script": {
+        "name": "My Custom Script",
+        "command": "/home/user/scripts/my-script.sh",
+        "icon": "terminal",
+        "keywords": ["script", "custom"]
+      }
+    }
+  }
+}
+```
+
+### Search Providers
+
+Enable different search sources:
+
+```json
+{
+  "searchProviders": {
+    "applications": {
+      "enabled": true,
+      "weight": 10
+    },
+    "files": {
+      "enabled": true,
+      "weight": 5,
+      "maxDepth": 3,
+      "searchPaths": ["~/Documents", "~/Downloads"]
+    },
+    "web": {
+      "enabled": true,
+      "weight": 3,
+      "engines": ["google", "duckduckgo"]
+    },
+    "calculator": {
+      "enabled": true,
+      "weight": 8
+    }
+  }
+}
+```
+
+## Extension Configuration
+
+### Extension Settings
+
+Configure extension behavior:
+
+```json
+{
+  "extensions": {
+    "autoUpdate": true,
+    "loadOnStartup": true,
+    "allowUnsigned": false,
+    "extensionPaths": [
+      "~/.config/rua/extensions",
+      "/usr/share/rua/extensions"
+    ]
+  }
+}
+```
+
+### Per-Extension Configuration
+
+Each extension can have its own settings:
+
+```json
+{
+  "extensionSettings": {
+    "file-manager": {
+      "showHidden": false,
+      "defaultPath": "~/Documents"
+    },
+    "web-search": {
+      "defaultEngine": "google",
+      "openInBrowser": true
+    }
+  }
+}
+```
+
+## Performance Settings
+
+### Resource Limits
+
+```json
+{
+  "performance": {
+    "maxMemoryUsage": "256MB",
+    "cacheSize": "50MB",
+    "indexingThreads": 2,
+    "searchTimeout": 5000
+  }
+}
+```
+
+### Caching
+
+```json
+{
+  "cache": {
+    "enabled": true,
+    "ttl": 3600,
+    "maxEntries": 1000,
+    "persistToDisk": true
+  }
+}
+```
+
+## Security Settings
+
+### Permissions
+
+```json
+{
+  "security": {
+    "allowShellCommands": true,
+    "allowFileAccess": true,
+    "allowNetworkAccess": true,
+    "sandboxExtensions": true,
+    "trustedExtensions": [
+      "official.file-manager",
+      "official.calculator"
+    ]
+  }
+}
+```
+
+## Advanced Configuration
+
+### Logging
+
+```json
+{
+  "logging": {
+    "level": "info",
+    "file": "~/.config/rua/rua.log",
+    "maxSize": "10MB",
+    "rotate": true
+  }
+}
+```
+
+### Development Settings
+
+```json
+{
+  "development": {
+    "debugMode": false,
+    "hotReload": true,
+    "extensionDevMode": false,
+    "showPerformanceMetrics": false
+  }
+}
+```
+
+## Configuration Examples
+
+### Minimal Configuration
+For users who want a simple setup:
+
+```json
+{
+  "appearance": {
+    "theme": "auto"
+  },
+  "shortcuts": {
+    "global": {
+      "toggle": "Super+Space"
+    }
+  },
+  "search": {
+    "maxResults": 8
+  }
+}
+```
+
+### Power User Configuration
+For advanced users who want maximum customization:
+
+```json
+{
+  "appearance": {
+    "theme": "dark",
+    "accentColor": "#8b5cf6"
+  },
+  "window": {
+    "width": 800,
+    "height": 500,
+    "transparency": 0.9
+  },
+  "shortcuts": {
+    "global": {
+      "toggle": "Super+Space",
+      "quickLaunch": "Super+R"
+    },
+    "custom": {
+      "Ctrl+1": "launch firefox",
+      "Ctrl+2": "launch code",
+      "Ctrl+t": "launch terminal"
+    }
+  },
+  "search": {
+    "fuzzyMatching": true,
+    "maxResults": 15,
+    "searchDelay": 50
+  },
+  "searchProviders": {
+    "files": {
+      "enabled": true,
+      "searchPaths": ["~/Projects", "~/Documents"]
+    }
+  }
+}
+```
+
+### Developer Configuration
+For extension developers:
+
+```json
+{
+  "development": {
+    "debugMode": true,
+    "hotReload": true,
+    "extensionDevMode": true
+  },
+  "extensions": {
+    "allowUnsigned": true,
+    "extensionPaths": ["~/dev/rua-extensions"]
+  },
+  "logging": {
+    "level": "debug"
+  }
+}
+```
+
+## Configuration Management
+
+### Backup Configuration
+```bash
+# Backup your configuration
+cp ~/.config/rua/config.json ~/.config/rua/config.json.backup
+
+# Restore from backup
+cp ~/.config/rua/config.json.backup ~/.config/rua/config.json
+```
+
+### Reset to Defaults
+```bash
+# Reset all settings
+rua --reset-config
+
+# Reset specific section
+rua --reset-config appearance
+```
+
+### Validate Configuration
+```bash
+# Check configuration for errors
+rua --validate-config
+
+# Show current configuration
+rua --show-config
+```
+
+## Troubleshooting Configuration
+
+### Common Issues
+
+#### Invalid JSON Syntax
+
+If Rua won't start after editing config:
+```bash
+# Validate JSON syntax
+rua --validate-config
+
+# Reset to defaults if needed
+rua --reset-config
+```
+
+#### Global Shortcuts Not Working
+
+Check if shortcuts conflict with system shortcuts:
+```bash
+# Test shortcut registration
+rua --test-shortcuts
+
+# Use alternative shortcuts
+rua --config shortcuts.global.toggle="Ctrl+Alt+Space"
+```
+
+#### Performance Issues
+
+Optimize settings for better performance:
+```json
+{
+  "search": {
+    "maxResults": 5,
+    "searchDelay": 200
+  },
+  "performance": {
+    "maxMemoryUsage": "128MB"
+  }
+}
+```
+
+## Next Steps
+
+After configuring Rua:
+
+1. **[Learn Keyboard Shortcuts](/docs/user-guide/keyboard-shortcuts)** - Master efficient navigation
+2. **[Manage Extensions](/docs/user-guide/extension-management)** - Install and configure extensions
+3. **[Create Custom Extensions](/docs/extensions/create-rua-ext)** - Build your own functionality
+
+<Callout type="info">
+  **Configuration Changes**: Most settings take effect immediately. Some may require restarting Rua.
+</Callout>

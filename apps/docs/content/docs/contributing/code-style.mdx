@@ -1,0 +1,834 @@
+---
+title: Code Style Guide
+description: Coding standards and style guidelines for Rua development
+icon: FileText
+---
+
+# Code Style Guide
+
+This guide outlines the coding standards and style guidelines for contributing to Rua. Following these conventions ensures consistency across the codebase and makes collaboration easier.
+
+## General Principles
+
+### Code Quality Standards
+
+1. **Readability**: Code should be self-documenting and easy to understand
+2. **Consistency**: Follow established patterns and conventions
+3. **Simplicity**: Prefer simple, clear solutions over complex ones
+4. **Performance**: Write efficient code, but prioritize clarity when there's a trade-off
+5. **Testing**: Write testable code with good separation of concerns
+
+### Documentation Requirements
+
+- All public APIs must have documentation
+- Complex algorithms should include explanatory comments
+- Breaking changes must be documented in commit messages
+- README files should be kept up to date
+
+## Rust Code Style
+
+### Formatting
+
+We use `rustfmt` with the default configuration:
+
+```bash
+# Format all Rust code
+cargo fmt
+
+# Check formatting without making changes
+cargo fmt -- --check
+```
+
+### Naming Conventions
+
+```rust
+// Use snake_case for variables, functions, and modules
+let user_name = "alice";
+fn calculate_total() -> u32 { }
+mod search_engine;
+
+// Use PascalCase for types, structs, enums, and traits
+struct SearchResult;
+enum ActionType;
+trait Searchable;
+
+// Use SCREAMING_SNAKE_CASE for constants
+const MAX_RESULTS: usize = 100;
+const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
+
+// Use descriptive names for generic parameters
+fn process_items<T, E>(items: Vec<T>) -> Result<Vec<T>, E>
+where
+    T: Clone + Send,
+    E: std::error::Error;
+```
+
+### Code Organization
+
+```rust
+// Order of items in modules:
+// 1. Imports (std, external crates, local)
+// 2. Type definitions
+// 3. Constants
+// 4. Functions
+// 5. Tests
+
+use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use crate::config::Config;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SearchQuery {
+    pub text: String,
+    pub limit: usize,
+}
+
+const DEFAULT_LIMIT: usize = 10;
+
+pub fn search(query: &SearchQuery) -> Vec<SearchResult> {
+    // Implementation
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_search() {
+        // Test implementation
+    }
+}
+```
+
+### Error Handling
+
+```rust
+// Use Result types for fallible operations
+pub fn load_config(path: &Path) -> Result<Config, ConfigError> {
+    let content = std::fs::read_to_string(path)
+        .map_err(ConfigError::IoError)?;
+    
+    serde_json::from_str(&content)
+        .map_err(ConfigError::ParseError)
+}
+
+// Define custom error types
+#[derive(Debug, thiserror::Error)]
+pub enum ConfigError {
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+    
+    #[error("Parse error: {0}")]
+    ParseError(#[from] serde_json::Error),
+}
+
+// Use expect() with descriptive messages for unrecoverable errors
+let config = load_config(&path)
+    .expect("Failed to load configuration file");
+```
+
+### Documentation
+
+```rust
+/// Searches for items matching the given query.
+/// 
+/// # Arguments
+/// 
+/// * `query` - The search query containing text and options
+/// * `sources` - List of search sources to query
+/// 
+/// # Returns
+/// 
+/// A vector of search results ordered by relevance.
+/// 
+/// # Examples
+/// 
+/// ```rust
+/// let query = SearchQuery::new("calculator");
+/// let results = search(&query, &sources);
+/// assert!(!results.is_empty());
+/// ```
+pub fn search(query: &SearchQuery, sources: &[SearchSource]) -> Vec<SearchResult> {
+    // Implementation
+}
+```
+
+### Async Code
+
+```rust
+// Use async/await for asynchronous operations
+pub async fn fetch_data(url: &str) -> Result<String, reqwest::Error> {
+    let response = reqwest::get(url).await?;
+    let text = response.text().await?;
+    Ok(text)
+}
+
+// Use tokio::spawn for concurrent tasks
+pub async fn process_multiple_queries(queries: Vec<SearchQuery>) -> Vec<SearchResult> {
+    let tasks: Vec<_> = queries
+        .into_iter()
+        .map(|query| tokio::spawn(async move { search(&query).await }))
+        .collect();
+    
+    let mut results = Vec::new();
+    for task in tasks {
+        if let Ok(result) = task.await {
+            results.extend(result);
+        }
+    }
+    
+    results
+}
+```
+
+## TypeScript/JavaScript Code Style
+
+### Formatting
+
+We use Prettier with these settings:
+
+```json
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false
+}
+```
+
+### Naming Conventions
+
+```typescript
+// Use camelCase for variables and functions
+const userName = 'alice';
+const searchResults = [];
+
+function calculateTotal(): number {
+  return 0;
+}
+
+// Use PascalCase for classes, interfaces, and types
+class SearchEngine {
+  private results: SearchResult[] = [];
+}
+
+interface SearchQuery {
+  text: string;
+  limit: number;
+}
+
+type ActionType = 'search' | 'execute' | 'navigate';
+
+// Use SCREAMING_SNAKE_CASE for constants
+const MAX_RESULTS = 100;
+const DEFAULT_TIMEOUT = 5000;
+
+// Use descriptive names for generic parameters
+interface Repository<TEntity, TKey> {
+  findById(id: TKey): Promise<TEntity | null>;
+  save(entity: TEntity): Promise<void>;
+}
+```
+
+### Type Definitions
+
+```typescript
+// Define interfaces for object shapes
+interface SearchResult {
+  id: string;
+  title: string;
+  description?: string;
+  icon?: string;
+  score: number;
+}
+
+// Use union types for limited sets of values
+type Theme = 'light' | 'dark' | 'system';
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+// Use generic types for reusable components
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+  message?: string;
+}
+
+// Use utility types when appropriate
+type PartialConfig = Partial<Config>;
+type RequiredFields = Required<Pick<Config, 'apiKey' | 'baseUrl'>>;
+```
+
+### Function Definitions
+
+```typescript
+// Use arrow functions for simple expressions
+const add = (a: number, b: number): number => a + b;
+
+// Use function declarations for complex logic
+function processSearchResults(
+  results: SearchResult[],
+  options: ProcessingOptions
+): ProcessedResult[] {
+  // Complex implementation
+  return results.map(result => ({
+    ...result,
+    processed: true,
+  }));
+}
+
+// Use async/await for asynchronous operations
+async function fetchSearchResults(query: string): Promise<SearchResult[]> {
+  try {
+    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+    
+    if (!response.ok) {
+      throw new Error(`Search failed: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Search error:', error);
+    return [];
+  }
+}
+```
+
+### React Components
+
+```typescript
+// Use functional components with TypeScript
+interface SearchBoxProps {
+  onSearch: (query: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+}
+
+export function SearchBox({ onSearch, placeholder, disabled }: SearchBoxProps) {
+  const [query, setQuery] = useState('');
+  
+  const handleSubmit = useCallback((e: FormEvent) => {
+    e.preventDefault();
+    onSearch(query);
+  }, [query, onSearch]);
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={placeholder}
+        disabled={disabled}
+        className="search-input"
+      />
+    </form>
+  );
+}
+
+// Use proper prop types and default values
+SearchBox.defaultProps = {
+  placeholder: 'Search...',
+  disabled: false,
+};
+```
+
+### State Management
+
+```typescript
+// Use Zustand for state management
+interface SearchStore {
+  query: string;
+  results: SearchResult[];
+  isLoading: boolean;
+  setQuery: (query: string) => void;
+  setResults: (results: SearchResult[]) => void;
+  setLoading: (loading: boolean) => void;
+}
+
+export const useSearchStore = create<SearchStore>((set) => ({
+  query: '',
+  results: [],
+  isLoading: false,
+  setQuery: (query) => set({ query }),
+  setResults: (results) => set({ results }),
+  setLoading: (isLoading) => set({ isLoading }),
+}));
+```
+
+## CSS/Styling Guidelines
+
+### Tailwind CSS Usage
+
+```typescript
+// Use Tailwind utility classes
+<div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+    Search Results
+  </h2>
+  <span className="text-sm text-gray-500 dark:text-gray-400">
+    {results.length} items
+  </span>
+</div>
+
+// Use component variants with cva
+import { cva } from 'class-variance-authority';
+
+const buttonVariants = cva(
+  'inline-flex items-center justify-center rounded-md font-medium transition-colors',
+  {
+    variants: {
+      variant: {
+        default: 'bg-blue-600 text-white hover:bg-blue-700',
+        secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300',
+        ghost: 'hover:bg-gray-100 text-gray-900',
+      },
+      size: {
+        sm: 'h-8 px-3 text-sm',
+        md: 'h-10 px-4',
+        lg: 'h-12 px-6 text-lg',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'md',
+    },
+  }
+);
+```
+
+### Custom CSS
+
+```css
+/* Use CSS custom properties for theming */
+:root {
+  --color-primary: #3b82f6;
+  --color-secondary: #6b7280;
+  --color-background: #ffffff;
+  --color-foreground: #1f2937;
+  --border-radius: 0.5rem;
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --color-background: #1f2937;
+  --color-foreground: #f9fafb;
+}
+
+/* Use BEM methodology for component styles */
+.search-box {
+  display: flex;
+  align-items: center;
+  background: var(--color-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+.search-box__input {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--color-foreground);
+}
+
+.search-box__input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+```
+
+## Testing Standards
+
+### Unit Tests
+
+```typescript
+// Use descriptive test names
+describe('SearchEngine', () => {
+  describe('search', () => {
+    it('should return empty array when query is empty', () => {
+      const engine = new SearchEngine();
+      const results = engine.search('');
+      expect(results).toEqual([]);
+    });
+    
+    it('should return matching results for valid query', () => {
+      const engine = new SearchEngine();
+      const results = engine.search('calculator');
+      
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({
+        title: expect.stringContaining('Calculator'),
+        type: 'application',
+      });
+    });
+  });
+});
+
+// Use setup and teardown appropriately
+describe('ConfigManager', () => {
+  let configManager: ConfigManager;
+  let tempDir: string;
+  
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rua-test-'));
+    configManager = new ConfigManager(tempDir);
+  });
+  
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true });
+  });
+  
+  it('should create default config when none exists', async () => {
+    const config = await configManager.load();
+    expect(config).toMatchObject({
+      theme: 'system',
+      maxResults: 10,
+    });
+  });
+});
+```
+
+### Integration Tests
+
+```rust
+#[cfg(test)]
+mod integration_tests {
+    use super::*;
+    use tempfile::TempDir;
+    
+    #[tokio::test]
+    async fn test_search_integration() {
+        let temp_dir = TempDir::new().unwrap();
+        let config = Config::new(temp_dir.path());
+        let search_engine = SearchEngine::new(config).await.unwrap();
+        
+        let query = SearchQuery::new("test");
+        let results = search_engine.search(&query).await.unwrap();
+        
+        assert!(!results.is_empty());
+        assert!(results.iter().any(|r| r.title.contains("test")));
+    }
+}
+```
+
+## Git Commit Guidelines
+
+### Commit Message Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### Types
+
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+
+### Examples
+
+```bash
+# Feature commit
+feat(search): add fuzzy search algorithm
+
+Implement fuzzy string matching for search queries to improve
+user experience when typing partial or misspelled terms.
+
+Closes #123
+
+# Bug fix commit
+fix(extensions): resolve memory leak in extension loader
+
+The extension loader was not properly cleaning up resources
+when extensions were unloaded, causing memory usage to grow
+over time.
+
+Fixes #456
+
+# Breaking change commit
+feat(api)!: change search API to return promises
+
+BREAKING CHANGE: The search API now returns promises instead
+of synchronous results. Update extension code to use async/await.
+
+Before:
+const results = rua.search(query);
+
+After:
+const results = await rua.search(query);
+```
+
+## Code Review Guidelines
+
+### What to Look For
+
+1. **Correctness**: Does the code do what it's supposed to do?
+2. **Performance**: Are there any obvious performance issues?
+3. **Security**: Are there any security vulnerabilities?
+4. **Style**: Does the code follow the style guidelines?
+5. **Tests**: Are there appropriate tests for the changes?
+6. **Documentation**: Is the code properly documented?
+
+### Review Process
+
+1. **Be constructive**: Provide helpful feedback, not just criticism
+2. **Be specific**: Point out exact issues and suggest improvements
+3. **Be timely**: Review PRs promptly to keep development moving
+4. **Ask questions**: If something is unclear, ask for clarification
+5. **Approve when ready**: Don't hold up good code for minor issues
+
+### Review Checklist
+
+- [ ] Code follows style guidelines
+- [ ] All tests pass
+- [ ] New functionality has tests
+- [ ] Documentation is updated
+- [ ] No obvious security issues
+- [ ] Performance considerations addressed
+- [ ] Breaking changes are documented
+
+## IDE Configuration
+
+### VS Code Settings
+
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.organizeImports": true
+  },
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "files.associations": {
+    "*.mdx": "markdown"
+  }
+}
+```
+
+### Extensions
+
+Required VS Code extensions:
+- Rust Analyzer
+- Tauri
+- ESLint
+- Prettier
+- Tailwind CSS IntelliSense
+- TypeScript Importer
+
+## Linting and Formatting
+
+### Rust
+
+```bash
+# Format code
+cargo fmt
+
+# Run clippy lints
+cargo clippy -- -D warnings
+
+# Run all checks
+cargo check && cargo clippy && cargo fmt -- --check
+```
+
+### TypeScript/JavaScript
+
+```bash
+# Run ESLint
+bun run lint
+
+# Fix ESLint issues
+bun run lint:fix
+
+# Format with Prettier
+bun run format
+
+# Type check
+bun run type-check
+```
+
+### Pre-commit Hooks
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+  
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+      - id: clippy
+  
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.0
+    hooks:
+      - id: prettier
+```
+
+## Performance Guidelines
+
+### Rust Performance
+
+```rust
+// Use appropriate data structures
+use std::collections::HashMap; // O(1) lookups
+use std::collections::BTreeMap; // Sorted keys
+
+// Avoid unnecessary allocations
+fn process_items(items: &[Item]) -> Vec<ProcessedItem> {
+    items.iter()
+        .filter(|item| item.is_valid())
+        .map(|item| item.process())
+        .collect()
+}
+
+// Use references when possible
+fn calculate_score(query: &str, item: &SearchItem) -> f64 {
+    // Implementation that doesn't take ownership
+}
+```
+
+### TypeScript Performance
+
+```typescript
+// Use useMemo for expensive calculations
+const expensiveValue = useMemo(() => {
+  return items.reduce((acc, item) => acc + item.score, 0);
+}, [items]);
+
+// Use useCallback for event handlers
+const handleSearch = useCallback((query: string) => {
+  setQuery(query);
+  performSearch(query);
+}, [performSearch]);
+
+// Debounce frequent operations
+const debouncedSearch = useMemo(
+  () => debounce((query: string) => performSearch(query), 300),
+  [performSearch]
+);
+```
+
+## Security Guidelines
+
+### Input Validation
+
+```rust
+// Validate and sanitize inputs
+pub fn search(query: &str) -> Result<Vec<SearchResult>, SearchError> {
+    if query.is_empty() {
+        return Err(SearchError::EmptyQuery);
+    }
+    
+    if query.len() > MAX_QUERY_LENGTH {
+        return Err(SearchError::QueryTooLong);
+    }
+    
+    let sanitized_query = sanitize_query(query);
+    // Perform search with sanitized input
+}
+```
+
+### Extension Security
+
+```typescript
+// Validate extension permissions
+function validatePermissions(manifest: ExtensionManifest): boolean {
+  const allowedPermissions = ['clipboard', 'storage', 'notifications'];
+  
+  return manifest.permissions.every(permission => 
+    allowedPermissions.includes(permission)
+  );
+}
+
+// Sanitize extension output
+function sanitizeOutput(output: unknown): string {
+  if (typeof output === 'string') {
+    return output.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  }
+  return String(output);
+}
+```
+
+## Documentation Standards
+
+### API Documentation
+
+```rust
+/// Configuration for the search engine.
+/// 
+/// # Examples
+/// 
+/// ```rust
+/// use rua::SearchConfig;
+/// 
+/// let config = SearchConfig::builder()
+///     .max_results(20)
+///     .fuzzy_threshold(0.8)
+///     .build();
+/// ```
+#[derive(Debug, Clone)]
+pub struct SearchConfig {
+    /// Maximum number of results to return
+    pub max_results: usize,
+    /// Fuzzy matching threshold (0.0 to 1.0)
+    pub fuzzy_threshold: f64,
+}
+```
+
+### README Structure
+
+```markdown
+# Project Name
+
+Brief description of what the project does.
+
+## Features
+
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Installation
+
+```bash
+# Installation commands
+```
+
+## Usage
+
+```typescript
+// Usage examples
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+## License
+
+This project is licensed under the MIT License.
+```
+
+## Next Steps
+
+- **[Build Process](/docs/contributing/build-process)** - Learn about the build and release process
+- **[Development Setup](/docs/contributing/development-setup)** - Set up your development environment
+- **[API Documentation](/docs/api/overview)** - Understand the extension API

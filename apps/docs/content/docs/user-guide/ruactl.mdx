@@ -1,0 +1,123 @@
+---
+title: ruactl
+description: Command-line tool for controlling Rua
+icon: Terminal
+---
+
+# ruactl
+
+ruactl is the command-line tool for controlling Rua. It's required to toggle the Rua window.
+
+## Installation
+
+Download from [GitHub Releases](https://github.com/fzdwx/rua/releases):
+
+```bash
+wget https://github.com/fzdwx/rua/releases/latest/download/ruactl-linux-x86_64.tar.gz
+tar -xzf ruactl-linux-x86_64.tar.gz
+mkdir -p ~/.local/bin
+mv ruactl ~/.local/bin/
+chmod +x ~/.local/bin/ruactl
+```
+
+Add to PATH in `~/.bashrc` or `~/.zshrc`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Or build from source:
+
+```bash
+# From the rua repository
+./install-ruactl.sh          # Install to ~/.local/bin
+just install                  # Install to /usr/bin (requires sudo)
+```
+
+## Commands
+
+### toggle
+
+Toggle Rua window visibility:
+
+```bash
+ruactl toggle
+```
+
+### health
+
+Check if Rua is running:
+
+```bash
+ruactl health
+```
+
+### validate
+
+Validate an extension manifest:
+
+```bash
+ruactl validate              # Current directory
+ruactl validate ./my-ext     # Specific directory
+```
+
+### pack
+
+Package an extension for distribution:
+
+```bash
+ruactl pack                  # Current directory
+ruactl pack ./my-ext         # Specific directory
+ruactl pack --dry-run        # Preview without creating archive
+```
+
+## Window Manager Integration
+
+### Hyprland
+
+```bash
+# ~/.config/hypr/hyprland.conf
+bind = ALT, Space, exec, ruactl toggle
+```
+
+### i3 / Sway
+
+```bash
+bindsym $mod+space exec ruactl toggle
+```
+
+### GNOME
+
+Settings → Keyboard → Custom Shortcuts:
+- Command: `ruactl toggle`
+- Shortcut: Your preference
+
+### KDE
+
+System Settings → Shortcuts → Custom Shortcuts:
+- Command: `ruactl toggle`
+
+## How It Works
+
+Rua runs an HTTP server on `127.0.0.1:7777`. ruactl sends requests to this server to control the window.
+
+## Troubleshooting
+
+### Connection refused
+
+Rua must be running first:
+
+```bash
+rua              # Start Rua
+ruactl health    # Should succeed now
+```
+
+### Command not found
+
+Check PATH:
+
+```bash
+echo $PATH | grep ".local/bin"
+# If missing, add to ~/.bashrc:
+export PATH="$HOME/.local/bin:$PATH"
+```

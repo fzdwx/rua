@@ -1,0 +1,782 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for Rua launcher
+icon: AlertTriangle
+---
+
+# Troubleshooting
+
+This guide helps you diagnose and resolve common issues with Rua. If you can't find a solution here, check our [support channels](#getting-help) for additional assistance.
+
+## Installation Issues
+
+### Binary Won't Execute
+
+#### Permission Denied Error
+
+```bash
+# Error: Permission denied when running rua
+bash: ./rua: Permission denied
+```
+
+**Solution:**
+```bash
+# Make the binary executable
+chmod +x /usr/local/bin/rua
+
+# Verify permissions
+ls -la /usr/local/bin/rua
+```
+
+#### Missing Shared Libraries
+
+```bash
+# Error: error while loading shared libraries
+./rua: error while loading shared libraries: libwebkit2gtk-4.0.so.37: cannot open shared object file
+```
+
+**Solution:**
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install -y libwebkit2gtk-4.0-37 libgtk-3-0 libayatana-appindicator3-1
+
+# Fedora/RHEL
+sudo dnf install -y webkit2gtk3 gtk3 libappindicator-gtk3
+
+# Arch Linux
+sudo pacman -S webkit2gtk gtk3 libappindicator-gtk3
+
+# Check missing libraries
+ldd /usr/local/bin/rua | grep "not found"
+```
+
+#### Architecture Mismatch
+
+```bash
+# Error: cannot execute binary file: Exec format error
+bash: ./rua: cannot execute binary file: Exec format error
+```
+
+**Solution:**
+```bash
+# Check your architecture
+uname -m
+
+# Download correct binary:
+# x86_64 for Intel/AMD 64-bit
+# aarch64 for ARM 64-bit
+
+# Verify binary architecture
+file /usr/local/bin/rua
+```
+
+### Installation Script Issues
+
+#### Download Failures
+
+```bash
+# Error: Failed to download installation script
+curl: (7) Failed to connect to raw.githubusercontent.com port 443
+```
+
+**Solutions:**
+1. **Check internet connection**
+2. **Try alternative download method:**
+   ```bash
+   wget https://raw.githubusercontent.com/rua-org/rua/main/install-ruactl.sh
+   chmod +x install-ruactl.sh
+   ./install-ruactl.sh
+   ```
+3. **Use manual installation** (see [Installation Guide](/docs/user-guide/installation))
+
+#### Sudo Permission Issues
+
+```bash
+# Error: sudo: command not found
+# Or: User is not in the sudoers file
+```
+
+**Solutions:**
+1. **Install to user directory:**
+   ```bash
+   mkdir -p ~/.local/bin
+   mv rua ~/.local/bin/
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+   source ~/.bashrc
+   ```
+
+2. **Ask system administrator** to install system-wide
+
+## Runtime Issues
+
+### Application Won't Start
+
+#### Segmentation Fault
+
+```bash
+# Error: Segmentation fault (core dumped)
+Segmentation fault (core dumped)
+```
+
+**Debugging steps:**
+```bash
+# Run with debug information
+RUST_BACKTRACE=1 rua
+
+# Check system logs
+journalctl --user -u rua --since "1 hour ago"
+
+# Run in safe mode
+rua --safe-mode
+```
+
+**Common causes:**
+- Corrupted configuration files
+- Incompatible extensions
+- Graphics driver issues
+- Insufficient memory
+
+**Solutions:**
+```bash
+# Reset configuration
+mv ~/.config/rua ~/.config/rua.backup
+rua  # Will create new default config
+
+# Disable extensions
+rua --no-extensions
+
+# Update graphics drivers
+sudo apt update && sudo apt upgrade  # Ubuntu/Debian
+```
+
+#### Display Server Issues
+
+```bash
+# Error: Failed to connect to display server
+Error: Failed to initialize display
+```
+
+**Solutions:**
+1. **For X11:**
+   ```bash
+   # Check DISPLAY variable
+   echo $DISPLAY
+   
+   # Set if missing
+   export DISPLAY=:0
+   ```
+
+2. **For Wayland:**
+   ```bash
+   # Check Wayland session
+   echo $WAYLAND_DISPLAY
+   
+   # Try X11 compatibility
+   GDK_BACKEND=x11 rua
+   ```
+
+3. **For SSH/Remote:**
+   ```bash
+   # Enable X11 forwarding
+   ssh -X username@hostname
+   
+   # Or use VNC/remote desktop
+   ```
+
+### Performance Issues
+
+#### High Memory Usage
+
+**Symptoms:**
+- System becomes slow when Rua is running
+- Out of memory errors
+- Excessive swap usage
+
+**Diagnosis:**
+```bash
+# Monitor memory usage
+top -p $(pgrep rua)
+
+# Check extension memory usage
+rua extensions monitor
+
+# Generate memory report
+rua --memory-report
+```
+
+**Solutions:**
+```bash
+# Limit extension memory
+rua config set extensions.memoryLimit 100MB
+
+# Disable memory-intensive extensions
+rua extensions disable heavy-extension
+
+# Reduce cache size
+rua config set performance.cacheSize 50MB
+
+# Clear cache
+rua cache clear
+```
+
+#### Slow Search Performance
+
+**Symptoms:**
+- Search results take long to appear
+- UI becomes unresponsive during search
+- High CPU usage
+
+**Solutions:**
+```bash
+# Reduce search scope
+rua config set search.maxResults 5
+
+# Increase search delay
+rua config set search.searchDelay 200
+
+# Disable fuzzy search
+rua config set search.fuzzySearch false
+
+# Rebuild search index
+rua index rebuild
+```
+
+### Configuration Issues
+
+#### Configuration File Corruption
+
+```bash
+# Error: Failed to parse configuration
+Error: Invalid JSON in configuration file
+```
+
+**Solutions:**
+```bash
+# Validate configuration
+jq . ~/.config/rua/config.json
+
+# Reset to defaults
+rm ~/.config/rua/config.json
+rua  # Will recreate with defaults
+
+# Restore from backup
+cp ~/.config/rua.backup/config.json ~/.config/rua/
+```
+
+#### Settings Not Persisting
+
+**Symptoms:**
+- Changes to settings are lost after restart
+- Configuration reverts to defaults
+
+**Diagnosis:**
+```bash
+# Check file permissions
+ls -la ~/.config/rua/
+
+# Check disk space
+df -h ~/.config/
+
+# Check for file locks
+lsof ~/.config/rua/config.json
+```
+
+**Solutions:**
+```bash
+# Fix permissions
+chmod 644 ~/.config/rua/config.json
+chown $USER:$USER ~/.config/rua/config.json
+
+# Ensure directory exists
+mkdir -p ~/.config/rua
+
+# Check for read-only filesystem
+mount | grep ~/.config
+```
+
+## Extension Issues
+
+### Extensions Won't Load
+
+#### Extension Loading Errors
+
+```bash
+# Error in logs
+Extension 'calculator' failed to load: Permission denied
+```
+
+**Solutions:**
+```bash
+# Check extension permissions
+rua extensions permissions calculator
+
+# Grant required permissions
+rua extensions grant calculator clipboard
+
+# Reinstall extension
+rua extensions uninstall calculator
+rua extensions install calculator
+
+# Check extension integrity
+rua extensions verify calculator
+```
+
+#### Extension Compatibility
+
+**Symptoms:**
+- Extension works in older version but not current
+- Missing features or broken functionality
+
+**Solutions:**
+```bash
+# Check extension compatibility
+rua extensions info calculator
+
+# Update extension
+rua extensions update calculator
+
+# Check for alternative extensions
+rua extensions search calculator
+
+# Report compatibility issue to extension author
+```
+
+### Extension Performance Issues
+
+#### Extension Crashes
+
+```bash
+# Error: Extension crashed unexpectedly
+Extension 'web-search' crashed with exit code 1
+```
+
+**Debugging:**
+```bash
+# View extension logs
+rua extensions logs web-search
+
+# Run extension in debug mode
+rua extensions debug web-search --enable
+
+# Test extension in isolation
+rua extensions test web-search
+```
+
+**Solutions:**
+```bash
+# Restart extension
+rua extensions restart web-search
+
+# Disable problematic extension
+rua extensions disable web-search
+
+# Report crash to extension developer
+rua extensions report web-search
+```
+
+## Keyboard Shortcut Issues
+
+### Global Shortcuts Not Working
+
+**Symptoms:**
+- Launcher doesn't appear when pressing shortcut
+- Shortcuts work sometimes but not always
+
+**Diagnosis:**
+```bash
+# Test shortcut registration
+rua --test-shortcuts
+
+# Check for conflicts
+rua --list-shortcuts
+
+# Monitor shortcut events
+rua --debug-shortcuts
+```
+
+**Solutions:**
+1. **Check desktop environment settings:**
+   - GNOME: Settings → Keyboard → Keyboard Shortcuts
+   - KDE: System Settings → Shortcuts → Global Shortcuts
+   - XFCE: Settings Manager → Keyboard → Application Shortcuts
+
+2. **Try alternative shortcuts:**
+   ```bash
+   # Edit keybindings
+   nano ~/.config/rua/keybindings.json
+   
+   # Use different key combination
+   {
+     "global": {
+       "toggle": ["Alt+Space", "Super+R"]
+     }
+   }
+   ```
+
+3. **Restart window manager:**
+   ```bash
+   # GNOME
+   killall -HUP gnome-shell
+   
+   # KDE
+   kquitapp5 plasmashell && kstart5 plasmashell
+   
+   # XFCE
+   xfce4-panel --restart
+   ```
+
+### Interface Shortcuts Not Responding
+
+**Solutions:**
+```bash
+# Reset shortcuts to defaults
+rua --reset-shortcuts
+
+# Check for input focus issues
+rua --debug-input
+
+# Verify shortcut configuration
+cat ~/.config/rua/keybindings.json
+```
+
+## Network and Connectivity Issues
+
+### Extension Network Errors
+
+```bash
+# Error: Failed to fetch data
+Network error: Connection timeout
+```
+
+**Solutions:**
+```bash
+# Check internet connection
+ping google.com
+
+# Check proxy settings
+echo $http_proxy
+echo $https_proxy
+
+# Configure proxy for Rua
+rua config set network.proxy "http://proxy.example.com:8080"
+
+# Disable network features temporarily
+rua config set extensions.allowNetwork false
+```
+
+### Update Check Failures
+
+**Solutions:**
+```bash
+# Manual update check
+rua --check-updates
+
+# Skip update check
+rua --no-update-check
+
+# Configure update server
+rua config set updates.server "https://api.rua.dev"
+```
+
+## File System Issues
+
+### Permission Errors
+
+```bash
+# Error: Permission denied accessing file
+Permission denied: /home/user/Documents/file.txt
+```
+
+**Solutions:**
+```bash
+# Check file permissions
+ls -la /home/user/Documents/file.txt
+
+# Grant file system permissions
+rua extensions grant file-manager filesystem
+
+# Check extension manifest permissions
+cat ~/.local/share/rua/extensions/file-manager/manifest.json
+```
+
+### Path Resolution Issues
+
+**Solutions:**
+```bash
+# Check PATH environment
+echo $PATH
+
+# Add missing paths
+export PATH="$PATH:/usr/local/bin"
+
+# Update search paths in configuration
+rua config set search.paths '["~/Documents", "~/Downloads"]'
+```
+
+## Graphics and Display Issues
+
+### Rendering Problems
+
+**Symptoms:**
+- Blurry or pixelated interface
+- Missing icons or images
+- Incorrect colors or themes
+
+**Solutions:**
+```bash
+# Check display scaling
+echo $GDK_SCALE
+echo $QT_SCALE_FACTOR
+
+# Force specific scaling
+GDK_SCALE=1 rua
+
+# Reset theme to default
+rua config set appearance.theme system
+
+# Clear icon cache
+rm -rf ~/.cache/rua/icons
+```
+
+### Window Management Issues
+
+**Solutions:**
+```bash
+# Reset window position
+rua config set window.position center
+
+# Check window manager compatibility
+rua --debug-window
+
+# Force window properties
+rua config set window.alwaysOnTop false
+```
+
+## Logging and Debugging
+
+### Enable Debug Logging
+
+```bash
+# Enable debug mode
+export RUST_LOG=debug
+rua
+
+# Enable specific module debugging
+export RUST_LOG=rua::search=debug,rua::extensions=trace
+rua
+
+# Save logs to file
+rua --log-file ~/.local/share/rua/logs/debug.log
+```
+
+### Collect System Information
+
+```bash
+# Generate system report
+rua --system-info > rua-system-info.txt
+
+# Include in bug reports:
+echo "OS: $(lsb_release -d | cut -f2)"
+echo "Kernel: $(uname -r)"
+echo "Desktop: $XDG_CURRENT_DESKTOP"
+echo "Rua version: $(rua --version)"
+```
+
+## Recovery Procedures
+
+### Complete Reset
+
+If Rua is completely broken:
+
+```bash
+# 1. Stop Rua
+killall rua
+
+# 2. Backup current configuration
+mv ~/.config/rua ~/.config/rua.broken
+
+# 3. Remove all data
+rm -rf ~/.local/share/rua
+rm -rf ~/.cache/rua
+
+# 4. Restart Rua (will create fresh configuration)
+rua
+```
+
+### Safe Mode
+
+```bash
+# Start in safe mode (no extensions, minimal config)
+rua --safe-mode
+
+# Start with minimal extensions only
+rua --minimal-extensions
+
+# Start with specific configuration
+rua --config /path/to/safe-config.json
+```
+
+### Rollback Updates
+
+```bash
+# If update caused issues, rollback
+sudo apt install rua=0.1.0  # Debian/Ubuntu
+sudo dnf downgrade rua       # Fedora
+yay -S rua-bin-0.1.0        # Arch (AUR)
+
+# Or reinstall previous version manually
+```
+
+## Frequently Asked Questions
+
+### General Questions
+
+#### Q: Why doesn't Rua start automatically with my system?
+
+**A:** Enable autostart in configuration:
+```bash
+rua config set behavior.startWithSystem true
+```
+
+Or add to your desktop environment's autostart:
+```bash
+# Create autostart entry
+mkdir -p ~/.config/autostart
+cat > ~/.config/autostart/rua.desktop << EOF
+[Desktop Entry]
+Type=Application
+Name=Rua
+Exec=rua --minimized
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+EOF
+```
+
+#### Q: How do I change the default keyboard shortcut?
+
+**A:** Edit the keybindings configuration:
+```bash
+nano ~/.config/rua/keybindings.json
+```
+
+Or use your desktop environment's keyboard settings to assign a different shortcut to the `rua` command.
+
+#### Q: Can I use Rua on Wayland?
+
+**A:** Yes, Rua supports Wayland. If you experience issues:
+```bash
+# Try X11 compatibility mode
+GDK_BACKEND=x11 rua
+
+# Or ensure Wayland support is enabled
+rua config set display.waylandSupport true
+```
+
+### Performance Questions
+
+#### Q: Why is Rua using so much memory?
+
+**A:** Common causes and solutions:
+- **Extensions**: Disable unused extensions
+- **Cache**: Reduce cache size in settings
+- **Search index**: Limit search scope
+- **Memory leaks**: Restart Rua periodically
+
+#### Q: Search results are slow to appear
+
+**A:** Optimize search performance:
+```bash
+# Reduce search scope
+rua config set search.maxResults 10
+
+# Increase search delay
+rua config set search.searchDelay 150
+
+# Disable fuzzy search if not needed
+rua config set search.fuzzySearch false
+```
+
+### Extension Questions
+
+#### Q: How do I install extensions from GitHub?
+
+**A:** Use the extension manager:
+```bash
+rua extensions install https://github.com/user/rua-extension.git
+```
+
+#### Q: Extension permissions are confusing
+
+**A:** Check our [Extension Permissions Guide](/docs/extensions/permissions) for detailed explanations.
+
+### Configuration Questions
+
+#### Q: Where are configuration files stored?
+
+**A:** Configuration locations:
+- Main config: `~/.config/rua/config.json`
+- Extensions: `~/.config/rua/extensions/`
+- Data: `~/.local/share/rua/`
+- Cache: `~/.cache/rua/`
+
+#### Q: How do I backup my configuration?
+
+**A:** Create a backup:
+```bash
+tar -czf rua-backup.tar.gz -C ~ .config/rua .local/share/rua
+```
+
+Restore backup:
+```bash
+tar -xzf rua-backup.tar.gz -C ~
+```
+
+## Getting Help
+
+### Community Support
+
+- **Discord**: Join our Discord server for real-time help
+- **Reddit**: r/rua_launcher for community discussions
+- **GitHub Discussions**: For feature requests and general questions
+
+### Bug Reports
+
+When reporting bugs, include:
+
+1. **System information**:
+   ```bash
+   rua --system-info
+   ```
+
+2. **Error logs**:
+   ```bash
+   rua --log-level debug 2>&1 | tee rua-debug.log
+   ```
+
+3. **Steps to reproduce** the issue
+
+4. **Expected vs actual behavior**
+
+### Feature Requests
+
+- Check existing issues first
+- Provide detailed use cases
+- Explain why the feature would be valuable
+- Consider contributing if you have development skills
+
+### Professional Support
+
+For enterprise users or complex deployments:
+- Email: support@rua.dev
+- Consulting services available
+- Custom extension development
+- Priority support options
+
+## Additional Resources
+
+- **[Installation Guide](/docs/user-guide/installation)** - Complete installation instructions
+- **[Configuration Guide](/docs/user-guide/configuration)** - Detailed configuration options
+- **[Extension Development](/docs/extensions/create-rua-ext)** - Create your own extensions
+- **[API Documentation](/docs/api/overview)** - Extension API reference

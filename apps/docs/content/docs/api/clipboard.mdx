@@ -1,0 +1,151 @@
+---
+title: Clipboard API
+description: Read and write clipboard content in Rua extensions
+icon: Clipboard
+---
+
+# Clipboard API
+
+The Clipboard API allows extensions to interact with the system clipboard, enabling seamless data exchange between your extension and other applications.
+
+## Overview
+
+The clipboard API provides simple methods to read from and write to the system clipboard. All operations are asynchronous and return promises.
+
+```typescript
+// Read text from clipboard
+const text = await rua.clipboard.readText();
+
+// Write text to clipboard
+await rua.clipboard.writeText('Hello, World!');
+```
+
+## Methods
+
+### readText()
+
+Reads text content from the system clipboard.
+
+```typescript
+readText(): Promise<string>
+```
+
+**Returns:** A promise that resolves to the clipboard text content.
+
+**Example:**
+```typescript
+try {
+  const clipboardText = await rua.clipboard.readText();
+  console.log('Clipboard content:', clipboardText);
+} catch (error) {
+  console.error('Failed to read clipboard:', error);
+}
+```
+
+### writeText(text)
+
+Writes text content to the system clipboard.
+
+```typescript
+writeText(text: string): Promise<void>
+```
+
+**Parameters:**
+- `text` (string): The text content to write to the clipboard
+
+**Returns:** A promise that resolves when the operation completes.
+
+**Example:**
+```typescript
+try {
+  await rua.clipboard.writeText('This text is now in the clipboard');
+  console.log('Text written to clipboard successfully');
+} catch (error) {
+  console.error('Failed to write to clipboard:', error);
+}
+```
+
+## Permissions
+
+To use the clipboard API, your extension must declare the `clipboard` permission in its manifest:
+
+```json
+{
+  "permissions": ["clipboard"]
+}
+```
+
+## Use Cases
+
+### Text Processing Extension
+
+```typescript
+// Read clipboard, process text, and write back
+const originalText = await rua.clipboard.readText();
+const processedText = originalText.toUpperCase();
+await rua.clipboard.writeText(processedText);
+```
+
+### Quick Note Taking
+
+```typescript
+// Append clipboard content to a note
+const clipboardContent = await rua.clipboard.readText();
+const timestamp = new Date().toISOString();
+const note = `[${timestamp}] ${clipboardContent}`;
+
+// Store in extension storage
+await rua.storage.set('notes', note);
+```
+
+### Data Format Converter
+
+```typescript
+// Convert clipboard data between formats
+const jsonText = await rua.clipboard.readText();
+try {
+  const data = JSON.parse(jsonText);
+  const csvText = convertToCSV(data);
+  await rua.clipboard.writeText(csvText);
+} catch (error) {
+  console.error('Invalid JSON format');
+}
+```
+
+## Error Handling
+
+Clipboard operations may fail due to various reasons:
+
+- **Permission denied**: The extension lacks clipboard permissions
+- **System restrictions**: Some systems may restrict clipboard access
+- **Empty clipboard**: Reading from an empty clipboard
+
+Always wrap clipboard operations in try-catch blocks:
+
+```typescript
+try {
+  const text = await rua.clipboard.readText();
+  // Process text...
+} catch (error) {
+  if (error.message.includes('permission')) {
+    console.error('Clipboard permission required');
+  } else {
+    console.error('Clipboard operation failed:', error);
+  }
+}
+```
+
+## Best Practices
+
+1. **Check permissions**: Ensure your extension has clipboard permissions before using the API
+2. **Handle errors gracefully**: Always implement proper error handling
+3. **Validate content**: Validate clipboard content before processing
+4. **User feedback**: Provide feedback when clipboard operations succeed or fail
+5. **Privacy considerations**: Be mindful of sensitive data in the clipboard
+
+## Security Considerations
+
+- The clipboard may contain sensitive information like passwords or personal data
+- Always validate and sanitize clipboard content before processing
+- Consider implementing user confirmation for clipboard write operations
+- Be transparent about clipboard usage in your extension's privacy policy

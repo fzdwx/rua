@@ -1,0 +1,81 @@
+---
+title: TypeScript API Reference
+description: Auto-generated API documentation from TypeScript source code
+icon: FileCode
+---
+
+# TypeScript API Reference
+
+This section contains auto-generated API documentation extracted from the TypeScript source code of the rua-api package.
+
+<Callout type="info">
+  This documentation is automatically generated from TypeScript source code. For more user-friendly guides, see the [API Overview](/docs/api/overview).
+</Callout>
+
+## Generation Status
+
+The TypeScript API documentation is generated using TypeDoc. To generate the latest documentation:
+
+```bash
+cd apps/docs
+npm run generate:api
+```
+
+## Available APIs
+
+The auto-generated documentation will include:
+
+- **Core Interfaces**: Main API interfaces and types
+- **Method Signatures**: Complete method signatures with parameters and return types
+- **Type Definitions**: All TypeScript interfaces, types, and enums
+- **Module Structure**: Detailed module organization and exports
+
+## Usage
+
+All APIs are accessed through the main RuaAPI interface:
+
+```typescript
+import { initializeRuaAPI } from 'rua-api/browser';
+
+const rua = await initializeRuaAPI();
+// Use any of the documented APIs
+```
+
+## Integration with IDE
+
+When using the rua-api package in your TypeScript project, your IDE will provide:
+
+- **IntelliSense**: Auto-completion for all API methods
+- **Type Checking**: Compile-time type validation
+- **Documentation**: Hover tooltips with method descriptions
+- **Go to Definition**: Navigate to source code definitions
+
+## Manual Generation
+
+To manually generate the TypeScript API documentation:
+
+1. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Generate Documentation**:
+   ```bash
+   npm run generate:api
+   ```
+
+3. **Build with Generated Docs**:
+   ```bash
+   npm run build:with-api
+   ```
+
+The generated documentation will be automatically integrated into the documentation site.
+
+## Source Code
+
+The source code for the rua-api package is located at:
+- `packages/rua-api/src/` - Main source files
+- `packages/rua-api/src/types/` - Type definitions
+- `packages/rua-api/src/browser/` - Browser-specific APIs
+
+For the most up-to-date API information, refer to the TypeScript source files or generate fresh documentation using the commands above.

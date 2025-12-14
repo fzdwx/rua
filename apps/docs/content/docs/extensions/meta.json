@@ -1,0 +1,11 @@
+{
+  "title": "Extension Development",
+  "description": "Create powerful extensions for Rua",
+  "icon": "Puzzle",
+  "pages": [
+    "create-rua-ext",
+    "manifest",
+    "permissions",
+    "debugging"
+  ]
+}

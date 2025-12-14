@@ -187,11 +187,6 @@ export interface RuaClientAPI {
         setTitle(title: string): Promise<void>;
     };
 
-    actions: {
-        register(actions: DynamicAction[]): Promise<void>;
-        unregister(actionIds: string[]): Promise<void>;
-    };
-
     os: {
         /** Get the current platform (e.g., 'linux', 'darwin', 'win32') */
         platform(): Promise<string>;

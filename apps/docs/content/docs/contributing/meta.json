@@ -1,0 +1,10 @@
+{
+  "title": "Contributing",
+  "description": "Guide for contributing to Rua development",
+  "icon": "Heart",
+  "pages": [
+    "development-setup",
+    "code-style",
+    "build-process"
+  ]
+}

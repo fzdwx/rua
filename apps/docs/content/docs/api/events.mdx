@@ -1,0 +1,523 @@
+---
+title: Events API
+description: Listen to and emit custom events in Rua extensions
+icon: Zap
+---
+
+# Events API
+
+The Events API enables extensions to listen for system events and respond to user interactions, creating dynamic and responsive extension experiences.
+
+## Overview
+
+The events system allows extensions to register event handlers for various system events such as activation, deactivation, search changes, and custom action triggers.
+
+```typescript
+// Listen for extension activation
+rua.on('activate', () => {
+  console.log('Extension activated');
+});
+
+// Listen for search query changes
+rua.on('search-change', (query) => {
+  console.log('Search query:', query);
+});
+
+// Remove event listener
+rua.off('activate', handler);
+```
+
+## Event Types
+
+### System Events
+
+#### activate
+
+Fired when the extension is activated (e.g., when Rua opens or the extension gains focus).
+
+```typescript
+rua.on('activate', () => {
+  // Extension is now active
+  console.log('Extension activated');
+});
+```
+
+**Use cases:**
+- Initialize extension state
+- Refresh data from external sources
+- Update UI components
+
+#### deactivate
+
+Fired when the extension is deactivated (e.g., when Rua closes or loses focus).
+
+```typescript
+rua.on('deactivate', () => {
+  // Extension is being deactivated
+  console.log('Extension deactivated');
+});
+```
+
+**Use cases:**
+- Save current state
+- Clean up resources
+- Pause background operations
+
+#### search-change
+
+Fired when the user changes the search query in the command palette.
+
+```typescript
+rua.on('search-change', (query: string) => {
+  console.log('User is searching for:', query);
+  // Update search results or filter content
+});
+```
+
+**Parameters:**
+- `query` (string): The current search query
+
+**Use cases:**
+- Filter extension content based on search
+- Provide real-time search suggestions
+- Update dynamic actions based on query
+
+#### action-triggered
+
+Fired when a dynamic action registered by the extension is triggered.
+
+```typescript
+rua.on('action-triggered', (event) => {
+  console.log('Action triggered:', event.actionId);
+  console.log('Context:', event.context);
+});
+```
+
+**Parameters:**
+- `event.actionId` (string): The ID of the triggered action
+- `event.context` (unknown): Additional context data
+
+**Use cases:**
+- Handle dynamic action execution
+- Process action-specific data
+- Update extension state based on actions
+
+## Methods
+
+### on(event, handler)
+
+Registers an event handler for the specified event type.
+
+```typescript
+on(event: string, handler: EventHandler): void
+```
+
+**Parameters:**
+- `event` (string): The event type to listen for
+- `handler` (EventHandler): The function to call when the event occurs
+
+**Example:**
+```typescript
+const handleActivation = () => {
+  console.log('Extension is now active');
+  // Initialize extension
+};
+
+rua.on('activate', handleActivation);
+```
+
+### off(event, handler)
+
+Removes a previously registered event handler.
+
+```typescript
+off(event: string, handler: EventHandler): void
+```
+
+**Parameters:**
+- `event` (string): The event type
+- `handler` (EventHandler): The handler function to remove
+
+**Example:**
+```typescript
+// Remove specific handler
+rua.off('activate', handleActivation);
+
+// Or store reference for later removal
+const searchHandler = (query) => console.log(query);
+rua.on('search-change', searchHandler);
+// Later...
+rua.off('search-change', searchHandler);
+```
+
+## Event Handler Types
+
+```typescript
+type EventHandler = (data?: any) => void;
+
+// Specific event handlers
+type ActivateHandler = () => void;
+type DeactivateHandler = () => void;
+type SearchChangeHandler = (query: string) => void;
+type ActionTriggeredHandler = (event: { actionId: string; context: unknown }) => void;
+```
+
+## Use Cases
+
+### Dynamic Search Results
+
+```typescript
+class SearchableExtension {
+  private items: Array<{ id: string; title: string; description: string }> = [];
+  private filteredItems: typeof this.items = [];
+
+  constructor() {
+    this.loadItems();
+    this.setupEventListeners();
+  }
+
+  private setupEventListeners() {
+    // Update search results when query changes
+    rua.on('search-change', (query) => {
+      this.filterItems(query);
+      this.updateDynamicActions();
+    });
+
+    // Handle action selection
+    rua.on('action-triggered', (event) => {
+      if (event.actionId.startsWith('item-')) {
+        const itemId = event.actionId.replace('item-', '');
+        this.handleItemSelection(itemId);
+      }
+    });
+  }
+
+  private filterItems(query: string) {
+    if (!query.trim()) {
+      this.filteredItems = this.items;
+      return;
+    }
+
+    this.filteredItems = this.items.filter(item =>
+      item.title.toLowerCase().includes(query.toLowerCase()) ||
+      item.description.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+
+  private async updateDynamicActions() {
+    const actions = this.filteredItems.map(item => ({
+      id: `item-${item.id}`,
+      title: item.title,
+      description: item.description,
+      icon: 'Search'
+    }));
+
+    await rua.actions.register(actions);
+  }
+
+  private handleItemSelection(itemId: string) {
+    const item = this.items.find(i => i.id === itemId);
+    if (item) {
+      console.log('Selected item:', item);
+      // Perform action with selected item
+    }
+  }
+}
+```
+
+### State Management
+
+```typescript
+class ExtensionStateManager {
+  private isActive = false;
+  private currentQuery = '';
+  private saveTimer: number | null = null;
+
+  constructor() {
+    this.setupEventListeners();
+    this.loadState();
+  }
+
+  private setupEventListeners() {
+    rua.on('activate', () => {
+      this.isActive = true;
+      this.onActivate();
+    });
+
+    rua.on('deactivate', () => {
+      this.isActive = false;
+      this.onDeactivate();
+    });
+
+    rua.on('search-change', (query) => {
+      this.currentQuery = query;
+      this.scheduleStateSave();
+    });
+  }
+
+  private async onActivate() {
+    console.log('Extension activated');
+    // Refresh data, update UI, etc.
+    await this.refreshData();
+  }
+
+  private async onDeactivate() {
+    console.log('Extension deactivated');
+    // Save state immediately
+    await this.saveState();
+    // Clear any pending timers
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+    }
+  }
+
+  private scheduleStateSave() {
+    // Debounce state saving
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+    }
+    
+    this.saveTimer = setTimeout(() => {
+      this.saveState();
+      this.saveTimer = null;
+    }, 1000);
+  }
+
+  private async saveState() {
+    const state = {
+      isActive: this.isActive,
+      currentQuery: this.currentQuery,
+      timestamp: Date.now()
+    };
+
+    await rua.storage.set('extensionState', state);
+  }
+
+  private async loadState() {
+    const state = await rua.storage.get('extensionState');
+    if (state) {
+      this.currentQuery = state.currentQuery || '';
+      console.log('State restored from:', new Date(state.timestamp));
+    }
+  }
+
+  private async refreshData() {
+    // Refresh extension data when activated
+    console.log('Refreshing extension data...');
+  }
+}
+```
+
+### Action Context Handling
+
+```typescript
+class ContextAwareExtension {
+  constructor() {
+    this.setupActionHandlers();
+  }
+
+  private setupActionHandlers() {
+    rua.on('action-triggered', (event) => {
+      switch (event.actionId) {
+        case 'copy-text':
+          this.handleCopyText(event.context);
+          break;
+        case 'save-file':
+          this.handleSaveFile(event.context);
+          break;
+        case 'process-data':
+          this.handleProcessData(event.context);
+          break;
+        default:
+          console.warn('Unknown action:', event.actionId);
+      }
+    });
+  }
+
+  private async handleCopyText(context: any) {
+    if (context && context.text) {
+      await rua.clipboard.writeText(context.text);
+      await rua.notification.show({
+        title: 'Text Copied',
+        body: 'Text has been copied to clipboard'
+      });
+    }
+  }
+
+  private async handleSaveFile(context: any) {
+    if (context && context.filename && context.content) {
+      await rua.fs.writeTextFile(context.filename, context.content, {
+        baseDir: BaseDirectory.Document
+      });
+      await rua.notification.show({
+        title: 'File Saved',
+        body: `File ${context.filename} has been saved`
+      });
+    }
+  }
+
+  private async handleProcessData(context: any) {
+    if (context && context.data) {
+      // Process the data
+      const processed = this.processData(context.data);
+      
+      // Update UI or perform other actions
+      console.log('Data processed:', processed);
+    }
+  }
+
+  private processData(data: any): any {
+    // Custom data processing logic
+    return data;
+  }
+}
+```
+
+### Real-time Updates
+
+```typescript
+class RealTimeExtension {
+  private updateInterval: number | null = null;
+  private isActive = false;
+
+  constructor() {
+    this.setupEventListeners();
+  }
+
+  private setupEventListeners() {
+    rua.on('activate', () => {
+      this.isActive = true;
+      this.startRealTimeUpdates();
+    });
+
+    rua.on('deactivate', () => {
+      this.isActive = false;
+      this.stopRealTimeUpdates();
+    });
+  }
+
+  private startRealTimeUpdates() {
+    if (this.updateInterval) return;
+
+    console.log('Starting real-time updates');
+    this.updateInterval = setInterval(() => {
+      if (this.isActive) {
+        this.fetchAndUpdateData();
+      }
+    }, 5000); // Update every 5 seconds
+  }
+
+  private stopRealTimeUpdates() {
+    if (this.updateInterval) {
+      console.log('Stopping real-time updates');
+      clearInterval(this.updateInterval);
+      this.updateInterval = null;
+    }
+  }
+
+  private async fetchAndUpdateData() {
+    try {
+      // Fetch fresh data
+      const data = await this.fetchData();
+      
+      // Update dynamic actions
+      await this.updateActions(data);
+      
+      console.log('Data updated:', data.length, 'items');
+    } catch (error) {
+      console.error('Failed to update data:', error);
+    }
+  }
+
+  private async fetchData(): Promise<any[]> {
+    // Simulate API call
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve([
+          { id: 1, title: 'Item 1', timestamp: Date.now() },
+          { id: 2, title: 'Item 2', timestamp: Date.now() }
+        ]);
+      }, 100);
+    });
+  }
+
+  private async updateActions(data: any[]) {
+    const actions = data.map(item => ({
+      id: `realtime-${item.id}`,
+      title: item.title,
+      description: `Updated: ${new Date(item.timestamp).toLocaleTimeString()}`,
+      icon: 'Clock'
+    }));
+
+    await rua.actions.register(actions);
+  }
+}
+```
+
+## Error Handling
+
+Event handlers should include proper error handling:
+
+```typescript
+rua.on('search-change', (query) => {
+  try {
+    // Process search query
+    processSearchQuery(query);
+  } catch (error) {
+    console.error('Search processing failed:', error);
+    // Optionally show user notification
+    rua.notification.show({
+      title: 'Search Error',
+      body: 'Failed to process search query'
+    });
+  }
+});
+
+rua.on('action-triggered', (event) => {
+  try {
+    handleAction(event);
+  } catch (error) {
+    console.error('Action handling failed:', error);
+    // Log error for debugging
+    console.error('Action ID:', event.actionId);
+    console.error('Context:', event.context);
+  }
+});
+```
+
+## Best Practices
+
+1. **Clean up event listeners**: Remove event listeners when they're no longer needed
+2. **Handle errors gracefully**: Always wrap event handlers in try-catch blocks
+3. **Debounce frequent events**: Use debouncing for events like search-change
+4. **Avoid blocking operations**: Keep event handlers lightweight and non-blocking
+5. **Use meaningful action IDs**: Make action IDs descriptive and unique
+6. **Validate event data**: Always validate event context data before processing
+7. **Provide user feedback**: Show notifications or UI updates for important events
+
+## Performance Considerations
+
+- Event handlers are called synchronously, so avoid heavy computations
+- Use `setTimeout` or `requestIdleCallback` for expensive operations
+- Debounce rapid events like search-change to avoid excessive processing
+- Remove unused event listeners to prevent memory leaks
+- Cache processed data to avoid redundant calculations
+
+## Debugging Events
+
+```typescript
+// Enable event debugging
+const debugEvents = true;
+
+if (debugEvents) {
+  const originalOn = rua.on;
+  rua.on = (event, handler) => {
+    const wrappedHandler = (...args) => {
+      console.log(`[Event] ${event}:`, args);
+      return handler(...args);
+    };
+    return originalOn.call(rua, event, wrappedHandler);
+  };
+}
+```

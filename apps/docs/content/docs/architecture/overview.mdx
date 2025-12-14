@@ -1,0 +1,61 @@
+---
+title: Architecture Overview
+description: Understanding Rua's system architecture and design principles
+icon: Building
+---
+
+# Architecture Overview
+
+Rua is built with a modern, modular architecture that prioritizes performance, extensibility, and maintainability.
+
+## High-Level Architecture
+
+Rua follows a layered architecture pattern with clear separation of concerns:
+
+**User Interface Layer:**
+- React Frontend - Modern React-based user interface
+- Theme System - Customizable theming and styling
+- UI Components - Reusable interface components
+
+**Application Layer:**
+- Rua Core - Central application logic and coordination
+- Extension Manager - Handles extension lifecycle and communication
+- Search Engine - Provides fast, fuzzy search capabilities
+- Configuration - Manages application and user settings
+
+**System Layer:**
+- Tauri Runtime - Cross-platform application framework
+- File System - Secure file system access
+- Process Manager - System process interaction
+- Clipboard API - System clipboard integration
+
+**Extension Layer:**
+- Extensions - Third-party functionality extensions
+- Extension API - Secure API for extension development
+
+## Technology Stack
+
+### Frontend Stack
+
+**Core Technologies:**
+- React 19 - UI framework with concurrent features
+- TypeScript - Type safety and developer experience
+- Vite - Fast build tool and development server
+- Tailwind CSS - Utility-first CSS framework
+
+### Backend Stack
+
+**Runtime Technologies:**
+- Tauri 2.0 - Desktop application framework
+- Rust - Systems programming language
+- WebView - Native webview integration
+- Tokio - Async runtime for Rust
+
+## Performance Characteristics
+
+Rua is designed for optimal performance with fast startup times and responsive user interactions.
+
+## Next Steps
+
+- [Project Structure](/docs/architecture/project-structure) - Detailed code organization
+- [Tech Stack](/docs/architecture/tech-stack) - Complete technology overview

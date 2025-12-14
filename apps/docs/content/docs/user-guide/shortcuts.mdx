@@ -1,0 +1,367 @@
+---
+title: Keyboard Shortcuts
+description: Complete guide to Rua keyboard shortcuts and usage tips
+icon: Keyboard
+---
+
+# Keyboard Shortcuts
+
+Master Rua's keyboard shortcuts to boost your productivity. This guide covers all available shortcuts and provides tips for efficient usage.
+
+## Global Shortcuts
+
+These shortcuts work system-wide, even when Rua is not visible:
+
+### Primary Actions
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Super + Space` | Toggle Launcher | Show/hide Rua launcher |
+| `Super + R` | Show Launcher | Always show launcher (even if visible) |
+| `Ctrl + Alt + Space` | Quick Launch | Show launcher with last search |
+| `Super + Shift + Space` | Action Mode | Open in action selection mode |
+
+### Alternative Shortcuts
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Alt + F2` | Show Launcher | Alternative launcher shortcut |
+| `Ctrl + Alt + R` | Restart Rua | Restart the application |
+| `Super + Q` | Quit Rua | Exit the application |
+
+<Callout type="info">
+  Global shortcuts can be customized in your desktop environment's keyboard settings or in Rua's configuration file.
+</Callout>
+
+## Interface Navigation
+
+When the launcher is open, use these shortcuts to navigate:
+
+### Basic Navigation
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `↓` / `Tab` | Next Item | Move to next search result |
+| `↑` / `Shift + Tab` | Previous Item | Move to previous search result |
+| `Enter` | Execute | Run the selected item |
+| `Escape` | Hide | Close the launcher |
+
+### Advanced Navigation
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Home` | First Item | Jump to first result |
+| `End` | Last Item | Jump to last result |
+| `Page Up` | Page Up | Move up by page |
+| `Page Down` | Page Down | Move down by page |
+| `Ctrl + Tab` | Next Category | Switch to next result category |
+| `Ctrl + Shift + Tab` | Previous Category | Switch to previous category |
+
+## Search and Input
+
+### Text Manipulation
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl + A` | Select All | Select all text in search box |
+| `Ctrl + C` | Copy | Copy selected text |
+| `Ctrl + V` | Paste | Paste text from clipboard |
+| `Ctrl + X` | Cut | Cut selected text |
+| `Ctrl + Z` | Undo | Undo last text change |
+
+### Search Control
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl + U` | Clear Search | Clear the search input |
+| `Ctrl + Backspace` | Delete Word | Delete previous word |
+| `Ctrl + Delete` | Delete Word Forward | Delete next word |
+| `Ctrl + L` | Focus Search | Focus on search input |
+
+### Search History
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl + ↑` | Previous Search | Navigate to previous search |
+| `Ctrl + ↓` | Next Search | Navigate to next search |
+| `Ctrl + H` | Show History | Show search history |
+| `Delete` | Remove History Item | Remove selected history item |
+
+## Execution Modes
+
+### Different Ways to Execute
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Enter` | Default Execute | Run with default action |
+| `Ctrl + Enter` | Execute in Terminal | Run command in terminal |
+| `Shift + Enter` | Execute as Admin | Run with elevated privileges |
+| `Alt + Enter` | Show Actions | Show available actions for item |
+
+### File Operations
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl + O` | Open | Open file with default application |
+| `Ctrl + Shift + O` | Open With | Choose application to open file |
+| `Ctrl + R` | Reveal in Files | Show file in file manager |
+| `Ctrl + D` | Show Details | Show file/application details |
+
+## Extension Shortcuts
+
+### Extension Management
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl + E` | Extension Mode | Switch to extension mode |
+| `Ctrl + Shift + E` | Manage Extensions | Open extension manager |
+| `F5` | Refresh Extensions | Reload all extensions |
+| `Ctrl + F5` | Force Refresh | Force reload extensions |
+
+### Extension-Specific Shortcuts
+
+Many extensions provide their own shortcuts. Common patterns:
+
+| Shortcut | Typical Action | Description |
+|----------|----------------|-------------|
+| `Ctrl + =` | Calculate | Trigger calculator (if installed) |
+| `Ctrl + T` | Translate | Trigger translator (if installed) |
+| `Ctrl + W` | Weather | Show weather (if installed) |
+| `Ctrl + N` | Notes | Quick note taking (if installed) |
+
+## Advanced Features
+
+### Multi-Selection
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl + Click` | Multi-Select | Select multiple items |
+| `Shift + Click` | Range Select | Select range of items |
+| `Ctrl + A` | Select All Results | Select all visible results |
+| `Ctrl + Enter` | Execute All | Execute all selected items |
+
+### Quick Actions
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Space` | Quick Preview | Preview selected item |
+| `Ctrl + Space` | Show Actions | Show context menu |
+| `Shift + Space` | Pin Item | Pin item to favorites |
+| `Ctrl + Shift + Space` | Unpin Item | Remove from favorites |
+
+### Window Management
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `F11` | Fullscreen | Toggle fullscreen mode |
+| `Ctrl + +` | Zoom In | Increase interface size |
+| `Ctrl + -` | Zoom Out | Decrease interface size |
+| `Ctrl + 0` | Reset Zoom | Reset to default size |
+
+## Customization
+
+### Custom Shortcuts
+
+You can customize shortcuts in `~/.config/rua/keybindings.json`:
+
+```json
+{
+  "global": {
+    "toggle": ["Super+Space", "Alt+F2"],
+    "show": ["Super+R"],
+    "hide": ["Escape", "Super+Escape"]
+  },
+  "interface": {
+    "selectNext": ["Down", "Tab", "Ctrl+N"],
+    "selectPrevious": ["Up", "Shift+Tab", "Ctrl+P"],
+    "execute": ["Return", "Ctrl+O"]
+  },
+  "custom": {
+    "openTerminal": {
+      "keys": ["Ctrl+Alt+T"],
+      "action": "execute",
+      "command": "gnome-terminal"
+    }
+  }
+}
+```
+
+### Shortcut Conflicts
+
+If shortcuts conflict with other applications:
+
+1. **Check system shortcuts**: Review your DE's keyboard settings
+2. **Modify Rua shortcuts**: Edit the keybindings configuration
+3. **Use alternative shortcuts**: Most actions have multiple shortcut options
+4. **Disable conflicting shortcuts**: Turn off conflicting system shortcuts
+
+## Usage Tips and Tricks
+
+### Efficient Search Techniques
+
+#### Fuzzy Search
+
+Rua supports fuzzy search - you don't need to type exact names:
+
+- `ff` → Firefox
+- `calc` → Calculator  
+- `term` → Terminal
+- `vsc` → Visual Studio Code
+
+#### Search Operators
+
+Use special operators for advanced searches:
+
+| Operator | Example | Description |
+|----------|---------|-------------|
+| `>` | `>shutdown` | Execute shell command |
+| `?` | `?weather` | Search web |
+| `@` | `@john` | Search contacts |
+| `#` | `#work` | Search by tag |
+| `/` | `/documents` | Search files in path |
+
+#### Quick Calculations
+
+Type mathematical expressions directly:
+
+- `2+2` → Shows result: 4
+- `15*8` → Shows result: 120
+- `sqrt(16)` → Shows result: 4
+- `sin(30)` → Shows result: 0.5
+
+### Workflow Optimization
+
+#### Pinned Items
+
+Pin frequently used items for quick access:
+
+1. Search for an item
+2. Press `Shift + Space` to pin
+3. Pinned items appear at the top of results
+
+#### Search History
+
+Leverage search history for repeated tasks:
+
+- Use `Ctrl + ↑/↓` to navigate history
+- Recent searches appear as suggestions
+- Clear history with `Ctrl + H` then `Delete`
+
+#### Action Chaining
+
+Execute multiple actions in sequence:
+
+1. Select multiple items with `Ctrl + Click`
+2. Press `Ctrl + Enter` to execute all
+3. Or use `Alt + Enter` to choose actions for each
+
+### Power User Features
+
+#### Command Mode
+
+Access advanced features with command mode:
+
+- Type `>` to enter command mode
+- Execute shell commands directly
+- Access system functions
+- Run scripts and automation
+
+#### Extension Workflows
+
+Combine extensions for powerful workflows:
+
+1. **Text Processing**: Select text → Transform → Copy result
+2. **File Management**: Search files → Batch operations → Execute
+3. **System Control**: Quick settings → Apply changes → Confirm
+
+#### Keyboard-Only Operation
+
+Use Rua entirely without mouse:
+
+1. Launch with global shortcut
+2. Type search query
+3. Navigate with arrow keys
+4. Execute with Enter
+5. Access actions with Alt+Enter
+
+## Accessibility
+
+### Screen Reader Support
+
+Rua supports screen readers with:
+
+- Proper ARIA labels
+- Keyboard navigation
+- Audio feedback options
+- High contrast themes
+
+### Motor Accessibility
+
+For users with motor impairments:
+
+- Sticky keys support
+- Adjustable timing settings
+- Single-key shortcuts
+- Voice control integration
+
+### Visual Accessibility
+
+- High contrast themes
+- Adjustable font sizes
+- Color customization
+- Reduced motion options
+
+## Troubleshooting Shortcuts
+
+### Shortcuts Not Working
+
+1. **Check if Rua is running**:
+   ```bash
+   ps aux | grep rua
+   ```
+
+2. **Verify shortcut registration**:
+   ```bash
+   rua --list-shortcuts
+   ```
+
+3. **Test shortcut conflicts**:
+   - Try alternative shortcuts
+   - Check system keyboard settings
+   - Disable other applications temporarily
+
+### Resetting Shortcuts
+
+```bash
+# Reset to default shortcuts
+rm ~/.config/rua/keybindings.json
+rua --reset-shortcuts
+
+# Or edit manually
+nano ~/.config/rua/keybindings.json
+```
+
+## Quick Reference Card
+
+Print this quick reference for easy access:
+
+### Essential Shortcuts
+- **Show/Hide**: `Super + Space`
+- **Navigate**: `↑/↓` or `Tab/Shift+Tab`
+- **Execute**: `Enter`
+- **Actions**: `Alt + Enter`
+- **Clear**: `Ctrl + U`
+- **Quit**: `Escape`
+
+### Power Features
+- **Terminal**: `Ctrl + Enter`
+- **Multi-select**: `Ctrl + Click`
+- **History**: `Ctrl + ↑/↓`
+- **Extensions**: `Ctrl + E`
+- **Commands**: `>command`
+
+## Next Steps
+
+- **[Extension Management](/docs/user-guide/extensions)** - Install and manage extensions
+- **[Configuration Guide](/docs/user-guide/configuration)** - Customize Rua settings
+- **[Troubleshooting](/docs/user-guide/troubleshooting)** - Solve common issues

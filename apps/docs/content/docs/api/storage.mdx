@@ -1,0 +1,312 @@
+---
+title: Storage API
+description: Persistent data storage for Rua extensions
+icon: Database
+---
+
+# Storage API
+
+The Storage API provides persistent data storage capabilities for Rua extensions, allowing you to save and retrieve data that persists across extension sessions.
+
+## Overview
+
+The storage API offers a simple key-value store with automatic JSON serialization. Data is stored locally and persists between application restarts.
+
+```typescript
+// Store data
+await rua.storage.set('userPreferences', { theme: 'dark', language: 'en' });
+
+// Retrieve data
+const preferences = await rua.storage.get('userPreferences');
+
+// Remove data
+await rua.storage.remove('userPreferences');
+```
+
+## Methods
+
+### get(key)
+
+Retrieves a value from storage by its key.
+
+```typescript
+get<T = any>(key: string): Promise<T | null>
+```
+
+**Parameters:**
+- `key` (string): The storage key to retrieve
+
+**Returns:** A promise that resolves to the stored value, or `null` if the key doesn't exist.
+
+**Example:**
+```typescript
+// Retrieve with type safety
+interface UserSettings {
+  theme: string;
+  notifications: boolean;
+}
+
+const settings = await rua.storage.get<UserSettings>('settings');
+if (settings) {
+  console.log('Theme:', settings.theme);
+}
+```
+
+### set(key, value)
+
+Stores a value in storage with the specified key.
+
+```typescript
+set(key: string, value: any): Promise<void>
+```
+
+**Parameters:**
+- `key` (string): The storage key
+- `value` (any): The value to store (will be JSON serialized)
+
+**Returns:** A promise that resolves when the operation completes.
+
+**Example:**
+```typescript
+const userData = {
+  name: 'John Doe',
+  preferences: {
+    theme: 'dark',
+    language: 'en'
+  }
+};
+
+await rua.storage.set('user', userData);
+```
+
+### remove(key)
+
+Removes a value from storage by its key.
+
+```typescript
+remove(key: string): Promise<void>
+```
+
+**Parameters:**
+- `key` (string): The storage key to remove
+
+**Returns:** A promise that resolves when the operation completes.
+
+**Example:**
+```typescript
+await rua.storage.remove('temporaryData');
+console.log('Temporary data cleared');
+```
+
+## Data Types
+
+The storage API automatically handles JSON serialization for various data types:
+
+### Supported Types
+
+```typescript
+// Primitives
+await rua.storage.set('string', 'Hello World');
+await rua.storage.set('number', 42);
+await rua.storage.set('boolean', true);
+
+// Objects and Arrays
+await rua.storage.set('object', { key: 'value' });
+await rua.storage.set('array', [1, 2, 3]);
+
+// Complex nested structures
+await rua.storage.set('complex', {
+  users: [
+    { id: 1, name: 'Alice' },
+    { id: 2, name: 'Bob' }
+  ],
+  metadata: {
+    version: '1.0',
+    created: new Date().toISOString()
+  }
+});
+```
+
+### Unsupported Types
+
+- Functions
+- Symbols
+- undefined values
+- Circular references
+
+## Permissions
+
+Storage API usage requires the `storage` permission in your extension manifest:
+
+```json
+{
+  "permissions": ["storage"]
+}
+```
+
+## Use Cases
+
+### User Preferences
+
+```typescript
+interface UserPreferences {
+  theme: 'light' | 'dark';
+  fontSize: number;
+  autoSave: boolean;
+}
+
+// Save preferences
+const preferences: UserPreferences = {
+  theme: 'dark',
+  fontSize: 14,
+  autoSave: true
+};
+await rua.storage.set('preferences', preferences);
+
+// Load preferences with defaults
+const loadPreferences = async (): Promise<UserPreferences> => {
+  const stored = await rua.storage.get<UserPreferences>('preferences');
+  return stored || {
+    theme: 'light',
+    fontSize: 12,
+    autoSave: false
+  };
+};
+```
+
+### Cache Management
+
+```typescript
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  ttl: number; // Time to live in milliseconds
+}
+
+class StorageCache {
+  async set<T>(key: string, data: T, ttlMs: number = 3600000): Promise<void> {
+    const entry: CacheEntry<T> = {
+      data,
+      timestamp: Date.now(),
+      ttl: ttlMs
+    };
+    await rua.storage.set(`cache_${key}`, entry);
+  }
+
+  async get<T>(key: string): Promise<T | null> {
+    const entry = await rua.storage.get<CacheEntry<T>>(`cache_${key}`);
+    if (!entry) return null;
+
+    // Check if expired
+    if (Date.now() - entry.timestamp > entry.ttl) {
+      await this.remove(key);
+      return null;
+    }
+
+    return entry.data;
+  }
+
+  async remove(key: string): Promise<void> {
+    await rua.storage.remove(`cache_${key}`);
+  }
+}
+```
+
+### Session State
+
+```typescript
+// Save current session state
+const saveSession = async (state: any) => {
+  await rua.storage.set('session', {
+    ...state,
+    lastSaved: Date.now()
+  });
+};
+
+// Restore session on startup
+const restoreSession = async () => {
+  const session = await rua.storage.get('session');
+  if (session) {
+    console.log('Restoring session from:', new Date(session.lastSaved));
+    return session;
+  }
+  return null;
+};
+```
+
+## Storage Limits
+
+While there are no hard limits enforced by the API, consider these best practices:
+
+- **Key naming**: Use descriptive, namespaced keys to avoid conflicts
+- **Data size**: Keep individual values reasonably sized (< 1MB recommended)
+- **Cleanup**: Regularly remove unused data to prevent storage bloat
+
+## Error Handling
+
+Storage operations may fail due to various reasons:
+
+```typescript
+try {
+  await rua.storage.set('data', largeObject);
+} catch (error) {
+  if (error.message.includes('quota')) {
+    console.error('Storage quota exceeded');
+    // Implement cleanup logic
+  } else if (error.message.includes('permission')) {
+    console.error('Storage permission denied');
+  } else {
+    console.error('Storage operation failed:', error);
+  }
+}
+```
+
+## Best Practices
+
+1. **Use TypeScript interfaces**: Define types for your stored data
+2. **Implement defaults**: Always provide fallback values when retrieving data
+3. **Namespace keys**: Use prefixes to organize your storage keys
+4. **Validate data**: Check data integrity when retrieving from storage
+5. **Handle migrations**: Plan for data structure changes in future versions
+6. **Clean up**: Remove obsolete data to keep storage efficient
+
+## Migration Example
+
+```typescript
+interface StorageManager {
+  version: number;
+  migrate(): Promise<void>;
+}
+
+class UserDataManager implements StorageManager {
+  version = 2;
+
+  async migrate(): Promise<void> {
+    const currentVersion = await rua.storage.get<number>('dataVersion') || 1;
+    
+    if (currentVersion < this.version) {
+      console.log(`Migrating from version ${currentVersion} to ${this.version}`);
+      
+      if (currentVersion === 1) {
+        // Migrate from v1 to v2
+        const oldData = await rua.storage.get('userData');
+        if (oldData) {
+          const newData = this.transformV1ToV2(oldData);
+          await rua.storage.set('userData', newData);
+        }
+      }
+      
+      await rua.storage.set('dataVersion', this.version);
+    }
+  }
+
+  private transformV1ToV2(oldData: any): any {
+    // Transform data structure
+    return {
+      ...oldData,
+      version: 2,
+      newField: 'defaultValue'
+    };
+  }
+}
+```

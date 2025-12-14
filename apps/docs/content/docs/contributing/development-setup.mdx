@@ -1,0 +1,587 @@
+---
+title: Development Setup
+description: Complete guide to setting up a development environment for Rua
+icon: Code
+---
+
+# Development Setup
+
+This guide will help you set up a complete development environment for contributing to Rua. Follow these steps to get started with development.
+
+## Prerequisites
+
+### System Requirements
+
+- **Operating System**: Linux (Ubuntu 20.04+, Fedora 35+, Arch Linux, or similar)
+- **Architecture**: x86_64 (AMD64) or ARM64
+- **Memory**: 4 GB RAM minimum, 8 GB recommended
+- **Storage**: 5 GB available space for development tools and dependencies
+
+### Required Tools
+
+#### 1. Rust and Cargo
+
+Rua's backend is built with Rust. Install the latest stable version:
+
+```bash
+# Install Rust using rustup
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Source the environment
+source ~/.cargo/env
+
+# Verify installation
+rustc --version
+cargo --version
+
+# Install additional components
+rustup component add rustfmt clippy
+```
+
+#### 2. Node.js and Bun
+
+The frontend and build tools require Node.js and Bun:
+
+```bash
+# Install Node.js (using NodeSource repository)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Or using nvm (recommended)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+source ~/.bashrc
+nvm install 20
+nvm use 20
+
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+source ~/.bashrc
+
+# Verify installations
+node --version
+npm --version
+bun --version
+```
+
+#### 3. System Dependencies
+
+Install required system libraries:
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install -y \
+  build-essential \
+  curl \
+  wget \
+  file \
+  libssl-dev \
+  libgtk-3-dev \
+  libayatana-appindicator3-dev \
+  librsvg2-dev \
+  libwebkit2gtk-4.0-dev \
+  pkg-config \
+  git
+```
+
+**Fedora/RHEL:**
+```bash
+sudo dnf install -y \
+  gcc \
+  gcc-c++ \
+  make \
+  curl \
+  wget \
+  file \
+  openssl-devel \
+  gtk3-devel \
+  libappindicator-gtk3-devel \
+  librsvg2-devel \
+  webkit2gtk3-devel \
+  pkg-config \
+  git
+```
+
+**Arch Linux:**
+```bash
+sudo pacman -S \
+  base-devel \
+  curl \
+  wget \
+  file \
+  openssl \
+  gtk3 \
+  libappindicator-gtk3 \
+  librsvg \
+  webkit2gtk \
+  pkg-config \
+  git
+```
+
+#### 4. Development Tools
+
+Install additional development tools:
+
+```bash
+# Git (if not already installed)
+sudo apt install git  # Ubuntu/Debian
+sudo dnf install git  # Fedora
+sudo pacman -S git    # Arch
+
+# Just (task runner)
+cargo install just
+
+# Tauri CLI
+cargo install tauri-cli
+
+# Additional Rust tools
+cargo install cargo-watch cargo-edit cargo-audit
+```
+
+## Project Setup
+
+### 1. Clone the Repository
+
+```bash
+# Clone the main repository
+git clone https://github.com/rua-org/rua.git
+cd rua
+
+# Or fork first and clone your fork
+git clone https://github.com/YOUR_USERNAME/rua.git
+cd rua
+
+# Add upstream remote (if using fork)
+git remote add upstream https://github.com/rua-org/rua.git
+```
+
+### 2. Install Dependencies
+
+```bash
+# Install all project dependencies
+bun install
+
+# This will install dependencies for:
+# - Root workspace
+# - apps/rua (main application)
+# - apps/docs (documentation)
+# - packages/rua-api (API package)
+# - packages/create-rua-ext (extension generator)
+```
+
+### 3. Verify Setup
+
+```bash
+# Check if everything is working
+just --list
+
+# Run basic checks
+just check
+
+# Build the project
+just build
+```
+
+## Development Workflow
+
+### Project Structure
+
+Understanding the project structure:
+
+```
+rua/
+├── apps/
+│   ├── rua/                 # Main Tauri application
+│   │   ├── src/            # React frontend source
+│   │   ├── src-tauri/      # Rust backend source
+│   │   └── dist/           # Built frontend assets
+│   └── docs/               # Documentation site (Fumadocs)
+├── packages/
+│   ├── rua-api/            # Extension API package
+│   └── create-rua-ext/     # Extension generator CLI
+├── examples/               # Example extensions
+├── docs/                   # Additional documentation
+├── justfile               # Task definitions
+└── package.json           # Workspace configuration
+```
+
+### Available Commands
+
+The project uses Just for task management. Common commands:
+
+```bash
+# Development
+just dev                    # Start development server
+just dev-docs              # Start documentation server
+just build                 # Build all projects
+just build-release         # Build optimized release
+
+# Testing
+just test                  # Run all tests
+just test-unit            # Run unit tests only
+just test-e2e             # Run end-to-end tests
+just lint                 # Run linting
+just format               # Format code
+
+# Maintenance
+just clean                # Clean build artifacts
+just deps                 # Update dependencies
+just check                # Run all checks
+```
+
+### Development Servers
+
+#### Main Application
+
+```bash
+# Start the main application in development mode
+just dev
+
+# Or manually:
+cd apps/rua
+bun run tauri dev
+```
+
+This will:
+- Start the Vite development server for the frontend
+- Launch the Tauri application with hot reload
+- Enable debug logging and development tools
+
+#### Documentation Site
+
+```bash
+# Start documentation development server
+just dev-docs
+
+# Or manually:
+cd apps/docs
+bun run dev
+```
+
+Access the documentation at `http://localhost:3000`
+
+#### API Package Development
+
+```bash
+# Watch and rebuild API package
+cd packages/rua-api
+bun run dev
+
+# Run API tests
+bun run test
+```
+
+### Code Organization
+
+#### Frontend (React + TypeScript)
+
+```
+apps/rua/src/
+├── components/          # Reusable UI components
+├── hooks/              # Custom React hooks
+├── stores/             # State management (Zustand)
+├── types/              # TypeScript type definitions
+├── utils/              # Utility functions
+├── styles/             # CSS and styling
+├── App.tsx             # Main application component
+└── main.tsx            # Application entry point
+```
+
+#### Backend (Rust + Tauri)
+
+```
+apps/rua/src-tauri/src/
+├── commands/           # Tauri command handlers
+├── extensions/         # Extension system
+├── search/             # Search functionality
+├── config/             # Configuration management
+├── utils/              # Utility modules
+├── main.rs             # Application entry point
+└── lib.rs              # Library exports
+```
+
+## IDE Configuration
+
+### Visual Studio Code
+
+Recommended extensions for VS Code:
+
+```json
+{
+  "recommendations": [
+    "rust-lang.rust-analyzer",
+    "tauri-apps.tauri-vscode",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense"
+  ]
+}
+```
+
+Workspace settings (`.vscode/settings.json`):
+
+```json
+{
+  "rust-analyzer.cargo.features": "all",
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+  ]
+}
+```
+
+### Other IDEs
+
+#### Neovim
+
+Install language servers and plugins:
+
+```lua
+-- LSP configuration
+require('lspconfig').rust_analyzer.setup({
+  settings = {
+    ['rust-analyzer'] = {
+      cargo = { features = 'all' },
+      checkOnSave = { command = 'clippy' }
+    }
+  }
+})
+
+require('lspconfig').tsserver.setup({})
+require('lspconfig').tailwindcss.setup({})
+```
+
+#### IntelliJ IDEA / CLion
+
+Install plugins:
+- Rust Plugin
+- Tauri Plugin  
+- TypeScript and JavaScript
+- Tailwind CSS
+
+## Debugging
+
+### Frontend Debugging
+
+```bash
+# Enable React DevTools
+export NODE_ENV=development
+
+# Start with debugging
+just dev
+
+# Or with specific debug flags
+RUST_LOG=debug just dev
+```
+
+### Backend Debugging
+
+```bash
+# Enable Rust debugging
+export RUST_LOG=debug
+export RUST_BACKTRACE=1
+
+# Run with debugging
+just dev
+
+# Or debug specific modules
+export RUST_LOG=rua::search=debug,rua::extensions=trace
+just dev
+```
+
+### Extension Debugging
+
+```bash
+# Debug extension loading
+export RUA_EXTENSION_DEBUG=1
+just dev
+
+# Test extension in isolation
+cd examples/hello-world
+bun run dev
+```
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all unit tests
+just test-unit
+
+# Run specific test suite
+cd apps/rua/src-tauri
+cargo test
+
+# Run frontend tests
+cd apps/rua
+bun run test
+```
+
+### Integration Tests
+
+```bash
+# Run integration tests
+just test-integration
+
+# Run with coverage
+just test-coverage
+```
+
+### End-to-End Tests
+
+```bash
+# Run E2E tests
+just test-e2e
+
+# Run specific E2E test
+cd apps/rua
+bun run test:e2e -- --grep "search functionality"
+```
+
+## Code Quality
+
+### Linting and Formatting
+
+```bash
+# Run all linting
+just lint
+
+# Format code
+just format
+
+# Fix linting issues
+just lint-fix
+```
+
+### Pre-commit Hooks
+
+Set up pre-commit hooks:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install hooks
+pre-commit install
+
+# Run hooks manually
+pre-commit run --all-files
+```
+
+## Building
+
+### Development Build
+
+```bash
+# Build for development
+just build
+
+# Build specific component
+cd apps/rua
+bun run build
+```
+
+### Release Build
+
+```bash
+# Build optimized release
+just build-release
+
+# Build with specific target
+just build-release --target x86_64-unknown-linux-gnu
+```
+
+### Cross-compilation
+
+```bash
+# Add target
+rustup target add aarch64-unknown-linux-gnu
+
+# Build for ARM64
+just build-release --target aarch64-unknown-linux-gnu
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Rust Compilation Errors
+
+```bash
+# Update Rust toolchain
+rustup update
+
+# Clean and rebuild
+cargo clean
+just build
+```
+
+#### Node.js/Bun Issues
+
+```bash
+# Clear node modules
+rm -rf node_modules
+bun install
+
+# Clear Bun cache
+bun pm cache rm
+```
+
+#### System Dependencies
+
+```bash
+# Ubuntu: Update package lists
+sudo apt update
+sudo apt upgrade
+
+# Check for missing libraries
+ldd target/debug/rua
+```
+
+#### Permission Issues
+
+```bash
+# Fix cargo permissions
+sudo chown -R $USER:$USER ~/.cargo
+
+# Fix npm permissions
+sudo chown -R $USER:$USER ~/.npm
+```
+
+### Getting Help
+
+If you encounter issues:
+
+1. **Check the logs**: Look for error messages in terminal output
+2. **Search existing issues**: Check GitHub issues for similar problems
+3. **Ask for help**: Join our Discord or create a GitHub issue
+4. **Provide details**: Include system info, error messages, and steps to reproduce
+
+## Contributing Guidelines
+
+Before making changes:
+
+1. **Read the contributing guide**: See [Contributing Guidelines](/docs/contributing/guidelines)
+2. **Check existing issues**: Look for related issues or feature requests
+3. **Create an issue**: Discuss major changes before implementing
+4. **Follow code style**: Use the project's formatting and linting rules
+5. **Write tests**: Add tests for new functionality
+6. **Update documentation**: Keep docs in sync with code changes
+
+## Next Steps
+
+Now that you have the development environment set up:
+
+1. **[Code Style Guide](/docs/contributing/code-style)** - Learn the project's coding standards
+2. **[Build Process](/docs/contributing/build-process)** - Understand the build and release process
+3. **[Extension Development](/docs/extensions/create-rua-ext)** - Create your first extension
+4. **[API Documentation](/docs/api/overview)** - Learn the extension API

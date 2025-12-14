@@ -1,0 +1,712 @@
+---
+title: Debugging and Testing
+description: Tools and techniques for debugging and testing Rua extensions
+icon: Bug
+---
+
+# Debugging and Testing
+
+Effective debugging and testing are crucial for creating reliable Rua extensions. This guide covers the tools, techniques, and best practices for debugging extension issues and ensuring your extensions work correctly.
+
+## Development Environment Setup
+
+### Enable Developer Mode
+
+First, enable developer mode in Rua to access debugging features:
+
+1. **Open Rua Settings**
+   - Launch Rua
+   - Type `settings` and press Enter
+   - Navigate to "Developer" section
+
+2. **Enable Developer Mode**
+   - Toggle "Developer Mode" to ON
+   - This enables additional debugging features
+   - Restart Rua for changes to take effect
+
+3. **Access Developer Tools**
+   - Right-click in any extension view
+   - Select "Inspect Element" to open DevTools
+   - Use keyboard shortcut `F12` in extension windows
+
+### Development Server Setup
+
+For extensions using build tools, set up a development workflow:
+
+```bash
+# Start development server with hot reloading
+cd my-extension
+bun run dev
+```
+
+This enables:
+- **Hot Module Replacement**: Instant updates without full page reload
+- **Error Overlay**: Visual error display during development
+
+To test your extension in Rua:
+1. Build your extension: `bun run build`
+2. Copy the built files to the extensions directory
+3. Reload Rua to pick up changes
+
+## Debugging Tools
+
+### Browser DevTools
+
+Rua extensions run in a WebView, giving you access to full browser debugging capabilities:
+
+#### Console Debugging
+
+```typescript
+// Basic logging
+console.log('Extension loaded');
+console.warn('This is a warning');
+console.error('Something went wrong');
+
+// Structured logging
+console.group('API Call');
+console.log('Request:', requestData);
+console.log('Response:', responseData);
+console.groupEnd();
+
+// Performance timing
+console.time('search-operation');
+// ... your code ...
+console.timeEnd('search-operation');
+```
+
+#### Network Monitoring
+
+Monitor HTTP requests in the Network tab:
+- View all outgoing requests
+- Check request/response headers
+- Monitor request timing
+- Debug CORS issues
+
+#### Performance Profiling
+
+Use the Performance tab to identify bottlenecks:
+- Record extension startup
+- Analyze rendering performance
+- Identify memory leaks
+- Profile CPU usage
+
+### Rua Debug Console
+
+Access Rua's built-in debug console:
+
+```bash
+# Start Rua with debug logging
+rua --debug
+
+# View extension logs
+rua logs --extension my-extension
+
+# Real-time log streaming
+rua logs --extension my-extension --follow
+```
+
+### Extension Validation
+
+Use `ruactl` to validate your extension before deployment:
+
+```bash
+# Validate extension manifest
+ruactl validate ./my-extension
+
+# Package extension for distribution
+ruactl pack ./my-extension
+
+# Preview package contents without creating archive
+ruactl pack ./my-extension --dry-run
+```
+
+**Validation checks:**
+- Manifest JSON syntax
+- Required fields presence
+- Permission syntax validity
+- Entry point file existence
+
+## Common Debugging Scenarios
+
+### Extension Won't Load
+
+When your extension fails to load:
+
+1. **Check Manifest Validity**
+   ```bash
+   rua validate-extension ./my-extension
+   ```
+   
+   Common issues:
+   - Invalid JSON syntax
+   - Missing required fields
+   - Incorrect file paths
+   - Invalid permission syntax
+
+2. **Verify File Paths**
+   ```bash
+   # Check if entry points exist
+   ls -la my-extension/dist/index.html
+   ls -la my-extension/dist/init.js
+   ```
+
+3. **Check Console Errors**
+   ```bash
+   rua --debug
+   # Look for extension loading errors
+   ```
+
+### API Calls Failing
+
+Debug API-related issues:
+
+```typescript
+// Add error handling to API calls
+try {
+  const result = await rua.clipboard.readText();
+  console.log('Clipboard content:', result);
+} catch (error) {
+  console.error('Clipboard API failed:', error);
+  
+  // Check specific error types
+  if (error.code === 'PERMISSION_DENIED') {
+    console.log('Missing clipboard permission');
+  } else if (error.code === 'API_UNAVAILABLE') {
+    console.log('API not available in this context');
+  }
+}
+```
+
+### Permission Issues
+
+Debug permission-related problems:
+
+```typescript
+// Test if an API works by trying to use it
+try {
+  const text = await rua.clipboard.readText();
+  console.log('Clipboard permission is granted');
+} catch (error) {
+  if (error.message.includes('permission')) {
+    console.error('Missing clipboard permission - add "clipboard" to manifest.json');
+  } else {
+    console.error('Clipboard API error:', error);
+  }
+}
+
+// Check your manifest.json for declared permissions
+// All permissions must be declared upfront - dynamic requests are not supported
+```
+
+<Callout type="info">
+  **Note**: Permissions are declared in `manifest.json` and granted at installation time. If an API call fails due to missing permissions, add the required permission to your manifest and reinstall the extension.
+</Callout>
+
+### Performance Issues
+
+Identify and fix performance bottlenecks:
+
+```typescript
+// Measure function performance
+async function measurePerformance<T>(
+  name: string, 
+  fn: () => Promise<T>
+): Promise<T> {
+  const start = performance.now();
+  try {
+    const result = await fn();
+    const end = performance.now();
+    console.log(`${name} took ${end - start}ms`);
+    return result;
+  } catch (error) {
+    const end = performance.now();
+    console.error(`${name} failed after ${end - start}ms:`, error);
+    throw error;
+  }
+}
+
+// Usage
+const results = await measurePerformance('search-files', async () => {
+  return await searchFiles(query);
+});
+```
+
+## Testing Strategies
+
+### Unit Testing
+
+Test individual functions and components:
+
+```typescript
+// test/utils.test.ts
+import { describe, it, expect } from 'vitest';
+import { formatFileSize, parseQuery } from '../src/utils';
+
+describe('Utility Functions', () => {
+  it('should format file sizes correctly', () => {
+    expect(formatFileSize(1024)).toBe('1 KB');
+    expect(formatFileSize(1048576)).toBe('1 MB');
+    expect(formatFileSize(0)).toBe('0 B');
+  });
+
+  it('should parse search queries', () => {
+    expect(parseQuery('file:*.txt')).toEqual({
+      type: 'file',
+      pattern: '*.txt'
+    });
+  });
+});
+```
+
+### Integration Testing
+
+Test extension integration with Rua APIs:
+
+```typescript
+// test/integration.test.ts
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createMockRuaAPI } from './mocks/rua-api';
+
+describe('Extension Integration', () => {
+  let mockRua: any;
+
+  beforeEach(() => {
+    mockRua = createMockRuaAPI();
+  });
+
+  it('should handle clipboard operations', async () => {
+    // Mock clipboard content
+    mockRua.clipboard.readText.mockResolvedValue('test content');
+    
+    // Test your extension logic
+    const result = await processClipboard(mockRua);
+    
+    expect(result).toBe('processed: test content');
+    expect(mockRua.clipboard.readText).toHaveBeenCalled();
+  });
+});
+```
+
+### End-to-End Testing
+
+Test complete user workflows:
+
+```typescript
+// test/e2e.test.ts
+import { test, expect } from '@playwright/test';
+
+test('extension search workflow', async ({ page }) => {
+  // Load extension in Rua
+  await page.goto('rua://extensions/my-extension');
+  
+  // Interact with extension UI
+  await page.fill('[data-testid=search-input]', 'test query');
+  await page.click('[data-testid=search-button]');
+  
+  // Verify results
+  await expect(page.locator('[data-testid=results]')).toBeVisible();
+  await expect(page.locator('[data-testid=result-item]')).toHaveCount(3);
+});
+```
+
+### Mock API Testing
+
+Create mocks for Rua APIs:
+
+```typescript
+// test/mocks/rua-api.ts
+export function createMockRuaAPI() {
+  return {
+    clipboard: {
+      readText: jest.fn(),
+      writeText: jest.fn()
+    },
+    storage: {
+      get: jest.fn(),
+      set: jest.fn(),
+      remove: jest.fn()
+    },
+    fs: {
+      readTextFile: jest.fn(),
+      writeTextFile: jest.fn(),
+      exists: jest.fn()
+    },
+    notification: {
+      show: jest.fn()
+    },
+    ui: {
+      setTitle: jest.fn(),
+      close: jest.fn()
+    }
+  };
+}
+```
+
+## Error Handling Best Practices
+
+### Graceful Error Handling
+
+Handle errors gracefully to improve user experience:
+
+```typescript
+async function safeApiCall<T>(
+  operation: () => Promise<T>,
+  fallback: T,
+  errorMessage: string
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    console.error(errorMessage, error);
+    
+    // Show user-friendly error
+    await rua.notification.show({
+      title: 'Operation Failed',
+      body: errorMessage
+    });
+    
+    return fallback;
+  }
+}
+
+// Usage
+const clipboardText = await safeApiCall(
+  () => rua.clipboard.readText(),
+  '',
+  'Failed to read clipboard content'
+);
+```
+
+### Error Reporting
+
+Implement error reporting for production extensions:
+
+```typescript
+class ErrorReporter {
+  static async report(error: Error, context: any = {}) {
+    const errorData = {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+      context,
+      extensionVersion: '1.0.0',
+      ruaVersion: await rua.os.version()
+    };
+    
+    // Log locally
+    console.error('Extension Error:', errorData);
+    
+    // Store for later analysis
+    await rua.storage.set(`error-${Date.now()}`, errorData);
+    
+    // Optional: Send to error tracking service
+    if (process.env.NODE_ENV === 'production') {
+      await this.sendToErrorService(errorData);
+    }
+  }
+  
+  private static async sendToErrorService(errorData: any) {
+    try {
+      await fetch('https://api.errortracking.com/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(errorData)
+      });
+    } catch (e) {
+      // Silently fail - don't let error reporting break the extension
+    }
+  }
+}
+
+// Global error handler
+window.addEventListener('error', (event) => {
+  ErrorReporter.report(event.error, { type: 'unhandled' });
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  ErrorReporter.report(event.reason, { type: 'promise-rejection' });
+});
+```
+
+## Performance Testing
+
+### Memory Usage Monitoring
+
+Monitor extension memory usage:
+
+```typescript
+class PerformanceMonitor {
+  private static measurements: Map<string, number> = new Map();
+  
+  static startMeasurement(name: string) {
+    this.measurements.set(name, performance.now());
+  }
+  
+  static endMeasurement(name: string): number {
+    const start = this.measurements.get(name);
+    if (!start) return 0;
+    
+    const duration = performance.now() - start;
+    this.measurements.delete(name);
+    
+    console.log(`Performance: ${name} took ${duration.toFixed(2)}ms`);
+    return duration;
+  }
+  
+  static async measureMemory(): Promise<any> {
+    if ('memory' in performance) {
+      return {
+        used: (performance as any).memory.usedJSHeapSize,
+        total: (performance as any).memory.totalJSHeapSize,
+        limit: (performance as any).memory.jsHeapSizeLimit
+      };
+    }
+    return null;
+  }
+}
+
+// Usage
+PerformanceMonitor.startMeasurement('search-operation');
+await performSearch(query);
+PerformanceMonitor.endMeasurement('search-operation');
+
+const memory = await PerformanceMonitor.measureMemory();
+console.log('Memory usage:', memory);
+```
+
+### Load Testing
+
+Test extension performance under load:
+
+```typescript
+// test/performance.test.ts
+import { describe, it } from 'vitest';
+
+describe('Performance Tests', () => {
+  it('should handle multiple concurrent API calls', async () => {
+    const promises = Array.from({ length: 100 }, (_, i) => 
+      rua.storage.get(`key-${i}`)
+    );
+    
+    const start = performance.now();
+    await Promise.all(promises);
+    const duration = performance.now() - start;
+    
+    expect(duration).toBeLessThan(1000); // Should complete within 1 second
+  });
+  
+  it('should not leak memory during repeated operations', async () => {
+    const initialMemory = await PerformanceMonitor.measureMemory();
+    
+    // Perform operations that might leak memory
+    for (let i = 0; i < 1000; i++) {
+      await performOperation();
+    }
+    
+    // Force garbage collection (if available)
+    if (global.gc) global.gc();
+    
+    const finalMemory = await PerformanceMonitor.measureMemory();
+    const memoryIncrease = finalMemory.used - initialMemory.used;
+    
+    expect(memoryIncrease).toBeLessThan(10 * 1024 * 1024); // Less than 10MB increase
+  });
+});
+```
+
+## Debugging Production Issues
+
+### Remote Debugging
+
+Enable remote debugging for production issues:
+
+```typescript
+// Add to your extension's initialization
+if (process.env.NODE_ENV === 'production' && process.env.DEBUG_MODE) {
+  // Enable detailed logging
+  console.log = (...args) => {
+    rua.storage.set(`debug-log-${Date.now()}`, args.join(' '));
+  };
+  
+  // Capture performance metrics
+  setInterval(async () => {
+    const memory = await PerformanceMonitor.measureMemory();
+    await rua.storage.set(`perf-${Date.now()}`, memory);
+  }, 60000); // Every minute
+}
+```
+
+### User Feedback Integration
+
+Collect user feedback for debugging:
+
+```typescript
+class FeedbackCollector {
+  static async collectDiagnostics() {
+    return {
+      extensionVersion: rua.extension.version,
+      extensionId: rua.extension.id,
+      platform: await rua.os.platform(),
+      timestamp: new Date().toISOString()
+    };
+  }
+  
+  static async submitFeedback(message: string, includeData: boolean = true) {
+    const feedback = {
+      message,
+      timestamp: new Date().toISOString(),
+      diagnostics: includeData ? await this.collectDiagnostics() : null
+    };
+    
+    // Store locally
+    await rua.storage.set(`feedback-${Date.now()}`, feedback);
+    
+    // Show confirmation
+    await rua.notification.show({
+      title: 'Feedback Submitted',
+      body: 'Thank you for your feedback!'
+    });
+  }
+}
+```
+
+## Testing Configuration
+
+### Vitest Configuration
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./test/setup.ts']
+  },
+  resolve: {
+    alias: {
+      '@': './src'
+    }
+  }
+});
+```
+
+### Test Setup
+
+```typescript
+// test/setup.ts
+import { vi } from 'vitest';
+import { createMockRuaAPI } from './mocks/rua-api';
+
+// Mock Rua API globally
+global.rua = createMockRuaAPI();
+
+// Mock window.rua for browser environment
+Object.defineProperty(window, 'rua', {
+  value: global.rua,
+  writable: true
+});
+
+// Setup test utilities
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+```
+
+## Continuous Integration
+
+### GitHub Actions Workflow
+
+```yaml
+# .github/workflows/test.yml
+name: Test Extension
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
+      - name: Install dependencies
+        run: bun install
+        
+      - name: Run tests
+        run: bun test
+        
+      - name: Build extension
+        run: bun run build
+        
+      - name: Validate extension
+        run: rua validate-extension .
+```
+
+## Troubleshooting Guide
+
+### Common Issues and Solutions
+
+<Accordions>
+  <Accordion title="Hot reload not working">
+    1. Check that developer mode is enabled
+    2. Verify the development server is running (`bun run dev`)
+    3. Rebuild the extension after changes: `bun run build`
+    4. Reload Rua to pick up the new build
+  </Accordion>
+  
+  <Accordion title="DevTools not opening">
+    1. Enable developer mode in Rua settings
+    2. Right-click in extension window and select "Inspect"
+    3. Use F12 keyboard shortcut
+    4. Check if extension is running in view mode
+  </Accordion>
+  
+  <Accordion title="API mocking not working in tests">
+    1. Ensure mocks are set up before importing extension code
+    2. Use `vi.hoisted()` for mock setup in Vitest
+    3. Clear mocks between tests:
+    ```typescript
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Testing permission scenarios">
+    To test different permission configurations:
+    1. Modify the `permissions` array in your `manifest.json`
+    2. Validate the manifest: `ruactl validate`
+    3. Reinstall the extension in Rua
+    4. Test the API calls that require those permissions
+    
+    For unit tests, mock the Rua API to simulate permission errors:
+    ```typescript
+    vi.mock('rua-api/browser', () => ({
+      initializeRuaAPI: vi.fn().mockResolvedValue({
+        fs: {
+          readTextFile: vi.fn().mockRejectedValue(new Error('Permission denied'))
+        }
+      })
+    }));
+    ```
+  </Accordion>
+</Accordions>
+
+## Best Practices Summary
+
+1. **Enable Developer Mode**: Always develop with developer mode enabled
+2. **Use Console Logging**: Leverage console methods for debugging
+3. **Handle Errors Gracefully**: Implement proper error handling and user feedback
+4. **Write Tests**: Cover critical functionality with unit and integration tests
+5. **Monitor Performance**: Track memory usage and execution time
+6. **Validate Early**: Use `rua validate-extension` during development
+7. **Mock APIs**: Create comprehensive mocks for testing
+8. **Document Issues**: Keep track of known issues and their solutions
+
+Effective debugging and testing will help you create robust, reliable extensions that provide a great user experience.

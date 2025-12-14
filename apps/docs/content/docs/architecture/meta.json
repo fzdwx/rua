@@ -1,0 +1,8 @@
+{
+  "title": "Architecture",
+  "description": "Understanding Rua's design and implementation",
+  "icon": "Building",
+  "pages": [
+    "project-structure"
+  ]
+}

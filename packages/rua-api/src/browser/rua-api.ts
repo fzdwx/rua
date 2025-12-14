@@ -153,11 +153,6 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
                 setTitle: (title) => hostAPI.uiSetTitle(title),
             },
 
-            actions: {
-                register: (actions) => hostAPI.actionsRegister(actions),
-                unregister: (actionIds) => hostAPI.actionsUnregister(actionIds),
-            },
-
             os: {
                 platform: () => hostAPI.osPlatform(),
             },
