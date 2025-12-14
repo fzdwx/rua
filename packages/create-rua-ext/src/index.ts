@@ -140,6 +140,11 @@ function createTemplateContext(config: ExtensionConfig) {
     // Package manager
     packageManager: config.packageManager,
     pmRun,
+    pmInstall: config.packageManager === 'npm' ? 'npm install' : `${config.packageManager} install`,
+    useBun: config.packageManager === 'bun',
+    useNpm: config.packageManager === 'npm',
+    usePnpm: config.packageManager === 'pnpm',
+    useYarn: config.packageManager === 'yarn',
     
     // Permissions
     permissions: config.permissions,
@@ -235,20 +240,8 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
       fs.writeFileSync(path.join(targetDir, 'src/App.svelte'), appContent);
     }
 
-    // Tailwind CSS setup
-    if (config.styling === 'tailwind' || config.styling === 'shadcn') {
-      const tailwindConfigTemplate = path.join(templatesDir, 'tailwind.config.ts.template');
-      if (fs.existsSync(tailwindConfigTemplate)) {
-        const tailwindConfigContent = renderTemplate(tailwindConfigTemplate, context);
-        fs.writeFileSync(path.join(targetDir, 'tailwind.config.ts'), tailwindConfigContent);
-      }
-
-      const postcssConfigTemplate = path.join(templatesDir, 'postcss.config.ts.template');
-      if (fs.existsSync(postcssConfigTemplate)) {
-        const postcssConfigContent = renderTemplate(postcssConfigTemplate, context);
-        fs.writeFileSync(path.join(targetDir, 'postcss.config.ts'), postcssConfigContent);
-      }
-    }
+    // Tailwind CSS v4 uses @tailwindcss/vite plugin, no config files needed
+    // The CSS file just needs @import "tailwindcss"
 
     // shadcn/ui setup
     if (config.styling === 'shadcn') {

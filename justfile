@@ -28,12 +28,12 @@ build-ext-cli:
 
 # Publish rua-api to npm
 publish-api:
-    cd packages/rua-api && bun run build && bun publish --registry https://registry.npmjs.org --access public 
+    cd packages/rua-api && bun run build && bun publish --registry https://registry.npmjs.org --access public
     @echo "✓ rua-api published to bun"
 
 # Publish create-rua-ext to npm
 publish-ext-cli:
-    cd packages/create-rua-ext && bun run build && bun publish --registry https://registry.npmjs.org --access public 
+    cd packages/create-rua-ext && bun run build && bun publish --registry https://registry.npmjs.org --access public
     @echo "✓ create-rua-ext published to bun"
 
 # Publish all packages to npm
@@ -56,6 +56,9 @@ test-ext name="test-extension":
 # Run Rua in development mode
 dev:
     bun run --cwd apps/rua tauri dev
+
+crate-ext:
+    cd packages/create-rua-ext
 
 # Rebuild rua-api and hello-word example for testing
 rebuild-example:

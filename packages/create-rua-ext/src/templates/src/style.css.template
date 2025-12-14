@@ -1,6 +1,4 @@
-{{#useTailwind}}@tailwind base;
-@tailwind components;
-@tailwind utilities;{{/useTailwind}}
+{{#useTailwind}}@import "tailwindcss";{{/useTailwind}}
 
 {{#useShadcn}}@layer base {
   :root {

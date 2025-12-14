@@ -28,9 +28,8 @@
     "@vitejs/plugin-vue": "^5.0.0",
     "vue-tsc": "^2.0.0"{{/useVue}}{{#useSvelte}},
     "@sveltejs/vite-plugin-svelte": "^4.0.0"{{/useSvelte}}{{#useTailwind}},
-    "tailwindcss": "^3.4.15",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.5.0"{{/useTailwind}}{{#useShadcn}},
+    "@tailwindcss/vite": "^4.1.0",
+    "tailwindcss": "^4.1.0"{{/useTailwind}}{{#useShadcn}},
     "@types/node": "^22.9.1",
     "tailwindcss-animate": "^1.0.7"{{/useShadcn}}
   }{{/useVite}}
