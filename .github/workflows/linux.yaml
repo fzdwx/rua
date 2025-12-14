@@ -52,15 +52,9 @@ jobs:
 
       - name: build rua-api package
         run: bun run --cwd packages/rua-api build
-
-      - name: start virtual display (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
-        run: Xvfb :99 -screen 0 1024x768x24 &
-
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DISPLAY: ':99'
         with:
           projectPath: apps/rua
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
