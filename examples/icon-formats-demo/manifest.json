@@ -1,0 +1,13 @@
+{
+  "id": "icon-formats-demo",
+  "name": "Icon Formats Demo",
+  "version": "1.0.0",
+  "description": "Demonstrates different icon formats for DynamicAction",
+  "author": "Rua Team",
+  "rua": {
+    "background": {
+      "entry": "src/init.ts"
+    },
+    "permissions": []
+  }
+}

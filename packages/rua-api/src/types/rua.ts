@@ -17,9 +17,17 @@ export interface DynamicAction {
     id: string;
     name: string;
     keywords?: string[];
+    /**
+     * Icon for the action. Supports multiple formats:
+     * - Iconify icon name (e.g., "tabler:puzzle", "mdi:home")
+     * - Data URI (e.g., "data:image/svg+xml;base64,...")
+     * - SVG string (e.g., "<svg>...</svg>")
+     * - Extension asset path (e.g., "./icon.png", "./assets/icon.svg")
+     */
     icon?: string;
     subtitle?: string;
     mode: 'view' | 'command';
+    section?: string;
 }
 
 /**
@@ -35,7 +43,13 @@ export interface ManifestDerivedAction {
     mode: 'view';
     /** Search keywords */
     keywords?: string;
-    /** Icon */
+    /**
+     * Icon for the action. Supports multiple formats:
+     * - Iconify icon name (e.g., "tabler:puzzle", "mdi:home")
+     * - Data URI (e.g., "data:image/svg+xml;base64,...")
+     * - SVG string (e.g., "<svg>...</svg>")
+     * - Extension asset path (e.g., "./icon.png", "./assets/icon.svg")
+     */
     icon?: string;
     /** Subtitle */
     subtitle?: string;

@@ -10,12 +10,14 @@ import { Icon } from '@iconify/react';
 import type { Action } from '@/command';
 import { useExtensionSystem, type ManifestDerivedAction, type DynamicAction } from '@/contexts/ExtensionSystemContext';
 import { notifyActionTriggered } from '@/lib/background-executor';
+import { ActionIcon } from '@/components/ActionIcon';
 
 /**
  * Convert a ManifestDerivedAction to an Action for the command palette
  */
 function convertToAction(
   extensionAction: ManifestDerivedAction,
+  extensionPath: string | undefined,
   setRootActionId: (id: string | null) => void,
   setSearch: (search: string) => void
 ): Action {
@@ -24,13 +26,13 @@ function convertToAction(
     name: extensionAction.name,
     keywords: extensionAction.keywords,
     icon: extensionAction.icon ? (
-      <Icon icon={extensionAction.icon} style={{ fontSize: '20px' }} />
+      <ActionIcon icon={extensionAction.icon} extensionPath={extensionPath} size="20px" />
     ) : (
       <Icon icon="tabler:puzzle" style={{ fontSize: '20px' }} />
     ),
     subtitle: extensionAction.subtitle,
     shortcut: extensionAction.shortcut,
-    section: 'Extensions',
+    // section: 'Extensions',
     // Pass uiEntry for view mode actions
     uiEntry: extensionAction.uiEntry,
     // Store extensionId for routing
@@ -71,12 +73,12 @@ function convertDynamicToAction(
     name: dynamicAction.name,
     keywords: dynamicAction.keywords?.join(' '),
     icon: dynamicAction.icon ? (
-      <Icon icon={dynamicAction.icon} style={{ fontSize: '20px' }} />
+      <ActionIcon icon={dynamicAction.icon} extensionPath={extPath} size="20px" />
     ) : (
       <Icon icon="tabler:sparkles" style={{ fontSize: '20px' }} />
     ),
     subtitle: dynamicAction.subtitle,
-    section: 'Extensions',
+    section: dynamicAction.section?dynamicAction.section:'Extensions',
     // Build uiEntry for view mode
     uiEntry: dynamicAction.mode === 'view' && uiEntry && extPath
       ? `${extPath}/${uiEntry}?action=${dynamicAction.id}`
@@ -91,6 +93,7 @@ function convertDynamicToAction(
       } else if (dynamicAction.mode === 'command') {
         // For command mode, notify the extension's background script
         notifyActionTriggered(extensionId, dynamicAction.id);
+        setSearch("");
       }
     },
   };
@@ -110,9 +113,10 @@ export function useExtensionActionsForPalette(
     if (!initialized) return [];
 
     // Convert manifest actions
-    const manifestActions = extensionActions.map((action) =>
-      convertToAction(action, setRootActionId, setSearch)
-    );
+    const manifestActions = extensionActions.map((action) => {
+      const extension = extensions.find(p => p.manifest.id === action.extensionId);
+      return convertToAction(action, extension?.path, setRootActionId, setSearch);
+    });
 
     // Convert dynamic actions
     const dynamicActionsList: Action[] = [];
