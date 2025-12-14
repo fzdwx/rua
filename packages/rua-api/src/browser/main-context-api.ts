@@ -75,19 +75,19 @@ export interface MainContextRuaAPI {
     /** File System API for reading/writing files */
     fs: {
         /** Read a text file */
-        readTextFile(path: string): Promise<string>;
+        readTextFile(path: string, options?: { baseDir?: string }): Promise<string>;
         /** Read a binary file */
-        readBinaryFile(path: string): Promise<number[]>;
+        readBinaryFile(path: string, options?: { baseDir?: string }): Promise<number[]>;
         /** Write a text file */
-        writeTextFile(path: string, contents: string): Promise<void>;
+        writeTextFile(path: string, contents: string, options?: { baseDir?: string }): Promise<void>;
         /** Write a binary file */
-        writeBinaryFile(path: string, contents: number[]): Promise<void>;
+        writeBinaryFile(path: string, contents: number[], options?: { baseDir?: string }): Promise<void>;
         /** Read directory contents */
-        readDir(path: string): Promise<DirEntry[]>;
+        readDir(path: string, options?: { baseDir?: string }): Promise<DirEntry[]>;
         /** Check if a path exists */
-        exists(path: string): Promise<boolean>;
+        exists(path: string, options?: { baseDir?: string }): Promise<boolean>;
         /** Get file/directory stats */
-        stat(path: string): Promise<FileStat>;
+        stat(path: string, options?: { baseDir?: string }): Promise<FileStat>;
     };
 
     /** Shell API for executing commands */
@@ -102,6 +102,12 @@ export interface MainContextRuaAPI {
         register(actions: DynamicAction[]): Promise<void>;
         /** Unregister previously registered actions */
         unregister(actionIds: string[]): Promise<void>;
+    };
+
+    /** OS API for getting platform information */
+    os: {
+        /** Get the current platform (e.g., 'linux', 'darwin', 'win32') */
+        platform(): Promise<string>;
     };
 
     /** Register an event handler for lifecycle events */

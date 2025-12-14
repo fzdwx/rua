@@ -6,7 +6,7 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
-import {ExtensionHostInfo, ParsedPermission} from "rua-api";
+import { ExtensionHostInfo, ParsedPermission } from 'rua-api';
 
 /** File stat result */
 export interface FileStat {
@@ -112,7 +112,59 @@ export const apiCore = {
             exitCode: result.exit_code,
         };
     },
+
+    /**
+     * Resolve a path with optional base directory
+     */
+    resolvePath(path: string, baseDir?: string): string {
+        if (!baseDir) {
+            return path;
+        }
+
+        // Get base directory path
+        const basePath = getBaseDirectoryPath(baseDir);
+        if (!basePath) {
+            return path;
+        }
+
+        // Join base path with relative path
+        return `${basePath}/${path}`;
+    },
 };
+
+
+/**
+ * Get the actual path for a base directory
+ */
+function getBaseDirectoryPath(baseDir: string): string | null {
+    const home = '$HOME';
+
+    switch (baseDir) {
+        case 'home':
+            return home;
+        case 'appData':
+        case 'appLocalData':
+            return `${home}/.local/share`;
+        case 'appConfig':
+            return `${home}/.config`;
+        case 'desktop':
+            return `${home}/Desktop`;
+        case 'document':
+            return `${home}/Documents`;
+        case 'download':
+            return `${home}/Downloads`;
+        case 'picture':
+            return `${home}/Pictures`;
+        case 'video':
+            return `${home}/Videos`;
+        case 'audio':
+            return `${home}/Music`;
+        case 'temp':
+            return '/tmp';
+        default:
+            return null;
+    }
+}
 
 /**
  * Check if a simple permission is present
@@ -125,44 +177,35 @@ export function hasSimplePermission(permissions: string[], permission: string): 
  * Check if extension has permission for a specific shell command
  */
 export function hasShellPermission(extensionInfo: ExtensionHostInfo, program: string, args: string[]): boolean {
-    // First check simple permission
     if (!hasSimplePermission(extensionInfo.permissions, 'shell')) {
         return false;
     }
 
-    // If no parsed permissions, allow all (backward compatibility - but not recommended)
     const parsedPermissions = extensionInfo.parsedPermissions;
     if (!parsedPermissions) {
         return true;
     }
 
-    // Find the shell permission config
     const permConfig = parsedPermissions.find((p: ParsedPermission) => p.permission === 'shell');
     if (!permConfig) {
-        return true; // No specific config, allow all
+        return true;
     }
 
-    // If no allowCommands, allow all
     if (!permConfig.allowCommands || permConfig.allowCommands.length === 0) {
         return true;
     }
 
-    // Check if command matches any allowed pattern
     return permConfig.allowCommands.some((rule) => {
-        // Check program name matches
         if (rule.program !== program) {
             return false;
         }
 
-        // If no args patterns specified, allow any args
         if (!rule.args || rule.args.length === 0) {
             return true;
         }
 
-        // Check if all provided args match the patterns
-        // Each arg must match the corresponding pattern
         if (args.length > rule.args.length) {
-            return false; // More args than patterns
+            return false;
         }
 
         return args.every((arg, index) => {
@@ -178,49 +221,43 @@ export function hasShellPermission(extensionInfo: ExtensionHostInfo, program: st
     });
 }
 
+
 /**
  * Check if extension has permission for a specific path
  */
 export function hasPathPermission(extensionInfo: ExtensionHostInfo, permission: string, path: string): boolean {
-    // First check simple permission
     if (!hasSimplePermission(extensionInfo.permissions, permission)) {
         return false;
     }
 
-    // If no parsed permissions, allow all (backward compatibility)
-    const parsedPermissions = (extensionInfo as ExtensionHostInfo & { parsedPermissions?: ParsedPermission[] }).parsedPermissions;
+    const parsedPermissions = extensionInfo.parsedPermissions;
     if (!parsedPermissions) {
         return true;
     }
 
-    // Find the permission config
     const permConfig = parsedPermissions.find((p: ParsedPermission) => p.permission === permission);
     if (!permConfig) {
-        return true; // No specific config, allow all
+        return true;
     }
 
-    // If no allowPaths, allow all
     if (!permConfig.allowPaths || permConfig.allowPaths.length === 0) {
         return true;
     }
 
-    // Check if path matches any allowed pattern
     return permConfig.allowPaths.some((pattern: string) => pathMatches(path, pattern));
 }
 
 /**
  * Check if a path matches a pattern
- * Supports ** for any path, * for single segment
  */
 function pathMatches(path: string, pattern: string): boolean {
     const expandedPattern = expandPath(pattern);
 
-    // Convert glob pattern to regex
     const regexPattern = expandedPattern
-        .replace(/[.+^${}()|[\]\\]/g, '\\$&')  // Escape special chars except * and ?
-        .replace(/\*\*/g, '<<<GLOBSTAR>>>')     // Temp placeholder for **
-        .replace(/\*/g, '[^/]*')                // * matches anything except /
-        .replace(/<<<GLOBSTAR>>>/g, '.*');      // ** matches anything
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*\*/g, '<<<GLOBSTAR>>>')
+        .replace(/\*/g, '[^/]*')
+        .replace(/<<<GLOBSTAR>>>/g, '.*');
 
     const regex = new RegExp(`^${regexPattern}$`);
     return regex.test(path);

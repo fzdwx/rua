@@ -6,11 +6,12 @@
  */
 
 import {IframeChildIO, RPCChannel} from 'kkrpc/browser';
-import type {RuaClientAPI, RuaServerAPI, EventHandler} from '../types';
+import type {RuaClientAPI, RuaServerAPI, EventHandler, FsOptions} from '../types';
 
 // Re-export types for convenience
 export type {ExtensionMeta, DynamicAction, RuaClientAPI as RuaAPI} from '../types/rua';
 export type {RuaClientAPI} from '../types/rua';
+export { BaseDirectory } from '../types';
 
 // Singleton instance
 let ruaInstance: RuaClientAPI | null = null;
@@ -129,16 +130,16 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
             },
 
             fs: {
-                readTextFile: (path) => hostAPI.fsReadTextFile(path),
-                readBinaryFile: async (path) => {
-                    const data = await hostAPI.fsReadBinaryFile(path);
+                readTextFile: (path: string, options?: FsOptions) => hostAPI.fsReadTextFile(path, options?.baseDir),
+                readBinaryFile: async (path: string, options?: FsOptions) => {
+                    const data = await hostAPI.fsReadBinaryFile(path, options?.baseDir);
                     return new Uint8Array(data);
                 },
-                writeTextFile: (path, contents) => hostAPI.fsWriteTextFile(path, contents),
-                writeBinaryFile: (path, contents) => hostAPI.fsWriteBinaryFile(path, Array.from(contents)),
-                readDir: (path) => hostAPI.fsReadDir(path),
-                exists: (path) => hostAPI.fsExists(path),
-                stat: (path) => hostAPI.fsStat(path),
+                writeTextFile: (path: string, contents: string, options?: FsOptions) => hostAPI.fsWriteTextFile(path, contents, options?.baseDir),
+                writeBinaryFile: (path: string, contents: Uint8Array, options?: FsOptions) => hostAPI.fsWriteBinaryFile(path, Array.from(contents), options?.baseDir),
+                readDir: (path: string, options?: FsOptions) => hostAPI.fsReadDir(path, options?.baseDir),
+                exists: (path: string, options?: FsOptions) => hostAPI.fsExists(path, options?.baseDir),
+                stat: (path: string, options?: FsOptions) => hostAPI.fsStat(path, options?.baseDir),
             },
 
             shell: {
@@ -155,6 +156,10 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
             actions: {
                 register: (actions) => hostAPI.actionsRegister(actions),
                 unregister: (actionIds) => hostAPI.actionsUnregister(actionIds),
+            },
+
+            os: {
+                platform: () => hostAPI.osPlatform(),
             },
 
             on: (event, handler) => {

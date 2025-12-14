@@ -10,6 +10,15 @@
 bunx create-rua-ext my-extension
 ```
 
+CLI 会引导你选择：
+- **Extension type**: Background + View / View Only / Background Only
+- **Template**: Basic (No Build) / View Extension
+- **Build tool**: Vite / None
+- **UI Framework**: React / Vue / Svelte / Vanilla
+- **Package manager**: bun / pnpm / yarn / npm
+- **Styling**: None / Tailwind CSS / shadcn/ui
+- **Permissions**: 选择需要的权限
+
 ### 测试扩展
 
 1. **创建扩展**
@@ -195,6 +204,16 @@ rua.on('search-change', (query) => {
 | `storage` | 本地存储 |
 | `http` | HTTP 请求 |
 | `shell` | Shell 命令执行 |
+| `fs:read` | 读取文件 |
+| `fs:write` | 写入文件 |
+| `fs:read-dir` | 读取目录 |
+| `fs:exists` | 检查文件是否存在 |
+| `fs:stat` | 获取文件元信息 |
+
+以下 API 无需权限：
+- `rua.ui.*` - UI 控制
+- `rua.actions.*` - 动态 Actions 注册
+- `rua.os.*` - 系统信息
 
 ## Extension API
 
@@ -266,6 +285,63 @@ const text = await rua.clipboard.readText();
 await rua.clipboard.writeText('Hello, World!');
 ```
 
+### File System API
+
+```javascript
+import { BaseDirectory } from 'rua-api'
+
+// 读取文本文件（需要 fs:read 权限）
+const content = await rua.fs.readTextFile('/path/to/file.txt');
+
+// 使用 baseDir 选项读取相对于特定目录的文件
+const config = await rua.fs.readTextFile('.config/myapp/config.json', {
+  baseDir: BaseDirectory.Home
+});
+
+// 读取二进制文件
+const data = await rua.fs.readBinaryFile('/path/to/file.bin');
+
+// 写入文本文件（需要 fs:write 权限）
+await rua.fs.writeTextFile('/path/to/file.txt', 'Hello, World!');
+
+// 写入二进制文件
+await rua.fs.writeBinaryFile('/path/to/file.bin', new Uint8Array([1, 2, 3]));
+
+// 读取目录内容（需要 fs:read-dir 权限）
+const entries = await rua.fs.readDir('/path/to/dir');
+// entries: [{ name: 'file.txt', isFile: true, isDirectory: false }, ...]
+
+// 检查文件是否存在（需要 fs:exists 权限）
+const exists = await rua.fs.exists('/path/to/file.txt');
+
+// 获取文件元信息（需要 fs:stat 权限）
+const stat = await rua.fs.stat('/path/to/file.txt');
+// stat: { size, isFile, isDirectory, mtime, ctime }
+```
+
+#### BaseDirectory 枚举
+
+| 值 | 说明 |
+|------|------|
+| `Home` | 用户主目录 (~) |
+| `AppData` | 应用数据目录 (~/.local/share) |
+| `AppConfig` | 应用配置目录 (~/.config) |
+| `Desktop` | 桌面目录 |
+| `Document` | 文档目录 |
+| `Download` | 下载目录 |
+| `Picture` | 图片目录 |
+| `Video` | 视频目录 |
+| `Audio` | 音乐目录 |
+| `Temp` | 临时目录 (/tmp) |
+
+### Shell API
+
+```javascript
+// 执行 Shell 命令（需要 shell 权限）
+const result = await rua.shell.execute('echo', ['Hello', 'World']);
+// result: { success: true, stdout: 'Hello World\n', stderr: '', exitCode: 0 }
+```
+
 ### UI Control API
 
 ```javascript
@@ -280,6 +356,23 @@ await rua.ui.close();
 
 // 设置扩展标题
 await rua.ui.setTitle('New Title');
+```
+
+### OS API
+
+```javascript
+// 获取当前平台（无需权限）
+const platform = await rua.os.platform();
+// 返回值: 'linux', 'darwin' (macOS), 或 'win32' (Windows)
+
+// 根据平台执行不同逻辑
+if (platform === 'darwin') {
+  // macOS 特定代码
+} else if (platform === 'win32') {
+  // Windows 特定代码
+} else {
+  // Linux 特定代码
+}
 ```
 
 ### Dynamic Actions API
@@ -318,29 +411,78 @@ rua.on('action-triggered', (data) => {
 rua.off('search-change', handler);
 ```
 
-## 初始化脚本 (init.js)
+## Background Script
 
-初始化脚本在扩展 UI 加载时执行，可用于注册动态 Actions：
+Background Script 在 Rua 应用启动时自动执行，运行在主程序上下文中（不是 iframe）。适合用于：
+- 注册动态 Actions
+- 监听生命周期事件
+- 持久化数据
 
-```javascript
-// init.js
-import { initializeRuaAPI } from 'rua-api/browser'
+### 配置 Background Script
+
+在 manifest.json 中添加 background action：
+
+```json
+{
+  "rua": {
+    "actions": [
+      {
+        "name": "background",
+        "title": "Background",
+        "mode": "background",
+        "script": "dist/init.js"
+      }
+    ]
+  }
+}
+```
+
+### 编写 Background Script
+
+```typescript
+// src/init.ts
+import { createMainContextRuaAPI } from 'rua-api/browser'
 
 async function init() {
-  const rua = await initializeRuaAPI()
+  const rua = createMainContextRuaAPI()
   
-  // 注册动态 Actions
-  await rua.actions.register([
-    {
-      id: 'my-dynamic-action',
-      name: 'My Dynamic Action',
-      mode: 'view'
-    }
-  ]);
+  console.log(`[${rua.extension.id}] Background script initialized!`)
+  
+  // 监听主窗口激活
+  rua.on('activate', async () => {
+    console.log('Main window activated!')
+    
+    // 注册动态 Actions
+    await rua.actions.register([
+      {
+        id: 'dynamic-action',
+        name: 'Dynamic Action',
+        keywords: ['dynamic'],
+        icon: 'tabler:sparkles',
+        subtitle: 'A dynamically registered action',
+        mode: 'view'
+      }
+    ])
+  })
+  
+  // 监听主窗口隐藏
+  rua.on('deactivate', async () => {
+    console.log('Main window deactivated!')
+  })
 }
 
 init()
 ```
+
+### Background Script vs View Script
+
+| 特性 | Background Script | View Script |
+|------|------------------|-------------|
+| 运行时机 | 应用启动时 | 用户打开视图时 |
+| 运行环境 | 主程序上下文 | iframe |
+| API 初始化 | `createMainContextRuaAPI()` | `initializeRuaAPI()` |
+| 生命周期事件 | ✅ activate/deactivate | ❌ |
+| UI 渲染 | ❌ | ✅ |
 
 ## 开发模式热重载
 

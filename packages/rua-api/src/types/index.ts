@@ -30,4 +30,7 @@ export type {
     DirEntry,
     ShellResult,
     ParsedPermission,
+    FsOptions,
 } from './rua';
+
+export { BaseDirectory } from './rua';

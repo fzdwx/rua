@@ -24,7 +24,9 @@ async function init() {
         const openWithCode = (path: string) => {
             rua.shell.execute("code", [path])
         }
-        console.log()
+        let vscodeFile = await rua.fs.readTextFile("~/.config/Code/User/globalStorage/storage.json");
+
+        console.log("vsaaaa:===============",vscodeFile)
 
         console.log(`[${rua.extension.id}] Background script initialized!`)
 

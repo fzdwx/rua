@@ -87,39 +87,46 @@ export function createRuaAPI(
         },
 
         // File System API
-        async fsReadTextFile(path: string): Promise<string> {
-            checkPathPermission('fs:read', path);
-            return await apiCore.fsReadTextFile(path);
+        async fsReadTextFile(path: string, baseDir?: string): Promise<string> {
+            const resolvedPath = apiCore.resolvePath(path, baseDir);
+            checkPathPermission('fs:read', resolvedPath);
+            return await apiCore.fsReadTextFile(resolvedPath);
         },
 
-        async fsReadBinaryFile(path: string): Promise<number[]> {
-            checkPathPermission('fs:read', path);
-            return await apiCore.fsReadBinaryFile(path);
+        async fsReadBinaryFile(path: string, baseDir?: string): Promise<number[]> {
+            const resolvedPath = apiCore.resolvePath(path, baseDir);
+            checkPathPermission('fs:read', resolvedPath);
+            return await apiCore.fsReadBinaryFile(resolvedPath);
         },
 
-        async fsWriteTextFile(path: string, contents: string): Promise<void> {
-            checkPathPermission('fs:write', path);
-            await apiCore.fsWriteTextFile(path, contents);
+        async fsWriteTextFile(path: string, contents: string, baseDir?: string): Promise<void> {
+            const resolvedPath = apiCore.resolvePath(path, baseDir);
+            checkPathPermission('fs:write', resolvedPath);
+            await apiCore.fsWriteTextFile(resolvedPath, contents);
         },
 
-        async fsWriteBinaryFile(path: string, contents: number[]): Promise<void> {
-            checkPathPermission('fs:write', path);
-            await apiCore.fsWriteBinaryFile(path, contents);
+        async fsWriteBinaryFile(path: string, contents: number[], baseDir?: string): Promise<void> {
+            const resolvedPath = apiCore.resolvePath(path, baseDir);
+            checkPathPermission('fs:write', resolvedPath);
+            await apiCore.fsWriteBinaryFile(resolvedPath, contents);
         },
 
-        async fsReadDir(path: string): Promise<{ name: string; isFile: boolean; isDirectory: boolean }[]> {
-            checkPathPermission('fs:read-dir', path);
-            return await apiCore.fsReadDir(path);
+        async fsReadDir(path: string, baseDir?: string): Promise<{ name: string; isFile: boolean; isDirectory: boolean }[]> {
+            const resolvedPath = apiCore.resolvePath(path, baseDir);
+            checkPathPermission('fs:read-dir', resolvedPath);
+            return await apiCore.fsReadDir(resolvedPath);
         },
 
-        async fsExists(path: string): Promise<boolean> {
-            checkPathPermission('fs:exists', path);
-            return await apiCore.fsExists(path);
+        async fsExists(path: string, baseDir?: string): Promise<boolean> {
+            const resolvedPath = apiCore.resolvePath(path, baseDir);
+            checkPathPermission('fs:exists', resolvedPath);
+            return await apiCore.fsExists(resolvedPath);
         },
 
-        async fsStat(path: string): Promise<{ size: number; isFile: boolean; isDirectory: boolean; mtime: number; ctime: number }> {
-            checkPathPermission('fs:stat', path);
-            return await apiCore.fsStat(path);
+        async fsStat(path: string, baseDir?: string): Promise<{ size: number; isFile: boolean; isDirectory: boolean; mtime: number; ctime: number }> {
+            const resolvedPath = apiCore.resolvePath(path, baseDir);
+            checkPathPermission('fs:stat', resolvedPath);
+            return await apiCore.fsStat(resolvedPath);
         },
 
         // Shell API
@@ -153,6 +160,16 @@ export function createRuaAPI(
 
         async actionsUnregister(actionIds: string[]): Promise<void> {
             callbacks.onUnregisterActions?.(actionIds);
+        },
+
+        // OS API (no permission required)
+        async osPlatform(): Promise<string> {
+            // Tauri provides platform info via navigator.userAgent or we can detect it
+            const platform = navigator.platform.toLowerCase();
+            if (platform.includes('win')) return 'win32';
+            if (platform.includes('mac')) return 'darwin';
+            if (platform.includes('linux')) return 'linux';
+            return platform;
         },
     };
 }

@@ -90,6 +90,38 @@ export interface DirEntry {
     isDirectory: boolean;
 }
 
+/** Base directory for file system operations */
+export enum BaseDirectory {
+    /** User's home directory (~) */
+    Home = 'home',
+    /** Application data directory */
+    AppData = 'appData',
+    /** Application local data directory */
+    AppLocalData = 'appLocalData',
+    /** Application config directory */
+    AppConfig = 'appConfig',
+    /** Desktop directory */
+    Desktop = 'desktop',
+    /** Documents directory */
+    Document = 'document',
+    /** Downloads directory */
+    Download = 'download',
+    /** Pictures directory */
+    Picture = 'picture',
+    /** Videos directory */
+    Video = 'video',
+    /** Music directory */
+    Audio = 'audio',
+    /** Temporary directory */
+    Temp = 'temp',
+}
+
+/** Options for file system operations */
+export interface FsOptions {
+    /** Base directory to resolve relative paths from */
+    baseDir?: BaseDirectory;
+}
+
 /**
  * Rua API interface (client-side)
  * This is what extensions use via window.rua
@@ -114,19 +146,19 @@ export interface RuaClientAPI {
 
     fs: {
         /** Read file contents as text (requires fs:read permission) */
-        readTextFile(path: string): Promise<string>;
+        readTextFile(path: string, options?: FsOptions): Promise<string>;
         /** Read file contents as binary (requires fs:read permission) */
-        readBinaryFile(path: string): Promise<Uint8Array>;
+        readBinaryFile(path: string, options?: FsOptions): Promise<Uint8Array>;
         /** Write text to file (requires fs:write permission) */
-        writeTextFile(path: string, contents: string): Promise<void>;
+        writeTextFile(path: string, contents: string, options?: FsOptions): Promise<void>;
         /** Write binary data to file (requires fs:write permission) */
-        writeBinaryFile(path: string, contents: Uint8Array): Promise<void>;
+        writeBinaryFile(path: string, contents: Uint8Array, options?: FsOptions): Promise<void>;
         /** Read directory contents (requires fs:read-dir permission) */
-        readDir(path: string): Promise<DirEntry[]>;
+        readDir(path: string, options?: FsOptions): Promise<DirEntry[]>;
         /** Check if file/directory exists (requires fs:exists permission) */
-        exists(path: string): Promise<boolean>;
+        exists(path: string, options?: FsOptions): Promise<boolean>;
         /** Get file/directory metadata (requires fs:stat permission) */
-        stat(path: string): Promise<FileStat>;
+        stat(path: string, options?: FsOptions): Promise<FileStat>;
     };
 
     shell: {
@@ -144,6 +176,11 @@ export interface RuaClientAPI {
     actions: {
         register(actions: DynamicAction[]): Promise<void>;
         unregister(actionIds: string[]): Promise<void>;
+    };
+
+    os: {
+        /** Get the current platform (e.g., 'linux', 'darwin', 'win32') */
+        platform(): Promise<string>;
     };
 
     on(event: string, handler: EventHandler): void;
@@ -175,19 +212,19 @@ export interface RuaServerAPI {
     storageRemove(key: string): Promise<void>;
 
     // File System API
-    fsReadTextFile(path: string): Promise<string>;
+    fsReadTextFile(path: string, baseDir?: string): Promise<string>;
 
-    fsReadBinaryFile(path: string): Promise<number[]>;
+    fsReadBinaryFile(path: string, baseDir?: string): Promise<number[]>;
 
-    fsWriteTextFile(path: string, contents: string): Promise<void>;
+    fsWriteTextFile(path: string, contents: string, baseDir?: string): Promise<void>;
 
-    fsWriteBinaryFile(path: string, contents: number[]): Promise<void>;
+    fsWriteBinaryFile(path: string, contents: number[], baseDir?: string): Promise<void>;
 
-    fsReadDir(path: string): Promise<DirEntry[]>;
+    fsReadDir(path: string, baseDir?: string): Promise<DirEntry[]>;
 
-    fsExists(path: string): Promise<boolean>;
+    fsExists(path: string, baseDir?: string): Promise<boolean>;
 
-    fsStat(path: string): Promise<FileStat>;
+    fsStat(path: string, baseDir?: string): Promise<FileStat>;
 
     // Shell API
     shellExecute(program: string, args: string[]): Promise<ShellResult>;
@@ -205,6 +242,9 @@ export interface RuaServerAPI {
     actionsRegister(actions: DynamicAction[]): Promise<void>;
 
     actionsUnregister(actionIds: string[]): Promise<void>;
+
+    // OS API
+    osPlatform(): Promise<string>;
 }
 
 /** Callbacks for UI control from host side */

@@ -24,10 +24,13 @@ export { initializeRuaAPI } from './rua-api';
 export { createMainContextRuaAPI, getExtensionId } from './main-context-api';
 export type { MainContextRuaAPI } from './main-context-api';
 
-// Re-export types
+// Re-export types and enums
 export type { 
   RuaAPI, 
   RuaClientAPI,
   ExtensionMeta, 
   DynamicAction,
 } from './rua-api';
+
+export { BaseDirectory } from './rua-api';
+export type { FsOptions } from '../types';

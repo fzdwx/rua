@@ -6,6 +6,29 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 
+/// Expand environment variables in path (e.g., $HOME)
+fn expand_path(path: &str) -> String {
+    let mut result = path.to_string();
+    
+    // Expand $HOME
+    if let Ok(home) = std::env::var("HOME") {
+        result = result.replace("$HOME", &home);
+    }
+    
+    // Expand ~ at the beginning
+    if result.starts_with("~/") {
+        if let Ok(home) = std::env::var("HOME") {
+            result = format!("{}{}", home, &result[1..]);
+        }
+    } else if result == "~" {
+        if let Ok(home) = std::env::var("HOME") {
+            result = home;
+        }
+    }
+    
+    result
+}
+
 /// Directory entry information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DirEntry {
@@ -31,47 +54,52 @@ pub struct FileStat {
 /// Read file contents as text
 #[tauri::command]
 pub async fn fs_read_text_file(path: String) -> Result<String, String> {
-    fs::read_to_string(&path)
+    let expanded_path = expand_path(&path);
+    fs::read_to_string(&expanded_path)
         .map_err(|e| format!("Failed to read file: {}", e))
 }
 
 /// Read file contents as binary
 #[tauri::command]
 pub async fn fs_read_binary_file(path: String) -> Result<Vec<u8>, String> {
-    fs::read(&path)
+    let expanded_path = expand_path(&path);
+    fs::read(&expanded_path)
         .map_err(|e| format!("Failed to read file: {}", e))
 }
 
 /// Write text to file
 #[tauri::command]
 pub async fn fs_write_text_file(path: String, contents: String) -> Result<(), String> {
+    let expanded_path = expand_path(&path);
     // Create parent directories if they don't exist
-    if let Some(parent) = Path::new(&path).parent() {
+    if let Some(parent) = Path::new(&expanded_path).parent() {
         fs::create_dir_all(parent)
             .map_err(|e| format!("Failed to create directory: {}", e))?;
     }
     
-    fs::write(&path, contents)
+    fs::write(&expanded_path, contents)
         .map_err(|e| format!("Failed to write file: {}", e))
 }
 
 /// Write binary data to file
 #[tauri::command]
 pub async fn fs_write_binary_file(path: String, contents: Vec<u8>) -> Result<(), String> {
+    let expanded_path = expand_path(&path);
     // Create parent directories if they don't exist
-    if let Some(parent) = Path::new(&path).parent() {
+    if let Some(parent) = Path::new(&expanded_path).parent() {
         fs::create_dir_all(parent)
             .map_err(|e| format!("Failed to create directory: {}", e))?;
     }
     
-    fs::write(&path, contents)
+    fs::write(&expanded_path, contents)
         .map_err(|e| format!("Failed to write file: {}", e))
 }
 
 /// Read directory contents
 #[tauri::command]
 pub async fn fs_read_dir(path: String) -> Result<Vec<DirEntry>, String> {
-    let entries = fs::read_dir(&path)
+    let expanded_path = expand_path(&path);
+    let entries = fs::read_dir(&expanded_path)
         .map_err(|e| format!("Failed to read directory: {}", e))?;
     
     let mut result = Vec::new();
@@ -93,13 +121,15 @@ pub async fn fs_read_dir(path: String) -> Result<Vec<DirEntry>, String> {
 /// Check if file/directory exists
 #[tauri::command]
 pub async fn fs_exists(path: String) -> Result<bool, String> {
-    Ok(Path::new(&path).exists())
+    let expanded_path = expand_path(&path);
+    Ok(Path::new(&expanded_path).exists())
 }
 
 /// Get file/directory metadata
 #[tauri::command]
 pub async fn fs_stat(path: String) -> Result<FileStat, String> {
-    let metadata = fs::metadata(&path)
+    let expanded_path = expand_path(&path);
+    let metadata = fs::metadata(&expanded_path)
         .map_err(|e| format!("Failed to get metadata: {}", e))?;
     
     let mtime = metadata.modified()

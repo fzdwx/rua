@@ -137,6 +137,9 @@ await rua.ui.showInput()
 await rua.ui.setTitle('New Title')
 await rua.ui.close()
 
+// OS Info
+const platform = await rua.os.platform() // 'linux', 'darwin', or 'win32'
+
 // Listen for search input changes
 rua.on('search-change', (query) => {
   console.log('Search changed:', query)

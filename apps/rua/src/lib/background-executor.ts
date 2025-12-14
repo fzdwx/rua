@@ -61,13 +61,13 @@ export interface MainContextRuaAPI {
     };
 
     fs: {
-        readTextFile(path: string): Promise<string>;
-        readBinaryFile(path: string): Promise<number[]>;
-        writeTextFile(path: string, contents: string): Promise<void>;
-        writeBinaryFile(path: string, contents: number[]): Promise<void>;
-        readDir(path: string): Promise<DirEntry[]>;
-        exists(path: string): Promise<boolean>;
-        stat(path: string): Promise<FileStat>;
+        readTextFile(path: string, options?: { baseDir?: string }): Promise<string>;
+        readBinaryFile(path: string, options?: { baseDir?: string }): Promise<number[]>;
+        writeTextFile(path: string, contents: string, options?: { baseDir?: string }): Promise<void>;
+        writeBinaryFile(path: string, contents: number[], options?: { baseDir?: string }): Promise<void>;
+        readDir(path: string, options?: { baseDir?: string }): Promise<DirEntry[]>;
+        exists(path: string, options?: { baseDir?: string }): Promise<boolean>;
+        stat(path: string, options?: { baseDir?: string }): Promise<FileStat>;
     };
 
     shell: {
@@ -77,6 +77,10 @@ export interface MainContextRuaAPI {
     actions: {
         register(actions: DynamicAction[]): Promise<void>;
         unregister(actionIds: string[]): Promise<void>;
+    };
+
+    os: {
+        platform(): Promise<string>;
     };
 
     on(event: 'activate' | 'deactivate', callback: () => void): void;
@@ -170,33 +174,40 @@ export function createMainContextRuaAPI(
         },
 
         fs: {
-            async readTextFile(path: string): Promise<string> {
-                checkPathPermission('fs:read', path);
-                return await apiCore.fsReadTextFile(path);
+            async readTextFile(path: string, options?: { baseDir?: string }): Promise<string> {
+                const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
+                checkPathPermission('fs:read', resolvedPath);
+                return await apiCore.fsReadTextFile(resolvedPath);
             },
-            async readBinaryFile(path: string): Promise<number[]> {
-                checkPathPermission('fs:read', path);
-                return await apiCore.fsReadBinaryFile(path);
+            async readBinaryFile(path: string, options?: { baseDir?: string }): Promise<number[]> {
+                const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
+                checkPathPermission('fs:read', resolvedPath);
+                return await apiCore.fsReadBinaryFile(resolvedPath);
             },
-            async writeTextFile(path: string, contents: string): Promise<void> {
-                checkPathPermission('fs:write', path);
-                await apiCore.fsWriteTextFile(path, contents);
+            async writeTextFile(path: string, contents: string, options?: { baseDir?: string }): Promise<void> {
+                const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
+                checkPathPermission('fs:write', resolvedPath);
+                await apiCore.fsWriteTextFile(resolvedPath, contents);
             },
-            async writeBinaryFile(path: string, contents: number[]): Promise<void> {
-                checkPathPermission('fs:write', path);
-                await apiCore.fsWriteBinaryFile(path, contents);
+            async writeBinaryFile(path: string, contents: number[], options?: { baseDir?: string }): Promise<void> {
+                const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
+                checkPathPermission('fs:write', resolvedPath);
+                await apiCore.fsWriteBinaryFile(resolvedPath, contents);
             },
-            async readDir(path: string): Promise<DirEntry[]> {
-                checkPathPermission('fs:read-dir', path);
-                return await apiCore.fsReadDir(path);
+            async readDir(path: string, options?: { baseDir?: string }): Promise<DirEntry[]> {
+                const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
+                checkPathPermission('fs:read-dir', resolvedPath);
+                return await apiCore.fsReadDir(resolvedPath);
             },
-            async exists(path: string): Promise<boolean> {
-                checkPathPermission('fs:exists', path);
-                return await apiCore.fsExists(path);
+            async exists(path: string, options?: { baseDir?: string }): Promise<boolean> {
+                const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
+                checkPathPermission('fs:exists', resolvedPath);
+                return await apiCore.fsExists(resolvedPath);
             },
-            async stat(path: string): Promise<FileStat> {
-                checkPathPermission('fs:stat', path);
-                return await apiCore.fsStat(path);
+            async stat(path: string, options?: { baseDir?: string }): Promise<FileStat> {
+                const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
+                checkPathPermission('fs:stat', resolvedPath);
+                return await apiCore.fsStat(resolvedPath);
             },
         },
 
@@ -219,6 +230,16 @@ export function createMainContextRuaAPI(
                 console.log('[BackgroundExecutor] Unregistering actions for:', extensionInfo.id, actionIds);
                 state.registeredActions = state.registeredActions.filter(id => !actionIds.includes(id));
                 globalCallbacks?.onUnregisterActions(extensionInfo.id, actionIds);
+            },
+        },
+
+        os: {
+            async platform(): Promise<string> {
+                const platform = navigator.platform.toLowerCase();
+                if (platform.includes('win')) return 'win32';
+                if (platform.includes('mac')) return 'darwin';
+                if (platform.includes('linux')) return 'linux';
+                return platform;
             },
         },
 
