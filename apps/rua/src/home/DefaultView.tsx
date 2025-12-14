@@ -66,7 +66,7 @@ export function DefaultView({
                         onRender={({item, active}) => {
                             if (typeof item === "string") {
                                 return (
-                                    <div className="px-4 py-2 text-xs font-semibold text-gray-11 uppercase tracking-wide">
+                                    <div className="px-4 py-2 text-xs font-semibold text-gray-11 tracking-wide">
                                         {item}
                                     </div>
                                 );
