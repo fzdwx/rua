@@ -32,6 +32,7 @@ export type {
     ParsedPermission,
     FsOptions,
     ActionTriggeredData,
+    SearchChangeData,
     BackgroundScriptState,
     BackgroundScriptCallbacks
 } from './rua';

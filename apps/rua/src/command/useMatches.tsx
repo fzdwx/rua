@@ -24,8 +24,9 @@ const fuseOptions: IFuseOptions<ActionImpl> = {
     ],
     includeScore: true,
     includeMatches: true,
-    threshold: 0.2,
+    threshold: 0.3,
     minMatchCharLength: 1,
+    ignoreLocation: true,
 };
 
 // Weight factor for usage count in sorting
@@ -212,14 +213,53 @@ function useInternalMatches(
             return throttledFiltered.map((action) => ({score: 0, action}));
         }
 
-        let matches: Match[] = [];
-        // Use Fuse's `search` method to perform the search efficiently
-        const searchResults = fuse.search(throttledSearch);
-        // Format the search results to match the existing structure
-        matches = searchResults.map(({item: action, score}) => ({
-            score: 1 / ((score ?? 0) + 1), // Convert the Fuse score to the format used in the original code
-            action,
-        }));
+        // Split search into tokens and search for each token
+        const tokens = throttledSearch.trim().split(/\s+/).filter(t => t.length > 0);
+        
+        if (tokens.length === 0) {
+            return throttledFiltered.map((action) => ({score: 0, action}));
+        }
+
+        if (tokens.length === 1) {
+            // Single token: use standard Fuse search
+            const searchResults = fuse.search(tokens[0]);
+            return searchResults.map(({item: action, score}) => ({
+                score: 1 / ((score ?? 0) + 1),
+                action,
+            }));
+        }
+
+        // Multiple tokens: search for each token and intersect results
+        // All tokens must match for an action to be included
+        const tokenResults = tokens.map(token => {
+            const results = fuse.search(token);
+            return new Map(results.map(r => [r.item.id, r.score ?? 0]));
+        });
+
+        // Find actions that match all tokens
+        const matches: Match[] = [];
+        for (const action of throttledFiltered) {
+            let totalScore = 0;
+            let matchesAll = true;
+            
+            for (const tokenResult of tokenResults) {
+                const score = tokenResult.get(action.id);
+                if (score === undefined) {
+                    matchesAll = false;
+                    break;
+                }
+                totalScore += score;
+            }
+            
+            if (matchesAll) {
+                // Average score across all tokens
+                const avgScore = totalScore / tokens.length;
+                matches.push({
+                    score: 1 / (avgScore + 1),
+                    action,
+                });
+            }
+        }
 
         return matches;
     }, [throttledFiltered, throttledSearch, fuse]) as Match[];

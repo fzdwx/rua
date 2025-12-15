@@ -270,6 +270,11 @@ export interface ExtensionHostInfo {
 }
 
 
+/** Search change event data */
+export interface SearchChangeData {
+    query: string;
+}
+
 /** State for a loaded background script */
 export interface BackgroundScriptState {
     extensionId: string;
@@ -279,6 +284,7 @@ export interface BackgroundScriptState {
     activateCallbacks: Set<() => void>;
     deactivateCallbacks: Set<() => void>;
     actionTriggeredCallbacks: Set<(data: ActionTriggeredData) => void>;
+    searchChangeCallbacks: Set<(data: SearchChangeData) => void>;
     registeredActions: string[];
 }
 

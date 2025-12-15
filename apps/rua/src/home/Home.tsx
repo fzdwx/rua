@@ -34,7 +34,7 @@ export default function Home() {
     const lastActiveMainActionRef = useRef<ActionImpl | null>(null); // Store last active main action for passing data to edit action
     const {theme, toggleTheme} = useTheme();
     const {incrementUsage} = useActionUsage();
-    const {notifyActivate, notifyDeactivate} = useExtensionSystem();
+    const {notifyActivate, notifyDeactivate, notifySearchChange} = useExtensionSystem();
 
     // Initialize action store
     const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
@@ -97,6 +97,14 @@ export default function Home() {
             unlistenHide?.();
         };
     }, [notifyActivate, notifyDeactivate]);
+
+    // Notify extensions when search input changes
+    useEffect(() => {
+        // Only notify when in main view (no root action selected)
+        if (state.rootActionId === null) {
+            notifySearchChange(search);
+        }
+    }, [search, state.rootActionId, notifySearchChange]);
 
     // Register actions when they change
     useRegisterActions(allActions, [allActions]);

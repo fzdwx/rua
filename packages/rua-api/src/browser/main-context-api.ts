@@ -32,16 +32,16 @@ export interface MainContextRuaAPI extends CommonRuaAPI {
     };
 
     /** Register an event handler for lifecycle events */
-    on(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: {
+    on(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', callback: (() => void) | ((data: {
         actionId: string;
         context?: unknown
-    }) => void)): void;
+    } | { query: string }) => void)): void;
 
     /** Unregister an event handler */
-    off(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: {
+    off(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', callback: (() => void) | ((data: {
         actionId: string;
         context?: unknown
-    }) => void)): void;
+    } | { query: string }) => void)): void;
 }
 
 // Extend Window interface for global variables set by the executor

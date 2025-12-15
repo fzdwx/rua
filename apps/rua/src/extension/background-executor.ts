@@ -12,7 +12,9 @@ import {
     ParsedPermission,
     MainContextRuaAPI,
     ShellResult,
-    ActionTriggeredData, DirEntry, FileStat, BackgroundScriptCallbacks, BackgroundScriptState, FsOptions
+    ActionTriggeredData,
+    SearchChangeData,
+    DirEntry, FileStat, BackgroundScriptCallbacks, BackgroundScriptState, FsOptions
 } from 'rua-api';
 import {
     apiCore,
@@ -187,23 +189,27 @@ export function createMainContextRuaAPI(
             },
         },
 
-        on(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: ActionTriggeredData) => void)): void {
+        on(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', callback: (() => void) | ((data: ActionTriggeredData | SearchChangeData) => void)): void {
             if (event === 'activate') {
                 state.activateCallbacks.add(callback as () => void);
             } else if (event === 'deactivate') {
                 state.deactivateCallbacks.add(callback as () => void);
             } else if (event === 'action-triggered') {
                 state.actionTriggeredCallbacks.add(callback as (data: ActionTriggeredData) => void);
+            } else if (event === 'search-change') {
+                state.searchChangeCallbacks.add(callback as (data: SearchChangeData) => void);
             }
         },
 
-        off(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: ActionTriggeredData) => void)): void {
+        off(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', callback: (() => void) | ((data: ActionTriggeredData | SearchChangeData) => void)): void {
             if (event === 'activate') {
                 state.activateCallbacks.delete(callback as () => void);
             } else if (event === 'deactivate') {
                 state.deactivateCallbacks.delete(callback as () => void);
             } else if (event === 'action-triggered') {
                 state.actionTriggeredCallbacks.delete(callback as (data: ActionTriggeredData) => void);
+            } else if (event === 'search-change') {
+                state.searchChangeCallbacks.delete(callback as (data: SearchChangeData) => void);
             }
         },
     };
@@ -255,6 +261,7 @@ export async function executeBackgroundScript(
         activateCallbacks: new Set(),
         deactivateCallbacks: new Set(),
         actionTriggeredCallbacks: new Set(),
+        searchChangeCallbacks: new Set(),
         registeredActions: [],
     };
 
@@ -400,6 +407,34 @@ export async function notifyActionTriggered(
 }
 
 /**
+ * Notify all extensions that the search input value has changed
+ * @param query - The current search query
+ */
+export async function notifySearchChange(query: string): Promise<void> {
+    const promises: Promise<void>[] = [];
+
+    for (const [extensionId, state] of backgroundScripts) {
+        if (!state.loaded) continue;
+
+        const data: SearchChangeData = { query };
+
+        for (const callback of state.searchChangeCallbacks) {
+            promises.push(
+                (async () => {
+                    try {
+                        callback(data);
+                    } catch (error) {
+                        console.warn('[BackgroundExecutor] Failed to notify search-change:', extensionId, error);
+                    }
+                })()
+            );
+        }
+    }
+
+    await Promise.allSettled(promises);
+}
+
+/**
  * Clean up a specific extension's background script state
  * Removes all callbacks and unregisters all dynamic actions
  */
@@ -417,6 +452,8 @@ export function cleanupExtension(extensionId: string): void {
     // Clear callbacks
     state.activateCallbacks.clear();
     state.deactivateCallbacks.clear();
+    state.actionTriggeredCallbacks.clear();
+    state.searchChangeCallbacks.clear();
 
     // Remove from registry
     backgroundScripts.delete(extensionId);

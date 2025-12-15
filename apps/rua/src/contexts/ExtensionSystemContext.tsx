@@ -19,6 +19,7 @@ import {
     setBackgroundCallbacks,
     notifyActivate as notifyActivateBackground,
     notifyDeactivate as notifyDeactivateBackground,
+    notifySearchChange as notifySearchChangeBackground,
     cleanupExtension as cleanupBackgroundExtension,
     isBackgroundScriptLoaded,
 } from '@/extension/background-executor.ts';
@@ -90,6 +91,8 @@ export interface ExtensionSystemContextValue {
     notifyActivate: () => Promise<void>;
     /** Notify all extensions that the main window is deactivated */
     notifyDeactivate: () => Promise<void>;
+    /** Notify all extensions that the search input value has changed */
+    notifySearchChange: (query: string) => Promise<void>;
 }
 
 const ExtensionSystemContext = createContext<ExtensionSystemContextValue | null>(null);
@@ -620,6 +623,10 @@ export function ExtensionSystemProvider({children}: ExtensionSystemProviderProps
         await notifyDeactivateBackground();
     }, []);
 
+    const notifySearchChange = useCallback(async (query: string) => {
+        await notifySearchChangeBackground(query);
+    }, []);
+
     const value: ExtensionSystemContextValue = {
         initialized,
         loading,
@@ -640,6 +647,7 @@ export function ExtensionSystemProvider({children}: ExtensionSystemProviderProps
         reloadExtensions,
         notifyActivate,
         notifyDeactivate,
+        notifySearchChange,
     };
 
     return (

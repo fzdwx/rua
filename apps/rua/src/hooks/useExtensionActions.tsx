@@ -81,7 +81,7 @@ function convertDynamicToAction(
     return {
         id: fullId,
         name: dynamicAction.name,
-        keywords: dynamicAction.keywords?.join(' '),
+        keywords: dynamicAction.keywords?.join(','),
         icon: dynamicAction.icon ? (
             <ActionIcon icon={dynamicAction.icon} extensionPath={extPath} size="20px"/>
         ) : (
