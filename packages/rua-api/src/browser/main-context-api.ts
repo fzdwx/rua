@@ -11,7 +11,8 @@
  *   rua.on('activate', () => console.log('Window activated'));
  */
 
-import type {ExtensionMeta, DynamicAction, ShellResult, DirEntry, FileStat} from '../types';
+import type {DynamicAction} from '../types';
+import {CommonRuaAPI} from "./index";
 
 // Re-export types for convenience
 export type {ExtensionMeta, DynamicAction} from '../types/rua';
@@ -20,57 +21,7 @@ export type {ExtensionMeta, DynamicAction} from '../types/rua';
  * Main Context Rua API interface for background scripts
  * Provides full API access for background scripts running in the main program context.
  */
-export interface MainContextRuaAPI {
-    /** Extension metadata */
-    extension: ExtensionMeta;
-
-    /** Clipboard API for reading/writing clipboard */
-    clipboard: {
-        /** Read text from clipboard */
-        readText(): Promise<string>;
-        /** Write text to clipboard */
-        writeText(text: string): Promise<void>;
-    };
-
-    /** Notification API for showing system notifications */
-    notification: {
-        /** Show a system notification */
-        show(options: { title: string; body?: string }): Promise<void>;
-    };
-
-    /** Storage API for persisting extension data */
-    storage: {
-        /** Get a value from extension storage */
-        get<T>(key: string): Promise<T | null>;
-        /** Set a value in extension storage */
-        set<T>(key: string, value: T): Promise<void>;
-        /** Remove a value from extension storage */
-        remove(key: string): Promise<void>;
-    };
-
-    /** File System API for reading/writing files */
-    fs: {
-        /** Read a text file */
-        readTextFile(path: string, options?: { baseDir?: string }): Promise<string>;
-        /** Read a binary file */
-        readBinaryFile(path: string, options?: { baseDir?: string }): Promise<number[]>;
-        /** Write a text file */
-        writeTextFile(path: string, contents: string, options?: { baseDir?: string }): Promise<void>;
-        /** Write a binary file */
-        writeBinaryFile(path: string, contents: number[], options?: { baseDir?: string }): Promise<void>;
-        /** Read directory contents */
-        readDir(path: string, options?: { baseDir?: string }): Promise<DirEntry[]>;
-        /** Check if a path exists */
-        exists(path: string, options?: { baseDir?: string }): Promise<boolean>;
-        /** Get file/directory stats */
-        stat(path: string, options?: { baseDir?: string }): Promise<FileStat>;
-    };
-
-    /** Shell API for executing commands */
-    shell: {
-        /** Execute a shell command */
-        execute(program: string, args?: string[]): Promise<ShellResult | string>;
-    };
+export interface MainContextRuaAPI extends CommonRuaAPI {
 
     /** Actions API for registering dynamic actions */
     actions: {
@@ -78,12 +29,6 @@ export interface MainContextRuaAPI {
         register(actions: DynamicAction[]): Promise<void>;
         /** Unregister previously registered actions */
         unregister(actionIds: string[]): Promise<void>;
-    };
-
-    /** OS API for getting platform information */
-    os: {
-        /** Get the current platform */
-        platform(): Promise<'windows' | 'linux' | 'darwin'>;
     };
 
     /** Register an event handler for lifecycle events */

@@ -55,15 +55,15 @@ export const apiCore = {
         return await invoke<string>('fs_read_text_file', {path});
     },
 
-    async fsReadBinaryFile(path: string): Promise<number[]> {
-        return await invoke<number[]>('fs_read_binary_file', {path});
+    async fsReadBinaryFile(path: string): Promise<Uint8Array> {
+        return await invoke<Uint8Array>('fs_read_binary_file', {path});
     },
 
     async fsWriteTextFile(path: string, contents: string): Promise<void> {
         await invoke('fs_write_text_file', {path, contents});
     },
 
-    async fsWriteBinaryFile(path: string, contents: number[]): Promise<void> {
+    async fsWriteBinaryFile(path: string, contents: Uint8Array): Promise<void> {
         await invoke('fs_write_binary_file', {path, contents});
     },
 
@@ -105,6 +105,11 @@ export const apiCore = {
             };
         }
         return await invoke<string>('execute_shell_command_async', {command})
+    },
+
+
+    async uiHideWindow(): Promise<void> {
+        // todo
     },
 
     /**

@@ -6,13 +6,13 @@
  * Each extension can have at most one background action.
  */
 
-import type {
+import {
     DynamicAction,
     ExtensionHostInfo,
     ParsedPermission,
     MainContextRuaAPI,
     ShellResult,
-    ActionTriggeredData, DirEntry, FileStat, BackgroundScriptCallbacks, BackgroundScriptState
+    ActionTriggeredData, DirEntry, FileStat, BackgroundScriptCallbacks, BackgroundScriptState, FsOptions
 } from 'rua-api';
 import {
     apiCore,
@@ -112,38 +112,42 @@ export function createMainContextRuaAPI(
             },
         },
 
+        async hideWindow(): Promise<void> {
+            await apiCore.uiHideWindow()
+        },
+
         fs: {
-            async readTextFile(path: string, options?: { baseDir?: string }): Promise<string> {
+            async readTextFile(path: string, options?: FsOptions): Promise<string> {
                 const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
                 checkPathPermission('fs:read', resolvedPath);
                 return await apiCore.fsReadTextFile(resolvedPath);
             },
-            async readBinaryFile(path: string, options?: { baseDir?: string }): Promise<number[]> {
+            async readBinaryFile(path: string, options?: FsOptions): Promise<Uint8Array> {
                 const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
                 checkPathPermission('fs:read', resolvedPath);
                 return await apiCore.fsReadBinaryFile(resolvedPath);
             },
-            async writeTextFile(path: string, contents: string, options?: { baseDir?: string }): Promise<void> {
+            async writeTextFile(path: string, contents: string, options?: FsOptions): Promise<void> {
                 const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
                 checkPathPermission('fs:write', resolvedPath);
                 await apiCore.fsWriteTextFile(resolvedPath, contents);
             },
-            async writeBinaryFile(path: string, contents: number[], options?: { baseDir?: string }): Promise<void> {
+            async writeBinaryFile(path: string, contents: Uint8Array, options?: FsOptions): Promise<void> {
                 const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
                 checkPathPermission('fs:write', resolvedPath);
                 await apiCore.fsWriteBinaryFile(resolvedPath, contents);
             },
-            async readDir(path: string, options?: { baseDir?: string }): Promise<DirEntry[]> {
+            async readDir(path: string, options?: FsOptions): Promise<DirEntry[]> {
                 const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
                 checkPathPermission('fs:read-dir', resolvedPath);
                 return await apiCore.fsReadDir(resolvedPath);
             },
-            async exists(path: string, options?: { baseDir?: string }): Promise<boolean> {
+            async exists(path: string, options?: FsOptions): Promise<boolean> {
                 const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
                 checkPathPermission('fs:exists', resolvedPath);
                 return await apiCore.fsExists(resolvedPath);
             },
-            async stat(path: string, options?: { baseDir?: string }): Promise<FileStat> {
+            async stat(path: string, options?:FsOptions): Promise<FileStat> {
                 const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
                 checkPathPermission('fs:stat', resolvedPath);
                 return await apiCore.fsStat(resolvedPath);

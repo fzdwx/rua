@@ -153,6 +153,10 @@ export function createRuaAPI(
             callbacks.onSetTitle?.(title);
         },
 
+        async uiHideWindow(): Promise<void>{
+            await apiCore.uiHideWindow();
+        },
+
         // Actions API (no permission required)
         async actionsRegister(actions: DynamicAction[]): Promise<void> {
             callbacks.onRegisterActions?.(actions);
@@ -178,5 +182,3 @@ export function createExtensionServerAPI(
 ): RuaServerAPI {
     return createRuaAPI(extensionInfo, callbacks);
 }
-
-export type ExtensionServerAPI = RuaServerAPI;
