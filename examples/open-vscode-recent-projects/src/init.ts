@@ -172,7 +172,7 @@ async function init() {
     // Handle action triggered
     rua.on('action-triggered', async (data: { actionId: string; context?: unknown }) => {
         console.log(`[${rua.extension.id}] Action triggered:`, data.actionId);
-
+        rua.hideWindow()
         const project = projectsMap.get(data.actionId);
         if (project) {
             await openWithVSCode(project.path);
