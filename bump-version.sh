@@ -56,6 +56,18 @@ cd apps/rua/src-tauri
 cargo update -p rua
 cd "$SCRIPT_DIR"
 
+# Update documentation files
+echo "📝 Updating documentation installation paths..."
+sed -i "s/rua_${CURRENT_VERSION}_amd64\\.deb/rua_${NEW_VERSION}_amd64.deb/g" apps/docs/content/docs/getting-started/installation.mdx
+sed -i "s/rua-${CURRENT_VERSION}-1\\.x86_64\\.rpm/rua-${NEW_VERSION}-1.x86_64.rpm/g" apps/docs/content/docs/getting-started/installation.mdx
+sed -i "s/rua_${CURRENT_VERSION}_amd64\\.AppImage/rua_${NEW_VERSION}_amd64.AppImage/g" apps/docs/content/docs/getting-started/installation.mdx
+
+sed -i "s/rua_${CURRENT_VERSION}_amd64\\.deb/rua_${NEW_VERSION}_amd64.deb/g" apps/docs/content/docs/user-guide/installation.mdx
+sed -i "s/rua-${CURRENT_VERSION}-1\\.x86_64\\.rpm/rua-${NEW_VERSION}-1.x86_64.rpm/g" apps/docs/content/docs/user-guide/installation.mdx
+sed -i "s/rua_${CURRENT_VERSION}_amd64\\.AppImage/rua_${NEW_VERSION}_amd64.AppImage/g" apps/docs/content/docs/user-guide/installation.mdx
+
+sed -i "s/rua_${CURRENT_VERSION}_amd64\\.deb/rua_${NEW_VERSION}_amd64.deb/g" apps/docs/content/docs/getting-started/quick-start.mdx
+
 # Check if there are any changes
 if git diff --quiet; then
     echo "⚠️  No changes detected. Version might already be ${NEW_VERSION}"
@@ -71,7 +83,10 @@ git add package.json \
     packages/create-rua-ext/package.json \
     apps/rua/src-tauri/Cargo.toml \
     apps/rua/src-tauri/tauri.conf.json \
-    apps/rua/src-tauri/Cargo.lock
+    apps/rua/src-tauri/Cargo.lock \
+    apps/docs/content/docs/getting-started/installation.mdx \
+    apps/docs/content/docs/user-guide/installation.mdx \
+    apps/docs/content/docs/getting-started/quick-start.mdx
 
 git commit -m "chore: bump version to ${NEW_VERSION}
 
