@@ -21,7 +21,7 @@ import {
     notifyDeactivate as notifyDeactivateBackground,
     cleanupExtension as cleanupBackgroundExtension,
     isBackgroundScriptLoaded,
-} from '@/lib/background-executor';
+} from '@/extension/background-executor.ts';
 
 // Import types from rua-api package
 import {
@@ -97,7 +97,7 @@ const ExtensionSystemContext = createContext<ExtensionSystemContextValue | null>
 /**
  * Props for PluginSystemProvider
  */
-export interface PluginSystemProviderProps {
+export interface ExtensionSystemProviderProps {
     children: ReactNode;
 }
 
@@ -200,9 +200,9 @@ async function loadDevExtension(devPath: string): Promise<ExtensionInfo | null> 
 }
 
 /**
- * Extension system provider component
+ * Extension system extension component
  */
-export function PluginSystemProvider({children}: PluginSystemProviderProps) {
+export function ExtensionSystemProvider({children}: ExtensionSystemProviderProps) {
     const [initialized, setInitialized] = useState(false);
     const [loading, setLoading] = useState(true);
     const [plugins, setPlugins] = useState<ExtensionInfo[]>([]);
@@ -330,7 +330,7 @@ export function PluginSystemProvider({children}: PluginSystemProviderProps) {
             }
 
             setInitialized(true);
-            
+
             // Notify all extensions that the window is activated on initial load
             // This ensures extensions receive the activate event even if the window
             // was already shown when they were loaded

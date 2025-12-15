@@ -11,90 +11,17 @@
  *   rua.on('activate', () => console.log('Window activated'));
  */
 
-import type { ExtensionMeta, DynamicAction } from '../types/rua';
+import type {DynamicAction} from '../types';
+import {CommonRuaAPI} from "./index";
 
 // Re-export types for convenience
-export type { ExtensionMeta, DynamicAction } from '../types/rua';
-
-/** File stat result */
-export interface FileStat {
-    size: number;
-    isFile: boolean;
-    isDirectory: boolean;
-    mtime: number;
-    ctime: number;
-}
-
-/** Directory entry */
-export interface DirEntry {
-    name: string;
-    isFile: boolean;
-    isDirectory: boolean;
-}
-
-/** Shell execution result */
-export interface ShellResult {
-    success: boolean;
-    stdout: string;
-    stderr: string;
-    exitCode: number | null;
-}
+export type {ExtensionMeta, DynamicAction} from '../types/rua';
 
 /**
  * Main Context Rua API interface for background scripts
  * Provides full API access for background scripts running in the main program context.
  */
-export interface MainContextRuaAPI {
-    /** Extension metadata */
-    extension: ExtensionMeta;
-
-    /** Clipboard API for reading/writing clipboard */
-    clipboard: {
-        /** Read text from clipboard */
-        readText(): Promise<string>;
-        /** Write text to clipboard */
-        writeText(text: string): Promise<void>;
-    };
-
-    /** Notification API for showing system notifications */
-    notification: {
-        /** Show a system notification */
-        show(options: { title: string; body?: string }): Promise<void>;
-    };
-
-    /** Storage API for persisting extension data */
-    storage: {
-        /** Get a value from extension storage */
-        get<T>(key: string): Promise<T | null>;
-        /** Set a value in extension storage */
-        set<T>(key: string, value: T): Promise<void>;
-        /** Remove a value from extension storage */
-        remove(key: string): Promise<void>;
-    };
-
-    /** File System API for reading/writing files */
-    fs: {
-        /** Read a text file */
-        readTextFile(path: string, options?: { baseDir?: string }): Promise<string>;
-        /** Read a binary file */
-        readBinaryFile(path: string, options?: { baseDir?: string }): Promise<number[]>;
-        /** Write a text file */
-        writeTextFile(path: string, contents: string, options?: { baseDir?: string }): Promise<void>;
-        /** Write a binary file */
-        writeBinaryFile(path: string, contents: number[], options?: { baseDir?: string }): Promise<void>;
-        /** Read directory contents */
-        readDir(path: string, options?: { baseDir?: string }): Promise<DirEntry[]>;
-        /** Check if a path exists */
-        exists(path: string, options?: { baseDir?: string }): Promise<boolean>;
-        /** Get file/directory stats */
-        stat(path: string, options?: { baseDir?: string }): Promise<FileStat>;
-    };
-
-    /** Shell API for executing commands */
-    shell: {
-        /** Execute a shell command */
-        execute(program: string, args?: string[]): Promise<ShellResult>;
-    };
+export interface MainContextRuaAPI extends CommonRuaAPI {
 
     /** Actions API for registering dynamic actions */
     actions: {
@@ -104,17 +31,17 @@ export interface MainContextRuaAPI {
         unregister(actionIds: string[]): Promise<void>;
     };
 
-    /** OS API for getting platform information */
-    os: {
-        /** Get the current platform (e.g., 'linux', 'darwin', 'win32') */
-        platform(): Promise<string>;
-    };
-
     /** Register an event handler for lifecycle events */
-    on(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: { actionId: string; context?: unknown }) => void)): void;
+    on(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: {
+        actionId: string;
+        context?: unknown
+    }) => void)): void;
 
     /** Unregister an event handler */
-    off(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: { actionId: string; context?: unknown }) => void)): void;
+    off(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: {
+        actionId: string;
+        context?: unknown
+    }) => void)): void;
 }
 
 // Extend Window interface for global variables set by the executor

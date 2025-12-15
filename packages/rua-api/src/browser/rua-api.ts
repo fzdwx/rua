@@ -6,12 +6,13 @@
  */
 
 import {IframeChildIO, RPCChannel} from 'kkrpc/browser';
-import type {RuaClientAPI, RuaServerAPI, EventHandler, FsOptions} from '../types';
+import type {RuaClientAPI, EventHandler, FsOptions} from '../types';
+import {RuaServerAPI} from "../types/rua";
 
 // Re-export types for convenience
 export type {ExtensionMeta, DynamicAction, RuaClientAPI as RuaAPI} from '../types/rua';
 export type {RuaClientAPI} from '../types/rua';
-export { BaseDirectory } from '../types';
+export {BaseDirectory} from '../types';
 
 // Singleton instance
 let ruaInstance: RuaClientAPI | null = null;
@@ -143,7 +144,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
             },
 
             shell: {
-                execute: (program, args = []) => hostAPI.shellExecute(program, args),
+                execute: (program, args = [], spawn?: boolean) => hostAPI.shellExecute(program, args, spawn),
             },
 
             ui: {
@@ -152,6 +153,8 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
                 close: () => hostAPI.uiClose(),
                 setTitle: (title) => hostAPI.uiSetTitle(title),
             },
+
+            hideWindow: () => hostAPI.uiHideWindow(),
 
             os: {
                 platform: () => hostAPI.osPlatform(),

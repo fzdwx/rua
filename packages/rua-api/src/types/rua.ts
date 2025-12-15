@@ -5,6 +5,8 @@
  * These types define the contract for Rua-specific APIs.
  */
 
+import {CommonRuaAPI} from "../browser";
+
 /** Extension metadata */
 export interface ExtensionMeta {
     id: string;
@@ -28,6 +30,7 @@ export interface DynamicAction {
     subtitle?: string;
     mode: 'view' | 'command';
     section?: string;
+    badge?: string  // Badge text to display on the right side of the action
 }
 
 /**
@@ -140,61 +143,18 @@ export interface FsOptions {
  * Rua API interface (client-side)
  * This is what extensions use via window.rua
  */
-export interface RuaClientAPI {
-    extension: ExtensionMeta;
-
-    clipboard: {
-        readText(): Promise<string>;
-        writeText(text: string): Promise<void>;
-    };
-
-    notification: {
-        show(options: { title: string; body?: string }): Promise<void>;
-    };
-
-    storage: {
-        get<T>(key: string): Promise<T | null>;
-        set<T>(key: string, value: T): Promise<void>;
-        remove(key: string): Promise<void>;
-    };
-
-    fs: {
-        /** Read file contents as text (requires fs:read permission) */
-        readTextFile(path: string, options?: FsOptions): Promise<string>;
-        /** Read file contents as binary (requires fs:read permission) */
-        readBinaryFile(path: string, options?: FsOptions): Promise<Uint8Array>;
-        /** Write text to file (requires fs:write permission) */
-        writeTextFile(path: string, contents: string, options?: FsOptions): Promise<void>;
-        /** Write binary data to file (requires fs:write permission) */
-        writeBinaryFile(path: string, contents: Uint8Array, options?: FsOptions): Promise<void>;
-        /** Read directory contents (requires fs:read-dir permission) */
-        readDir(path: string, options?: FsOptions): Promise<DirEntry[]>;
-        /** Check if file/directory exists (requires fs:exists permission) */
-        exists(path: string, options?: FsOptions): Promise<boolean>;
-        /** Get file/directory metadata (requires fs:stat permission) */
-        stat(path: string, options?: FsOptions): Promise<FileStat>;
-    };
-
-    shell: {
-        /** Execute a shell command (requires shell permission with matching allow rules) */
-        execute(program: string, args?: string[]): Promise<ShellResult>;
-    };
-
+export interface RuaClientAPI extends CommonRuaAPI {
     ui: {
         hideInput(): Promise<void>;
         showInput(): Promise<void>;
+        /** close action back to main view */
         close(): Promise<void>;
         setTitle(title: string): Promise<void>;
     };
 
-    os: {
-        /** Get the current platform (e.g., 'linux', 'darwin', 'win32') */
-        platform(): Promise<string>;
-    };
+    on(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', handler: EventHandler): void;
 
-    on(event: string, handler: EventHandler): void;
-
-    off(event: string, handler: EventHandler): void;
+    off(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', handler: EventHandler): void;
 }
 
 /**
@@ -236,7 +196,7 @@ export interface RuaServerAPI {
     fsStat(path: string, baseDir?: string): Promise<FileStat>;
 
     // Shell API
-    shellExecute(program: string, args: string[]): Promise<ShellResult>;
+    shellExecute(program: string, args: string[], spawn?: boolean): Promise<ShellResult | string>;
 
     // UI API
     uiHideInput(): Promise<void>;
@@ -247,14 +207,24 @@ export interface RuaServerAPI {
 
     uiSetTitle(title: string): Promise<void>;
 
+    uiHideWindow(): Promise<void>
+
     // Actions API
     actionsRegister(actions: DynamicAction[]): Promise<void>;
 
     actionsUnregister(actionIds: string[]): Promise<void>;
 
     // OS API
-    osPlatform(): Promise<string>;
+    osPlatform(): Promise<'windows' | 'linux' | 'darwin'>;
 }
+
+
+/** Action triggered event data */
+export interface ActionTriggeredData {
+    actionId: string;
+    context?: unknown;
+}
+
 
 /** Callbacks for UI control from host side */
 export interface RuaHostCallbacks {
@@ -295,4 +265,23 @@ export interface ExtensionHostInfo {
     permissions: string[];
     /** Detailed parsed permissions with allow rules */
     parsedPermissions?: ParsedPermission[];
+}
+
+
+/** State for a loaded background script */
+export interface BackgroundScriptState {
+    extensionId: string;
+    scriptPath: string;
+    loaded: boolean;
+    error?: string;
+    activateCallbacks: Set<() => void>;
+    deactivateCallbacks: Set<() => void>;
+    actionTriggeredCallbacks: Set<(data: ActionTriggeredData) => void>;
+    registeredActions: string[];
+}
+
+/** Callbacks for background script actions */
+export interface BackgroundScriptCallbacks {
+    onRegisterActions: (extensionId: string, actions: DynamicAction[]) => void;
+    onUnregisterActions: (extensionId: string, actionIds: string[]) => void;
 }

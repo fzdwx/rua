@@ -1,6 +1,5 @@
 /// Read text from clipboard using xclip on Linux
 #[tauri::command]
-#[cfg(target_os = "linux")]
 pub fn read_clipboard() -> Result<String, String> {
     use std::process::Command;
 
@@ -20,17 +19,9 @@ pub fn read_clipboard() -> Result<String, String> {
     }
 }
 
-/// Read text from clipboard (not supported on non-Linux platforms)
-#[tauri::command]
-#[cfg(not(target_os = "linux"))]
-pub fn read_clipboard() -> Result<String, String> {
-    // Return empty string on non-Linux platforms
-    Ok(String::new())
-}
 
 /// Write text to clipboard using xclip on Linux
 #[tauri::command]
-#[cfg(target_os = "linux")]
 pub fn write_clipboard(text: String) -> Result<(), String> {
     use std::process::{Command, Stdio};
     use std::io::Write;
@@ -56,12 +47,4 @@ pub fn write_clipboard(text: String) -> Result<(), String> {
     } else {
         Err("xclip failed to write to clipboard".to_string())
     }
-}
-
-/// Write text to clipboard (not supported on non-Linux platforms)
-#[tauri::command]
-#[cfg(not(target_os = "linux"))]
-pub fn write_clipboard(_text: String) -> Result<(), String> {
-    // No-op on non-Linux platforms
-    Ok(())
 }

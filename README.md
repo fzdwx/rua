@@ -1,6 +1,6 @@
 # Rua
 
-A modern, extensible command palette launcher for Linux, built with Tauri + React + TypeScript.
+A modern, extensible command palette launcher for Linux.
 
 ![img.png](./.github/img.png)
 
@@ -12,6 +12,18 @@ A modern, extensible command palette launcher for Linux, built with Tauri + Reac
 - ⌨️ Keyboard-first navigation
 - 🔍 Fuzzy search for applications and actions
 - 📦 Easy extension development with `create-rua-ext`
+
+## Documentation
+
+For detailed documentation, including:
+
+- 📖 [Installation Guide](https://rua-docs.vercel.app/docs/getting-started/installation)
+- 🔌 [Extension Development](https://rua-docs.vercel.app/docs/extensions/create-rua-ext)
+- 📚 [API Reference](https://rua-docs.vercel.app/docs/api/overview)
+- 🛠️ [ruactl CLI Tool](https://rua-docs.vercel.app/docs/user-guide/ruactl)
+- 🤝 [Contributing Guide](https://rua-docs.vercel.app/docs/contributing/development-setup)
+
+Visit the **[Rua Documentation](https://rua-docs.vercel.app)** website.
 
 ## Quick Start
 
@@ -25,7 +37,7 @@ A modern, extensible command palette launcher for Linux, built with Tauri + Reac
 
 ```bash
 # Install dependencies
-bun install
+just pre
 
 # Run in development mode
 just dev
@@ -33,18 +45,6 @@ just dev
 # Build for production
 just build
 ```
-
-## Documentation
-
-For detailed documentation, including:
-
-- 📖 [Installation Guide](https://rua-docs.vercel.app/docs/getting-started/installation)
-- 🔌 [Extension Development](https://rua-docs.vercel.app/docs/extensions/create-rua-ext)
-- 📚 [API Reference](https://rua-docs.vercel.app/docs/api/overview)
-- 🛠️ [ruactl CLI Tool](https://rua-docs.vercel.app/docs/user-guide/ruactl)
-- 🤝 [Contributing Guide](https://rua-docs.vercel.app/docs/contributing/development-setup)
-
-Visit the **[Rua Documentation](https://rua-docs.vercel.app)** website.
 
 ## Create an Extension
 

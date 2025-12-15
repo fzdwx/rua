@@ -5,32 +5,9 @@
  * This module provides the core Tauri invoke calls for all Rua APIs.
  */
 
-import { invoke } from '@tauri-apps/api/core';
-import { ExtensionHostInfo, ParsedPermission } from 'rua-api';
+import {invoke} from '@tauri-apps/api/core';
+import {DirEntry, ExtensionHostInfo, FileStat, ParsedPermission, ShellResult} from 'rua-api';
 
-/** File stat result */
-export interface FileStat {
-    size: number;
-    isFile: boolean;
-    isDirectory: boolean;
-    mtime: number;
-    ctime: number;
-}
-
-/** Directory entry */
-export interface DirEntry {
-    name: string;
-    isFile: boolean;
-    isDirectory: boolean;
-}
-
-/** Shell execution result */
-export interface ShellResult {
-    success: boolean;
-    stdout: string;
-    stderr: string;
-    exitCode: number | null;
-}
 
 /**
  * Core API implementations - direct Tauri invoke calls
@@ -42,7 +19,7 @@ export const apiCore = {
     },
 
     async clipboardWriteText(text: string): Promise<void> {
-        await invoke('write_clipboard', { text });
+        await invoke('write_clipboard', {text});
     },
 
     // Notification
@@ -75,42 +52,64 @@ export const apiCore = {
 
     // File System
     async fsReadTextFile(path: string): Promise<string> {
-        return await invoke<string>('fs_read_text_file', { path });
+        return await invoke<string>('fs_read_text_file', {path});
     },
 
-    async fsReadBinaryFile(path: string): Promise<number[]> {
-        return await invoke<number[]>('fs_read_binary_file', { path });
+    async fsReadBinaryFile(path: string): Promise<Uint8Array> {
+        return await invoke<Uint8Array>('fs_read_binary_file', {path});
     },
 
     async fsWriteTextFile(path: string, contents: string): Promise<void> {
-        await invoke('fs_write_text_file', { path, contents });
+        await invoke('fs_write_text_file', {path, contents});
     },
 
-    async fsWriteBinaryFile(path: string, contents: number[]): Promise<void> {
-        await invoke('fs_write_binary_file', { path, contents });
+    async fsWriteBinaryFile(path: string, contents: Uint8Array): Promise<void> {
+        await invoke('fs_write_binary_file', {path, contents});
     },
 
     async fsReadDir(path: string): Promise<DirEntry[]> {
-        return await invoke('fs_read_dir', { path });
+        return await invoke('fs_read_dir', {path});
     },
 
     async fsExists(path: string): Promise<boolean> {
-        return await invoke<boolean>('fs_exists', { path });
+        return await invoke<boolean>('fs_exists', {path});
     },
 
     async fsStat(path: string): Promise<FileStat> {
-        return await invoke('fs_stat', { path });
+        return await invoke('fs_stat', {path});
+    },
+
+    async platform(): Promise<'windows' | 'linux' | 'darwin'> {
+        const platform = navigator.platform.toLowerCase();
+        if (platform.includes('win')) return 'windows';
+        if (platform.includes('mac')) return 'darwin';
+        if (platform.includes('linux')) return 'linux';
+        // @ts-ignore
+        return platform;
     },
 
     // Shell
-    async shellExecute(command: string): Promise<ShellResult> {
-        const result = await invoke<{ success: boolean; stdout: string; stderr: string; exit_code: number | null }>('execute_shell_command', { command });
-        return {
-            success: result.success,
-            stdout: result.stdout,
-            stderr: result.stderr,
-            exitCode: result.exit_code,
-        };
+    async shellExecute(command: string, spawn?: boolean): Promise<ShellResult | string> {
+        if (!spawn) {
+            const result = await invoke<{
+                success: boolean;
+                stdout: string;
+                stderr: string;
+                exit_code: number | null
+            }>('execute_shell_command', {command});
+            return {
+                success: result.success,
+                stdout: result.stdout,
+                stderr: result.stderr,
+                exitCode: result.exit_code,
+            };
+        }
+        return await invoke<string>('execute_shell_command_async', {command})
+    },
+
+
+    async uiHideWindow(): Promise<void> {
+        // todo
     },
 
     /**

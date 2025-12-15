@@ -4,17 +4,17 @@
  * Rua-specific APIs exposed to extension iframes via kkrpc.
  */
 
-import type {
+import {
     ExtensionMeta,
     DynamicAction,
     RuaServerAPI,
     RuaHostCallbacks,
-    ExtensionHostInfo,
+    ExtensionHostInfo, ShellResult, FileStat, DirEntry,
 } from 'rua-api';
-import {apiCore, hasPathPermission, hasShellPermission, hasSimplePermission, permissionError} from './rua-api-core';
+import {apiCore, hasPathPermission, hasShellPermission, hasSimplePermission, permissionError} from './rua-api-core.ts';
 
 // Re-export types for convenience
-export type { ExtensionMeta, DynamicAction, RuaHostCallbacks, RuaClientCallbacks, ExtensionHostInfo } from 'rua-api';
+export type {ExtensionMeta, DynamicAction, RuaHostCallbacks, RuaClientCallbacks, ExtensionHostInfo} from 'rua-api';
 
 /** Alias for RuaServerAPI */
 export type RuaAPI = RuaServerAPI;
@@ -111,7 +111,7 @@ export function createRuaAPI(
             await apiCore.fsWriteBinaryFile(resolvedPath, contents);
         },
 
-        async fsReadDir(path: string, baseDir?: string): Promise<{ name: string; isFile: boolean; isDirectory: boolean }[]> {
+        async fsReadDir(path: string, baseDir?: string): Promise<DirEntry[]> {
             const resolvedPath = apiCore.resolvePath(path, baseDir);
             checkPathPermission('fs:read-dir', resolvedPath);
             return await apiCore.fsReadDir(resolvedPath);
@@ -123,17 +123,17 @@ export function createRuaAPI(
             return await apiCore.fsExists(resolvedPath);
         },
 
-        async fsStat(path: string, baseDir?: string): Promise<{ size: number; isFile: boolean; isDirectory: boolean; mtime: number; ctime: number }> {
+        async fsStat(path: string, baseDir?: string): Promise<FileStat> {
             const resolvedPath = apiCore.resolvePath(path, baseDir);
             checkPathPermission('fs:stat', resolvedPath);
             return await apiCore.fsStat(resolvedPath);
         },
 
         // Shell API
-        async shellExecute(program: string, args: string[]): Promise<{ success: boolean; stdout: string; stderr: string; exitCode: number | null }> {
+        async shellExecute(program: string, args: string[], spawn?: boolean): Promise<ShellResult | string> {
             checkShellPermission(program, args);
             const command = [program, ...args].join(' ');
-            return await apiCore.shellExecute(command);
+            return await apiCore.shellExecute(command, spawn);
         },
 
         // UI API (no permission required)
@@ -153,6 +153,10 @@ export function createRuaAPI(
             callbacks.onSetTitle?.(title);
         },
 
+        async uiHideWindow(): Promise<void>{
+            await apiCore.uiHideWindow();
+        },
+
         // Actions API (no permission required)
         async actionsRegister(actions: DynamicAction[]): Promise<void> {
             callbacks.onRegisterActions?.(actions);
@@ -163,13 +167,8 @@ export function createRuaAPI(
         },
 
         // OS API (no permission required)
-        async osPlatform(): Promise<string> {
-            // Tauri provides platform info via navigator.userAgent or we can detect it
-            const platform = navigator.platform.toLowerCase();
-            if (platform.includes('win')) return 'window';
-            if (platform.includes('mac')) return 'darwin';
-            if (platform.includes('linux')) return 'linux';
-            return platform;
+        async osPlatform(): Promise<'windows' | 'linux' | 'darwin'> {
+            return await apiCore.platform();
         },
     };
 }
@@ -183,5 +182,3 @@ export function createExtensionServerAPI(
 ): RuaServerAPI {
     return createRuaAPI(extensionInfo, callbacks);
 }
-
-export type ExtensionServerAPI = RuaServerAPI;

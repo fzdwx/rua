@@ -1,29 +1,24 @@
-mod applications;
-mod clipboard;
-mod extensions;
-mod extension_storage;
+mod control_server;
 mod file_watcher;
 mod fs_api;
-mod notification;
-mod proxy;
-mod control_server;
-mod shell_executor;
+pub mod types;
 mod webpage_info;
 
 #[cfg(target_os = "linux")]
-mod hyprland;
+mod linux;
+use linux::*;
+mod extension;
+#[cfg(not(target_os = "linux"))]
+mod not_linux;
+use extension::*;
+#[cfg(not(target_os = "linux"))]
+use not_linux::*;
 
 use std::path::PathBuf;
-use tauri::{App, Manager};
 use tauri::http::{Request, Response};
-use tauri::tray::{TrayIconBuilder, MouseButton, MouseButtonState, TrayIconEvent};
 use tauri::menu::{Menu, MenuItem};
-
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::{App, Manager};
 
 fn setup(app: &mut App) -> anyhow::Result<()> {
     let win = app.get_webview_window("main").unwrap();
@@ -61,27 +56,30 @@ fn setup_tray(app: &App) -> anyhow::Result<()> {
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
         .show_menu_on_left_click(false)
-        .on_menu_event(|app, event| {
-            match event.id.as_ref() {
-                "show" => {
-                    if let Some(window) = app.get_webview_window("main") {
-                        let _ = window.show();
-                        let _ = window.set_focus();
-                    }
+        .on_menu_event(|app, event| match event.id.as_ref() {
+            "show" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
                 }
-                "devtools" => {
-                    if let Some(window) = app.get_webview_window("main") {
-                        let _ = window.open_devtools();
-                    }
-                }
-                "quit" => {
-                    app.exit(0);
-                }
-                _ => {}
             }
+            "devtools" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.open_devtools();
+                }
+            }
+            "quit" => {
+                app.exit(0);
+            }
+            _ => {}
         })
         .on_tray_icon_event(|tray, event| {
-            if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } = event
+            {
                 let app = tray.app_handle();
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.show();
@@ -178,10 +176,6 @@ fn serve_file(file_path: &PathBuf) -> Response<Vec<u8>> {
     }
 }
 
-/// Handle custom `ext://` protocol for loading extension files (old signature for reference)
-#[allow(dead_code)]
-fn handle_ext_protocol_old() {}
-
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
@@ -199,31 +193,29 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            greet,
-            applications::get_applications,
-            applications::refresh_applications_cache,
-            applications::launch_application,
-            proxy::fetch_with_proxy,
-            clipboard::read_clipboard,
-            clipboard::write_clipboard,
-            shell_executor::execute_shell_command,
-            shell_executor::execute_shell_command_async,
+            get_applications,
+            refresh_applications_cache,
+            launch_application,
+            read_clipboard,
+            write_clipboard,
+            execute_shell_command,
+            execute_shell_command_async,
             webpage_info::fetch_page_info,
-            extensions::get_extensions,
-            extensions::install_extension,
-            extensions::uninstall_extension,
-            extensions::enable_extension,
-            extensions::disable_extension,
-            extensions::get_extensions_path,
-            extensions::load_dev_extension,
+            get_extensions,
+            install_extension,
+            uninstall_extension,
+            enable_extension,
+            disable_extension,
+            get_extensions_path,
+            load_dev_extension,
             file_watcher::watch_directory,
             file_watcher::stop_watching,
             file_watcher::is_watching,
             file_watcher::get_watched_path,
-            notification::show_notification,
-            extension_storage::extension_storage_get,
-            extension_storage::extension_storage_set,
-            extension_storage::extension_storage_remove,
+            show_notification,
+            extension_storage_get,
+            extension_storage_set,
+            extension_storage_remove,
             fs_api::fs_read_text_file,
             fs_api::fs_read_binary_file,
             fs_api::fs_write_text_file,
@@ -231,12 +223,6 @@ pub fn run() {
             fs_api::fs_read_dir,
             fs_api::fs_exists,
             fs_api::fs_stat,
-            #[cfg(target_os = "linux")]
-            hyprland::focus_window_hyprland,
-            #[cfg(target_os = "linux")]
-            hyprland::move_to_current_workspace,
-            #[cfg(target_os = "linux")]
-            hyprland::is_window_on_current_workspace
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

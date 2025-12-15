@@ -1,14 +1,17 @@
 import Link from 'next/link';
+import Image from 'next/image'
+import HelloImage from '../../public/img.png';
 
 export default function HomePage() {
   return (
     <div className="flex flex-col justify-center text-center flex-1 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Rua Documentation
+        <h1 className="text-4xl font-bold mb-6 bg-clip-text text-transparent">
+          rua
         </h1>
-        <p className="text-xl text-muted-foreground mb-8">
-          A modern, extensible command palette launcher for Linux, built with Tauri + React + TypeScript.
+        <Image src={HelloImage} alt="" />
+        <p className="text-xl text-muted-foreground mb-8 pt-2">
+          A modern, extensible command palette launcher for Linux.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -42,7 +45,7 @@ export default function HomePage() {
             Get Started
           </Link>
           <Link 
-            href="/docs/api" 
+            href="/docs/api/overview"
             className="inline-flex items-center justify-center px-6 py-3 border border-input rounded-lg font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             API Reference

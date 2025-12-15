@@ -31,6 +31,9 @@ export type {
     ShellResult,
     ParsedPermission,
     FsOptions,
+    ActionTriggeredData,
+    BackgroundScriptState,
+    BackgroundScriptCallbacks
 } from './rua';
 
-export { BaseDirectory } from './rua';
+export {BaseDirectory} from './rua';
