@@ -26,6 +26,7 @@
         "postcss": "^8.5.6",
         "tailwindcss": "^4.1.17",
         "typedoc": "^0.26.0",
+        "typedoc-plugin-markdown": "^4.2.9",
         "typescript": "^5.9.3",
       },
     },
@@ -1920,6 +1921,8 @@
     "type-is": ["type-is@2.0.1", "https://registry.npmmirror.com/type-is/-/type-is-2.0.1.tgz", { "dependencies": { "content-type": "^1.0.5", "media-typer": "^1.1.0", "mime-types": "^3.0.0" } }, "sha512-OZs6gsjF4vMp32qrCbiVSkrFmXtG/AZhY3t0iAMrMBiAZyV9oALtXO8hsrHbMXF9x6L3grlFuwW2oAz7cav+Gw=="],
 
     "typedoc": ["typedoc@0.26.11", "https://registry.npmmirror.com/typedoc/-/typedoc-0.26.11.tgz", { "dependencies": { "lunr": "^2.3.9", "markdown-it": "^14.1.0", "minimatch": "^9.0.5", "shiki": "^1.16.2", "yaml": "^2.5.1" }, "peerDependencies": { "typescript": "4.6.x || 4.7.x || 4.8.x || 4.9.x || 5.0.x || 5.1.x || 5.2.x || 5.3.x || 5.4.x || 5.5.x || 5.6.x" }, "bin": { "typedoc": "bin/typedoc" } }, "sha512-sFEgRRtrcDl2FxVP58Ze++ZK2UQAEvtvvH8rRlig1Ja3o7dDaMHmaBfvJmdGnNEFaLTpQsN8dpvZaTqJSu/Ugw=="],
+
+    "typedoc-plugin-markdown": ["typedoc-plugin-markdown@4.9.0", "https://mirrors.cloud.tencent.com/npm/typedoc-plugin-markdown/-/typedoc-plugin-markdown-4.9.0.tgz", { "peerDependencies": { "typedoc": "0.28.x" } }, "sha512-9Uu4WR9L7ZBgAl60N/h+jqmPxxvnC9nQAlnnO/OujtG2ubjnKTVUFY1XDhcMY+pCqlX3N2HsQM2QTYZIU9tJuw=="],
 
     "typescript": ["typescript@5.8.3", "https://registry.npmmirror.com/typescript/-/typescript-5.8.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ=="],
 

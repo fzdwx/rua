@@ -285,7 +285,7 @@ function convertToImportUrl(extensionPath: string, scriptPath: string): string {
     const baseDir = fullPath.substring(0, lastSlash);
     const fileName = fullPath.substring(lastSlash + 1);
     const encodedBaseDir = btoa(baseDir).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    return `ext://${encodedBaseDir}/${fileName}`;
+    return `ext://${encodedBaseDir}/${fileName}?_r=${new Date().getTime()}`;
 }
 
 /**

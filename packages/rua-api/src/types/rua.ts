@@ -28,6 +28,7 @@ export interface DynamicAction {
     subtitle?: string;
     mode: 'view' | 'command';
     section?: string;
+    badge?: string  // Badge text to display on the right side of the action
 }
 
 /**

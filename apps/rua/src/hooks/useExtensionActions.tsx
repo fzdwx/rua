@@ -5,98 +5,113 @@
  * Also includes dynamic actions registered by extensions at runtime.
  */
 
-import { useMemo } from 'react';
-import { Icon } from '@iconify/react';
-import type { Action } from '@/command';
-import { useExtensionSystem, type ManifestDerivedAction, type DynamicAction } from '@/contexts/ExtensionSystemContext';
-import { notifyActionTriggered } from '@/lib/background-executor';
-import { ActionIcon } from '@/components/ActionIcon';
+import {useMemo} from 'react';
+import {Icon} from '@iconify/react';
+import type {Action, ActionId} from '@/command';
+import {useExtensionSystem, type ManifestDerivedAction, type DynamicAction} from '@/contexts/ExtensionSystemContext';
+import {notifyActionTriggered} from '@/lib/background-executor';
+import {ActionIcon} from '@/components/ActionIcon';
+import {useActionUsage} from "@/contexts/ActionUsageContext.tsx";
 
 /**
  * Convert a ManifestDerivedAction to an Action for the command palette
  */
 function convertToAction(
-  extensionAction: ManifestDerivedAction,
-  extensionPath: string | undefined,
-  setRootActionId: (id: string | null) => void,
-  setSearch: (search: string) => void
+    extensionAction: ManifestDerivedAction,
+    extensionPath: string | undefined,
+    setRootActionId: (id: string | null) => void,
+    setSearch: (search: string) => void,
+    incrementUsage: (actionId: ActionId) => void,
+    getUsageCount: (actionId: ActionId) => number,
 ): Action {
-  return {
-    id: extensionAction.id,
-    name: extensionAction.name,
-    keywords: extensionAction.keywords,
-    icon: extensionAction.icon ? (
-      <ActionIcon icon={extensionAction.icon} extensionPath={extensionPath} size="20px" />
-    ) : (
-      <Icon icon="tabler:puzzle" style={{ fontSize: '20px' }} />
-    ),
-    subtitle: extensionAction.subtitle,
-    shortcut: extensionAction.shortcut,
-    // section: 'Extensions',
-    // Pass uiEntry for view mode actions
-    uiEntry: extensionAction.uiEntry,
-    // Store extensionId for routing
-    item: { extensionId: extensionAction.extensionId },
-    // Pass query flag for showing query input box
-    query: extensionAction.query,
-    perform: () => {
-      if (extensionAction.mode === 'view') {
-        // Clear search input when entering extension view
-        setSearch("");
-        // For view mode, set root action to show the extension view
-        setRootActionId(extensionAction.id);
-      }
-    },
-  };
+    return {
+        id: extensionAction.id,
+        name: extensionAction.name,
+        keywords: extensionAction.keywords,
+        icon: extensionAction.icon ? (
+            <ActionIcon icon={extensionAction.icon} extensionPath={extensionPath} size="20px"/>
+        ) : (
+            <Icon icon="tabler:puzzle" style={{fontSize: '20px'}}/>
+        ),
+        subtitle: extensionAction.subtitle,
+        shortcut: extensionAction.shortcut,
+        // section: 'Extensions',
+        // Pass uiEntry for view mode actions
+        uiEntry: extensionAction.uiEntry,
+        // Store extensionId for routing
+        item: {extensionId: extensionAction.extensionId},
+        // Pass query flag for showing query input box
+        query: extensionAction.query,
+        usageCount: getUsageCount(extensionAction.id),
+        perform: () => {
+            incrementUsage(extensionAction.id)
+            if (extensionAction.mode === 'view') {
+                // Clear search input when entering extension view
+                setSearch("");
+                // For view mode, set root action to show the extension view
+                setRootActionId(extensionAction.id);
+            }
+        },
+    };
 }
 
 /**
  * Convert a DynamicAction to an Action for the command palette
  */
 function convertDynamicToAction(
-  extensionId: string,
-  dynamicAction: DynamicAction,
-  extensions: { manifest: { id: string; rua: { ui?: { entry: string } } }; path: string }[],
-  setRootActionId: (id: string | null) => void,
-  setSearch: (search: string) => void
+    extensionId: string,
+    dynamicAction: DynamicAction,
+    extensions: {
+        manifest: { id: string; rua: { ui?: { entry: string; }; }; };
+        path: string;
+    }[],
+    setRootActionId: (id: string | null) => void,
+    setSearch: (search: string) => void,
+    incrementUsage: (actionId: ActionId) => void,
+    getUsageCount: (actionId: ActionId) => number,
 ): Action {
-  // Find the extension to get its UI entry
-  const extension = extensions.find(p => p.manifest.id === extensionId);
-  const uiEntry = extension?.manifest.rua.ui?.entry;
-  const extPath = extension?.path;
+    // Find the extension to get its UI entry
+    const extension = extensions.find(p => p.manifest.id === extensionId);
+    const uiEntry = extension?.manifest.rua.ui?.entry;
+    const extPath = extension?.path;
 
-  // Build full action ID with extension prefix
-  const fullId = `${extensionId}.${dynamicAction.id}`;
+    // Build full action ID with extension prefix
+    const fullId = `${extensionId}.${dynamicAction.id}`;
 
-  return {
-    id: fullId,
-    name: dynamicAction.name,
-    keywords: dynamicAction.keywords?.join(' '),
-    icon: dynamicAction.icon ? (
-      <ActionIcon icon={dynamicAction.icon} extensionPath={extPath} size="20px" />
-    ) : (
-      <Icon icon="tabler:sparkles" style={{ fontSize: '20px' }} />
-    ),
-    subtitle: dynamicAction.subtitle,
-    section: dynamicAction.section?dynamicAction.section:'Extensions',
-    // Build uiEntry for view mode
-    uiEntry: dynamicAction.mode === 'view' && uiEntry && extPath
-      ? `${extPath}/${uiEntry}?action=${dynamicAction.id}`
-      : undefined,
-    // Store extensionId for routing
-    item: { extensionId: extensionId, isDynamic: true },
-    perform: () => {
-      if (dynamicAction.mode === 'view') {
-        // Clear search input when entering extension view
-        setSearch("");
-        setRootActionId(fullId);
-      } else if (dynamicAction.mode === 'command') {
-        // For command mode, notify the extension's background script
-        notifyActionTriggered(extensionId, dynamicAction.id);
-        setSearch("");
-      }
-    },
-  };
+    return {
+        id: fullId,
+        name: dynamicAction.name,
+        keywords: dynamicAction.keywords?.join(' '),
+        icon: dynamicAction.icon ? (
+            <ActionIcon icon={dynamicAction.icon} extensionPath={extPath} size="20px"/>
+        ) : (
+            <Icon icon="tabler:sparkles" style={{fontSize: '20px'}}/>
+        ),
+        subtitle: dynamicAction.subtitle,
+        // section: dynamicAction.section ? dynamicAction.section : 'Extensions',
+        // Build uiEntry for view mode
+        uiEntry: dynamicAction.mode === 'view' && uiEntry && extPath
+            ? `${extPath}/${uiEntry}?action=${dynamicAction.id}`
+            : undefined,
+        // Store extensionId for routing
+        item: {extensionId: extensionId, isDynamic: true},
+        usageCount: getUsageCount(fullId),
+        badge: dynamicAction.badge,
+        perform:
+            () => {
+                incrementUsage(fullId)
+                if (dynamicAction.mode === 'view') {
+                    // Clear search input when entering extension view
+                    setSearch("");
+                    setRootActionId(fullId);
+                } else if (dynamicAction.mode === 'command') {
+                    // For command mode, notify the extension's background script
+                    notifyActionTriggered(extensionId, dynamicAction.id);
+                    setSearch("");
+                }
+            },
+    }
+
 }
 
 /**
@@ -104,32 +119,32 @@ function convertDynamicToAction(
  * Includes both manifest-defined actions and dynamically registered actions
  */
 export function useExtensionActionsForPalette(
-  setRootActionId: (id: string | null) => void,
-  setSearch: (search: string) => void
+    setRootActionId: (id: string | null) => void,
+    setSearch: (search: string) => void
 ): Action[] {
-  const { extensionActions, dynamicActions, extensions, initialized } = useExtensionSystem();
+    const {extensionActions, dynamicActions, extensions, initialized} = useExtensionSystem();
+    const {incrementUsage, getUsageCount} = useActionUsage();
+    return useMemo(() => {
+        if (!initialized) return [];
 
-  return useMemo(() => {
-    if (!initialized) return [];
+        // Convert manifest actions
+        const manifestActions = extensionActions.map((action) => {
+            const extension = extensions.find(p => p.manifest.id === action.extensionId);
+            return convertToAction(action, extension?.path, setRootActionId, setSearch, incrementUsage, getUsageCount);
+        });
 
-    // Convert manifest actions
-    const manifestActions = extensionActions.map((action) => {
-      const extension = extensions.find(p => p.manifest.id === action.extensionId);
-      return convertToAction(action, extension?.path, setRootActionId, setSearch);
-    });
+        // Convert dynamic actions
+        const dynamicActionsList: Action[] = [];
+        dynamicActions.forEach((actions, extensionId) => {
+            for (const action of actions) {
+                dynamicActionsList.push(
+                    convertDynamicToAction(extensionId, action, extensions, setRootActionId, setSearch, incrementUsage, getUsageCount)
+                );
+            }
+        });
 
-    // Convert dynamic actions
-    const dynamicActionsList: Action[] = [];
-    dynamicActions.forEach((actions, extensionId) => {
-      for (const action of actions) {
-        dynamicActionsList.push(
-          convertDynamicToAction(extensionId, action, extensions, setRootActionId, setSearch)
-        );
-      }
-    });
-
-    const allActions = [...manifestActions, ...dynamicActionsList];
-    console.log('[useExtensionActionsForPalette] actions:', allActions.length, 'manifest:', manifestActions.length, 'dynamic:', dynamicActionsList.length);
-    return allActions;
-  }, [extensionActions, dynamicActions, extensions, initialized, setRootActionId, setSearch]);
+        const allActions = [...manifestActions, ...dynamicActionsList];
+        console.log('[useExtensionActionsForPalette] actions:', allActions.length, 'manifest:', manifestActions.length, 'dynamic:', dynamicActionsList.length);
+        return allActions;
+    }, [extensionActions, dynamicActions, extensions, initialized, setRootActionId, setSearch]);
 }

@@ -53,6 +53,10 @@ test-ext name="test-extension":
     cp -r /tmp/{{name}} ~/.local/share/rua/extensions/
     @echo "✓ {{name}} created and installed"
 
+pre:
+    cd packages/rua-api && bun install
+    cd packages/rua-api && bun run build
+
 # Run Rua in development mode
 dev:
     bun run --cwd apps/rua tauri dev

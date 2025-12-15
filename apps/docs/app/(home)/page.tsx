@@ -42,7 +42,7 @@ export default function HomePage() {
             Get Started
           </Link>
           <Link 
-            href="/docs/api" 
+            href="/docs/api/overview"
             className="inline-flex items-center justify-center px-6 py-3 border border-input rounded-lg font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             API Reference
