@@ -1,13 +1,6 @@
-use std::process::Command;
+use crate::types::ShellResult;
 use std::env;
-
-#[derive(Debug, serde::Serialize)]
-pub struct ShellResult {
-    success: bool,
-    stdout: String,
-    stderr: String,
-    exit_code: Option<i32>,
-}
+use std::process::Command;
 
 /// Get the user's default shell
 fn get_default_shell() -> String {

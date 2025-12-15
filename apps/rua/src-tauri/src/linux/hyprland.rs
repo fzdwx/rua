@@ -1,6 +1,5 @@
 use std::process::Command;
 use serde_json::Value;
-use tauri::Window;
 
 /// Get the current active workspace ID
 fn get_active_workspace() -> Result<i64, String> {
@@ -55,7 +54,6 @@ fn get_window_workspace(class: &str) -> Result<Option<i64>, String> {
 }
 
 /// Check if window is on current workspace
-#[tauri::command]
 pub fn is_window_on_current_workspace(class: Option<String>) -> Result<bool, String> {
     let class_name = class.unwrap_or_else(|| "rua".to_string());
 
@@ -65,31 +63,7 @@ pub fn is_window_on_current_workspace(class: Option<String>) -> Result<bool, Str
     Ok(window_workspace == Some(active_workspace))
 }
 
-/// Moves the Tauri window to the current active workspace in Hyprland
-#[tauri::command]
-pub fn focus_window_hyprland(window: Window) -> Result<(), String> {
-    // Get the window title to identify it in Hyprland
-    let title = window.title().map_err(|e| e.to_string())?;
-
-    // Use hyprctl to focus the window by title, which will automatically
-    // move it to the current workspace if needed
-    let output = Command::new("hyprctl")
-        .args(["dispatch", "focuswindow", &format!("title:{}", title)])
-        .output()
-        .map_err(|e| format!("Failed to execute hyprctl: {}", e))?;
-
-    if !output.status.success() {
-        return Err(format!(
-            "hyprctl command failed: {}",
-            String::from_utf8_lossy(&output.stderr)
-        ));
-    }
-
-    Ok(())
-}
-
 /// Move window to current workspace by class name
-#[tauri::command]
 pub fn move_to_current_workspace(class: Option<String>) -> Result<(), String> {
     let class_name = class.unwrap_or_else(|| "rua".to_string());
 

@@ -1,17 +1,16 @@
 mod control_server;
-mod extension_storage;
-mod extensions;
 mod file_watcher;
 mod fs_api;
-mod shell_executor;
 pub mod types;
 mod webpage_info;
 
 #[cfg(target_os = "linux")]
 mod linux;
 use linux::*;
+mod extension;
 #[cfg(not(target_os = "linux"))]
 mod not_linux;
+use extension::*;
 #[cfg(not(target_os = "linux"))]
 use not_linux::*;
 
@@ -199,24 +198,24 @@ pub fn run() {
             launch_application,
             read_clipboard,
             write_clipboard,
-            shell_executor::execute_shell_command,
-            shell_executor::execute_shell_command_async,
+            execute_shell_command,
+            execute_shell_command_async,
             webpage_info::fetch_page_info,
-            extensions::get_extensions,
-            extensions::install_extension,
-            extensions::uninstall_extension,
-            extensions::enable_extension,
-            extensions::disable_extension,
-            extensions::get_extensions_path,
-            extensions::load_dev_extension,
+            get_extensions,
+            install_extension,
+            uninstall_extension,
+            enable_extension,
+            disable_extension,
+            get_extensions_path,
+            load_dev_extension,
             file_watcher::watch_directory,
             file_watcher::stop_watching,
             file_watcher::is_watching,
             file_watcher::get_watched_path,
             show_notification,
-            extension_storage::extension_storage_get,
-            extension_storage::extension_storage_set,
-            extension_storage::extension_storage_remove,
+            extension_storage_get,
+            extension_storage_set,
+            extension_storage_remove,
             fs_api::fs_read_text_file,
             fs_api::fs_read_binary_file,
             fs_api::fs_write_text_file,
