@@ -137,14 +137,15 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
                     return new Uint8Array(data);
                 },
                 writeTextFile: (path: string, contents: string, options?: FsOptions) => hostAPI.fsWriteTextFile(path, contents, options?.baseDir),
-                writeBinaryFile: (path: string, contents: Uint8Array, options?: FsOptions) => hostAPI.fsWriteBinaryFile(path, Array.from(contents), options?.baseDir),
+                writeBinaryFile: (path: string, contents: Uint8Array, options?: FsOptions) => hostAPI.fsWriteBinaryFile(path, contents, options?.baseDir),
                 readDir: (path: string, options?: FsOptions) => hostAPI.fsReadDir(path, options?.baseDir),
                 exists: (path: string, options?: FsOptions) => hostAPI.fsExists(path, options?.baseDir),
                 stat: (path: string, options?: FsOptions) => hostAPI.fsStat(path, options?.baseDir),
             },
 
             shell: {
-                execute: (program, args = [], spawn?: boolean) => hostAPI.shellExecute(program, args, spawn),
+                execute: (program, args = [],) => hostAPI.shellExecute(program, args),
+                executeSpawn: (program, args = []) => hostAPI.shellExecuteSpawn(program, args),
             },
 
             ui: {

@@ -7,7 +7,7 @@ build:
 bump version:
     sh bump-version.sh {{version}}
 
-install:
+install: pre
     jq '.bundle.active = false' apps/rua/src-tauri/tauri.conf.json > apps/rua/src-tauri/tauri.conf.json.tmp && mv apps/rua/src-tauri/tauri.conf.json.tmp apps/rua/src-tauri/tauri.conf.json
     cd apps/rua && bun tauri-build
     cargo build --manifest-path apps/rua/src-tauri/Cargo.toml --bin ruactl --release

@@ -89,27 +89,17 @@ export const apiCore = {
     },
 
     // Shell
-    async shellExecute(command: string, spawn?: boolean): Promise<ShellResult | string> {
-        if (!spawn) {
-            const result = await invoke<{
-                success: boolean;
-                stdout: string;
-                stderr: string;
-                exit_code: number | null
-            }>('execute_shell_command', {command});
-            return {
-                success: result.success,
-                stdout: result.stdout,
-                stderr: result.stderr,
-                exitCode: result.exit_code,
-            };
-        }
+    async shellExecute(command: string): Promise<ShellResult> {
+        return await invoke<ShellResult>('execute_shell_command', {command});
+    },
+
+    async shellExecuteSpawn(command: string): Promise<string> {
         return await invoke<string>('execute_shell_command_async', {command})
     },
 
 
     async uiHideWindow(): Promise<void> {
-        // todo
+        await invoke('hide_window_command');
     },
 
     /**

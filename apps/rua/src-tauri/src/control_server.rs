@@ -22,6 +22,14 @@ pub struct Response {
     message: String,
 }
 
+#[tauri::command]
+pub async fn hide_window_command(app: AppHandle) -> Result<String, String> {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = hide_window(window);
+    }
+    Ok("OK".to_string())
+}
+
 /// Toggle window visibility
 async fn toggle_window(State(state): State<AppState>) -> impl IntoResponse {
     let app_handle = state.app_handle.lock().await;

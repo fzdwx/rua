@@ -76,7 +76,8 @@ export interface CommonRuaAPI {
 
     shell: {
         /** Execute a shell command (requires shell permission with matching allow rules) */
-        execute(program: string, args?: string[]): Promise<ShellResult | string>;
+        execute(program: string, args?: string[]): Promise<ShellResult>;
+        executeSpawn(program: string, args?: string[]): Promise<string>;
     };
 
     hideWindow(): Promise<void>;

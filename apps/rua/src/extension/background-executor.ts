@@ -147,7 +147,7 @@ export function createMainContextRuaAPI(
                 checkPathPermission('fs:exists', resolvedPath);
                 return await apiCore.fsExists(resolvedPath);
             },
-            async stat(path: string, options?:FsOptions): Promise<FileStat> {
+            async stat(path: string, options?: FsOptions): Promise<FileStat> {
                 const resolvedPath = apiCore.resolvePath(path, options?.baseDir);
                 checkPathPermission('fs:stat', resolvedPath);
                 return await apiCore.fsStat(resolvedPath);
@@ -155,10 +155,15 @@ export function createMainContextRuaAPI(
         },
 
         shell: {
-            async execute(program: string, args: string[] = [], spawn?: boolean): Promise<ShellResult | string> {
+            async execute(program: string, args: string[] = []): Promise<ShellResult> {
                 checkShellPermission(program, args);
                 const command = [program, ...args].join(' ');
-                return await apiCore.shellExecute(command, spawn);
+                return await apiCore.shellExecute(command);
+            },
+            async executeSpawn(program: string, args: string[] = []): Promise<string> {
+                checkShellPermission(program, args);
+                const command = [program, ...args].join(' ');
+                return await apiCore.shellExecuteSpawn(command);
             },
         },
 

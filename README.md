@@ -60,3 +60,8 @@ See the [Extension Development Guide](https://rua-docs.vercel.app/docs/extension
 ## License
 
 MIT
+
+
+## TODO
+
+1. [ ] main context 支持监听 search 框的输入

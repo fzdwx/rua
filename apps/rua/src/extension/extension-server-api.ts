@@ -93,7 +93,7 @@ export function createRuaAPI(
             return await apiCore.fsReadTextFile(resolvedPath);
         },
 
-        async fsReadBinaryFile(path: string, baseDir?: string): Promise<number[]> {
+        async fsReadBinaryFile(path: string, baseDir?: string): Promise<Uint8Array> {
             const resolvedPath = apiCore.resolvePath(path, baseDir);
             checkPathPermission('fs:read', resolvedPath);
             return await apiCore.fsReadBinaryFile(resolvedPath);
@@ -105,7 +105,7 @@ export function createRuaAPI(
             await apiCore.fsWriteTextFile(resolvedPath, contents);
         },
 
-        async fsWriteBinaryFile(path: string, contents: number[], baseDir?: string): Promise<void> {
+        async fsWriteBinaryFile(path: string, contents: Uint8Array, baseDir?: string): Promise<void> {
             const resolvedPath = apiCore.resolvePath(path, baseDir);
             checkPathPermission('fs:write', resolvedPath);
             await apiCore.fsWriteBinaryFile(resolvedPath, contents);
@@ -130,10 +130,16 @@ export function createRuaAPI(
         },
 
         // Shell API
-        async shellExecute(program: string, args: string[], spawn?: boolean): Promise<ShellResult | string> {
+        async shellExecute(program: string, args: string[]): Promise<ShellResult> {
             checkShellPermission(program, args);
             const command = [program, ...args].join(' ');
-            return await apiCore.shellExecute(command, spawn);
+            return await apiCore.shellExecute(command,);
+        },
+
+        async shellExecuteSpawn(program: string, args: string[]): Promise<string> {
+            checkShellPermission(program, args);
+            const command = [program, ...args].join(' ');
+            return await apiCore.shellExecuteSpawn(command,);
         },
 
         // UI API (no permission required)

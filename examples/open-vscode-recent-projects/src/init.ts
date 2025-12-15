@@ -62,7 +62,7 @@ async function init() {
                     'Library/Application Support/Code/User/globalStorage/storage.json',
                     {baseDir: BaseDirectory.Home}
                 );
-            } else if (platform === 'win32') {
+            } else if (platform === 'windows') {
                 fileContent = await rua.fs.readTextFile(
                     'Code/User/globalStorage/storage.json',
                     {baseDir: BaseDirectory.AppData}

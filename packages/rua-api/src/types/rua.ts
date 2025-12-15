@@ -183,11 +183,11 @@ export interface RuaServerAPI {
     // File System API
     fsReadTextFile(path: string, baseDir?: string): Promise<string>;
 
-    fsReadBinaryFile(path: string, baseDir?: string): Promise<number[]>;
+    fsReadBinaryFile(path: string, baseDir?: string): Promise<Uint8Array>;
 
     fsWriteTextFile(path: string, contents: string, baseDir?: string): Promise<void>;
 
-    fsWriteBinaryFile(path: string, contents: number[], baseDir?: string): Promise<void>;
+    fsWriteBinaryFile(path: string, contents: Uint8Array, baseDir?: string): Promise<void>;
 
     fsReadDir(path: string, baseDir?: string): Promise<DirEntry[]>;
 
@@ -196,7 +196,9 @@ export interface RuaServerAPI {
     fsStat(path: string, baseDir?: string): Promise<FileStat>;
 
     // Shell API
-    shellExecute(program: string, args: string[], spawn?: boolean): Promise<ShellResult | string>;
+    shellExecute(program: string, args: string[]): Promise<ShellResult>;
+
+    shellExecuteSpawn(program: string, args: string[]): Promise<string>;
 
     // UI API
     uiHideInput(): Promise<void>;

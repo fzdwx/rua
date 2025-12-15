@@ -11,6 +11,7 @@ mod extension;
 #[cfg(not(target_os = "linux"))]
 mod not_linux;
 use extension::*;
+use control_server::*;
 #[cfg(not(target_os = "linux"))]
 use not_linux::*;
 
@@ -21,8 +22,8 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}
 use tauri::{App, Manager};
 
 fn setup(app: &mut App) -> anyhow::Result<()> {
-    let win = app.get_webview_window("main").unwrap();
-    win.eval("window.location.reload()")?;
+    // let win = app.get_webview_window("main").unwrap();
+    // win.eval("window.location.reload()")?;
 
     #[cfg(desktop)]
     let _ = app
@@ -208,6 +209,7 @@ pub fn run() {
             disable_extension,
             get_extensions_path,
             load_dev_extension,
+            hide_window_command,
             file_watcher::watch_directory,
             file_watcher::stop_watching,
             file_watcher::is_watching,
