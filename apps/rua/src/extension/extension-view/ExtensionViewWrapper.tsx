@@ -6,7 +6,7 @@
  */
 
 import { useExtensionSystem } from '@/contexts/ExtensionSystemContext.tsx';
-import { ExtensionView } from './ExtensionView';
+import { ExtensionView } from './ExtensionView.tsx';
 import type { DynamicAction } from '@/extension/extension-server-api.ts';
 import type { ExtensionPermission, ParsedPermission } from 'rua-api';
 

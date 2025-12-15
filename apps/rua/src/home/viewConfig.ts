@@ -9,12 +9,9 @@ import {
     QuickLinkCreator,
     QuickLinkView
 } from "@/components/quick-link";
-import {ExtensionManagerView} from "@/components/extension-manager";
-import {ExtensionViewWrapper} from "@/components/extension-view";
+import {ExtensionManagerView} from "@/extension/extension-manager";
+import {ExtensionViewWrapper} from "@/extension/extension-view";
 import {ViewContext} from "./viewContext";
-
-// Extension action ID prefix (format: pluginId.actionName)
-export const extensionActionPrefix = "ext:";
 
 // Extension manager action ID
 export const extensionManagerId = "manage-extension";
