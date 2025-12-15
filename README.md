@@ -25,7 +25,7 @@ A modern, extensible command palette launcher for Linux, built with Tauri + Reac
 
 ```bash
 # Install dependencies
-bun install
+just pre
 
 # Run in development mode
 just dev

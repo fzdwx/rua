@@ -143,7 +143,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
             },
 
             shell: {
-                execute: (program, args = []) => hostAPI.shellExecute(program, args),
+                execute: (program, args = [],spawn?: boolean) => hostAPI.shellExecute(program, args,spawn),
             },
 
             ui: {

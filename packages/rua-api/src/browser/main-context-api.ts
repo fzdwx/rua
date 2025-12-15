@@ -11,34 +11,10 @@
  *   rua.on('activate', () => console.log('Window activated'));
  */
 
-import type { ExtensionMeta, DynamicAction } from '../types/rua';
+import type {ExtensionMeta, DynamicAction, ShellResult, DirEntry, FileStat} from '../types';
 
 // Re-export types for convenience
-export type { ExtensionMeta, DynamicAction } from '../types/rua';
-
-/** File stat result */
-export interface FileStat {
-    size: number;
-    isFile: boolean;
-    isDirectory: boolean;
-    mtime: number;
-    ctime: number;
-}
-
-/** Directory entry */
-export interface DirEntry {
-    name: string;
-    isFile: boolean;
-    isDirectory: boolean;
-}
-
-/** Shell execution result */
-export interface ShellResult {
-    success: boolean;
-    stdout: string;
-    stderr: string;
-    exitCode: number | null;
-}
+export type {ExtensionMeta, DynamicAction} from '../types/rua';
 
 /**
  * Main Context Rua API interface for background scripts
@@ -93,7 +69,7 @@ export interface MainContextRuaAPI {
     /** Shell API for executing commands */
     shell: {
         /** Execute a shell command */
-        execute(program: string, args?: string[]): Promise<ShellResult>;
+        execute(program: string, args?: string[]): Promise<ShellResult | string>;
     };
 
     /** Actions API for registering dynamic actions */
@@ -106,15 +82,21 @@ export interface MainContextRuaAPI {
 
     /** OS API for getting platform information */
     os: {
-        /** Get the current platform (e.g., 'linux', 'darwin', 'win32') */
-        platform(): Promise<string>;
+        /** Get the current platform */
+        platform(): Promise<'windows' | 'linux' | 'darwin'>;
     };
 
     /** Register an event handler for lifecycle events */
-    on(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: { actionId: string; context?: unknown }) => void)): void;
+    on(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: {
+        actionId: string;
+        context?: unknown
+    }) => void)): void;
 
     /** Unregister an event handler */
-    off(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: { actionId: string; context?: unknown }) => void)): void;
+    off(event: 'activate' | 'deactivate' | 'action-triggered', callback: (() => void) | ((data: {
+        actionId: string;
+        context?: unknown
+    }) => void)): void;
 }
 
 // Extend Window interface for global variables set by the executor

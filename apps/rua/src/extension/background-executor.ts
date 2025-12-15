@@ -6,95 +6,25 @@
  * Each extension can have at most one background action.
  */
 
-import type { DynamicAction, ExtensionMeta, ExtensionHostInfo, ParsedPermission } from 'rua-api';
+import type {
+    DynamicAction,
+    ExtensionHostInfo,
+    ParsedPermission,
+    MainContextRuaAPI,
+    ShellResult,
+    ActionTriggeredData, DirEntry, FileStat, BackgroundScriptCallbacks, BackgroundScriptState
+} from 'rua-api';
 import {
     apiCore,
     hasSimplePermission,
     hasPathPermission,
     hasShellPermission,
     permissionError,
-    type FileStat,
-    type DirEntry,
-    type ShellResult,
-} from './rua-api-core';
+} from './rua-api-core.ts';
 
-// Re-export types
-export type { FileStat, DirEntry, ShellResult } from './rua-api-core';
 
 /** Timeout for script initialization (5 seconds) */
 const SCRIPT_TIMEOUT = 5000;
-
-/** Action triggered event data */
-export interface ActionTriggeredData {
-    actionId: string;
-    context?: unknown;
-}
-
-/** State for a loaded background script */
-export interface BackgroundScriptState {
-    extensionId: string;
-    scriptPath: string;
-    loaded: boolean;
-    error?: string;
-    activateCallbacks: Set<() => void>;
-    deactivateCallbacks: Set<() => void>;
-    actionTriggeredCallbacks: Set<(data: ActionTriggeredData) => void>;
-    registeredActions: string[];
-}
-
-/** Callbacks for background script actions */
-export interface BackgroundScriptCallbacks {
-    onRegisterActions: (extensionId: string, actions: DynamicAction[]) => void;
-    onUnregisterActions: (extensionId: string, actionIds: string[]) => void;
-}
-
-/** Main context Rua API interface for background scripts */
-export interface MainContextRuaAPI {
-    extension: ExtensionMeta;
-
-    clipboard: {
-        readText(): Promise<string>;
-        writeText(text: string): Promise<void>;
-    };
-
-    notification: {
-        show(options: { title: string; body?: string }): Promise<void>;
-    };
-
-    storage: {
-        get<T>(key: string): Promise<T | null>;
-        set<T>(key: string, value: T): Promise<void>;
-        remove(key: string): Promise<void>;
-    };
-
-    fs: {
-        readTextFile(path: string, options?: { baseDir?: string }): Promise<string>;
-        readBinaryFile(path: string, options?: { baseDir?: string }): Promise<number[]>;
-        writeTextFile(path: string, contents: string, options?: { baseDir?: string }): Promise<void>;
-        writeBinaryFile(path: string, contents: number[], options?: { baseDir?: string }): Promise<void>;
-        readDir(path: string, options?: { baseDir?: string }): Promise<DirEntry[]>;
-        exists(path: string, options?: { baseDir?: string }): Promise<boolean>;
-        stat(path: string, options?: { baseDir?: string }): Promise<FileStat>;
-    };
-
-    shell: {
-        execute(program: string, args?: string[]): Promise<ShellResult>;
-    };
-
-    actions: {
-        register(actions: DynamicAction[]): Promise<void>;
-        unregister(actionIds: string[]): Promise<void>;
-    };
-
-    os: {
-        platform(): Promise<string>;
-    };
-
-    on(event: 'activate' | 'deactivate', callback: () => void): void;
-    on(event: 'action-triggered', callback: (data: ActionTriggeredData) => void): void;
-    off(event: 'activate' | 'deactivate', callback: () => void): void;
-    off(event: 'action-triggered', callback: (data: ActionTriggeredData) => void): void;
-}
 
 // Registry of loaded background scripts
 const backgroundScripts = new Map<string, BackgroundScriptState>();
@@ -221,10 +151,10 @@ export function createMainContextRuaAPI(
         },
 
         shell: {
-            async execute(program: string, args: string[] = []): Promise<ShellResult> {
+            async execute(program: string, args: string[] = [], spawn?: boolean): Promise<ShellResult | string> {
                 checkShellPermission(program, args);
                 const command = [program, ...args].join(' ');
-                return await apiCore.shellExecute(command);
+                return await apiCore.shellExecute(command, spawn);
             },
         },
 
@@ -243,12 +173,8 @@ export function createMainContextRuaAPI(
         },
 
         os: {
-            async platform(): Promise<string> {
-                const platform = navigator.platform.toLowerCase();
-                if (platform.includes('win')) return 'win32';
-                if (platform.includes('mac')) return 'darwin';
-                if (platform.includes('linux')) return 'linux';
-                return platform;
+            async platform(): Promise<'windows' | 'linux' | 'darwin'> {
+                return apiCore.platform()
             },
         },
 
@@ -446,7 +372,7 @@ export async function notifyActionTriggered(
 
     console.log('[BackgroundExecutor] Notifying action-triggered:', extensionId, actionId);
 
-    const data: ActionTriggeredData = { actionId, context };
+    const data: ActionTriggeredData = {actionId, context};
     const promises: Promise<void>[] = [];
 
     for (const callback of state.actionTriggeredCallbacks) {

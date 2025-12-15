@@ -9,7 +9,7 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Icon } from '@iconify/react';
 import { RPCChannel, IframeParentIO } from 'kkrpc/browser';
-import { createExtensionServerAPI, type DynamicAction, type ExtensionServerAPI, type RuaClientCallbacks } from '@/lib/extension-server-api';
+import { createExtensionServerAPI, type DynamicAction, type ExtensionServerAPI, type RuaClientCallbacks } from '@/extension/extension-server-api.ts';
 import type { ParsedPermission } from 'rua-api';
 
 interface ExtensionViewProps {

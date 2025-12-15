@@ -9,7 +9,7 @@ import {useMemo} from 'react';
 import {Icon} from '@iconify/react';
 import type {Action, ActionId} from '@/command';
 import {useExtensionSystem, type ManifestDerivedAction, type DynamicAction} from '@/contexts/ExtensionSystemContext';
-import {notifyActionTriggered} from '@/lib/background-executor';
+import {notifyActionTriggered} from '@/extension/background-executor.ts';
 import {ActionIcon} from '@/components/ActionIcon';
 import {useActionUsage} from "@/contexts/ActionUsageContext.tsx";
 

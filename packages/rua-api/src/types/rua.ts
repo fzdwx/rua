@@ -178,7 +178,7 @@ export interface RuaClientAPI {
 
     shell: {
         /** Execute a shell command (requires shell permission with matching allow rules) */
-        execute(program: string, args?: string[]): Promise<ShellResult>;
+        execute(program: string, args?: string[]): Promise<ShellResult | string>;
     };
 
     ui: {
@@ -189,8 +189,8 @@ export interface RuaClientAPI {
     };
 
     os: {
-        /** Get the current platform (e.g., 'linux', 'darwin', 'win32') */
-        platform(): Promise<string>;
+        /** Get the current platform */
+        platform(): Promise<'windows' | 'linux' | 'darwin'>;
     };
 
     on(event: string, handler: EventHandler): void;
@@ -237,7 +237,7 @@ export interface RuaServerAPI {
     fsStat(path: string, baseDir?: string): Promise<FileStat>;
 
     // Shell API
-    shellExecute(program: string, args: string[]): Promise<ShellResult>;
+    shellExecute(program: string, args: string[], spawn?: boolean): Promise<ShellResult | string>;
 
     // UI API
     uiHideInput(): Promise<void>;
@@ -254,8 +254,15 @@ export interface RuaServerAPI {
     actionsUnregister(actionIds: string[]): Promise<void>;
 
     // OS API
-    osPlatform(): Promise<string>;
+    osPlatform(): Promise<'windows' | 'linux' | 'darwin'>;
 }
+
+/** Action triggered event data */
+export interface ActionTriggeredData {
+    actionId: string;
+    context?: unknown;
+}
+
 
 /** Callbacks for UI control from host side */
 export interface RuaHostCallbacks {
@@ -296,4 +303,23 @@ export interface ExtensionHostInfo {
     permissions: string[];
     /** Detailed parsed permissions with allow rules */
     parsedPermissions?: ParsedPermission[];
+}
+
+
+/** State for a loaded background script */
+export interface BackgroundScriptState {
+    extensionId: string;
+    scriptPath: string;
+    loaded: boolean;
+    error?: string;
+    activateCallbacks: Set<() => void>;
+    deactivateCallbacks: Set<() => void>;
+    actionTriggeredCallbacks: Set<(data: ActionTriggeredData) => void>;
+    registeredActions: string[];
+}
+
+/** Callbacks for background script actions */
+export interface BackgroundScriptCallbacks {
+    onRegisterActions: (extensionId: string, actions: DynamicAction[]) => void;
+    onUnregisterActions: (extensionId: string, actionIds: string[]) => void;
 }
