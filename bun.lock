@@ -32,7 +32,7 @@
     },
     "apps/rua": {
       "name": "rua",
-      "version": "0.4.2",
+      "version": "0.4.6",
       "dependencies": {
         "@base-ui-components/react": "^1.0.0-rc.0",
         "@base-ui/react": "^1.0.0",
@@ -136,7 +136,7 @@
     },
     "packages/create-rua-ext": {
       "name": "create-rua-ext",
-      "version": "0.4.2",
+      "version": "0.4.6",
       "bin": {
         "create-rua-ext": "./dist/index.js",
       },
@@ -154,7 +154,7 @@
     },
     "packages/rua-api": {
       "name": "rua-api",
-      "version": "0.4.2",
+      "version": "0.4.6",
       "dependencies": {
         "kkrpc": "^0.6.0",
         "tauri-api-adapter": "^0.3.27",

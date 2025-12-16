@@ -22,6 +22,8 @@ pub fn show_window(window: WebviewWindow) -> anyhow::Result<String> {
                     if let Err(e) = wm.show_window(win_id) {
                         eprintln!("[X11] show_window failed, falling back to Tauri API: {}", e);
                     } else {
+                        let _ = window.center();
+                        let _ = window.set_focus();
                         // X11 操作成功，但仍然使用 Tauri API 确保状态同步
                         eprintln!("[X11] Window shown via X11, syncing with Tauri");
                     }
