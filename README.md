@@ -64,4 +64,5 @@ MIT
 
 ## TODO
 
-1. [ ] main context 支持监听 search 框的输入
+1. [x] main context 支持监听 search 框的输入
+2. [ ] 插件主题切换

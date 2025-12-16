@@ -80,6 +80,7 @@ export default function Home() {
         
         // Listen for window-shown event (custom event from control_server)
         getCurrentWebviewWindow().listen('rua://window-shown', () => {
+            document.body.focus()
             notifyActivate();
         }).then(unlistenFn => {
             unlistenShow = unlistenFn;

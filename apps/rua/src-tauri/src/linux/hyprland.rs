@@ -84,3 +84,20 @@ pub fn move_to_current_workspace(class: Option<String>) -> Result<(), String> {
 
     Ok(())
 }
+
+pub fn focus_by_class(class: Option<String>) -> Result<(), String> {
+    let class_name = class.unwrap_or_else(|| "rua".to_string());
+    let arg = format!("class:{}", class_name);
+    let output = Command::new("hyprctl")
+        .args(["dispatch", "focuswindow", &arg])
+        .output()
+        .map_err(|e| format!("Failed to execute hyprctl: {}", e))?;
+
+    // Check if the command output contains an error message
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    if stdout.contains("Error") || stdout.contains("error") {
+        return Err(format!("hyprctl command failed: {}", stdout));
+    }
+
+    Ok(())
+}

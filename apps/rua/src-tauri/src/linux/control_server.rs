@@ -9,7 +9,10 @@ pub fn show_window(window: WebviewWindow) -> anyhow::Result<String> {
         display_server::DisplayServer::Hyprland => {
             // Hyprland 特定优化：跨 workspace 移动
             if let Err(e) = hyprland::move_to_current_workspace(Some("rua".to_string())) {
-                eprintln!("[Hyprland] Failed to move window to current workspace: {}", e);
+                eprintln!(
+                    "[Hyprland] Failed to move window to current workspace: {}",
+                    e
+                );
             }
         }
         display_server::DisplayServer::X11 => {
@@ -73,13 +76,19 @@ pub fn hide_window(window: WebviewWindow) -> anyhow::Result<String> {
                 Ok(false) => {
                     // Window is visible but not on current workspace -> move it to current workspace
                     if let Err(e) = hyprland::move_to_current_workspace(Some("rua".to_string())) {
-                        eprintln!("[Hyprland] Failed to move window to current workspace: {}", e);
+                        eprintln!(
+                            "[Hyprland] Failed to move window to current workspace: {}",
+                            e
+                        );
                     }
                     if let Err(e) = window.center() {
                         eprintln!("Failed to center window: {}", e);
                     }
                     if let Err(e) = window.set_focus() {
                         eprintln!("Failed to focus window: {}", e);
+                    }
+                    if let Err(e) = hyprland::focus_by_class(Some("rua".to_string())) {
+                        eprintln!("[Hyprland] Failed to focus window: {}", e);
                     }
                     // Emit window-shown event (window is now visible on current workspace)
                     let _ = window.emit("rua://window-shown", ());
