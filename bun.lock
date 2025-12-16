@@ -57,6 +57,7 @@
         "lucide-react": "^0.548.0",
         "motion": "^12.23.24",
         "next-themes": "^0.4.6",
+        "pinyin-match": "^1.2.10",
         "radix-ui": "^1.4.3",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
@@ -1639,6 +1640,8 @@
     "picocolors": ["picocolors@1.1.1", "https://registry.npmmirror.com/picocolors/-/picocolors-1.1.1.tgz", {}, "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="],
 
     "picomatch": ["picomatch@4.0.3", "https://registry.npmmirror.com/picomatch/-/picomatch-4.0.3.tgz", {}, "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q=="],
+
+    "pinyin-match": ["pinyin-match@1.2.10", "https://mirrors.cloud.tencent.com/npm/pinyin-match/-/pinyin-match-1.2.10.tgz", {}, "sha512-Xo1uMd9n56/xP2EAn7yfApnTmAGCLGqxFIm1fuOnSMty0xhqRF3+ZwVjp2yWFD/alv60RUWa/cZoQSeTSp1HxA=="],
 
     "pkce-challenge": ["pkce-challenge@5.0.1", "https://registry.npmmirror.com/pkce-challenge/-/pkce-challenge-5.0.1.tgz", {}, "sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ=="],
 

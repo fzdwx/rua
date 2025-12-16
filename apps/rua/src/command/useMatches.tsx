@@ -3,6 +3,7 @@ import type {ActionImpl} from "./action";
 import {Priority, useThrottledValue} from "./utils";
 import Fuse, {IFuseOptions} from "fuse.js";
 import {ActionId, ActionTree} from "./types";
+import pinyinMatch from "pinyin-match";
 
 export const NO_GROUP = {
     name: "none",
@@ -24,7 +25,7 @@ const fuseOptions: IFuseOptions<ActionImpl> = {
     ],
     includeScore: true,
     includeMatches: true,
-    threshold: 0.3,
+    threshold: 0.2,
     minMatchCharLength: 1,
     ignoreLocation: true,
 };
@@ -192,6 +193,50 @@ type Match = {
     score: number;
 };
 
+/**
+ * Check if a string contains Chinese characters
+ */
+function containsChinese(text: string): boolean {
+    return /[\u4e00-\u9fa5]/.test(text);
+}
+
+/**
+ * Match action using pinyin
+ * Returns a score if matched, undefined if not matched
+ */
+function matchPinyin(action: ActionImpl, search: string): number | undefined {
+    // Check name
+    if (action.name && containsChinese(action.name)) {
+        const matched = pinyinMatch.match(action.name, search);
+        if (matched) {
+            // Calculate score based on match quality
+            // Full match gets higher score, partial match gets lower score
+            return 0.3; // Lower score than exact Fuse match
+        }
+    }
+
+    // Check subtitle
+    if (action.subtitle && containsChinese(action.subtitle)) {
+        const matched = pinyinMatch.match(action.subtitle, search);
+        if (matched) {
+            return 0.5; // Even lower score for subtitle match
+        }
+    }
+
+    // Check keywords
+    if (action.keywords && containsChinese(action.keywords)) {
+        const keywords = action.keywords.split(",");
+        for (const keyword of keywords) {
+            const matched = pinyinMatch.match(keyword.trim(), search);
+            if (matched) {
+                return 0.4; // Medium score for keyword match
+            }
+        }
+    }
+
+    return undefined;
+}
+
 function useInternalMatches(
     filtered: ActionImpl[],
     search: string,
@@ -215,18 +260,40 @@ function useInternalMatches(
 
         // Split search into tokens and search for each token
         const tokens = throttledSearch.trim().split(/\s+/).filter(t => t.length > 0);
-        
+
         if (tokens.length === 0) {
             return throttledFiltered.map((action) => ({score: 0, action}));
         }
 
+        // Use a Map to store unique matches by action ID
+        const matchMap = new Map<string, Match>();
+
         if (tokens.length === 1) {
-            // Single token: use standard Fuse search
-            const searchResults = fuse.search(tokens[0]);
-            return searchResults.map(({item: action, score}) => ({
-                score: 1 / ((score ?? 0) + 1),
-                action,
-            }));
+            const token = tokens[0];
+
+            // 1. Fuse.js search
+            const searchResults = fuse.search(token);
+            for (const {item: action, score} of searchResults) {
+                matchMap.set(action.id, {
+                    score: 1 / ((score ?? 0) + 1),
+                    action,
+                });
+            }
+
+            // 2. Pinyin match - add results not already in Fuse results
+            for (const action of throttledFiltered) {
+                if (!matchMap.has(action.id)) {
+                    const pinyinScore = matchPinyin(action, token);
+                    if (pinyinScore !== undefined) {
+                        matchMap.set(action.id, {
+                            score: pinyinScore,
+                            action,
+                        });
+                    }
+                }
+            }
+
+            return Array.from(matchMap.values());
         }
 
         // Multiple tokens: search for each token and intersect results
@@ -236,21 +303,38 @@ function useInternalMatches(
             return new Map(results.map(r => [r.item.id, r.score ?? 0]));
         });
 
-        // Find actions that match all tokens
+        const pinyinTokenResults = tokens.map(token => {
+            const results = new Map<string, number>();
+            for (const action of throttledFiltered) {
+                const score = matchPinyin(action, token);
+                if (score !== undefined) {
+                    results.set(action.id, score);
+                }
+            }
+            return results;
+        });
+
+        // Find actions that match all tokens (either via Fuse or pinyin)
         const matches: Match[] = [];
         for (const action of throttledFiltered) {
             let totalScore = 0;
             let matchesAll = true;
-            
-            for (const tokenResult of tokenResults) {
-                const score = tokenResult.get(action.id);
-                if (score === undefined) {
+
+            for (let i = 0; i < tokens.length; i++) {
+                // Check if this token matches via Fuse or pinyin
+                const fuseScore = tokenResults[i].get(action.id);
+                const pinyinScore = pinyinTokenResults[i].get(action.id);
+
+                if (fuseScore !== undefined) {
+                    totalScore += fuseScore;
+                } else if (pinyinScore !== undefined) {
+                    totalScore += pinyinScore;
+                } else {
                     matchesAll = false;
                     break;
                 }
-                totalScore += score;
             }
-            
+
             if (matchesAll) {
                 // Average score across all tokens
                 const avgScore = totalScore / tokens.length;
