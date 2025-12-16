@@ -5,7 +5,7 @@
  * When an action is selected, it opens the project in VSCode.
  */
 import {BaseDirectory, createMainContextRuaAPI} from 'rua-api/browser';
-import {DynamicAction} from "rua-api";
+import {ActionTriggeredData, DynamicAction} from "rua-api";
 
 interface Storage {
     profileAssociations: {
@@ -170,14 +170,15 @@ async function init() {
     });
 
     // Handle action triggered
-    rua.on('action-triggered', async (data: { actionId: string; context?: unknown }) => {
-        console.log(`[${rua.extension.id}] Action triggered:`, data.actionId);
+    rua.on('action-triggered', async (data: unknown) => {
+        let d2 = <ActionTriggeredData>data;
+        console.log(`[${rua.extension.id}] Action triggered:`, d2.actionId);
         rua.hideWindow()
-        const project = projectsMap.get(data.actionId);
+        const project = projectsMap.get(d2.actionId);
         if (project) {
             await openWithVSCode(project.path);
         } else {
-            console.warn(`[${rua.extension.id}] Unknown action:`, data.actionId);
+            console.warn(`[${rua.extension.id}] Unknown action:`, d2.actionId);
         }
     });
 }

@@ -68,8 +68,21 @@ export interface ManifestDerivedAction {
     query?: boolean;
 }
 
-/** Event handler type */
+/** Event handler type
+ * @ActionTriggeredData
+ * */
 export type EventHandler = (data: unknown) => void;
+
+/** Action triggered event data */
+export interface ActionTriggeredData {
+    actionId: string;
+    context?: unknown;
+}
+
+/** Search change event data */
+export interface SearchChangeData {
+    query: string;
+}
 
 /** Shell command execution result */
 export interface ShellResult {
@@ -221,13 +234,6 @@ export interface RuaServerAPI {
 }
 
 
-/** Action triggered event data */
-export interface ActionTriggeredData {
-    actionId: string;
-    context?: unknown;
-}
-
-
 /** Callbacks for UI control from host side */
 export interface RuaHostCallbacks {
     onHideInput?: () => void;
@@ -269,11 +275,6 @@ export interface ExtensionHostInfo {
     parsedPermissions?: ParsedPermission[];
 }
 
-
-/** Search change event data */
-export interface SearchChangeData {
-    query: string;
-}
 
 /** State for a loaded background script */
 export interface BackgroundScriptState {

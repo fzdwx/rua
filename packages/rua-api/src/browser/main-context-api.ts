@@ -11,7 +11,7 @@
  *   rua.on('activate', () => console.log('Window activated'));
  */
 
-import type {DynamicAction} from '../types';
+import {DynamicAction, EventHandler} from '../types';
 import {CommonRuaAPI} from "./index";
 
 // Re-export types for convenience
@@ -32,16 +32,10 @@ export interface MainContextRuaAPI extends CommonRuaAPI {
     };
 
     /** Register an event handler for lifecycle events */
-    on(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', callback: (() => void) | ((data: {
-        actionId: string;
-        context?: unknown
-    } | { query: string }) => void)): void;
+    on(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', handler: EventHandler): void;
 
     /** Unregister an event handler */
-    off(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', callback: (() => void) | ((data: {
-        actionId: string;
-        context?: unknown
-    } | { query: string }) => void)): void;
+    off(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change',  handler: EventHandler): void;
 }
 
 // Extend Window interface for global variables set by the executor
