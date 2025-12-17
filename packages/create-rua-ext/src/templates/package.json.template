@@ -11,7 +11,8 @@
   "dependencies": {
     "rua-api": "^0.1.0"{{#useReact}},
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"{{/useReact}}{{#useVue}},
+    "react-dom": "^19.1.0"{{/useReact}}{{#useRuaUI}},
+    "@rua/ui": "^0.1.0"{{/useRuaUI}}{{#useVue}},
     "vue": "^3.5.13"{{/useVue}}{{#useSvelte}},
     "svelte": "^5.33.0"{{/useSvelte}}{{#useShadcn}},
     "class-variance-authority": "^0.7.1",

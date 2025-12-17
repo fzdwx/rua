@@ -10,15 +10,6 @@
   },
   "dependencies": {
     "rua-api": "workspace:*",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
     "valibot": "^1.0.0"
-  },
-  "devDependencies": {
-    "vite": "^7.0.4",
-    "typescript": "^5.8.0",
-    "@vitejs/plugin-react": "^4.5.2",
-    "@types/react": "^19.1.6",
-    "@types/react-dom": "^19.1.5"
   }
 }

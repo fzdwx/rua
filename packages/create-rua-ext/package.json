@@ -35,8 +35,6 @@
   },
   "devDependencies": {
     "@types/prompts": "^2.4.9",
-    "@types/node": "^24.9.1",
-    "@types/handlebars": "^4.1.0",
-    "typescript": "~5.8.3"
+    "@types/handlebars": "^4.1.0"
   }
 }

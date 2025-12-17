@@ -1,0 +1,15 @@
+@import '@rua/ui/styles';
+
+/* Optional: Custom styles for your extension */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

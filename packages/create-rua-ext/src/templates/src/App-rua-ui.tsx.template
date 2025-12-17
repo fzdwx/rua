@@ -1,0 +1,133 @@
+import { useState, useEffect } from 'react'
+import { initializeRuaAPI, type RuaAPI } from 'rua-api/browser'
+import { List, NavigationProvider } from '@rua/ui'
+import type { ListItem } from '@rua/ui'
+
+function App() {
+  const params = new URLSearchParams(window.location.search)
+  const action = params.get('action')
+
+  const [rua, setRua] = useState<RuaAPI | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    initializeRuaAPI().then(api => {
+      setRua(api)
+    }).catch(err => {
+      setError('Failed to initialize: ' + err.message)
+    })
+  }, [])
+
+  if (error) {
+    return (
+      <div className="p-6 text-red-500">
+        <h3>Error</h3>
+        <p>{error}</p>
+      </div>
+    )
+  }
+
+  if (!rua) {
+    return <div className="p-6">Loading...</div>
+  }
+
+  return (
+    <NavigationProvider>
+      <MainList rua={rua} action={action} />
+    </NavigationProvider>
+  )
+}
+
+function MainList({ rua, action }: { rua: RuaAPI; action: string | null }) {
+  const items: ListItem[] = [
+    {{#hasClipboard}}{
+      id: 'read-clipboard',
+      title: 'Read Clipboard',
+      subtitle: 'Read text from system clipboard',
+      icon: <span>📋</span>,
+    },
+    {
+      id: 'write-clipboard',
+      title: 'Write to Clipboard',
+      subtitle: 'Copy text to system clipboard',
+      icon: <span>✍️</span>,
+    },{{/hasClipboard}}
+    {{#hasNotification}}{
+      id: 'show-notification',
+      title: 'Show Notification',
+      subtitle: 'Display a system notification',
+      icon: <span>🔔</span>,
+    },{{/hasNotification}}
+    {{#hasStorage}}{
+      id: 'save-storage',
+      title: 'Save to Storage',
+      subtitle: 'Save timestamp to local storage',
+      icon: <span>💾</span>,
+    },
+    {
+      id: 'load-storage',
+      title: 'Load from Storage',
+      subtitle: 'Load timestamp from local storage',
+      icon: <span>📂</span>,
+    },{{/hasStorage}}
+    {
+      id: 'close',
+      title: 'Close Extension',
+      subtitle: 'Close the extension window',
+      icon: <span>❌</span>,
+    },
+  ]
+
+  const handleSelect = async (item: ListItem) => {
+    try {
+      switch (item.id) {
+        {{#hasClipboard}}case 'read-clipboard': {
+          const text = await rua.clipboard.readText()
+          await rua.notification.show({ title: 'Clipboard', body: text || '(empty)' })
+          break
+        }
+        case 'write-clipboard': {
+          await rua.clipboard.writeText('Hello from {{name}}!')
+          await rua.notification.show({ title: 'Success', body: 'Text copied to clipboard' })
+          break
+        }{{/hasClipboard}}
+        {{#hasNotification}}case 'show-notification': {
+          await rua.notification.show({
+            title: 'Hello from {{name}}!',
+            body: 'This notification was sent from the {{name}} extension.'
+          })
+          break
+        }{{/hasNotification}}
+        {{#hasStorage}}case 'save-storage': {
+          const timestamp = new Date().toISOString()
+          await rua.storage.set('lastUsed', timestamp)
+          await rua.notification.show({ title: 'Saved', body: timestamp })
+          break
+        }
+        case 'load-storage': {
+          const value = await rua.storage.get<string>('lastUsed')
+          await rua.notification.show({ title: 'Loaded', body: value || '(no data)' })
+          break
+        }{{/hasStorage}}
+        case 'close': {
+          await rua.ui.close()
+          break
+        }
+      }
+    } catch (e: unknown) {
+      const message = (e as Error).message
+      await rua.notification.show({ title: 'Error', body: message })
+    }
+  }
+
+  return (
+    <List
+      searchPlaceholder="Search actions..."
+      items={items}
+      onSelect={handleSelect}
+      enablePinyin={false}
+    />
+  )
+}
+
+export default App

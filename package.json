@@ -14,5 +14,22 @@
     "preview": "bun run --cwd apps/rua preview",
     "tauri": "bun run --cwd apps/rua tauri",
     "tauri-build": "bun run --cwd apps/rua tauri-build"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@types/node": "^24.9.1",
+    "vite": "^7.0.4",
+    "@vitejs/plugin-react": "^4.6.0",
+    "tailwindcss": "^4.1.17",
+    "@tailwindcss/vite": "^4.1.16",
+    "postcss": "^8.5.6"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.4.0"
   }
 }
