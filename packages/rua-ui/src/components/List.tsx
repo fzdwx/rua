@@ -1,11 +1,19 @@
-import {useState, useRef, useEffect, useMemo, useCallback} from 'react';
+import {useState, useRef, useEffect, useMemo, useCallback, ReactNode, ReactElement, Children, isValidElement} from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ListProps, ListItem as ListItemType, ListSection } from '../types';
+import { ListProps, ListItem as ListItemType, ListSection, FilteringOptions, ListItemComponentProps, ListSectionComponentProps, ListEmptyViewProps } from '../types';
 import { SearchInput } from './SearchInput';
 import { ListItem } from './ListItem';
 import { ActionPanel } from './ActionPanel';
 import { useSearch } from '../hooks/useSearch';
 import { useKeyboard } from '../hooks/useKeyboard';
+import { 
+  ListItemComponent, 
+  ListSectionComponent, 
+  ListEmptyView,
+  isListItemComponent, 
+  isListSectionComponent,
+  isListEmptyViewComponent 
+} from './ListSubComponents';
 
 /**
  * Focus retry options for exponential backoff
@@ -67,7 +75,8 @@ export async function attemptFocusWithRetry(
  * Main list component with integrated search and virtualized results
  */
 export function List({
-  searchPlaceholder = 'Search...',
+  searchPlaceholder,
+  searchBarPlaceholder = 'Search...',
   items = [],
   sections,
   onSearch,
@@ -79,7 +88,98 @@ export function List({
   onBack,
   actions,
   initialSearch,
+  navigationTitle,
+  isShowingDetail = false,
+  filtering = true,
+  throttle = false,
+  searchBarAccessory,
+  children,
 }: ListProps) {
+  // Use searchBarPlaceholder, fallback to deprecated searchPlaceholder for backward compatibility
+  const placeholder = searchBarPlaceholder || searchPlaceholder || 'Search...';
+  
+  // Determine if filtering is enabled
+  const filteringEnabled = filtering !== false;
+  const filteringOptions: FilteringOptions | undefined = 
+    typeof filtering === 'object' ? filtering : undefined;
+
+  // Process children to extract items, sections, and empty view
+  const { childItems, childSections, childEmptyView } = useMemo(() => {
+    const result: {
+      childItems: ListItemType[];
+      childSections: ListSection[];
+      childEmptyView: ReactElement<ListEmptyViewProps> | null;
+    } = {
+      childItems: [],
+      childSections: [],
+      childEmptyView: null,
+    };
+
+    if (!children) return result;
+
+    Children.forEach(children, (child) => {
+      if (!isValidElement(child)) return;
+
+      if (isListItemComponent(child)) {
+        // Convert List.Item component to ListItemType
+        const props = child.props as ListItemComponentProps;
+        result.childItems.push({
+          id: props.id,
+          title: props.title,
+          subtitle: props.subtitle,
+          icon: props.icon,
+          keywords: props.keywords,
+          accessories: props.accessories,
+          actions: props.actions ? [] : undefined, // Actions handled separately
+        });
+      } else if (isListSectionComponent(child)) {
+        // Convert List.Section component to ListSection
+        const sectionProps = child.props as ListSectionComponentProps;
+        const sectionItems: ListItemType[] = [];
+
+        Children.forEach(sectionProps.children, (sectionChild) => {
+          if (isValidElement(sectionChild) && isListItemComponent(sectionChild)) {
+            const itemProps = sectionChild.props as ListItemComponentProps;
+            sectionItems.push({
+              id: itemProps.id,
+              title: itemProps.title,
+              subtitle: itemProps.subtitle,
+              icon: itemProps.icon,
+              keywords: itemProps.keywords,
+              accessories: itemProps.accessories,
+              actions: itemProps.actions ? [] : undefined,
+            });
+          }
+        });
+
+        result.childSections.push({
+          title: sectionProps.title,
+          subtitle: sectionProps.subtitle,
+          items: sectionItems,
+        });
+      } else if (isListEmptyViewComponent(child)) {
+        result.childEmptyView = child;
+      }
+    });
+
+    return result;
+  }, [children]);
+
+  // Merge prop-based items/sections with children-based items/sections
+  const mergedItems = useMemo(() => {
+    return [...items, ...childItems];
+  }, [items, childItems]);
+
+  const mergedSections = useMemo(() => {
+    if (sections || childSections.length > 0) {
+      return [...(sections || []), ...childSections];
+    }
+    return undefined;
+  }, [sections, childSections]);
+
+  // Use childEmptyView if provided, otherwise use emptyView prop
+  const effectiveEmptyView = childEmptyView || emptyView;
+
   const [query, setQuery] = useState(initialSearch || '');
   const [activeIndex, setActiveIndex] = useState(0);
   const [initialSearchLoaded, setInitialSearchLoaded] = useState(!!initialSearch);
@@ -98,9 +198,9 @@ export function List({
 
   // Combine items and sections into a flat list
   const allItems = useMemo(() => {
-    if (sections) {
+    if (mergedSections && mergedSections.length > 0) {
       const result: Array<ListItemType | string> = [];
-      for (const section of sections) {
+      for (const section of mergedSections) {
         if (section.title) {
           result.push(section.title);
         }
@@ -108,8 +208,8 @@ export function List({
       }
       return result;
     }
-    return items;
-  }, [items, sections]);
+    return mergedItems;
+  }, [mergedItems, mergedSections]);
 
   // Search logic
   const searchResults = useSearch({
@@ -118,13 +218,13 @@ export function List({
     enablePinyin,
   });
 
-  // Display items: if searching, show results; otherwise show all items
+  // Display items: if searching and filtering enabled, show results; otherwise show all items
   const displayItems = useMemo(() => {
-    if (!query.trim()) {
+    if (!query.trim() || !filteringEnabled) {
       return allItems;
     }
     return searchResults.map((result) => result.item);
-  }, [query, allItems, searchResults]);
+  }, [query, allItems, searchResults, filteringEnabled]);
 
   // Virtualization
   const rowVirtualizer = useVirtualizer({
@@ -284,14 +384,14 @@ export function List({
         <SearchInput
           value={query}
           onChange={handleSearchChange}
-          placeholder={searchPlaceholder}
+          placeholder={placeholder}
           loading={isLoading}
           showBackButton={showBackButton}
           onBack={handleBack}
           inputRef={inputRef}
         />
         <div className="list-empty">
-          {emptyView || <p>No results found</p>}
+          {effectiveEmptyView || <p>No results found</p>}
         </div>
         {actions && actions.length > 0 && (
           <ActionPanel actions={actions} position="footer" />
@@ -305,7 +405,7 @@ export function List({
       <SearchInput
         value={query}
         onChange={handleSearchChange}
-        placeholder={searchPlaceholder}
+        placeholder={placeholder}
         loading={isLoading}
         showBackButton={showBackButton}
         onBack={handleBack}
@@ -385,3 +485,8 @@ export function List({
     </div>
   );
 }
+
+// Attach sub-components to List for Raycast-style API
+List.Item = ListItemComponent;
+List.Section = ListSectionComponent;
+List.EmptyView = ListEmptyView;

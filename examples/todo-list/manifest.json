@@ -17,7 +17,7 @@
         "keywords": ["todo-list"],
         "icon": "tabler:star",
         "subtitle": "TODO List",
-        "query": true
+        "query": false
       }
     ]
   },

@@ -3,6 +3,8 @@ import { useEffect, useCallback } from 'react';
 export interface UseKeyboardOptions {
   onArrowUp?: () => void;
   onArrowDown?: () => void;
+  onArrowLeft?: () => void;
+  onArrowRight?: () => void;
   onEnter?: () => void;
   onEscape?: () => void;
   enabled?: boolean;
@@ -14,6 +16,8 @@ export interface UseKeyboardOptions {
 export function useKeyboard({
   onArrowUp,
   onArrowDown,
+  onArrowLeft,
+  onArrowRight,
   onEnter,
   onEscape,
   enabled = true,
@@ -31,6 +35,14 @@ export function useKeyboard({
           event.preventDefault();
           onArrowDown?.();
           break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          onArrowLeft?.();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          onArrowRight?.();
+          break;
         case 'Enter':
           event.preventDefault();
           onEnter?.();
@@ -41,7 +53,7 @@ export function useKeyboard({
           break;
       }
     },
-    [enabled, onArrowUp, onArrowDown, onEnter, onEscape]
+    [enabled, onArrowUp, onArrowDown, onArrowLeft, onArrowRight, onEnter, onEscape]
   );
 
   useEffect(() => {

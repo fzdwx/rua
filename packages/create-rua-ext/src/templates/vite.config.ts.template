@@ -1,12 +1,10 @@
 import { defineConfig } from 'vite'
 {{#useReact}}import react from '@vitejs/plugin-react'{{/useReact}}
-{{#useVue}}import vue from '@vitejs/plugin-vue'{{/useVue}}
-{{#useSvelte}}import { svelte } from '@sveltejs/vite-plugin-svelte'{{/useSvelte}}
 {{#useTailwind}}import tailwindcss from '@tailwindcss/vite'{{/useTailwind}}
 
 export default defineConfig({
-  plugins: [{{#useReact}}react(){{/useReact}}{{#useVue}}vue(){{/useVue}}{{#useSvelte}}svelte(){{/useSvelte}}{{#useTailwind}}{{#hasPlugins}}, {{/hasPlugins}}tailwindcss(){{/useTailwind}}],
-  base: './',  // 使用相对路径，确保 ext:// protocol 能正确加载
+  plugins: [{{#useReact}}react(){{/useReact}}{{#useTailwind}}, tailwindcss(){{/useTailwind}}],
+  base: './',  // Use relative paths for ext:// protocol
   build: {
     outDir: 'dist',
     rollupOptions: {

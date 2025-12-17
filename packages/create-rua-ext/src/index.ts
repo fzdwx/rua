@@ -3,6 +3,7 @@
  * create-rua-ext CLI
  *
  * A CLI tool to scaffold Rua extension projects.
+ * View mode uses Vite + React + @rua/ui + Tailwind CSS.
  *
  * Usage:
  *   bunx create-rua-ext
@@ -28,9 +29,7 @@ interface ExtensionConfig {
   extensionType: 'background' | 'view' | 'both';
   packageManager: 'npm' | 'bun' | 'pnpm' | 'yarn';
   buildTool: 'vite' | 'none';
-  framework: 'none' | 'react' | 'vue' | 'svelte';
-  uiLibrary: 'none' | 'rua-ui';
-  styling: 'none' | 'tailwind' | 'shadcn';
+  framework: 'react';  // View mode only supports React now
   permissions: string[];
 }
 
@@ -41,7 +40,7 @@ const TEMPLATES = {
   },
   view: {
     name: 'View Extension',
-    description: 'Extension with UI framework and build tool',
+    description: 'Vite + React + @rua/ui + shadcn/ui + Tailwind CSS',
   },
 };
 
@@ -56,29 +55,6 @@ const PACKAGE_MANAGERS = [
   { title: 'bun', value: 'bun' },
   { title: 'yarn', value: 'yarn' },
   { title: 'npm', value: 'npm' },
-];
-
-const BUILD_TOOLS = [
-  { title: 'Vite', value: 'vite', description: 'Fast build tool with HMR' },
-  { title: 'None', value: 'none', description: 'No build tool (vanilla JS)' },
-];
-
-const FRAMEWORKS = [
-  { title: 'None (Vanilla)', value: 'none', description: 'Plain HTML/JS' },
-  { title: 'React', value: 'react', description: 'React with TypeScript' },
-  { title: 'Vue', value: 'vue', description: 'Vue 3 with TypeScript' },
-  { title: 'Svelte', value: 'svelte', description: 'Svelte with TypeScript' },
-];
-
-const STYLING_OPTIONS = [
-  { title: 'None', value: 'none', description: 'No CSS framework' },
-  { title: 'Tailwind CSS', value: 'tailwind', description: 'Utility-first CSS framework' },
-  { title: 'shadcn/ui', value: 'shadcn', description: 'Tailwind + shadcn/ui components' },
-];
-
-const UI_LIBRARY_OPTIONS = [
-  { title: 'None', value: 'none', description: 'No UI library' },
-  { title: 'Rua UI', value: 'rua-ui', description: 'Pre-built components with search, forms, and navigation' },
 ];
 
 const PERMISSIONS = [
@@ -184,20 +160,20 @@ function createTemplateContext(config: ExtensionConfig) {
 
     // Build tool flags
     useVite,
-    useVanilla: config.framework === 'none',
-    useReact: config.framework === 'react',
-    useVue: config.framework === 'vue',
-    useSvelte: config.framework === 'svelte',
-    hasPlugins: config.framework !== 'none',
+    useVanilla: false, // View mode only supports React now
+    useReact: true,    // View mode always uses React
+    useVue: false,     // Removed Vue support
+    useSvelte: false,  // Removed Svelte support
+    hasPlugins: true,  // Always has React plugin
 
-    // Styling flags
-    useTailwind: (config.styling === 'tailwind' || config.styling === 'shadcn') && config.uiLibrary !== 'rua-ui',
-    useShadcn: config.styling === 'shadcn' && config.uiLibrary !== 'rua-ui',
-    useNoStyling: config.styling === 'none' || config.uiLibrary === 'rua-ui',
+    // Styling flags - View mode uses both rua-ui and shadcn with Tailwind
+    useTailwind: hasView,
+    useShadcn: hasView,  // Always include shadcn for view mode
+    useNoStyling: !hasView,
 
-    // UI Library flags
-    useRuaUI: config.uiLibrary === 'rua-ui',
-    useNoUILibrary: config.uiLibrary === 'none',
+    // UI Library flags - View mode uses both rua-ui and shadcn
+    useRuaUI: hasView,
+    useNoUILibrary: false,
 
     // Package manager
     packageManager: config.packageManager,
@@ -227,7 +203,7 @@ function createTemplateContext(config: ExtensionConfig) {
     // File paths
     uiEntry: useVite ? 'dist/index.html' : 'index.html',
     initEntry: useVite ? 'dist/init.js' : 'init.js',
-    scriptSrc: useVite ? (config.framework === 'react' ? '/src/main.tsx' : '/src/main.ts') : 'main.js',
+    scriptSrc: useVite ? '/src/main.tsx' : 'main.js',
     scriptType: useVite ? 'module' : 'text/javascript',
   };
 }
@@ -272,7 +248,8 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
     const tsconfigContent = renderTemplate(tsconfigTemplate, context);
     fs.writeFileSync(path.join(targetDir, 'tsconfig.json'), tsconfigContent);
 
-    // View files (index.html, main.ts, style.css, App component)
+    // View files (index.html, main.tsx, style.css, App.tsx)
+    // View mode always uses React + @rua/ui + shadcn/ui + Tailwind
     const hasView = config.extensionType === 'view' || config.extensionType === 'both';
     if (hasView) {
       // index.html
@@ -280,71 +257,24 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
       const indexContent = renderTemplate(indexTemplate, context);
       fs.writeFileSync(path.join(targetDir, 'index.html'), indexContent);
 
-      // src/main.tsx for React, src/main.ts for others
+      // src/main.tsx (always React)
       const mainTemplate = path.join(templatesDir, 'src/main.ts.template');
       const mainContent = renderTemplate(mainTemplate, context);
-      const mainFileName = config.framework === 'react' ? 'src/main.tsx' : 'src/main.ts';
-      fs.writeFileSync(path.join(targetDir, mainFileName), mainContent);
+      fs.writeFileSync(path.join(targetDir, 'src/main.tsx'), mainContent);
 
-      // src/style.css (skip React, it handles CSS separately based on uiLibrary)
-      if (config.framework !== 'react') {
-        const styleTemplate = path.join(templatesDir, 'src/style.css.template');
-        const styleContent = renderTemplate(styleTemplate, context);
+      // App.tsx - use rua-ui template
+      const appTemplate = path.join(templatesDir, 'src/App-rua-ui.tsx.template');
+      const appContent = renderTemplate(appTemplate, context);
+      fs.writeFileSync(path.join(targetDir, 'src/App.tsx'), appContent);
+
+      // style.css - use rua-ui style template
+      const ruaUiStyleTemplate = path.join(templatesDir, 'src/style-rua-ui.css.template');
+      if (fs.existsSync(ruaUiStyleTemplate)) {
+        const styleContent = renderTemplate(ruaUiStyleTemplate, context);
         fs.writeFileSync(path.join(targetDir, 'src/style.css'), styleContent);
       }
 
-      // Framework-specific App component
-      if (config.framework === 'react') {
-        let appTemplateName: string;
-
-        if (config.uiLibrary === 'rua-ui') {
-          appTemplateName = 'src/App-rua-ui.tsx.template';
-        } else if (config.styling === 'shadcn') {
-          appTemplateName = 'src/App-shadcn.tsx.template';
-        } else {
-          appTemplateName = 'src/App.tsx.template';
-        }
-
-        const appTemplate = path.join(templatesDir, appTemplateName);
-        const appContent = renderTemplate(appTemplate, context);
-        fs.writeFileSync(path.join(targetDir, 'src/App.tsx'), appContent);
-
-        // Handle different CSS files based on UI library
-        if (config.uiLibrary === 'rua-ui') {
-          const ruaUiStyleTemplate = path.join(templatesDir, 'src/style-rua-ui.css.template');
-          if (fs.existsSync(ruaUiStyleTemplate)) {
-            const styleContent = renderTemplate(ruaUiStyleTemplate, context);
-            fs.writeFileSync(path.join(targetDir, 'src/style.css'), styleContent);
-          }
-        } else {
-          const styleTemplate = path.join(templatesDir, 'src/style.css.template');
-          const styleContent = renderTemplate(styleTemplate, context);
-          fs.writeFileSync(path.join(targetDir, 'src/style.css'), styleContent);
-        }
-      } else if (config.framework === 'vue') {
-        const appTemplate = path.join(templatesDir, 'src/App.vue.template');
-        const appContent = renderTemplate(appTemplate, context);
-        fs.writeFileSync(path.join(targetDir, 'src/App.vue'), appContent);
-      } else if (config.framework === 'svelte') {
-        const appTemplate = path.join(templatesDir, 'src/App.svelte.template');
-        const appContent = renderTemplate(appTemplate, context);
-        fs.writeFileSync(path.join(targetDir, 'src/App.svelte'), appContent);
-      }
-    }
-
-    // Background script (init.ts)
-    const hasBackground = config.extensionType === 'background' || config.extensionType === 'both';
-    if (hasBackground) {
-      const initTemplate = path.join(templatesDir, 'src/init.ts.template');
-      const initContent = renderTemplate(initTemplate, context);
-      fs.writeFileSync(path.join(targetDir, 'src/init.ts'), initContent);
-    }
-
-    // Tailwind CSS v4 uses @tailwindcss/vite plugin, no config files needed
-    // The CSS file just needs @import "tailwindcss"
-
-    // shadcn/ui setup
-    if (config.styling === 'shadcn') {
+      // shadcn/ui setup - always included for view mode
       const componentsJsonTemplate = path.join(templatesDir, 'components.json.template');
       if (fs.existsSync(componentsJsonTemplate)) {
         const componentsJsonContent = renderTemplate(componentsJsonTemplate, context);
@@ -358,6 +288,14 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
         const utilsContent = renderTemplate(utilsTemplate, context);
         fs.writeFileSync(path.join(targetDir, 'src/lib/utils.ts'), utilsContent);
       }
+    }
+
+    // Background script (init.ts)
+    const hasBackground = config.extensionType === 'background' || config.extensionType === 'both';
+    if (hasBackground) {
+      const initTemplate = path.join(templatesDir, 'src/init.ts.template');
+      const initContent = renderTemplate(initTemplate, context);
+      fs.writeFileSync(path.join(targetDir, 'src/init.ts'), initContent);
     }
   } else {
     // Basic project (no build)
@@ -434,38 +372,10 @@ async function main() {
     },
     {
       type: (prev) => prev !== 'basic' ? 'select' : null,
-      name: 'buildTool',
-      message: 'Build tool:',
-      choices: BUILD_TOOLS,
-      initial: 0,
-    },
-    {
-      type: (_, values) => values.buildTool === 'vite' && values.extensionType !== 'background' ? 'select' : null,
-      name: 'uiLibrary',
-      message: 'UI Library:',
-      choices: UI_LIBRARY_OPTIONS,
-      initial: 1,
-    },
-    {
-      type: (_, values) => values.buildTool === 'vite' && values.extensionType !== 'background' && values.uiLibrary !== 'rua-ui' ? 'select' : null,
-      name: 'framework',
-      message: 'UI Framework:',
-      choices: FRAMEWORKS,
-      initial: 1,
-    },
-    {
-      type: (_, values) => values.buildTool === 'vite' ? 'select' : null,
       name: 'packageManager',
       message: 'Package manager:',
       choices: PACKAGE_MANAGERS,
       initial: 1,
-    },
-    {
-      type: (_, values) => values.buildTool === 'vite' && values.extensionType !== 'background' && values.uiLibrary !== 'rua-ui' ? 'select' : null,
-      name: 'styling',
-      message: 'Styling:',
-      choices: STYLING_OPTIONS,
-      initial: 0,
     },
     {
       type: 'multiselect',
@@ -487,6 +397,8 @@ async function main() {
     ? `${toKebabCase(response.author)}.${kebabName}`
     : kebabName;
 
+  const isViewTemplate = response.template === 'view';
+
   const config: ExtensionConfig = {
     name: extName,
     id: extId,
@@ -495,10 +407,8 @@ async function main() {
     template: response.template || 'basic',
     extensionType: response.extensionType || 'both',
     packageManager: response.packageManager || 'npm',
-    buildTool: response.buildTool || 'none',
-    framework: response.uiLibrary === 'rua-ui' ? 'react' : (response.framework || 'none'),
-    uiLibrary: response.uiLibrary || 'none',
-    styling: response.styling || 'none',
+    buildTool: isViewTemplate ? 'vite' : 'none',
+    framework: 'react',      // View mode always uses React
     permissions: response.permissions || [],
   };
 
@@ -535,17 +445,12 @@ async function main() {
     const pmInstall = config.packageManager === 'npm' ? 'npm install' : `${config.packageManager} install`;
     const pmRun = config.packageManager === 'npm' ? 'npm run' : config.packageManager;
     console.log(`  ${pc.cyan(pmInstall)}`);
-
-    if (config.styling === 'shadcn') {
-      console.log(`  ${pc.cyan(`npx shadcn@latest add button card badge separator`)}`);
-    }
-
-    if (config.uiLibrary === 'rua-ui') {
-      console.log();
-      console.log(pc.dim('  Using @rua/ui components (List, Form, Navigation)'));
-    }
-
+    console.log(`  ${pc.cyan(`npx shadcn@latest add button card badge separator`)}`);
     console.log(`  ${pc.cyan(`${pmRun} dev`)}`);
+    console.log();
+    console.log(pc.dim('  Stack: Vite + React + @rua/ui + shadcn/ui + Tailwind CSS'));
+    console.log(pc.dim('  @rua/ui: List, Form, ActionPanel, Toast, Navigation'));
+    console.log(pc.dim('  shadcn/ui: Button, Card, Badge, and more'));
   } else {
     console.log(`  ${pc.cyan('# Edit your extension files')}`);
   }
