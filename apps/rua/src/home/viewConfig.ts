@@ -146,7 +146,6 @@ export function createViewConfigs(
                         extensionId = parts.slice(0, -1).join('.');
                     }
                 }
-                console.log('[ExtensionView] action:', action, 'uiEntry:', action?.uiEntry, 'extensionId:', extensionId);
                 return {
                     uiEntry: action?.uiEntry || '',
                     extensionName: action?.name || 'Extension',

@@ -2,12 +2,18 @@ import { ActionPanelProps } from '../types';
 
 /**
  * ActionPanel component for displaying actions in a footer or inline
+ * Uses command-footer class for footer position to match main interface styling
  */
 export function ActionPanel({ actions, position = 'footer' }: ActionPanelProps) {
   if (actions.length === 0) return null;
 
+  // Use command-footer class for footer position to ensure consistency with main interface
+  const containerClass = position === 'footer' 
+    ? 'action-panel command-footer' 
+    : 'action-panel action-panel-inline';
+
   return (
-    <div className={`action-panel action-panel-${position}`}>
+    <div className={containerClass}>
       {actions.map((action) => (
         <button
           key={action.id}

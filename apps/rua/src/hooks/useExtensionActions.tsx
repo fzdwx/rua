@@ -148,7 +148,6 @@ export function useExtensionActionsForPalette(
         });
 
         const allActions = [...manifestActions, ...dynamicActionsList];
-        console.log('[useExtensionActionsForPalette] actions:', allActions.length, 'manifest:', manifestActions.length, 'dynamic:', dynamicActionsList.length);
         return allActions;
     }, [extensionActions, dynamicActions, extensions, initialized, setRootActionId, setSearch]);
 }

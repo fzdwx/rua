@@ -19,7 +19,7 @@ export const ListItem = forwardRef<HTMLDivElement, ListItemProps>(
     return (
       <motion.div
         ref={ref}
-        className={active ? 'list-item-active' : 'list-item'}
+        className={active ? 'command-item-active' : 'command-item'}
         onClick={onClick}
         onPointerMove={onPointerMove}
         onPointerDown={onPointerDown}
@@ -27,17 +27,17 @@ export const ListItem = forwardRef<HTMLDivElement, ListItemProps>(
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
       >
-        <div className="list-item-content">
-          {item.icon && <div className="list-item-icon">{item.icon}</div>}
-          <div className="list-item-text">
-            <div className="list-item-title">{item.title}</div>
+        <div className="command-item-content">
+          {item.icon && <div className="command-item-icon">{item.icon}</div>}
+          <div className="command-item-text">
+            <div className="command-item-title">{item.title}</div>
             {item.subtitle && (
-              <div className="list-item-subtitle">{item.subtitle}</div>
+              <div className="command-item-subtitle">{item.subtitle}</div>
             )}
           </div>
         </div>
         {item.accessories && item.accessories.length > 0 && (
-          <div className="list-item-accessories">
+          <div className="command-item-accessories">
             {item.accessories.map((accessory, index) => (
               <Accessory key={index} accessory={accessory} />
             ))}
@@ -55,7 +55,7 @@ ListItem.displayName = 'ListItem';
  */
 function Accessory({ accessory }: { accessory: AccessoryType }) {
   return (
-    <div className="list-item-accessory" title={accessory.tooltip}>
+    <div className="command-item-accessory" title={accessory.tooltip}>
       {accessory.icon && <span className="accessory-icon">{accessory.icon}</span>}
       {accessory.text && <span className="accessory-text">{accessory.text}</span>}
     </div>

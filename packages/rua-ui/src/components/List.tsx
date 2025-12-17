@@ -141,18 +141,27 @@ export function List({
     setActiveIndex(firstItemIndex);
   }, [query, displayItems]);
 
+  const handleActivate = () => {
+    // Focus input when extension view is activated
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 200);
+  };
+
   // Listen for activate event from rua API and focus input
   useEffect(() => {
-    const handleActivate = () => {
-      // Focus input when extension view is activated
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 200);
-    };
-
     // Check if rua API is available
     if (typeof window !== 'undefined' && (window as any).rua) {
       const rua = (window as any).rua;
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 200);
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 400);
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 600);
       rua.on?.('activate', handleActivate);
 
       return () => {
@@ -162,6 +171,7 @@ export function List({
 
     // Also listen for rua-ready event in case API loads after component mount
     const handleRuaReady = () => {
+      console.log("rua ready")
       const rua = (window as any).rua;
       rua.on?.('activate', handleActivate);
     };
@@ -176,6 +186,10 @@ export function List({
       }
     };
   }, []);
+
+  window.addEventListener('rua-ready', ()=>{
+    console.log("333333333333333333333333333333333")
+  });
 
   // Initial focus on mount for extensions
   useEffect(() => {

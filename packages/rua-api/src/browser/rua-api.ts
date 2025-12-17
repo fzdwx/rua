@@ -240,6 +240,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
 
         // Dispatch ready event
         window.dispatchEvent(new CustomEvent('rua-ready', {detail: ruaAPI.extension}));
+        console.log('dispatch rua-ready')
 
         console.log('[Rua API] Initialized for extension:', ruaAPI.extension.id);
 

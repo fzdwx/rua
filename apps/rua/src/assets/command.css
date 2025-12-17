@@ -385,18 +385,7 @@ button:not([class]) {
   align-items: center;
 }
 
-.search-input {
-  background: transparent;
-  color: var(--text);
-  padding: 16px;
-  width: 100%;
-  flex: 1;
-  font-size: 16px;
-  box-sizing: border-box;
-  outline: none;
-  border: none;
-  font-family: var(--font-sans);
-}
+
 
 .search-loading-indicator {
   position: absolute;
@@ -427,36 +416,14 @@ button:not([class]) {
   transition-property: height;
 }
 
-/* List Item */
-.list-item,
-.list-item-active {
-  transition: 0.1s ease;
-  transition-property: background, border-color;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  border-left: 3px solid transparent;
-}
-
-.list-item {
-  background: transparent;
-}
-
-.list-item-active {
-  background: var(--hover);
-  border-left-color: var(--primary);
-}
-
-.list-item-content {
+.command-item-content {
   display: flex;
   align-items: center;
   gap: 12px;
   flex: 1;
 }
 
-.list-item-icon {
+.command-item-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -464,30 +431,30 @@ button:not([class]) {
   color: var(--gray11);
 }
 
-.list-item-text {
+.command-item-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.list-item-title {
+.command-item-title {
   font-size: 14px;
   color: var(--text);
   font-weight: 500;
 }
 
-.list-item-subtitle {
+.command-item-subtitle {
   font-size: 12px;
   color: var(--gray11);
 }
 
-.list-item-accessories {
+.command-item-accessories {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.list-item-accessory {
+.command-item-accessory {
   display: flex;
   align-items: center;
   gap: 4px;

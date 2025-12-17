@@ -11,15 +11,15 @@ interface Todo {
     done: boolean
     createdAt: string
 }
-
+window.addEventListener('rua-ready', ()=>{
+    console.log("44444444444444444444")
+});
 function App() {
     const [rua, setRua] = useState<RuaAPI | null>(null)
     initializeRuaAPI().then(setRua).catch(console.error)
     useRuaTheme() // Auto-sync theme with main app
-    initializeRuaAPI().then(setRua).catch(console.error)
 
     if (!rua) return <div>Loading...</div>
-
     return (
         <TodoList rua={rua}/>
     )
@@ -141,7 +141,7 @@ function TodoList({rua}: { rua: RuaAPI }) {
             sections={sections}
             isLoading={isLoading}
             enablePinyin={true}
-            actions={globalActions}
+            // actions={globalActions}
             showBackButton={true}
         />
     )

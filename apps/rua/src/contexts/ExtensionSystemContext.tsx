@@ -162,8 +162,6 @@ function convertExtensionToActions(ext: ExtensionInfo): ManifestDerivedAction[] 
     const {manifest, path: extPath} = ext;
     const uiEntry = manifest.rua.ui?.entry;
 
-    console.log('[convertExtensionToActions] ext:', ext.manifest.id, 'path:', extPath, 'uiEntry:', uiEntry);
-
     // Filter out background actions - they run automatically and shouldn't appear in action list
     const userFacingActions = manifest.rua.actions.filter(
         (action: ManifestAction) => action.mode !== 'background'
@@ -185,7 +183,6 @@ function convertExtensionToActions(ext: ExtensionInfo): ManifestDerivedAction[] 
                 : undefined,
             query: action.query,
         };
-        console.log('[convertExtensionToActions] action:', derivedAction.id, 'uiEntry:', derivedAction.uiEntry);
         return derivedAction;
     });
 }

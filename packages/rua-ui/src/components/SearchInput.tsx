@@ -78,7 +78,7 @@ export function SearchInput({
       <input
         ref={inputRef}
         autoFocus={autoFocus}
-        className="search-input"
+        className="command-input"
         autoComplete="off"
         role="combobox"
         spellCheck="false"

@@ -94,7 +94,6 @@ export function ExtensionView({
         return `${baseUrl}?${params.toString()}`;
     }, [uiEntry, refreshKey]);
 
-    console.log('[ExtensionView] uiEntry:', uiEntry, 'extUrl:', extUrl, 'refreshKey:', refreshKey);
 
     // Collect main app CSS content
     const collectMainAppCss = useCallback(async (): Promise<string> => {
@@ -219,6 +218,7 @@ export function ExtensionView({
                 // Notify extension to activate (which should trigger input focus in rua-ui)
                 const clientAPI = rpc.getAPI();
                 try {
+                    console.log('activateactivateactivateactivateactivateactivateactivate')
                     clientAPI.onActivate?.();
                 } catch (err) {
                     console.log('[ExtensionView] Failed to notify activation:', err);
