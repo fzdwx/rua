@@ -1,6 +1,6 @@
 import {useState, useEffect} from 'react'
 import {initializeRuaAPI, type RuaAPI} from 'rua-api/browser'
-import {List, Form, NavigationProvider, useNavigation, useRuaTheme} from '@rua/ui'
+import {List, Form, useRuaTheme} from '@rua/ui'
 import type {ListItem} from '@rua/ui'
 
 interface Todo {
@@ -21,21 +21,13 @@ function App() {
     if (!rua) return <div>Loading...</div>
 
     return (
-        <NavigationProvider>
-            <TodoList rua={rua}/>
-        </NavigationProvider>
+        <TodoList rua={rua}/>
     )
 }
 
 function TodoList({rua}: { rua: RuaAPI }) {
     const [todos, setTodos] = useState<Todo[]>([])
     const [isLoading, setIsLoading] = useState(true)
-    const {push, pop} = useNavigation()
-
-    // Handle back button - close extension and return to main app
-    const handleBack = async () => {
-        await rua.ui.close()
-    }
 
     // Load todos from storage
     useEffect(() => {
@@ -139,7 +131,7 @@ function TodoList({rua}: { rua: RuaAPI }) {
             title: 'New Todo',
             icon: <span>➕</span>,
             shortcut: {key: 'n', modifiers: ['cmd'] as const},
-            onAction: () => push(<CreateTodoForm onSubmit={addTodo}/>),
+            onAction: () => <CreateTodoForm onSubmit={addTodo}/>,
         },
     ]
 
@@ -151,17 +143,13 @@ function TodoList({rua}: { rua: RuaAPI }) {
             enablePinyin={true}
             actions={globalActions}
             showBackButton={true}
-            onBack={handleBack}
         />
     )
 }
 
 function CreateTodoForm({onSubmit}: { onSubmit: (values: any) => void }) {
-    const {pop} = useNavigation()
-
     const handleSubmit = (values: any) => {
         onSubmit(values)
-        pop()
     }
 
     return (

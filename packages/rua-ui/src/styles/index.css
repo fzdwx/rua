@@ -20,6 +20,9 @@
   --gray10: hsl(0, 0%, 52.3%);
   --gray11: hsl(0, 0%, 43.5%);
   --gray12: hsl(0, 0%, 9%);
+
+  /* Semi-transparent backgrounds (90% opacity like main app) */
+  --app-bg: rgb(255 255 255 / .9);
 }
 
 .dark {
@@ -38,6 +41,9 @@
   --gray10: hsl(0, 0%, 49.4%);
   --gray11: hsl(0, 0%, 62.8%);
   --gray12: hsl(0, 0%, 93%);
+
+  /* Semi-transparent backgrounds (90% opacity like main app) */
+  --app-bg: rgb(34 34 34 / .9);
 }
 
 /* Reset */
@@ -69,7 +75,7 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
-  background: var(--gray2);
+  background: var(--app-bg);
   border-radius: 8px;
   overflow: hidden;
 }

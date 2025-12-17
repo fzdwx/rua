@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, {useState, useRef, useEffect, useMemo, useCallback} from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ListProps, ListItem as ListItemType, ListSection } from '../types';
 import { SearchInput } from './SearchInput';
@@ -19,7 +19,7 @@ export function List({
   enablePinyin = false,
   isLoading = false,
   emptyView,
-  showBackButton = false,
+  showBackButton = true,
   onBack,
   actions,
 }: ListProps) {
@@ -28,6 +28,15 @@ export function List({
   const parentRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Default back handler - close extension and return to main app
+  const handleBack = useCallback(() => {
+    if (onBack) {
+      onBack();
+    } else if (typeof window !== 'undefined' && (window as any).rua) {
+      (window as any).rua.ui.close();
+    }
+  }, [onBack]);
 
   // Combine items and sections into a flat list
   const allItems = useMemo(() => {
@@ -188,7 +197,7 @@ export function List({
           placeholder={searchPlaceholder}
           loading={isLoading}
           showBackButton={showBackButton}
-          onBack={onBack}
+          onBack={handleBack}
           inputRef={inputRef}
         />
         <div className="list-empty">
@@ -209,7 +218,7 @@ export function List({
         placeholder={searchPlaceholder}
         loading={isLoading}
         showBackButton={showBackButton}
-        onBack={onBack}
+        onBack={handleBack}
         inputRef={inputRef}
       />
       <div ref={parentRef} className="list-scroll-container">
