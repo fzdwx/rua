@@ -1,8 +1,7 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { motion } from 'motion/react';
 import { ListItem as ListItemType } from '../types';
 import type { Accessory as AccessoryType } from '../types';
-import { cn } from '../utils';
 
 export interface ListItemProps {
   item: ListItemType;
@@ -20,7 +19,7 @@ export const ListItem = forwardRef<HTMLDivElement, ListItemProps>(
     return (
       <motion.div
         ref={ref}
-        className={cn('list-item', active && 'list-item-active')}
+        className={active ? 'list-item-active' : 'list-item'}
         onClick={onClick}
         onPointerMove={onPointerMove}
         onPointerDown={onPointerDown}

@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect, useMemo, useCallback} from 'react';
+import {useState, useRef, useEffect, useMemo, useCallback} from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ListProps, ListItem as ListItemType, ListSection } from '../types';
 import { SearchInput } from './SearchInput';

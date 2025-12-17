@@ -230,6 +230,9 @@ export interface RuaServerAPI {
 
     uiGetTheme(): Promise<'light' | 'dark'>;
 
+    /** Get main app CSS styles for injection into extension iframe */
+    uiGetStyles(): Promise<string>;
+
     // Actions API
     actionsRegister(actions: DynamicAction[]): Promise<void>;
 

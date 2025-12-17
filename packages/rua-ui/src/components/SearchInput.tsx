@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { cn } from '../utils';
+import { useState, useRef, useEffect } from 'react';
 
 export interface SearchInputProps {
   value: string;
