@@ -83,6 +83,16 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
                         }
                     });
                 },
+                onThemeChange: async (theme: 'light' | 'dark') => {
+                    const handlers = eventHandlers.get('theme-change') || [];
+                    handlers.forEach((handler) => {
+                        try {
+                            handler(theme);
+                        } catch (e) {
+                            console.error('[Rua API] Event handler error:', e);
+                        }
+                    });
+                },
             },
         });
 
@@ -143,6 +153,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
                 showInput: () => hostAPI.uiShowInput(),
                 close: () => hostAPI.uiClose(),
                 setTitle: (title) => hostAPI.uiSetTitle(title),
+                getTheme: () => hostAPI.uiGetTheme(),
             },
 
             hideWindow: () => hostAPI.uiHideWindow(),

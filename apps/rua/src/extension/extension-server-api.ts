@@ -24,7 +24,8 @@ export type RuaAPI = RuaServerAPI;
  */
 export function createRuaAPI(
     extensionInfo: ExtensionHostInfo,
-    callbacks: RuaHostCallbacks
+    callbacks: RuaHostCallbacks,
+    theme: 'light' | 'dark'
 ): RuaServerAPI {
     const checkPermission = (permission: string, detail?: string) => {
         if (!hasSimplePermission(extensionInfo.permissions, permission)) {
@@ -163,6 +164,10 @@ export function createRuaAPI(
             await apiCore.uiHideWindow();
         },
 
+        async uiGetTheme(): Promise<'light' | 'dark'> {
+            return theme;
+        },
+
         // Actions API (no permission required)
         async actionsRegister(actions: DynamicAction[]): Promise<void> {
             callbacks.onRegisterActions?.(actions);
@@ -184,7 +189,8 @@ export function createRuaAPI(
  */
 export function createExtensionServerAPI(
     extensionInfo: ExtensionHostInfo,
-    callbacks: RuaHostCallbacks
+    callbacks: RuaHostCallbacks,
+    theme: 'light' | 'dark'
 ): RuaServerAPI {
-    return createRuaAPI(extensionInfo, callbacks);
+    return createRuaAPI(extensionInfo, callbacks, theme);
 }

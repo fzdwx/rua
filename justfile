@@ -56,6 +56,8 @@ test-ext name="test-extension":
 pre:
     cd packages/rua-api && bun install
     cd packages/rua-api && bun run build
+    cd packages/rua-ui && bun install
+    cd packages/rua-ui && bun run build
     cd apps/rua && bun install
 
 # Run Rua in development mode

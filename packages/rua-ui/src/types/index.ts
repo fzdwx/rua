@@ -61,6 +61,9 @@ export interface ListProps {
   enablePinyin?: boolean;
   isLoading?: boolean;
   emptyView?: ReactNode;
+  showBackButton?: boolean;
+  onBack?: () => void;
+  actions?: Action[];
 }
 
 /**

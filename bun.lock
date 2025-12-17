@@ -125,14 +125,6 @@
         "vite": "^7.0.0",
       },
     },
-    "examples/todo-rua-ui": {
-      "name": "rua-ui-example.todo",
-      "version": "0.1.0",
-      "dependencies": {
-        "@rua/ui": "workspace:*",
-        "rua-api": "workspace:*",
-      },
-    },
     "packages/create-rua-ext": {
       "name": "create-rua-ext",
       "version": "0.4.6",
@@ -1770,8 +1762,6 @@
     "rua": ["rua@workspace:apps/rua"],
 
     "rua-api": ["rua-api@workspace:packages/rua-api"],
-
-    "rua-ui-example.todo": ["rua-ui-example.todo@workspace:examples/todo-rua-ui"],
 
     "run-applescript": ["run-applescript@7.1.0", "https://registry.npmmirror.com/run-applescript/-/run-applescript-7.1.0.tgz", {}, "sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q=="],
 

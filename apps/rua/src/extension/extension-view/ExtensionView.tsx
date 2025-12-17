@@ -15,6 +15,7 @@ import {
     type RuaClientCallbacks
 } from '@/extension/extension-server-api.ts';
 import type {ParsedPermission, RuaServerAPI} from 'rua-api';
+import {useTheme} from '@/hooks/useTheme';
 
 interface ExtensionViewProps {
     /** The extension's UI entry path with action query param */
@@ -63,6 +64,7 @@ export function ExtensionView({
     const [_loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [_title, setTitle] = useState(extensionName);
+    const {theme} = useTheme();
 
     // Convert file path to custom ext:// protocol URL
     // Format: ext://BASE64_ENCODED_BASE_DIR/filename?query
@@ -144,7 +146,8 @@ export function ExtensionView({
                     onSetTitle: setTitle,
                     onRegisterActions,
                     onUnregisterActions,
-                }
+                },
+                theme
             );
 
             // Create RPC channel with exposed API
@@ -152,10 +155,22 @@ export function ExtensionView({
             rpcRef.current = rpc;
 
             console.log(`[ExtensionView] kkrpc connection established for ${extensionId}`);
+
+            // Auto-focus iframe and notify extension to focus its input
+            setTimeout(() => {
+                iframeRef.current?.focus();
+                // Notify extension to activate (which should trigger input focus in rua-ui)
+                const clientAPI = rpc.getAPI();
+                try {
+                    clientAPI.onActivate?.();
+                } catch (err) {
+                    console.log('[ExtensionView] Failed to notify activation:', err);
+                }
+            }, 0);
         } catch (err) {
             console.error('[ExtensionView] Failed to setup RPC:', err);
         }
-    }, [extensionId, extensionName, extensionVersion, permissions, parsedPermissions, onInputVisibilityChange, handleClose, onRegisterActions, onUnregisterActions]);
+    }, [extensionId, extensionName, extensionVersion, permissions, parsedPermissions, onInputVisibilityChange, handleClose, onRegisterActions, onUnregisterActions, theme]);
 
     useEffect(() => {
         const iframe = iframeRef.current;
@@ -172,6 +187,18 @@ export function ExtensionView({
             iframe.removeEventListener('error', handleError);
         };
     }, [refreshKey]);
+
+    // Notify extension when theme changes
+    useEffect(() => {
+        if (rpcRef.current) {
+            const clientAPI = rpcRef.current.getAPI();
+            try {
+                clientAPI.onThemeChange?.(theme);
+            } catch (err) {
+                console.log('[ExtensionView] Failed to notify theme change:', err);
+            }
+        }
+    }, [theme]);
 
     return (
         <div className="flex flex-col h-full">

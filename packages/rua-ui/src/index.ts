@@ -10,6 +10,7 @@ export { useNavigation, NavigationProvider } from './hooks/useNavigation';
 export { useSearch } from './hooks/useSearch';
 export { useKeyboard } from './hooks/useKeyboard';
 export { useActions } from './hooks/useActions';
+export { useRuaTheme } from './hooks/useRuaTheme';
 
 // Types
 export type {

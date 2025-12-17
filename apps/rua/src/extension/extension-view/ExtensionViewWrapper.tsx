@@ -109,19 +109,21 @@ function parsePermissions(permissions: ExtensionPermission[]): {
   };
 
   return (
-    <ExtensionView
-      uiEntry={uiEntry}
-      extensionName={extensionName}
-      extensionId={extensionId}
-      extensionVersion={extensionVersion}
-      permissions={simplePermissions}
-      parsedPermissions={parsedPermissions}
-      onReturn={onReturn}
-      onInputVisibilityChange={onInputVisibilityChange}
-      onRegisterActions={handleRegisterActions}
-      onUnregisterActions={handleUnregisterActions}
-      refreshKey={devRefreshKey}
-      search={search}
-    />
+    <div className="flex flex-col h-full">
+      <ExtensionView
+        uiEntry={uiEntry}
+        extensionName={extensionName}
+        extensionId={extensionId}
+        extensionVersion={extensionVersion}
+        permissions={simplePermissions}
+        parsedPermissions={parsedPermissions}
+        onReturn={onReturn}
+        onInputVisibilityChange={onInputVisibilityChange}
+        onRegisterActions={handleRegisterActions}
+        onUnregisterActions={handleUnregisterActions}
+        refreshKey={devRefreshKey}
+        search={search}
+      />
+    </div>
   );
 }

@@ -163,13 +163,15 @@ export interface RuaClientAPI extends CommonRuaAPI {
         /** close action back to main view */
         close(): Promise<void>;
         setTitle(title: string): Promise<void>;
+        /** Get current theme */
+        getTheme(): Promise<'light' | 'dark'>;
     };
 
-    /** Register event handler. View mode extensions only support: activate, deactivate, action-triggered */
-    on(event: 'activate' | 'deactivate' | 'action-triggered', handler: EventHandler): void;
+    /** Register event handler. View mode extensions support: activate, deactivate, action-triggered, theme-change */
+    on(event: 'activate' | 'deactivate' | 'action-triggered' | 'theme-change', handler: EventHandler): void;
 
     /** Unregister event handler */
-    off(event: 'activate' | 'deactivate' | 'action-triggered', handler: EventHandler): void;
+    off(event: 'activate' | 'deactivate' | 'action-triggered' | 'theme-change', handler: EventHandler): void;
 }
 
 /**
@@ -226,6 +228,8 @@ export interface RuaServerAPI {
 
     uiHideWindow(): Promise<void>
 
+    uiGetTheme(): Promise<'light' | 'dark'>;
+
     // Actions API
     actionsRegister(actions: DynamicAction[]): Promise<void>;
 
@@ -254,6 +258,8 @@ export interface RuaClientCallbacks {
     onActivate?: () => void;
     /** Called when the main window is deactivated (hidden) */
     onDeactivate?: () => void;
+    /** Called when the application theme changes */
+    onThemeChange?: (theme: 'light' | 'dark') => void;
 }
 
 /** Parsed permission with allow rules */

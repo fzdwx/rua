@@ -3,6 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { ListProps, ListItem as ListItemType, ListSection } from '../types';
 import { SearchInput } from './SearchInput';
 import { ListItem } from './ListItem';
+import { ActionPanel } from './ActionPanel';
 import { useSearch } from '../hooks/useSearch';
 import { useKeyboard } from '../hooks/useKeyboard';
 
@@ -18,11 +19,15 @@ export function List({
   enablePinyin = false,
   isLoading = false,
   emptyView,
+  showBackButton = false,
+  onBack,
+  actions,
 }: ListProps) {
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const parentRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Combine items and sections into a flat list
   const allItems = useMemo(() => {
@@ -127,6 +132,52 @@ export function List({
     setActiveIndex(firstItemIndex);
   }, [query, displayItems]);
 
+  // Listen for activate event from rua API and focus input
+  useEffect(() => {
+    const handleActivate = () => {
+      // Focus input when extension view is activated
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 200);
+    };
+
+    // Check if rua API is available
+    if (typeof window !== 'undefined' && (window as any).rua) {
+      const rua = (window as any).rua;
+      rua.on?.('activate', handleActivate);
+
+      return () => {
+        rua.off?.('activate', handleActivate);
+      };
+    }
+
+    // Also listen for rua-ready event in case API loads after component mount
+    const handleRuaReady = () => {
+      const rua = (window as any).rua;
+      rua.on?.('activate', handleActivate);
+    };
+
+    window.addEventListener('rua-ready', handleRuaReady);
+
+    return () => {
+      window.removeEventListener('rua-ready', handleRuaReady);
+      if (typeof window !== 'undefined' && (window as any).rua) {
+        const rua = (window as any).rua;
+        rua.off?.('activate', handleActivate);
+      }
+    };
+  }, []);
+
+  // Initial focus on mount for extensions
+  useEffect(() => {
+    // Focus input after component is fully mounted and rendered
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 200); // Slightly longer delay to ensure iframe and DOM are ready
+
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array = run once on mount
+
   // Empty state
   if (!isLoading && displayItems.length === 0) {
     return (
@@ -136,10 +187,16 @@ export function List({
           onChange={handleSearchChange}
           placeholder={searchPlaceholder}
           loading={isLoading}
+          showBackButton={showBackButton}
+          onBack={onBack}
+          inputRef={inputRef}
         />
         <div className="list-empty">
           {emptyView || <p>No results found</p>}
         </div>
+        {actions && actions.length > 0 && (
+          <ActionPanel actions={actions} position="footer" />
+        )}
       </div>
     );
   }
@@ -151,6 +208,9 @@ export function List({
         onChange={handleSearchChange}
         placeholder={searchPlaceholder}
         loading={isLoading}
+        showBackButton={showBackButton}
+        onBack={onBack}
+        inputRef={inputRef}
       />
       <div ref={parentRef} className="list-scroll-container">
         <div
@@ -220,6 +280,9 @@ export function List({
           })}
         </div>
       </div>
+      {actions && actions.length > 0 && (
+        <ActionPanel actions={actions} position="footer" />
+      )}
     </div>
   );
 }

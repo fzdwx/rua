@@ -78,6 +78,30 @@
 .search-input-container {
   position: relative;
   border-bottom: 1px solid var(--gray6);
+  display: flex;
+  align-items: center;
+}
+
+.search-input-back-button {
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--gray11);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.search-input-back-button:hover {
+  color: var(--text);
+}
+
+.search-input-back-icon {
+  display: flex;
+  align-items: center;
 }
 
 .search-input {
@@ -85,6 +109,7 @@
   color: var(--text);
   padding: 16px;
   width: 100%;
+  flex: 1;
   font-size: 16px;
   box-sizing: border-box;
   outline: none;
