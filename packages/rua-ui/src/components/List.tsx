@@ -8,6 +8,62 @@ import { useSearch } from '../hooks/useSearch';
 import { useKeyboard } from '../hooks/useKeyboard';
 
 /**
+ * Focus retry options for exponential backoff
+ */
+export interface FocusRetryOptions {
+  maxRetries?: number;        // Default: 3
+  initialDelay?: number;      // Default: 50ms
+  backoffMultiplier?: number; // Default: 2
+}
+
+/**
+ * Calculate delay for a given attempt using exponential backoff
+ * Formula: initialDelay * (backoffMultiplier ^ attempt)
+ * For attempt 0: 50ms, attempt 1: 100ms, attempt 2: 200ms
+ */
+export function calculateBackoffDelay(
+  attempt: number,
+  initialDelay: number = 50,
+  backoffMultiplier: number = 2
+): number {
+  return initialDelay * Math.pow(backoffMultiplier, attempt);
+}
+
+/**
+ * Attempt to focus an input element with exponential backoff retry
+ * Returns true if focus was successful, false otherwise
+ */
+export async function attemptFocusWithRetry(
+  inputRef: React.RefObject<HTMLInputElement | null>,
+  options: FocusRetryOptions = {}
+): Promise<boolean> {
+  const {
+    maxRetries = 3,
+    initialDelay = 50,
+    backoffMultiplier = 2,
+  } = options;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const delay = calculateBackoffDelay(attempt, initialDelay, backoffMultiplier);
+    
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
+    if (inputRef.current) {
+      inputRef.current.focus();
+      
+      // Check if focus was successful
+      if (document.activeElement === inputRef.current) {
+        return true;
+      }
+    }
+  }
+  
+  // All retries exhausted
+  console.warn('Focus retry: All attempts exhausted, focus may not have succeeded');
+  return false;
+}
+
+/**
  * Main list component with integrated search and virtualized results
  */
 export function List({
@@ -141,27 +197,26 @@ export function List({
     setActiveIndex(firstItemIndex);
   }, [query, displayItems]);
 
-  const handleActivate = () => {
-    // Focus input when extension view is activated
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 200);
-  };
+  const handleActivate = useCallback(() => {
+    // Focus input when extension view is activated using retry mechanism
+    attemptFocusWithRetry(inputRef, {
+      maxRetries: 3,
+      initialDelay: 50,
+      backoffMultiplier: 2,
+    });
+  }, []);
 
   // Listen for activate event from rua API and focus input
   useEffect(() => {
     // Check if rua API is available
     if (typeof window !== 'undefined' && (window as any).rua) {
       const rua = (window as any).rua;
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 200);
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 400);
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 600);
+      // Use retry mechanism for initial focus
+      attemptFocusWithRetry(inputRef, {
+        maxRetries: 3,
+        initialDelay: 50,
+        backoffMultiplier: 2,
+      });
       rua.on?.('activate', handleActivate);
 
       return () => {
@@ -171,7 +226,6 @@ export function List({
 
     // Also listen for rua-ready event in case API loads after component mount
     const handleRuaReady = () => {
-      console.log("rua ready")
       const rua = (window as any).rua;
       rua.on?.('activate', handleActivate);
     };
@@ -185,20 +239,17 @@ export function List({
         rua.off?.('activate', handleActivate);
       }
     };
-  }, []);
+  }, [handleActivate]);
 
-  window.addEventListener('rua-ready', ()=>{
-    console.log("333333333333333333333333333333333")
-  });
-
-  // Initial focus on mount for extensions
+  // Initial focus on mount for extensions using retry mechanism
   useEffect(() => {
     // Focus input after component is fully mounted and rendered
-    const timer = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 200); // Slightly longer delay to ensure iframe and DOM are ready
-
-    return () => clearTimeout(timer);
+    // Using exponential backoff: 50ms, 100ms, 200ms
+    attemptFocusWithRetry(inputRef, {
+      maxRetries: 3,
+      initialDelay: 50,
+      backoffMultiplier: 2,
+    });
   }, []); // Empty dependency array = run once on mount
 
   // Empty state

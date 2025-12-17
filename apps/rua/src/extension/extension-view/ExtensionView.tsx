@@ -7,6 +7,64 @@
  */
 
 import {useEffect, useRef, useState, useMemo, useCallback} from 'react';
+
+/**
+ * Focus retry options for exponential backoff
+ */
+interface FocusRetryOptions {
+    maxRetries?: number;        // Default: 3
+    initialDelay?: number;      // Default: 50ms
+    backoffMultiplier?: number; // Default: 2
+}
+
+/**
+ * Calculate delay for a given attempt using exponential backoff
+ * Formula: initialDelay * (backoffMultiplier ^ attempt)
+ * For attempt 0: 50ms, attempt 1: 100ms, attempt 2: 200ms
+ */
+function calculateBackoffDelay(
+    attempt: number,
+    initialDelay: number = 50,
+    backoffMultiplier: number = 2
+): number {
+    return initialDelay * Math.pow(backoffMultiplier, attempt);
+}
+
+/**
+ * Attempt to notify extension activation with exponential backoff retry
+ * Returns true if notification was successful, false otherwise
+ */
+async function attemptActivateWithRetry(
+    getClientAPI: () => { onActivate?: () => void } | null,
+    options: FocusRetryOptions = {}
+): Promise<boolean> {
+    const {
+        maxRetries = 3,
+        initialDelay = 50,
+        backoffMultiplier = 2,
+    } = options;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        const delay = calculateBackoffDelay(attempt, initialDelay, backoffMultiplier);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        try {
+            const clientAPI = getClientAPI();
+            if (clientAPI?.onActivate) {
+                clientAPI.onActivate();
+                console.log(`[ExtensionView] onActivate called successfully on attempt ${attempt + 1}`);
+                return true;
+            }
+        } catch (err) {
+            console.log(`[ExtensionView] onActivate attempt ${attempt + 1} failed:`, err);
+        }
+    }
+    
+    // All retries exhausted
+    console.warn('[ExtensionView] Focus retry: All attempts exhausted, activation may not have succeeded');
+    return false;
+}
 import {Icon} from '@iconify/react';
 import {RPCChannel, IframeParentIO} from 'kkrpc/browser';
 import {
@@ -212,18 +270,23 @@ export function ExtensionView({
 
             console.log(`[ExtensionView] kkrpc connection established for ${extensionId}`);
 
-            // Auto-focus iframe and notify extension to focus its input
-            setTimeout(() => {
-                iframeRef.current?.focus();
-                // Notify extension to activate (which should trigger input focus in rua-ui)
-                const clientAPI = rpc.getAPI();
-                try {
-                    console.log('activateactivateactivateactivateactivateactivateactivate')
-                    clientAPI.onActivate?.();
-                } catch (err) {
-                    console.log('[ExtensionView] Failed to notify activation:', err);
+            // Auto-focus iframe and notify extension to focus its input with retry mechanism
+            iframeRef.current?.focus();
+            
+            // Use retry mechanism for activation notification
+            // This ensures the extension's input gets focused even if there are timing issues
+            attemptActivateWithRetry(
+                () => rpc.getAPI(),
+                {
+                    maxRetries: 3,
+                    initialDelay: 50,
+                    backoffMultiplier: 2,
                 }
-            }, 0);
+            ).then((success) => {
+                if (!success) {
+                    console.warn('[ExtensionView] Failed to activate extension after all retries');
+                }
+            });
         } catch (err) {
             console.error('[ExtensionView] Failed to setup RPC:', err);
         }
