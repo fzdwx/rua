@@ -208,6 +208,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
                 close: () => hostAPI.uiClose(),
                 setTitle: (title) => hostAPI.uiSetTitle(title),
                 getTheme: () => hostAPI.uiGetTheme(),
+                getInitialSearch: () => hostAPI.uiGetInitialSearch(),
             },
 
             hideWindow: () => hostAPI.uiHideWindow(),

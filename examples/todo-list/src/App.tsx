@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react'
+import {useState, useEffect, use} from 'react'
 import {initializeRuaAPI, type RuaAPI} from 'rua-api/browser'
 import {List, Form, useRuaTheme} from '@rua/ui'
 import type {ListItem} from '@rua/ui'
@@ -16,16 +16,21 @@ window.addEventListener('rua-ready', ()=>{
 });
 function App() {
     const [rua, setRua] = useState<RuaAPI | null>(null)
-    initializeRuaAPI().then(setRua).catch(console.error)
-    useRuaTheme() // Auto-sync theme with main app
+    const [initialText, setInitialText] = useState<string>('')
+    useEffect(() => {
+        initializeRuaAPI().then(setRua).catch(console.error)
+    }, []);
+    useEffect(() => {
+        rua?.ui.getInitialSearch()
+    }, [rua]);
 
     if (!rua) return <div>Loading...</div>
     return (
-        <TodoList rua={rua}/>
+        <TodoList rua={rua} initialText={initialText}/>
     )
 }
 
-function TodoList({rua}: { rua: RuaAPI }) {
+function TodoList({rua,initialText}: { rua: RuaAPI,initialText:string }) {
     const [todos, setTodos] = useState<Todo[]>([])
     const [isLoading, setIsLoading] = useState(true)
 

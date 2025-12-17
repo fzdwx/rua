@@ -78,9 +78,11 @@ export function List({
   showBackButton = true,
   onBack,
   actions,
+  initialSearch,
 }: ListProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialSearch || '');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [initialSearchLoaded, setInitialSearchLoaded] = useState(!!initialSearch);
   const parentRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -251,6 +253,29 @@ export function List({
       backoffMultiplier: 2,
     });
   }, []); // Empty dependency array = run once on mount
+
+  // Load initial search value from rua API if not provided via props
+  useEffect(() => {
+    if (initialSearchLoaded) return;
+    
+    const loadInitialSearch = async () => {
+      if (typeof window !== 'undefined' && (window as any).rua) {
+        try {
+          const rua = (window as any).rua;
+          const initialValue = await rua.ui.getInitialSearch();
+          if (initialValue) {
+            setQuery(initialValue);
+            onSearch?.(initialValue);
+          }
+        } catch (err) {
+          console.warn('[List] Failed to get initial search:', err);
+        }
+      }
+      setInitialSearchLoaded(true);
+    };
+
+    loadInitialSearch();
+  }, [initialSearchLoaded, onSearch]);
 
   // Empty state
   if (!isLoading && displayItems.length === 0) {

@@ -165,6 +165,8 @@ export interface RuaClientAPI extends CommonRuaAPI {
         setTitle(title: string): Promise<void>;
         /** Get current theme */
         getTheme(): Promise<'light' | 'dark'>;
+        /** Get initial search value passed from main app */
+        getInitialSearch(): Promise<string>;
     };
 
     /** Register event handler. View mode extensions support: activate, deactivate, action-triggered, theme-change */
@@ -233,6 +235,9 @@ export interface RuaServerAPI {
     /** Get main app CSS styles for injection into extension iframe */
     uiGetStyles(): Promise<string>;
 
+    /** Get initial search value passed from main app */
+    uiGetInitialSearch(): Promise<string>;
+
     // Actions API
     actionsRegister(actions: DynamicAction[]): Promise<void>;
 
@@ -251,6 +256,8 @@ export interface RuaHostCallbacks {
     onSetTitle?: (title: string) => void;
     onRegisterActions?: (actions: DynamicAction[]) => void;
     onUnregisterActions?: (actionIds: string[]) => void;
+    /** Get initial search value */
+    getInitialSearch?: () => string;
 }
 
 /** Client-side callbacks that host can invoke */

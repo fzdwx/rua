@@ -173,6 +173,10 @@ export function createRuaAPI(
             return cssStyles;
         },
 
+        async uiGetInitialSearch(): Promise<string> {
+            return callbacks.getInitialSearch?.() || '';
+        },
+
         // Actions API (no permission required)
         async actionsRegister(actions: DynamicAction[]): Promise<void> {
             callbacks.onRegisterActions?.(actions);

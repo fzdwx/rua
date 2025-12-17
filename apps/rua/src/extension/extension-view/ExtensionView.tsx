@@ -46,9 +46,9 @@ async function attemptActivateWithRetry(
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         const delay = calculateBackoffDelay(attempt, initialDelay, backoffMultiplier);
-        
+
         await new Promise(resolve => setTimeout(resolve, delay));
-        
+
         try {
             const clientAPI = getClientAPI();
             if (clientAPI?.onActivate) {
@@ -60,11 +60,12 @@ async function attemptActivateWithRetry(
             console.log(`[ExtensionView] onActivate attempt ${attempt + 1} failed:`, err);
         }
     }
-    
+
     // All retries exhausted
     console.warn('[ExtensionView] Focus retry: All attempts exhausted, activation may not have succeeded');
     return false;
 }
+
 import {Icon} from '@iconify/react';
 import {RPCChannel, IframeParentIO} from 'kkrpc/browser';
 import {
@@ -114,7 +115,7 @@ export function ExtensionView({
                                   onRegisterActions,
                                   onUnregisterActions,
                                   refreshKey = 0,
-                                  search: _search = '',
+                                  search,
                               }: ExtensionViewProps) {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const ioRef = useRef<IframeParentIO | null>(null);
@@ -259,6 +260,7 @@ export function ExtensionView({
                     onSetTitle: setTitle,
                     onRegisterActions,
                     onUnregisterActions,
+                    getInitialSearch: () => search || '',
                 },
                 theme,
                 cssContent
@@ -272,7 +274,7 @@ export function ExtensionView({
 
             // Auto-focus iframe and notify extension to focus its input with retry mechanism
             iframeRef.current?.focus();
-            
+
             // Use retry mechanism for activation notification
             // This ensures the extension's input gets focused even if there are timing issues
             attemptActivateWithRetry(

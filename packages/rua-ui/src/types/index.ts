@@ -64,6 +64,8 @@ export interface ListProps {
   showBackButton?: boolean;
   onBack?: () => void;
   actions?: Action[];
+  /** Initial search value. If not provided, will be fetched from rua API */
+  initialSearch?: string;
 }
 
 /**
