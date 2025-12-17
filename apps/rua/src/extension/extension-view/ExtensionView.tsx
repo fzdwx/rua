@@ -55,7 +55,7 @@ export function ExtensionView({
                                   onRegisterActions,
                                   onUnregisterActions,
                                   refreshKey = 0,
-                                  search = '',
+                                  search: _search = '',
                               }: ExtensionViewProps) {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const ioRef = useRef<IframeParentIO | null>(null);
@@ -116,10 +116,6 @@ export function ExtensionView({
         };
     }, [refreshKey]);
 
-    // Store search value in ref so handleIframeLoad can access the latest value
-    const searchRef = useRef(search);
-    searchRef.current = search;
-
     // Setup RPC when iframe loads
     const handleIframeLoad = useCallback(() => {
         setLoading(false);
@@ -156,18 +152,6 @@ export function ExtensionView({
             rpcRef.current = rpc;
 
             console.log(`[ExtensionView] kkrpc connection established for ${extensionId}`);
-
-            // Send initial search value after RPC is established
-            // Use a small delay to ensure the extension has registered its handlers
-            setTimeout(() => {
-                if (rpcRef.current && searchRef.current) {
-                    try {
-                        rpcRef.current.getAPI().onSearchChange?.(searchRef.current);
-                    } catch (err) {
-                        console.log('[ExtensionView] Failed to send initial search:', err);
-                    }
-                }
-            }, 100);
         } catch (err) {
             console.error('[ExtensionView] Failed to setup RPC:', err);
         }
@@ -188,19 +172,6 @@ export function ExtensionView({
             iframe.removeEventListener('error', handleError);
         };
     }, [refreshKey]);
-
-    // Notify extension when search changes
-    useEffect(() => {
-        if (rpcRef.current) {
-            const clientAPI = rpcRef.current.getAPI();
-            // Use try-catch since the extension may not have registered the callback yet
-            try {
-                clientAPI.onSearchChange?.(search)
-            } catch (err) {
-                console.log("clientAPI.onSearchChange ", err)
-            }
-        }
-    }, [search]);
 
     return (
         <div className="flex flex-col h-full">

@@ -42,6 +42,8 @@ function convertToAction(
         item: {extensionId: extensionAction.extensionId},
         // Pass query flag for showing query input box
         query: extensionAction.query,
+        // Auto-hide search box for view mode extensions
+        hideSearchBox: extensionAction.mode === 'view',
         usageCount: getUsageCount(extensionAction.id),
         perform: () => {
             incrementUsage(extensionAction.id)
@@ -95,6 +97,8 @@ function convertDynamicToAction(
             : undefined,
         // Store extensionId for routing
         item: {extensionId: extensionId, isDynamic: true},
+        // Auto-hide search box for view mode dynamic actions
+        hideSearchBox: dynamicAction.mode === 'view',
         usageCount: getUsageCount(fullId),
         badge: dynamicAction.badge,
         perform:

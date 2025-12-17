@@ -165,9 +165,11 @@ export interface RuaClientAPI extends CommonRuaAPI {
         setTitle(title: string): Promise<void>;
     };
 
-    on(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', handler: EventHandler): void;
+    /** Register event handler. View mode extensions only support: activate, deactivate, action-triggered */
+    on(event: 'activate' | 'deactivate' | 'action-triggered', handler: EventHandler): void;
 
-    off(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', handler: EventHandler): void;
+    /** Unregister event handler */
+    off(event: 'activate' | 'deactivate' | 'action-triggered', handler: EventHandler): void;
 }
 
 /**
@@ -246,7 +248,7 @@ export interface RuaHostCallbacks {
 
 /** Client-side callbacks that host can invoke */
 export interface RuaClientCallbacks {
-    /** Called when search input value changes */
+    /** @internal Called when search input value changes. Internal use only - not exposed to view mode extensions */
     onSearchChange?: (query: string) => void;
     /** Called when the main window is activated (shown) */
     onActivate?: () => void;

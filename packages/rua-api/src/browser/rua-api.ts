@@ -63,16 +63,6 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
                         }
                     });
                 },
-                onSearchChange: async (query: string) => {
-                    const handlers = eventHandlers.get('search-change') || [];
-                    handlers.forEach((handler) => {
-                        try {
-                            handler(query);
-                        } catch (e) {
-                            console.error('[Rua API] Event handler error:', e);
-                        }
-                    });
-                },
                 onActivate: async () => {
                     const handlers = eventHandlers.get('activate') || [];
                     handlers.forEach((handler) => {

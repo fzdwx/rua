@@ -31,7 +31,7 @@ export interface MainContextRuaAPI extends CommonRuaAPI {
         unregister(actionIds: string[]): Promise<void>;
     };
 
-    /** Register an event handler for lifecycle events */
+    /** Register an event handler for lifecycle events. Background scripts support: activate, deactivate, action-triggered, search-change */
     on(event: 'activate' | 'deactivate' | 'action-triggered' | 'search-change', handler: EventHandler): void;
 
     /** Unregister an event handler */
