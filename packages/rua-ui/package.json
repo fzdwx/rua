@@ -22,10 +22,12 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "fuse.js": "^7.1.0",
-    "pinyin-match": "^1.2.10",
     "@tanstack/react-virtual": "^3.0.1",
-    "motion": "^12.23.24"
+    "date-fns": "^4.1.0",
+    "fuse.js": "^7.1.0",
+    "motion": "^12.23.24",
+    "pinyin-match": "^1.2.10",
+    "react-markdown": "^10.1.0"
   },
   "peerDependencies": {
     "react": "^19.1.0",

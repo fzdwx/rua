@@ -1,5 +1,6 @@
 import { ReactElement } from "react";
 import { ListItemComponentProps, ListSectionComponentProps, ListEmptyViewProps } from "../types";
+import { ListItemDetail } from "./ListItemDetail";
 
 /**
  * List.Item component for use as a child of List
@@ -14,6 +15,9 @@ export function ListItemComponent(_props: ListItemComponentProps) {
 // Mark this component for identification
 ListItemComponent.displayName = "List.Item";
 ListItemComponent.__isListItem = true;
+
+// Attach Detail sub-component to List.Item
+(ListItemComponent as any).Detail = ListItemDetail;
 
 /**
  * List.Section component for grouping List.Item components

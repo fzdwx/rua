@@ -595,22 +595,7 @@ function FormComponent({
           </div>
         )}
         <div className={`form-fields ${isLoading ? "form-fields-loading" : ""}`}>{children}</div>
-        {actions && actions.length > 0 && (
-          <div className="form-actions">
-            {actions.map((action) => (
-              <button
-                key={action.id}
-                type={action.id === "submit" ? "submit" : "button"}
-                onClick={action.id !== "submit" ? action.onAction : undefined}
-                className="form-action-button"
-                disabled={isLoading}
-              >
-                {action.icon && <span className="action-icon">{action.icon}</span>}
-                {action.title}
-              </button>
-            ))}
-          </div>
-        )}
+        {actions && <div className="form-actions">{actions}</div>}
       </form>
     </FormContext.Provider>
   );

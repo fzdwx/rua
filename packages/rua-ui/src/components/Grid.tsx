@@ -541,7 +541,7 @@ export function Grid({
           inputRef={inputRef}
         />
         <div className="grid-empty">{emptyView || <p>No results found</p>}</div>
-        {actions && actions.length > 0 && <ActionPanel actions={actions} position="footer" />}
+        {actions && actions}
       </div>
     );
   }
@@ -595,7 +595,7 @@ export function Grid({
             );
           })}
         </div>
-        {actions && actions.length > 0 && <ActionPanel actions={actions} position="footer" />}
+        {actions && actions}
       </div>
     );
   }
@@ -617,7 +617,7 @@ export function Grid({
           {renderGridItems(displayItems)}
         </div>
       </div>
-      {actions && actions.length > 0 && <ActionPanel actions={actions} position="footer" />}
+      {actions && actions}
     </div>
   );
 }

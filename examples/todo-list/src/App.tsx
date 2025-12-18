@@ -11,6 +11,7 @@ import {
   Toast,
   showToast,
   useNavigation,
+  formatRelativeDate,
 } from "@rua/ui";
 
 interface Todo {
@@ -42,6 +43,9 @@ function TodoList({rua}: { rua: RuaAPI }) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [filter, setFilter] = useState<string>("all");
+  const [showDetail, setShowDetail] = useState(false);
+  const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
   const {push} = useNavigation();
 
   // Load todos from storage
@@ -130,124 +134,21 @@ function TodoList({rua}: { rua: RuaAPI }) {
     });
   };
 
-  const activeTodos = todos.filter((t) => !t.done);
-  const completedTodos = todos.filter((t) => t.done);
+  // Apply filters
+  const filteredTodos = todos.filter((todo) => {
+    // Status filter
+    if (filter === "active" && todo.done) return false;
+    if (filter === "completed" && !todo.done) return false;
+    if (filter === "high" && todo.priority !== "high") return false;
+    if (filter === "medium" && todo.priority !== "medium") return false;
+    if (filter === "low" && todo.priority !== "low") return false;
+    return true;
+  });
 
-  // Grid View
-  if (viewMode === "grid") {
-    return (
-      <Grid
-        navigationTitle="Todo List - Grid View"
-        searchBarPlaceholder="Search todos..."
-        isLoading={isLoading}
-        columns={3}
-      >
-        {todos.length === 0 && !isLoading && (
-          <Grid.EmptyView
-            icon={<Icon source={Icon.Document} size={48}/>}
-            title="No Todos Yet"
-            description="Create your first todo to get started"
-            actions={
-              <ActionPanel>
-                <Action
-                  title="Create Todo"
-                  icon={<Icon source={Icon.Plus}/>}
-                  shortcut={{key: "n", modifiers: ["cmd"]}}
-                  onAction={() => push(<CreateTodoForm onSubmit={addTodo}/>)}
-                />
-              </ActionPanel>
-            }
-          />
-        )}
+  const activeTodos = filteredTodos.filter((t) => !t.done);
+  const completedTodos = filteredTodos.filter((t) => t.done);
 
-        {activeTodos.length > 0 && (
-          <Grid.Section title="Active" subtitle={`${activeTodos.length} items`}>
-            {activeTodos.map((todo) => (
-              <Grid.Item
-                key={todo.id}
-                id={todo.id}
-                content={{source: getPriorityIcon(todo.priority), tooltip: todo.priority}}
-                title={todo.title}
-                subtitle={todo.description}
-                keywords={[todo.priority, ...(todo.tags || [])]}
-                actions={
-                  <ActionPanel title={todo.title}>
-                    <Action
-                      title="View Details"
-                      icon={<Icon source={Icon.Eye}/>}
-                      shortcut={{key: "enter"}}
-                      onAction={() =>
-                        push(
-                          <TodoDetail
-                            todo={todo}
-                            onToggle={toggleTodo}
-                            onDelete={deleteTodo}
-                            onUpdate={updateTodo}
-                          />
-                        )
-                      }
-                    />
-                    <Action
-                      title="Switch to List View"
-                      icon={<Icon source={Icon.List}/>}
-                      shortcut={{key: "l", modifiers: ["cmd"]}}
-                      onAction={() => setViewMode("list")}
-                    />
-                    <Action
-                      title="Create New Todo"
-                      icon={<Icon source={Icon.Plus}/>}
-                      shortcut={{key: "n", modifiers: ["cmd"]}}
-                      onAction={() => push(<CreateTodoForm onSubmit={addTodo}/>)}
-                    />
-                  </ActionPanel>
-                }
-              />
-            ))}
-          </Grid.Section>
-        )}
-
-        {completedTodos.length > 0 && (
-          <Grid.Section title="Completed" subtitle={`${completedTodos.length} items`}>
-            {completedTodos.map((todo) => (
-              <Grid.Item
-                key={todo.id}
-                id={todo.id}
-                content={{source: "✅", tooltip: "Completed"}}
-                title={todo.title}
-                subtitle={todo.description}
-                actions={
-                  <ActionPanel title={todo.title}>
-                    <Action
-                      title="View Details"
-                      icon={<Icon source={Icon.Eye}/>}
-                      onAction={() =>
-                        push(
-                          <TodoDetail
-                            todo={todo}
-                            onToggle={toggleTodo}
-                            onDelete={deleteTodo}
-                            onUpdate={updateTodo}
-                          />
-                        )
-                      }
-                    />
-                    <Action
-                      title="Create New Todo"
-                      icon={<Icon source={Icon.Plus}/>}
-                      shortcut={{key: "n", modifiers: ["cmd"]}}
-                      onAction={() => push(<CreateTodoForm onSubmit={addTodo}/>)}
-                    />
-                  </ActionPanel>
-                }
-              />
-            ))}
-          </Grid.Section>
-        )}
-      </Grid>
-    );
-  }
-
-  // List View (default)
+  const selectedTodo = selectedTodoId ? todos.find(t => t.id === selectedTodoId) : null;
 
   return (
     <List
@@ -256,6 +157,36 @@ function TodoList({rua}: { rua: RuaAPI }) {
       isLoading={isLoading}
       enablePinyin={true}
       showBackButton={true}
+      isShowingDetail={showDetail}
+      onSelectionChange={setSelectedTodoId}
+      actions={
+        <ActionPanel>
+          <Action
+            title="Create Todo"
+            icon={<Icon source={Icon.Plus}/>}
+            shortcut={{key: "n", modifiers: ["cmd"]}}
+            onAction={() => push(<CreateTodoForm onSubmit={addTodo}/>)}
+          />
+        </ActionPanel>
+      }
+      searchBarAccessory={
+        <List.Dropdown
+          tooltip="Filter Todos"
+          value={filter}
+          onChange={setFilter}
+        >
+          <List.Dropdown.Section title="Status">
+            <List.Dropdown.Item title="All" value="all" />
+            <List.Dropdown.Item title="Active" value="active" />
+            <List.Dropdown.Item title="Completed" value="completed" />
+          </List.Dropdown.Section>
+          <List.Dropdown.Section title="Priority">
+            <List.Dropdown.Item title="High Priority" value="high" />
+            <List.Dropdown.Item title="Medium Priority" value="medium" />
+            <List.Dropdown.Item title="Low Priority" value="low" />
+          </List.Dropdown.Section>
+        </List.Dropdown>
+      }
     >
       {/* Empty View */}
       {todos.length === 0 && !isLoading && (
@@ -263,16 +194,6 @@ function TodoList({rua}: { rua: RuaAPI }) {
           icon={<Icon source={Icon.Document} size={48}/>}
           title="No Todos Yet"
           description="Create your first todo to get started"
-          actions={
-            <ActionPanel>
-              <Action
-                title="Create Todo"
-                icon={<Icon source={Icon.Plus}/>}
-                shortcut={{key: "n", modifiers: ["cmd"]}}
-                onAction={() => push(<CreateTodoForm onSubmit={addTodo}/>)}
-              />
-            </ActionPanel>
-          }
         />
       )}
 
@@ -291,13 +212,86 @@ function TodoList({rua}: { rua: RuaAPI }) {
                 ...(todo.dueDate
                   ? [
                     {
-                      text: `Due: ${formatDate(todo.dueDate)}`,
-                      icon: <Icon source={Icon.Calendar} size={12}/>,
+                      date: new Date(todo.dueDate),
+                      tooltip: `Due ${formatDate(todo.dueDate)}`,
                     },
                   ]
                   : []),
-                {text: todo.priority.toUpperCase()},
+                {
+                  tag: todo.priority.toUpperCase(),
+                  color: getPriorityColor(todo.priority),
+                  tooltip: `Priority: ${todo.priority}`,
+                },
+                {
+                  date: new Date(todo.createdAt),
+                  tooltip: "Created",
+                },
               ]}
+              detail={
+                <List.Item.Detail
+                  markdown={`
+# ${todo.title}
+
+${todo.description || "*No description provided*"}
+
+---
+
+**Status:** ${todo.done ? "✅ Completed" : "⏳ Active"}
+
+**Priority:** ${getPriorityIcon(todo.priority)} ${todo.priority.charAt(0).toUpperCase() + todo.priority.slice(1)}
+
+**Created:** ${formatDate(todo.createdAt)}
+
+${todo.dueDate ? `**Due Date:** ${formatDate(todo.dueDate)}` : ""}
+
+${todo.tags && todo.tags.length > 0 ? `**Tags:** ${todo.tags.join(", ")}` : ""}
+                  `.trim()}
+                  metadata={
+                    <List.Item.Detail.Metadata>
+                      <List.Item.Detail.Metadata.Label
+                        title="Status"
+                        text={todo.done ? "Completed" : "Active"}
+                        icon={<Icon source={todo.done ? Icon.Checkmark : Icon.Clock}/>}
+                      />
+                      <List.Item.Detail.Metadata.Label
+                        title="Priority"
+                        text={{
+                          value: todo.priority.toUpperCase(),
+                          color: getPriorityColor(todo.priority),
+                        }}
+                        icon={<span>{getPriorityIcon(todo.priority)}</span>}
+                      />
+                      <List.Item.Detail.Metadata.Separator/>
+                      <List.Item.Detail.Metadata.Label
+                        title="Created"
+                        text={formatDate(todo.createdAt)}
+                        icon={<Icon source={Icon.Calendar}/>}
+                      />
+                      {todo.dueDate && (
+                        <List.Item.Detail.Metadata.Label
+                          title="Due Date"
+                          text={formatDate(todo.dueDate)}
+                          icon={<Icon source={Icon.Clock}/>}
+                        />
+                      )}
+                      {todo.tags && todo.tags.length > 0 && (
+                        <>
+                          <List.Item.Detail.Metadata.Separator/>
+                          <List.Item.Detail.Metadata.TagList title="Tags">
+                            {todo.tags.map((tag, index) => (
+                              <List.Item.Detail.Metadata.TagList.Item
+                                key={index}
+                                text={tag}
+                                color={getTagColor(index)}
+                              />
+                            ))}
+                          </List.Item.Detail.Metadata.TagList>
+                        </>
+                      )}
+                    </List.Item.Detail.Metadata>
+                  }
+                />
+              }
               actions={
                 <ActionPanel title={todo.title}>
                   <ActionPanel.Section title="Actions">
@@ -355,6 +349,12 @@ function TodoList({rua}: { rua: RuaAPI }) {
                       }
                     />
                     <Action
+                      title={showDetail ? "Hide Detail" : "Show Detail"}
+                      icon={<Icon source={Icon.Eye}/>}
+                      shortcut={{key: "d", modifiers: ["cmd", "shift"]}}
+                      onAction={() => setShowDetail(!showDetail)}
+                    />
+                    <Action
                       title="Switch to Grid View"
                       icon={<Icon source={Icon.Grid}/>}
                       shortcut={{key: "g", modifiers: ["cmd"]}}
@@ -386,7 +386,17 @@ function TodoList({rua}: { rua: RuaAPI }) {
               title={todo.title}
               subtitle={todo.description}
               icon={<span>✅</span>}
-              accessories={[{text: "DONE"}]}
+              accessories={[
+                {
+                  tag: "DONE",
+                  color: "#10b981",
+                  tooltip: "Completed",
+                },
+                {
+                  date: new Date(todo.createdAt),
+                  tooltip: "Created",
+                },
+              ]}
               actions={
                 <ActionPanel title={todo.title}>
                   <ActionPanel.Section title="Actions">
@@ -507,36 +517,39 @@ ${todo.dueDate ? `**Due Date:** ${formatDate(todo.dueDate)}` : ""}
           )}
         </Detail.Metadata>
       }
-      actions={[
-        {
-          id: "toggle",
-          title: todo.done ? "Mark as Active" : "Mark as Done",
-          onAction: () => {
-            onToggle(todo.id);
-            pop();
-          },
-        },
-        {
-          id: "edit",
-          title: "Edit",
-          onAction: () =>
-            push(
-              <CreateTodoForm
-                onSubmit={(values) => onUpdate(todo.id, values)}
-                initialValues={todo}
-                isEditing
-              />
-            ),
-        },
-        {
-          id: "delete",
-          title: "Delete",
-          onAction: () => {
-            onDelete(todo.id);
-            pop();
-          },
-        },
-      ]}
+      actions={
+        <ActionPanel>
+          <Action
+            title={todo.done ? "Mark as Active" : "Mark as Done"}
+            icon={<Icon source={todo.done ? Icon.Circle : Icon.Checkmark}/>}
+            onAction={() => {
+              onToggle(todo.id);
+              pop();
+            }}
+          />
+          <Action
+            title="Edit"
+            icon={<Icon source={Icon.Pencil}/>}
+            onAction={() =>
+              push(
+                <CreateTodoForm
+                  onSubmit={(values) => onUpdate(todo.id, values)}
+                  initialValues={todo}
+                  isEditing
+                />
+              )
+            }
+          />
+          <Action
+            title="Delete"
+            icon={<Icon source={Icon.Trash}/>}
+            onAction={() => {
+              onDelete(todo.id);
+              pop();
+            }}
+          />
+        </ActionPanel>
+      }
     />
   );
 }
@@ -559,14 +572,17 @@ function CreateTodoForm({onSubmit, initialValues, isEditing}: CreateTodoFormProp
     <Form
       navigationTitle={isEditing ? "Edit Todo" : "Create Todo"}
       onSubmit={handleSubmit}
-      actions={[
-        {
-          id: "submit",
-          title: isEditing ? "Save Changes" : "Create Todo",
-          onAction: () => {
-          },
-        },
-      ]}
+      actions={
+        <ActionPanel>
+          <Action
+            title={isEditing ? "Save Changes" : "Create Todo"}
+            icon={<Icon source={Icon.Checkmark}/>}
+            onAction={() => {
+              // Form submission is handled by the Form component's onSubmit
+            }}
+          />
+        </ActionPanel>
+      }
     >
       <Form.TextField
         id="title"
@@ -618,6 +634,19 @@ function getPriorityIcon(priority: string): string {
       return "🟢";
     default:
       return "⚪";
+  }
+}
+
+function getPriorityColor(priority: string): string {
+  switch (priority) {
+    case "high":
+      return "#ef4444"; // red
+    case "medium":
+      return "#f59e0b"; // amber
+    case "low":
+      return "#10b981"; // green
+    default:
+      return "#6b7280"; // gray
   }
 }
 

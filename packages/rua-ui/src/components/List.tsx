@@ -32,6 +32,7 @@ import {
   isListSectionComponent,
   isListEmptyViewComponent,
 } from "./ListSubComponents";
+import { ListDropdown } from "./ListDropdown";
 
 /**
  * Focus retry options for exponential backoff
@@ -94,6 +95,7 @@ export function List({
   sections,
   onSearch,
   onSelect,
+  onSelectionChange,
   enablePinyin = false,
   isLoading = false,
   emptyView,
@@ -106,6 +108,9 @@ export function List({
   filtering = true,
   throttle = false,
   searchBarAccessory,
+  searchText,
+  selectedItemId,
+  pagination,
   children,
 }: ListProps) {
   // Use searchBarPlaceholder, fallback to deprecated searchPlaceholder for backward compatibility
@@ -144,6 +149,8 @@ export function List({
           keywords: props.keywords,
           accessories: props.accessories,
           actions: props.actions ? [] : undefined, // Actions handled separately
+          detail: props.detail,
+          quickLook: props.quickLook,
         });
       } else if (isListSectionComponent(child)) {
         // Convert List.Section component to ListSection
@@ -161,6 +168,8 @@ export function List({
               keywords: itemProps.keywords,
               accessories: itemProps.accessories,
               actions: itemProps.actions ? [] : undefined,
+              detail: itemProps.detail,
+              quickLook: itemProps.quickLook,
             });
           }
         });
@@ -193,7 +202,10 @@ export function List({
   // Use childEmptyView if provided, otherwise use emptyView prop
   const effectiveEmptyView = childEmptyView || emptyView;
 
-  const [query, setQuery] = useState(initialSearch || "");
+  // Use controlled searchText if provided, otherwise use internal state
+  const [internalQuery, setInternalQuery] = useState(initialSearch || "");
+  const query = searchText !== undefined ? searchText : internalQuery;
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [initialSearchLoaded, setInitialSearchLoaded] = useState(!!initialSearch);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -239,12 +251,37 @@ export function List({
     return searchResults.map((result) => result.item);
   }, [query, allItems, searchResults, filteringEnabled]);
 
+  // Pagination state - add placeholder items when loading more
+  const [loadingMore, setLoadingMore] = useState(false);
+  const totalItemCount = pagination?.hasMore && loadingMore
+    ? displayItems.length + (pagination?.pageSize || 20)
+    : displayItems.length;
+
   // Virtualization
   const rowVirtualizer = useVirtualizer({
-    count: displayItems.length,
+    count: totalItemCount,
     estimateSize: () => 66,
     getScrollElement: () => parentRef.current,
   });
+
+  // Handle pagination - detect when user scrolls to bottom
+  useEffect(() => {
+    if (!pagination?.hasMore || loadingMore) return;
+
+    const virtualItems = rowVirtualizer.getVirtualItems();
+    if (virtualItems.length === 0) return;
+
+    const lastItem = virtualItems[virtualItems.length - 1];
+
+    // If we're close to the end (within 5 items), trigger load more
+    if (lastItem.index >= displayItems.length - 5) {
+      setLoadingMore(true);
+
+      Promise.resolve(pagination.onLoadMore()).finally(() => {
+        setLoadingMore(false);
+      });
+    }
+  }, [rowVirtualizer.getVirtualItems(), displayItems.length, pagination, loadingMore]);
 
   // Keyboard navigation
   const incrementIndex = () => {
@@ -255,7 +292,17 @@ export function List({
       while (nextIndex < displayItems.length && typeof displayItems[nextIndex] === "string") {
         nextIndex++;
       }
-      return nextIndex >= displayItems.length ? prev : nextIndex;
+      const newIndex = nextIndex >= displayItems.length ? prev : nextIndex;
+
+      // Fire onSelectionChange with the new item's id
+      if (newIndex !== prev && newIndex < displayItems.length) {
+        const item = displayItems[newIndex];
+        if (typeof item !== "string") {
+          onSelectionChange?.(item.id);
+        }
+      }
+
+      return newIndex;
     });
   };
 
@@ -267,7 +314,17 @@ export function List({
       while (nextIndex >= 0 && typeof displayItems[nextIndex] === "string") {
         nextIndex--;
       }
-      return nextIndex < 0 ? prev : nextIndex;
+      const newIndex = nextIndex < 0 ? prev : nextIndex;
+
+      // Fire onSelectionChange with the new item's id
+      if (newIndex !== prev && newIndex >= 0) {
+        const item = displayItems[newIndex];
+        if (typeof item !== "string") {
+          onSelectionChange?.(item.id);
+        }
+      }
+
+      return newIndex;
     });
   };
 
@@ -287,7 +344,9 @@ export function List({
 
   // Handle search change
   const handleSearchChange = (value: string) => {
-    setQuery(value);
+    if (searchText === undefined) {
+      setInternalQuery(value);
+    }
     setActiveIndex(0);
     onSearch?.(value);
   };
@@ -310,7 +369,29 @@ export function List({
   useEffect(() => {
     const firstItemIndex = typeof displayItems[0] === "string" ? 1 : 0;
     setActiveIndex(firstItemIndex);
-  }, [query, displayItems]);
+
+    // Fire onSelectionChange with the first item's id
+    if (displayItems.length > firstItemIndex) {
+      const item = displayItems[firstItemIndex];
+      if (typeof item !== "string") {
+        onSelectionChange?.(item.id);
+      }
+    } else {
+      onSelectionChange?.(null);
+    }
+  }, [query, displayItems, onSelectionChange]);
+
+  // Handle controlled selectedItemId prop
+  useEffect(() => {
+    if (selectedItemId !== undefined) {
+      const index = displayItems.findIndex(
+        (item) => typeof item !== "string" && item.id === selectedItemId
+      );
+      if (index >= 0) {
+        setActiveIndex(index);
+      }
+    }
+  }, [selectedItemId, displayItems]);
 
   const handleActivate = useCallback(() => {
     console.log("handleActivatehandleActivatehandleActivatehandleActivate")
@@ -377,8 +458,8 @@ export function List({
         try {
           const rua = (window as any).rua;
           const initialValue = await rua.ui.getInitialSearch();
-          if (initialValue) {
-            setQuery(initialValue);
+          if (initialValue && searchText === undefined) {
+            setInternalQuery(initialValue);
             onSearch?.(initialValue);
           }
         } catch (err) {
@@ -403,15 +484,21 @@ export function List({
           showBackButton={showBackButton}
           onBack={handleBack}
           inputRef={inputRef}
+          accessory={searchBarAccessory}
         />
         <div className="list-empty">{effectiveEmptyView || <p>No results found</p>}</div>
-        {actions && actions.length > 0 && <ActionPanel actions={actions} position="footer" />}
+        {actions && actions}
       </div>
     );
   }
 
+  // Get the currently selected item's detail
+  const currentItem = displayItems[activeIndex];
+  const currentItemDetail =
+    typeof currentItem !== "string" && currentItem?.detail ? currentItem.detail : null;
+
   return (
-    <div className="list-container">
+    <div className={`list-container ${isShowingDetail ? "list-container-split" : ""}`}>
       <SearchInput
         value={query}
         onValueChange={handleSearchChange}
@@ -420,8 +507,10 @@ export function List({
         showBackButton={showBackButton}
         onBack={handleBack}
         inputRef={inputRef}
+        accessory={searchBarAccessory}
       />
-      <div ref={parentRef} className="list-scroll-container">
+      <div className="list-content-wrapper">
+        <div ref={parentRef} className="list-scroll-container">
         <div
           role="listbox"
           className="list-virtual-container"
@@ -431,6 +520,30 @@ export function List({
           }}
         >
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            // Check if this is a placeholder item for pagination
+            if (virtualRow.index >= displayItems.length) {
+              return (
+                <div
+                  key={virtualRow.index}
+                  data-index={virtualRow.index}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                  className="command-item"
+                >
+                  <div className="command-item-content">
+                    <div className="command-item-text">
+                      <div className="command-item-title">Loading...</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             const item = displayItems[virtualRow.index];
             const active = virtualRow.index === activeIndex;
 
@@ -489,7 +602,11 @@ export function List({
           })}
         </div>
       </div>
-      {actions && actions.length > 0 && <ActionPanel actions={actions} position="footer" />}
+        {isShowingDetail && currentItemDetail && (
+          <div className="list-detail-panel">{currentItemDetail}</div>
+        )}
+      </div>
+      {actions && actions}
     </div>
   );
 }
@@ -498,3 +615,4 @@ export function List({
 List.Item = ListItemComponent;
 List.Section = ListSectionComponent;
 List.EmptyView = ListEmptyView;
+List.Dropdown = ListDropdown;

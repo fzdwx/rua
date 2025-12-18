@@ -12,6 +12,22 @@ export {
   isListSectionComponent,
   isListEmptyViewComponent,
 } from "./components/ListSubComponents";
+export { ListDropdown } from "./components/ListDropdown";
+export {
+  ListDropdownItem,
+  ListDropdownSection,
+  isListDropdownItem,
+  isListDropdownSection,
+} from "./components/ListDropdownSubComponents";
+export { ListItemDetail } from "./components/ListItemDetail";
+export {
+  ListItemDetailMetadata,
+  ListItemDetailMetadataLabel,
+  ListItemDetailMetadataLink,
+  ListItemDetailMetadataTagList,
+  ListItemDetailMetadataTagListItem,
+  ListItemDetailMetadataSeparator,
+} from "./components/ListItemDetailMetadata";
 
 // Form component and sub-components
 export { Form } from "./components/Form";
@@ -129,6 +145,9 @@ export type {
   ListItemComponentProps,
   ListSectionComponentProps,
   ListEmptyViewProps,
+  ListDropdownProps,
+  ListDropdownItemProps,
+  ListDropdownSectionProps,
 } from "./types";
 
 // Detail types
@@ -188,6 +207,9 @@ export type {
 
 // Utility component types
 export type { SearchInputProps, ListItemRendererProps } from "./types";
+
+// Utility functions
+export { formatRelativeDate, formatRelativeDateVerbose } from "./utils/formatDate";
 
 // Re-export Action component types from ActionPanel for convenience
 export type {

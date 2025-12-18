@@ -33,25 +33,10 @@ declare global {
  * Props for the ActionPanel component (Raycast-aligned)
  */
 export interface ActionPanelProps {
-  /** @deprecated Use children-based API instead */
-  actions?: LegacyAction[];
-  /** @deprecated Use children-based API instead */
-  position?: "footer" | "inline";
   /** Panel title displayed in the header */
   title?: string;
   /** Action or ActionPanel.Section children */
   children?: ReactNode;
-}
-
-/**
- * Legacy action interface for backward compatibility
- */
-interface LegacyAction {
-  id: string;
-  title: string;
-  icon?: ReactElement;
-  shortcut?: KeyboardShortcut;
-  onAction: () => void | Promise<void>;
 }
 
 /**
@@ -172,70 +157,16 @@ export function formatShortcut(shortcut: KeyboardShortcut): string {
 }
 
 /**
- * Internal component for legacy action button with shortcut support
- */
-function LegacyActionButton({ action }: { action: LegacyAction }) {
-  const onActionRef = useRef(action.onAction);
-
-  useEffect(() => {
-    onActionRef.current = action.onAction;
-  }, [action.onAction]);
-
-  const handleAction = useCallback(async () => {
-    try {
-      await onActionRef.current();
-    } catch (error) {
-      console.error("[ActionPanel] Error executing action:", error);
-    }
-  }, []);
-
-  // Register keyboard shortcut
-  useShortcut(action.shortcut, handleAction);
-
-  return (
-    <button
-      onClick={handleAction}
-      className="action-panel-button"
-      title={action.shortcut ? formatShortcut(action.shortcut) : undefined}
-    >
-      {action.icon && <span className="action-icon">{action.icon}</span>}
-      <span className="action-title">{action.title}</span>
-      {action.shortcut && (
-        <span className="action-shortcut">{formatShortcut(action.shortcut)}</span>
-      )}
-    </button>
-  );
-}
-
-/**
  * ActionPanel component for displaying actions
- * Supports both legacy array-based API and new children-based API
+ * Children-based API only
  */
-export function ActionPanel({ actions, position = "footer", title, children }: ActionPanelProps) {
-  // Use children-based API if children are provided
-  const hasChildren = React.Children.count(children) > 0;
-
-  if (!hasChildren && (!actions || actions.length === 0)) {
+export function ActionPanel({ title, children }: ActionPanelProps) {
+  if (!children) {
     return null;
   }
 
-  const containerClass =
-    position === "footer" ? "action-panel command-footer" : "action-panel action-panel-inline";
-
-  // Legacy array-based rendering
-  if (!hasChildren && actions) {
-    return (
-      <div className={containerClass}>
-        {actions.map((action) => (
-          <LegacyActionButton key={action.id} action={action} />
-        ))}
-      </div>
-    );
-  }
-
-  // New children-based rendering
   return (
-    <div className={containerClass}>
+    <div className="action-panel command-footer">
       {title && <div className="action-panel-header">{title}</div>}
       <div className="action-panel-content">{children}</div>
     </div>

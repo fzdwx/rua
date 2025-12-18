@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, ReactNode } from "react";
 import { LeftButton, InputLoading } from "../common/tools.tsx";
 
 export interface SearchInputProps {
@@ -10,6 +10,7 @@ export interface SearchInputProps {
   showBackButton?: boolean;
   onBack?: () => void;
   inputRef?: React.Ref<HTMLInputElement | null>;
+  accessory?: ReactNode;
 }
 
 /**
@@ -23,6 +24,7 @@ export function SearchInput({
   showBackButton = false,
   onBack,
   inputRef: externalInputRef,
+  accessory,
 }: SearchInputProps) {
   const [inputValue, setInputValue] = useState(value);
   const internalInputRef = useRef<HTMLInputElement>(null);
@@ -67,6 +69,7 @@ export function SearchInput({
         onKeyDown={handleKeyDown}
       />
       <InputLoading loading={loading} />
+      {accessory && <div className="search-input-accessory">{accessory}</div>}
     </div>
   );
 }

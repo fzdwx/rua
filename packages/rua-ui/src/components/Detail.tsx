@@ -162,16 +162,7 @@ export function Detail({
       </div>
 
       {/* Actions */}
-      {actions && actions.length > 0 && (
-        <div className="detail-actions">
-          {actions.map((action) => (
-            <button key={action.id} onClick={action.onAction} className="detail-action-button">
-              {action.icon && <span className="action-icon">{action.icon}</span>}
-              {action.title}
-            </button>
-          ))}
-        </div>
-      )}
+      {actions && <div className="detail-actions">{actions}</div>}
     </div>
   );
 }

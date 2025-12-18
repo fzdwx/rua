@@ -23,9 +23,11 @@ export interface Action {
  * Accessory item displayed on the right side of a list item
  */
 export interface Accessory {
-  text?: string;
+  text?: string | { value: string; color?: string };
   icon?: ReactElement;
   tooltip?: string;
+  tag?: string | Date | { value: string | Date; color?: string };
+  date?: Date | { value: Date; color?: string };
 }
 
 /**
@@ -39,6 +41,11 @@ export interface ListItem {
   keywords?: string[];
   accessories?: Accessory[];
   actions?: Action[];
+  detail?: ReactElement;
+  quickLook?: {
+    path: string;
+    name?: string;
+  };
 }
 
 /**
@@ -70,6 +77,11 @@ export interface ListItemComponentProps {
   actions?: ReactElement;
   /** Detail view to display in split view mode */
   detail?: ReactElement;
+  /** Quick Look configuration for file preview */
+  quickLook?: {
+    path: string;
+    name?: string;
+  };
 }
 
 /**
@@ -106,6 +118,60 @@ export interface FilteringOptions {
 }
 
 /**
+ * Props for List.Dropdown component (Raycast-aligned)
+ */
+export interface ListDropdownProps {
+  /** Tooltip displayed when hovering the dropdown */
+  tooltip: string;
+  /** ID of the dropdown */
+  id?: string;
+  /** Default value of the dropdown */
+  defaultValue?: string;
+  /** Controlled value of the dropdown */
+  value?: string;
+  /** Whether to persist the value across sessions */
+  storeValue?: boolean;
+  /** Callback when selection changes */
+  onChange?: (newValue: string) => void;
+  /** Callback when search text changes */
+  onSearchTextChange?: (text: string) => void;
+  /** Placeholder text for search field */
+  placeholder?: string;
+  /** Whether the dropdown is loading */
+  isLoading?: boolean;
+  /** Control built-in filtering behavior */
+  filtering?: boolean | FilteringOptions;
+  /** Whether to throttle search input */
+  throttle?: boolean;
+  /** Dropdown.Item or Dropdown.Section children */
+  children?: ReactNode;
+}
+
+/**
+ * Props for List.Dropdown.Item component
+ */
+export interface ListDropdownItemProps {
+  /** Item title */
+  title: string;
+  /** Item value */
+  value: string;
+  /** Optional icon */
+  icon?: ReactElement;
+  /** Additional search keywords */
+  keywords?: string[];
+}
+
+/**
+ * Props for List.Dropdown.Section component
+ */
+export interface ListDropdownSectionProps {
+  /** Section title */
+  title?: string;
+  /** Dropdown.Item children */
+  children: ReactNode;
+}
+
+/**
  * Props for the List component
  */
 export interface ListProps {
@@ -115,12 +181,14 @@ export interface ListProps {
   sections?: ListSection[];
   onSearch?: (query: string) => void;
   onSelect?: (item: ListItem) => void;
+  onSelectionChange?: (id: string | null) => void;
   enablePinyin?: boolean;
   isLoading?: boolean;
   emptyView?: ReactNode;
   showBackButton?: boolean;
   onBack?: () => void;
-  actions?: Action[];
+  /** ActionPanel to display for the list */
+  actions?: ReactElement;
   /** Initial search value. If not provided, will be fetched from rua API */
   initialSearch?: string;
   /** Title displayed in the navigation bar */
@@ -133,6 +201,16 @@ export interface ListProps {
   throttle?: boolean;
   /** Accessory component to display in the search bar */
   searchBarAccessory?: ReactNode;
+  /** Controlled search text value */
+  searchText?: string;
+  /** Controlled selected item ID */
+  selectedItemId?: string;
+  /** Pagination configuration */
+  pagination?: {
+    hasMore: boolean;
+    onLoadMore: () => void;
+    pageSize: number;
+  };
   /** Children components (List.Item, List.Section) */
   children?: ReactNode;
 }
@@ -143,8 +221,8 @@ export interface ListProps {
 export interface FormProps {
   /** Form title */
   title?: string;
-  /** Actions available for this form */
-  actions?: Action[];
+  /** ActionPanel to display for this form */
+  actions?: ReactElement;
   /** Callback when form is submitted */
   onSubmit?: (values: Record<string, any>) => void;
   /** Form field children */
@@ -367,8 +445,8 @@ export interface DetailProps {
   markdown?: string;
   /** Custom content to render */
   children?: ReactNode;
-  /** Actions available for this detail view */
-  actions?: Action[];
+  /** ActionPanel to display for this detail view */
+  actions?: ReactElement;
   /** Title displayed in the navigation bar */
   navigationTitle?: string;
   /** Whether the detail view is in a loading state */
@@ -438,10 +516,6 @@ export interface DetailMetadataSeparatorProps {}
  * Props for the ActionPanel component (Raycast-aligned)
  */
 export interface ActionPanelProps {
-  /** @deprecated Use children-based API instead */
-  actions?: Action[];
-  /** @deprecated Use children-based API instead */
-  position?: "footer" | "inline";
   /** Panel title displayed in the header */
   title?: string;
   /** Action or ActionPanel.Section children */
@@ -664,8 +738,8 @@ export interface GridProps {
   showBackButton?: boolean;
   /** Callback when back button is clicked */
   onBack?: () => void;
-  /** Actions available for this grid */
-  actions?: Action[];
+  /** ActionPanel to display for the grid */
+  actions?: ReactElement;
 }
 
 /**
