@@ -1,8 +1,16 @@
-import { createContext, useContext, useState, FormEvent, useEffect, useRef, ReactElement } from 'react';
-import { FormProps } from '../types';
-import type { 
-  FormTextFieldProps, 
-  FormTextAreaProps, 
+import {
+  createContext,
+  useContext,
+  useState,
+  FormEvent,
+  useEffect,
+  useRef,
+  ReactElement,
+} from "react";
+import { FormProps } from "../types";
+import type {
+  FormTextFieldProps,
+  FormTextAreaProps,
   FormPasswordFieldProps,
   FormDropdownProps,
   FormDropdownItemProps,
@@ -10,7 +18,7 @@ import type {
   FormDatePickerProps,
   FormFilePickerProps,
   FormCheckboxProps,
-} from '../types';
+} from "../types";
 
 interface FormContextValue {
   values: Record<string, any>;
@@ -22,7 +30,7 @@ interface FormContextValue {
 
 const FormContext = createContext<FormContextValue | null>(null);
 
-const DRAFT_STORAGE_KEY = 'rua-form-drafts';
+const DRAFT_STORAGE_KEY = "rua-form-drafts";
 
 /**
  * Hook to access form context
@@ -30,7 +38,7 @@ const DRAFT_STORAGE_KEY = 'rua-form-drafts';
 export function useFormContext() {
   const context = useContext(FormContext);
   if (!context) {
-    throw new Error('Form fields must be used within a Form component');
+    throw new Error("Form fields must be used within a Form component");
   }
   return context;
 }
@@ -51,9 +59,9 @@ function TextField({
   autoFocus = false,
 }: FormTextFieldProps) {
   const { values, errors, setValue, isLoading } = useFormContext();
-  
+
   const isControlled = controlledValue !== undefined;
-  const internalValue = values[id] ?? defaultValue ?? '';
+  const internalValue = values[id] ?? defaultValue ?? "";
   const displayValue = isControlled ? controlledValue : internalValue;
   const error = propError || errors[id];
 
@@ -82,7 +90,7 @@ function TextField({
         placeholder={placeholder}
         autoFocus={autoFocus}
         disabled={isLoading}
-        className={`form-input ${error ? 'form-input-error' : ''}`}
+        className={`form-input ${error ? "form-input-error" : ""}`}
       />
       {info && !error && <span className="form-info-message">{info}</span>}
       {error && <span className="form-error-message">{error}</span>}
@@ -109,9 +117,9 @@ function TextArea({
 }: FormTextAreaProps) {
   const { values, errors, setValue, isLoading } = useFormContext();
   const [showPreview, setShowPreview] = useState(false);
-  
+
   const isControlled = controlledValue !== undefined;
-  const internalValue = values[id] ?? defaultValue ?? '';
+  const internalValue = values[id] ?? defaultValue ?? "";
   const displayValue = isControlled ? controlledValue : internalValue;
   const error = propError || errors[id];
 
@@ -136,7 +144,7 @@ function TextArea({
               className="form-preview-toggle"
               onClick={() => setShowPreview(!showPreview)}
             >
-              {showPreview ? 'Edit' : 'Preview'}
+              {showPreview ? "Edit" : "Preview"}
             </button>
           )}
         </div>
@@ -156,7 +164,7 @@ function TextArea({
           autoFocus={autoFocus}
           disabled={isLoading}
           rows={rows}
-          className={`form-textarea ${error ? 'form-input-error' : ''}`}
+          className={`form-textarea ${error ? "form-input-error" : ""}`}
         />
       )}
       {info && !error && <span className="form-info-message">{info}</span>}
@@ -169,30 +177,22 @@ function TextArea({
  * Dropdown.Item component
  */
 function DropdownItem({ value, title }: FormDropdownItemProps): ReactElement {
-  return (
-    <option value={value}>
-      {title}
-    </option>
-  );
+  return <option value={value}>{title}</option>;
 }
 
 /**
  * Dropdown.Section component
  */
 function DropdownSection({ title, children }: FormDropdownSectionProps): ReactElement {
-  return (
-    <optgroup label={title || ''}>
-      {children}
-    </optgroup>
-  );
+  return <optgroup label={title || ""}>{children}</optgroup>;
 }
 
 /**
  * Dropdown component with Raycast-aligned API
  */
-function Dropdown({ 
-  id, 
-  title, 
+function Dropdown({
+  id,
+  title,
   value: controlledValue,
   defaultValue,
   onChange,
@@ -202,9 +202,9 @@ function Dropdown({
   items,
 }: FormDropdownProps) {
   const { values, errors, setValue, isLoading } = useFormContext();
-  
+
   const isControlled = controlledValue !== undefined;
-  const internalValue = values[id] ?? defaultValue ?? '';
+  const internalValue = values[id] ?? defaultValue ?? "";
   const displayValue = isControlled ? controlledValue : internalValue;
   const error = propError || errors[id];
 
@@ -229,7 +229,7 @@ function Dropdown({
         value={displayValue}
         onChange={handleChange}
         disabled={isLoading}
-        className={`form-select ${error ? 'form-input-error' : ''}`}
+        className={`form-select ${error ? "form-input-error" : ""}`}
       >
         <option value="">Select an option</option>
         {items?.map((item) => (
@@ -254,8 +254,8 @@ const DropdownWithSubs = Object.assign(Dropdown, {
 /**
  * Checkbox component with Raycast-aligned API
  */
-function Checkbox({ 
-  id, 
+function Checkbox({
+  id,
   label,
   value: controlledValue,
   defaultValue,
@@ -263,7 +263,7 @@ function Checkbox({
   info,
 }: FormCheckboxProps) {
   const { values, setValue, isLoading } = useFormContext();
-  
+
   const isControlled = controlledValue !== undefined;
   const internalValue = values[id] ?? defaultValue ?? false;
   const checked = isControlled ? controlledValue : internalValue;
@@ -311,9 +311,9 @@ function PasswordField({
   autoFocus = false,
 }: FormPasswordFieldProps) {
   const { values, errors, setValue, isLoading } = useFormContext();
-  
+
   const isControlled = controlledValue !== undefined;
-  const internalValue = values[id] ?? defaultValue ?? '';
+  const internalValue = values[id] ?? defaultValue ?? "";
   const displayValue = isControlled ? controlledValue : internalValue;
   const error = propError || errors[id];
 
@@ -343,7 +343,7 @@ function PasswordField({
         autoFocus={autoFocus}
         disabled={isLoading}
         autoComplete="current-password"
-        className={`form-input ${error ? 'form-input-error' : ''}`}
+        className={`form-input ${error ? "form-input-error" : ""}`}
       />
       {info && !error && <span className="form-info-message">{info}</span>}
       {error && <span className="form-error-message">{error}</span>}
@@ -361,21 +361,21 @@ function DatePicker({
   defaultValue,
   min,
   max,
-  type = 'date',
+  type = "date",
   onChange,
   error: propError,
   info,
 }: FormDatePickerProps) {
   const { values, errors, setValue, isLoading } = useFormContext();
-  
+
   const isControlled = controlledValue !== undefined;
   const internalValue = values[id] ?? defaultValue;
   const dateValue = isControlled ? controlledValue : internalValue;
   const error = propError || errors[id];
 
   const formatDateForInput = (date: Date | undefined): string => {
-    if (!date) return '';
-    if (type === 'datetime') {
+    if (!date) return "";
+    if (type === "datetime") {
       return date.toISOString().slice(0, 16);
     }
     return date.toISOString().slice(0, 10);
@@ -399,13 +399,13 @@ function DatePicker({
       <input
         id={id}
         name={id}
-        type={type === 'datetime' ? 'datetime-local' : 'date'}
+        type={type === "datetime" ? "datetime-local" : "date"}
         value={formatDateForInput(dateValue)}
         onChange={handleChange}
         min={min ? formatDateForInput(min) : undefined}
         max={max ? formatDateForInput(max) : undefined}
         disabled={isLoading}
-        className={`form-input ${error ? 'form-input-error' : ''}`}
+        className={`form-input ${error ? "form-input-error" : ""}`}
       />
       {info && !error && <span className="form-info-message">{info}</span>}
       {error && <span className="form-error-message">{error}</span>}
@@ -431,20 +431,20 @@ function FilePicker({
 }: FormFilePickerProps) {
   const { values, errors, setValue, isLoading } = useFormContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const isControlled = controlledValue !== undefined;
   const internalValue: string[] = values[id] ?? defaultValue ?? [];
   const files: string[] = isControlled ? (controlledValue ?? []) : internalValue;
   const error = propError || errors[id];
 
-  const acceptString = allowedFileTypes?.map(type => 
-    type.startsWith('.') ? type : `.${type}`
-  ).join(',');
+  const acceptString = allowedFileTypes
+    ?.map((type) => (type.startsWith(".") ? type : `.${type}`))
+    .join(",");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
     if (!selectedFiles) return;
-    
+
     const filePaths = Array.from(selectedFiles).map((file: File) => file.name);
     if (!isControlled) {
       setValue(id, filePaths);
@@ -454,7 +454,7 @@ function FilePicker({
 
   const handleClear = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
     if (!isControlled) {
       setValue(id, []);
@@ -480,7 +480,7 @@ function FilePicker({
           onChange={handleChange}
           disabled={isLoading}
           className="form-file-input"
-          {...(canChooseDirectories && !canChooseFiles ? { webkitdirectory: '' } : {})}
+          {...(canChooseDirectories && !canChooseFiles ? { webkitdirectory: "" } : {})}
         />
         {files.length > 0 && (
           <div className="form-file-list">
@@ -509,10 +509,10 @@ function FilePicker({
 /**
  * Form component with validation and field management
  */
-function FormComponent({ 
-  title, 
-  actions, 
-  onSubmit, 
+function FormComponent({
+  title,
+  actions,
+  onSubmit,
   children,
   navigationTitle,
   isLoading = false,
@@ -594,16 +594,14 @@ function FormComponent({
             <div className="form-loading-spinner" />
           </div>
         )}
-        <div className={`form-fields ${isLoading ? 'form-fields-loading' : ''}`}>
-          {children}
-        </div>
+        <div className={`form-fields ${isLoading ? "form-fields-loading" : ""}`}>{children}</div>
         {actions && actions.length > 0 && (
           <div className="form-actions">
             {actions.map((action) => (
               <button
                 key={action.id}
-                type={action.id === 'submit' ? 'submit' : 'button'}
-                onClick={action.id !== 'submit' ? action.onAction : undefined}
+                type={action.id === "submit" ? "submit" : "button"}
+                onClick={action.id !== "submit" ? action.onAction : undefined}
                 className="form-action-button"
                 disabled={isLoading}
               >

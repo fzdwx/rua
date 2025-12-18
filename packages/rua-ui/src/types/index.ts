@@ -1,11 +1,11 @@
-import { ReactElement, ReactNode } from 'react';
+import { ReactElement, ReactNode } from "react";
 
 /**
  * Keyboard shortcut configuration
  */
 export interface KeyboardShortcut {
   key: string;
-  modifiers?: Array<'cmd' | 'ctrl' | 'alt' | 'shift'>;
+  modifiers?: Array<"cmd" | "ctrl" | "alt" | "shift">;
 }
 
 /**
@@ -304,7 +304,7 @@ export interface FormDatePickerProps {
   /** Maximum selectable date */
   max?: Date;
   /** Type of date picker */
-  type?: 'date' | 'datetime';
+  type?: "date" | "datetime";
   /** Callback when value changes */
   onChange?: (date: Date | null) => void;
   /** Error message to display */
@@ -443,7 +443,7 @@ export interface ActionPanelProps {
   /** @deprecated Use children-based API instead */
   actions?: Action[];
   /** @deprecated Use children-based API instead */
-  position?: 'footer' | 'inline';
+  position?: "footer" | "inline";
   /** Panel title displayed in the header */
   title?: string;
   /** Action or ActionPanel.Section children */
@@ -607,13 +607,13 @@ export interface GridSectionProps {
   /** Section subtitle */
   subtitle?: string;
   /** Aspect ratio for items in this section */
-  aspectRatio?: '1' | '3/2' | '2/3' | '4/3' | '3/4' | '16/9' | '9/16';
+  aspectRatio?: "1" | "3/2" | "2/3" | "4/3" | "3/4" | "16/9" | "9/16";
   /** Number of columns for this section */
   columns?: number;
   /** How content fits within the grid item */
-  fit?: 'contain' | 'fill';
+  fit?: "contain" | "fill";
   /** Inset/padding for items in this section */
-  inset?: 'small' | 'medium' | 'large';
+  inset?: "small" | "medium" | "large";
   /** Grid.Item children */
   children: ReactNode;
 }
@@ -639,11 +639,11 @@ export interface GridProps {
   /** Number of columns in the grid */
   columns?: number;
   /** Inset/padding for grid items */
-  inset?: 'small' | 'medium' | 'large';
+  inset?: "small" | "medium" | "large";
   /** Aspect ratio for grid items */
-  aspectRatio?: '1' | '3/2' | '2/3' | '4/3' | '3/4' | '16/9' | '9/16';
+  aspectRatio?: "1" | "3/2" | "2/3" | "4/3" | "3/4" | "16/9" | "9/16";
   /** How content fits within the grid item */
-  fit?: 'contain' | 'fill';
+  fit?: "contain" | "fill";
   /** Placeholder text for the search bar */
   searchBarPlaceholder?: string;
   /** Control built-in filtering behavior */
@@ -670,11 +670,10 @@ export interface GridProps {
   actions?: Action[];
 }
 
-
 /**
  * Toast style enum values
  */
-export type ToastStyleType = 'success' | 'failure' | 'animated';
+export type ToastStyleType = "success" | "failure" | "animated";
 
 /**
  * Toast action configuration
@@ -717,7 +716,6 @@ export interface ToastInstance {
   /** Update toast style */
   style?: ToastStyleType;
 }
-
 
 /**
  * Props for SearchInput component

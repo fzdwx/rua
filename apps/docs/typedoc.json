@@ -33,13 +33,7 @@
   ],
   "categorizeByGroup": false,
   "defaultCategory": "Other",
-  "categoryOrder": [
-    "Core API",
-    "Types",
-    "Utilities",
-    "*",
-    "Other"
-  ],
+  "categoryOrder": ["Core API", "Types", "Utilities", "*", "Other"],
   "gitRevision": "main",
   "gitRemote": "origin",
   "includeVersion": true,

@@ -65,11 +65,7 @@ export function useQuickLinks() {
 
   // Update an existing quick link
   const updateQuickLink = useCallback((id: string, updates: Partial<Omit<QuickLink, "id">>) => {
-    setQuickLinks((prev) =>
-      prev.map((link) =>
-        link.id === id ? { ...link, ...updates } : link
-      )
-    );
+    setQuickLinks((prev) => prev.map((link) => (link.id === id ? { ...link, ...updates } : link)));
   }, []);
 
   // Delete a quick link

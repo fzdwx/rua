@@ -55,6 +55,7 @@ function MyExtension() {
 ```
 
 **Props:**
+
 - `searchPlaceholder?: string` - Placeholder text for search input
 - `items?: ListItem[]` - Array of items to display
 - `sections?: ListSection[]` - Grouped items with section headers
@@ -96,6 +97,7 @@ function MyForm() {
 ```
 
 **Form Fields:**
+
 - `Form.TextField` - Single-line text input
 - `Form.TextArea` - Multi-line text input
 - `Form.Dropdown` - Select dropdown
@@ -191,7 +193,7 @@ function ItemDetail({ item }) {
 Hook for searching items with fuzzy search and optional pinyin support.
 
 ```typescript
-import { useSearch } from '@rua/ui';
+import { useSearch } from "@rua/ui";
 
 const results = useSearch({
   items: myItems,
@@ -205,7 +207,7 @@ const results = useSearch({
 Hook for handling keyboard navigation.
 
 ```typescript
-import { useKeyboard } from '@rua/ui';
+import { useKeyboard } from "@rua/ui";
 
 useKeyboard({
   onArrowUp: () => decrementIndex(),
@@ -234,7 +236,7 @@ if (canPop) pop();
 The package includes CSS with design system variables. Import the styles in your extension:
 
 ```typescript
-import '@rua/ui/styles';
+import "@rua/ui/styles";
 ```
 
 Or if your bundler handles CSS automatically, it will be included when you import components.
@@ -323,7 +325,7 @@ export default TodoExtension;
 All components are fully typed. Import types from the package:
 
 ```typescript
-import type { ListItem, ListSection, Action, FormProps } from '@rua/ui';
+import type { ListItem, ListSection, Action, FormProps } from "@rua/ui";
 ```
 
 ## License

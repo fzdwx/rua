@@ -1,92 +1,88 @@
-import {Action, ActionTree} from "./types";
-import {ActionInterface} from "./action";
+import { Action, ActionTree } from "./types";
+import { ActionInterface } from "./action";
 import * as React from "react";
-import {useState} from "react";
-import {ActionId} from ".";
+import { useState } from "react";
+import { ActionId } from ".";
 
 interface State {
-    actions: ActionTree
-    rootActionId: ActionId | null;
-    activeIndex: number
+  actions: ActionTree;
+  rootActionId: ActionId | null;
+  activeIndex: number;
 }
 
 export const useActionStore = (actions?: Action[]) => {
-    const actionsInterface = React.useMemo(
-        () =>
-            new ActionInterface(actions || [], {
-                historyManager: undefined,
-            }),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [actions]
-    )
+  const actionsInterface = React.useMemo(
+    () =>
+      new ActionInterface(actions || [], {
+        historyManager: undefined,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [actions]
+  );
 
-    const [state, setState] =
-        useState<State>({
-            actions: {...actionsInterface.actions},
-            rootActionId: null,
-            activeIndex: 0,
-        });
+  const [state, setState] = useState<State>({
+    actions: { ...actionsInterface.actions },
+    rootActionId: null,
+    activeIndex: 0,
+  });
 
-    const registerActions = React.useCallback(
-        (actions: Action[]) => {
-            setState((state) => {
-                return {
-                    ...state,
-                    actions: actionsInterface.add(actions),
-                };
-            })
+  const registerActions = React.useCallback(
+    (actions: Action[]) => {
+      setState((state) => {
+        return {
+          ...state,
+          actions: actionsInterface.add(actions),
+        };
+      });
 
-            return function unregister() {
-                setState((state) => {
-                    return {
-                        ...state,
-                        actions: actionsInterface.remove(actions),
-                    };
-                })
-            };
-        },
-        [actionsInterface]
-    );
-
-    const setRootActionId = React.useCallback(
-        (rootActionId: ActionId | null) => {
-            setState((state) => {
-                return {
-                    ...state,
-                    rootActionId,
-                };
-            });
-        },
-        []
-    );
-
-    //@ts-ignore
-    const setActiveIndex = (cb) =>
-        setState((state) => ({
+      return function unregister() {
+        setState((state) => {
+          return {
             ...state,
-            activeIndex: typeof cb === "number" ? cb : cb(state.activeIndex),
-        }))
+            actions: actionsInterface.remove(actions),
+          };
+        });
+      };
+    },
+    [actionsInterface]
+  );
 
-    const useRegisterActions = (actions: Action[], dependencies: React.DependencyList = []) => {
-        const actionsCache = React.useMemo(() => actions, dependencies);
-        React.useEffect(() => {
-            if (!actionsCache.length) {
-                return;
-            }
+  const setRootActionId = React.useCallback((rootActionId: ActionId | null) => {
+    setState((state) => {
+      return {
+        ...state,
+        rootActionId,
+      };
+    });
+  }, []);
 
-            const unregister = registerActions(actionsCache);
-            return () => {
-                unregister();
-            };
-        }, [registerActions, actionsCache]);
-    }
+  //@ts-ignore
+  const setActiveIndex = (cb) =>
+    setState((state) => ({
+      ...state,
+      activeIndex: typeof cb === "number" ? cb : cb(state.activeIndex),
+    }));
 
-    return {
-        useRegisterActions,
-        setRootActionId,
-        setActiveIndex,
-        state
-    }
-}
+  const useRegisterActions = (actions: Action[], dependencies: React.DependencyList = []) => {
+    const actionsCache = React.useMemo(() => actions, dependencies);
+    React.useEffect(() => {
+      if (!actionsCache.length) {
+        return;
+      }
 
-export type UseRegisterActions = (actions: Action[], dependencies?: React.DependencyList) => void
+      const unregister = registerActions(actionsCache);
+      return () => {
+        unregister();
+      };
+    }, [registerActions, actionsCache]);
+  };
+
+  return {
+    useRegisterActions,
+    setRootActionId,
+    setActiveIndex,
+    state,
+  };
+};
+
+export type UseRegisterActions = (actions: Action[], dependencies?: React.DependencyList) => void;

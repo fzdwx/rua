@@ -65,5 +65,5 @@ MIT
 
 1. [x] main context 支持监听 search 框的输入
 2. [ ] 插件主题切换
-3. [ ] 统一 version /home/like/projects/rua/packages/rua-api/src/index.ts  packages/create-rua-ext/src/templates/package.json.template:12 /home/like/projects/rua/packages/rua-ui/package.json
-4. [ ] rua-api 提出 react 依赖 
+3. [ ] 统一 version /home/like/projects/rua/packages/rua-api/src/index.ts packages/create-rua-ext/src/templates/package.json.template:12 /home/like/projects/rua/packages/rua-ui/package.json
+4. [ ] rua-api 提出 react 依赖

@@ -1,6 +1,6 @@
 /**
  * ActionIcon Component
- * 
+ *
  * Renders icons for actions with support for multiple formats:
  * - Iconify icon names (e.g., "tabler:puzzle")
  * - Data URIs (e.g., "data:image/svg+xml;base64,...")
@@ -8,8 +8,8 @@
  * - Extension asset paths (e.g., "./icon.png")
  */
 
-import { Icon } from '@iconify/react';
-import { useMemo } from 'react';
+import { Icon } from "@iconify/react";
+import { useMemo } from "react";
 
 interface ActionIconProps {
   icon: string;
@@ -19,43 +19,43 @@ interface ActionIconProps {
   style?: React.CSSProperties;
 }
 
-export function ActionIcon({ 
-  icon, 
-  extensionPath, 
-  size = '20px',
-  className = '',
-  style = {}
+export function ActionIcon({
+  icon,
+  extensionPath,
+  size = "20px",
+  className = "",
+  style = {},
 }: ActionIconProps) {
   const iconContent = useMemo(() => {
     // Check if it's a data URI
-    if (icon.startsWith('data:')) {
+    if (icon.startsWith("data:")) {
       return (
-        <img 
-          src={icon} 
+        <img
+          src={icon}
           alt="action icon"
           className={className}
-          style={{ 
-            width: size, 
-            height: size, 
-            objectFit: 'contain',
-            ...style 
-          }} 
+          style={{
+            width: size,
+            height: size,
+            objectFit: "contain",
+            ...style,
+          }}
         />
       );
     }
 
     // Check if it's an SVG string
-    if (icon.trim().startsWith('<svg')) {
+    if (icon.trim().startsWith("<svg")) {
       return (
-        <div 
+        <div
           className={className}
-          style={{ 
-            width: size, 
-            height: size, 
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            ...style 
+          style={{
+            width: size,
+            height: size,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            ...style,
           }}
           dangerouslySetInnerHTML={{ __html: icon }}
         />
@@ -63,35 +63,27 @@ export function ActionIcon({
     }
 
     // Check if it's a relative path (extension asset)
-    if (icon.startsWith('./') || icon.startsWith('../') || icon.startsWith('/')) {
+    if (icon.startsWith("./") || icon.startsWith("../") || icon.startsWith("/")) {
       // Build full URL using extension path
-      const fullUrl = extensionPath 
-        ? `${extensionPath}/${icon.replace(/^\.\//, '')}`
-        : icon;
-      
+      const fullUrl = extensionPath ? `${extensionPath}/${icon.replace(/^\.\//, "")}` : icon;
+
       return (
-        <img 
-          src={fullUrl} 
+        <img
+          src={fullUrl}
           alt="action icon"
           className={className}
-          style={{ 
-            width: size, 
-            height: size, 
-            objectFit: 'contain',
-            ...style 
-          }} 
+          style={{
+            width: size,
+            height: size,
+            objectFit: "contain",
+            ...style,
+          }}
         />
       );
     }
 
     // Default: treat as iconify icon name
-    return (
-      <Icon 
-        icon={icon} 
-        className={className}
-        style={{ fontSize: size, ...style }} 
-      />
-    );
+    return <Icon icon={icon} className={className} style={{ fontSize: size, ...style }} />;
   }, [icon, extensionPath, size, className, style]);
 
   return iconContent;

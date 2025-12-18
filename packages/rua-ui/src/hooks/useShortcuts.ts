@@ -1,5 +1,5 @@
-import { useEffect, useCallback, useRef } from 'react';
-import type { KeyboardShortcut } from '../types';
+import { useEffect, useCallback, useRef } from "react";
+import type { KeyboardShortcut } from "../types";
 
 /**
  * Handler function for keyboard shortcuts
@@ -33,10 +33,10 @@ class ShortcutRegistry {
   normalizeShortcut(shortcut: KeyboardShortcut): string {
     const mods = shortcut.modifiers || [];
     // Order: cmd → ctrl → alt → shift → key
-    const orderedMods = ['cmd', 'ctrl', 'alt', 'shift'].filter(m =>
-      mods.includes(m as 'cmd' | 'ctrl' | 'alt' | 'shift')
+    const orderedMods = ["cmd", "ctrl", "alt", "shift"].filter((m) =>
+      mods.includes(m as "cmd" | "ctrl" | "alt" | "shift")
     );
-    return [...orderedMods, shortcut.key.toLowerCase()].join('+');
+    return [...orderedMods, shortcut.key.toLowerCase()].join("+");
   }
 
   /**
@@ -45,25 +45,25 @@ class ShortcutRegistry {
   formatShortcut(shortcut: KeyboardShortcut): string {
     const mods = shortcut.modifiers || [];
     // Order: cmd → ctrl → alt → shift → key
-    const orderedMods = ['cmd', 'ctrl', 'alt', 'shift'].filter(m =>
-      mods.includes(m as 'cmd' | 'ctrl' | 'alt' | 'shift')
+    const orderedMods = ["cmd", "ctrl", "alt", "shift"].filter((m) =>
+      mods.includes(m as "cmd" | "ctrl" | "alt" | "shift")
     );
 
     const modStrings = orderedMods.map((mod) => {
       switch (mod) {
-        case 'cmd':
-          return '⌘';
-        case 'ctrl':
-          return 'Ctrl';
-        case 'alt':
-          return 'Alt';
-        case 'shift':
-          return 'Shift';
+        case "cmd":
+          return "⌘";
+        case "ctrl":
+          return "Ctrl";
+        case "alt":
+          return "Alt";
+        case "shift":
+          return "Shift";
         default:
           return mod;
       }
     });
-    return [...modStrings, shortcut.key.toUpperCase()].join('+');
+    return [...modStrings, shortcut.key.toUpperCase()].join("+");
   }
 
   /**
@@ -80,10 +80,10 @@ class ShortcutRegistry {
     }
 
     // Check modifiers
-    const cmdRequired = mods.includes('cmd');
-    const ctrlRequired = mods.includes('ctrl');
-    const altRequired = mods.includes('alt');
-    const shiftRequired = mods.includes('shift');
+    const cmdRequired = mods.includes("cmd");
+    const ctrlRequired = mods.includes("ctrl");
+    const altRequired = mods.includes("alt");
+    const shiftRequired = mods.includes("shift");
 
     // On macOS, cmd is metaKey; on other platforms, we treat cmd as metaKey too
     const cmdPressed = event.metaKey;
@@ -103,18 +103,14 @@ class ShortcutRegistry {
    * Setup global keyboard event listener
    */
   private setupGlobalListener(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     this.listener = (event: KeyboardEvent) => {
       if (!this.enabled) return;
 
       // Don't trigger shortcuts when typing in input fields
       const target = event.target as HTMLElement;
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable
-      ) {
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
         // Allow shortcuts with cmd/ctrl modifier even in input fields
         if (!event.metaKey && !event.ctrlKey) {
           return;
@@ -135,11 +131,11 @@ class ShortcutRegistry {
               const result = entry.handler();
               if (result instanceof Promise) {
                 result.catch((error) => {
-                  console.error('[ShortcutRegistry] Error executing shortcut handler:', error);
+                  console.error("[ShortcutRegistry] Error executing shortcut handler:", error);
                 });
               }
             } catch (error) {
-              console.error('[ShortcutRegistry] Error executing shortcut handler:', error);
+              console.error("[ShortcutRegistry] Error executing shortcut handler:", error);
             }
 
             return; // Only trigger the first matching handler
@@ -148,7 +144,7 @@ class ShortcutRegistry {
       }
     };
 
-    window.addEventListener('keydown', this.listener, true);
+    window.addEventListener("keydown", this.listener, true);
   }
 
   /**
@@ -235,8 +231,8 @@ class ShortcutRegistry {
    * Destroy the registry and remove event listener
    */
   destroy(): void {
-    if (this.listener && typeof window !== 'undefined') {
-      window.removeEventListener('keydown', this.listener, true);
+    if (this.listener && typeof window !== "undefined") {
+      window.removeEventListener("keydown", this.listener, true);
       this.listener = null;
     }
     this.clear();
@@ -323,11 +319,7 @@ export function useShortcuts(
     for (const config of shortcutsRef.current) {
       if (config.enabled === false) continue;
 
-      const unregister = registry.register(
-        config.shortcut,
-        config.handler,
-        config.priority || 0
-      );
+      const unregister = registry.register(config.shortcut, config.handler, config.priority || 0);
       unregisterFns.push(unregister);
     }
 

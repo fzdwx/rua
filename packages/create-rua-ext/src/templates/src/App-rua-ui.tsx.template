@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { initializeRuaAPI, type RuaAPI } from 'rua-api/browser'
-import { List, NavigationProvider } from '@rua/ui'
+import { List } from '@rua/ui'
 import type { ListItem } from '@rua/ui'
 
 function App() {
@@ -32,9 +32,7 @@ function App() {
   }
 
   return (
-    <NavigationProvider>
       <MainList rua={rua} action={action} />
-    </NavigationProvider>
   )
 }
 

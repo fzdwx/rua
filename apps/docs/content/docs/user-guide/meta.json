@@ -2,8 +2,5 @@
   "title": "User Guide",
   "description": "Complete user guide for Rua launcher",
   "icon": "User",
-  "pages": [
-    "installation",
-    "ruactl"
-  ]
+  "pages": ["installation", "ruactl"]
 }

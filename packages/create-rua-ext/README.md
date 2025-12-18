@@ -126,24 +126,26 @@ my-extension/
 All templates include `rua-api` for extension functionality. The API is initialized automatically:
 
 ```typescript
-import { initializeRuaAPI } from 'rua-api/browser'
+import { initializeRuaAPI } from "rua-api/browser";
 
 // Initialize the API (extension info fetched from host)
-const rua = await initializeRuaAPI()
+const rua = await initializeRuaAPI();
 
 // Use extension APIs
-await rua.clipboard.writeText('Hello!')
-await rua.notification.show({ title: 'Hello!', body: 'From extension' })
-await rua.storage.set('key', 'value')
-await rua.ui.close()
+await rua.clipboard.writeText("Hello!");
+await rua.notification.show({ title: "Hello!", body: "From extension" });
+await rua.storage.set("key", "value");
+await rua.ui.close();
 
 // Register dynamic actions
-await rua.actions.register([{
-  id: 'my-action',
-  name: 'My Action',
-  mode: 'view',
-  keywords: ['hello']
-}])
+await rua.actions.register([
+  {
+    id: "my-action",
+    name: "My Action",
+    mode: "view",
+    keywords: ["hello"],
+  },
+]);
 ```
 
 ## Example

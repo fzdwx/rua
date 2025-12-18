@@ -13,18 +13,23 @@
     "build": "bun run --cwd apps/rua build",
     "preview": "bun run --cwd apps/rua preview",
     "tauri": "bun run --cwd apps/rua tauri",
-    "tauri-build": "bun run --cwd apps/rua tauri-build"
+    "tauri-build": "bun run --cwd apps/rua tauri-build",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\" && cargo fmt --manifest-path apps/rua/src-tauri/Cargo.toml",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\" && cargo fmt --manifest-path apps/rua/src-tauri/Cargo.toml --check",
+    "format:ts": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:rust": "cargo fmt --manifest-path apps/rua/src-tauri/Cargo.toml"
   },
   "devDependencies": {
-    "typescript": "~5.8.3",
+    "@tailwindcss/vite": "^4.1.16",
+    "@types/node": "^24.9.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "@types/node": "^24.9.1",
-    "vite": "^7.0.4",
     "@vitejs/plugin-react": "^4.6.0",
+    "postcss": "^8.5.6",
+    "prettier": "^3.7.4",
     "tailwindcss": "^4.1.17",
-    "@tailwindcss/vite": "^4.1.16",
-    "postcss": "^8.5.6"
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4"
   },
   "dependencies": {
     "react": "^19.1.0",

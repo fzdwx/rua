@@ -15,20 +15,12 @@
         "name": "main",
         "title": "hello-word",
         "mode": "view",
-        "keywords": [
-          "hello-word"
-        ],
+        "keywords": ["hello-word"],
         "icon": "tabler:star",
         "subtitle": " rua extension demo 1",
         "query": true
       }
     ]
   },
-  "permissions": [
-    "clipboard",
-    "notification",
-    "storage",
-    "http",
-    "shell"
-  ]
+  "permissions": ["clipboard", "notification", "storage", "http", "shell"]
 }

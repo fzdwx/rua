@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from "react";
 
 export interface UseKeyboardOptions {
   onArrowUp?: () => void;
@@ -27,27 +27,27 @@ export function useKeyboard({
       if (!enabled) return;
 
       switch (event.key) {
-        case 'ArrowUp':
+        case "ArrowUp":
           event.preventDefault();
           onArrowUp?.();
           break;
-        case 'ArrowDown':
+        case "ArrowDown":
           event.preventDefault();
           onArrowDown?.();
           break;
-        case 'ArrowLeft':
+        case "ArrowLeft":
           event.preventDefault();
           onArrowLeft?.();
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           event.preventDefault();
           onArrowRight?.();
           break;
-        case 'Enter':
+        case "Enter":
           event.preventDefault();
           onEnter?.();
           break;
-        case 'Escape':
+        case "Escape":
           event.preventDefault();
           onEscape?.();
           break;
@@ -59,9 +59,9 @@ export function useKeyboard({
   useEffect(() => {
     if (!enabled) return;
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [enabled, handleKeyDown]);
 

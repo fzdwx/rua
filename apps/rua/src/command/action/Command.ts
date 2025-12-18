@@ -14,10 +14,7 @@ export class Command {
     redo: History["redo"];
   };
 
-  constructor(
-    command: { perform: Command["perform"] },
-    options: CommandOptions = {}
-  ) {
+  constructor(command: { perform: Command["perform"] }, options: CommandOptions = {}) {
     this.perform = () => {
       const negate = command.perform();
       // no need for history if non negatable

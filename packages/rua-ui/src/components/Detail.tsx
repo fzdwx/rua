@@ -1,4 +1,4 @@
-import { ReactNode, ReactElement } from 'react';
+import { ReactNode, ReactElement } from "react";
 import {
   DetailProps,
   DetailMetadataProps,
@@ -7,27 +7,23 @@ import {
   DetailMetadataTagListProps,
   DetailMetadataTagListItemProps,
   DetailMetadataSeparatorProps,
-} from '../types';
+} from "../types";
 
 // Type markers for component identification
-const DETAIL_METADATA_TYPE = Symbol.for('rua-ui.Detail.Metadata');
-const DETAIL_METADATA_LABEL_TYPE = Symbol.for('rua-ui.Detail.Metadata.Label');
-const DETAIL_METADATA_LINK_TYPE = Symbol.for('rua-ui.Detail.Metadata.Link');
-const DETAIL_METADATA_TAGLIST_TYPE = Symbol.for('rua-ui.Detail.Metadata.TagList');
-const DETAIL_METADATA_TAGLIST_ITEM_TYPE = Symbol.for('rua-ui.Detail.Metadata.TagList.Item');
-const DETAIL_METADATA_SEPARATOR_TYPE = Symbol.for('rua-ui.Detail.Metadata.Separator');
+const DETAIL_METADATA_TYPE = Symbol.for("rua-ui.Detail.Metadata");
+const DETAIL_METADATA_LABEL_TYPE = Symbol.for("rua-ui.Detail.Metadata.Label");
+const DETAIL_METADATA_LINK_TYPE = Symbol.for("rua-ui.Detail.Metadata.Link");
+const DETAIL_METADATA_TAGLIST_TYPE = Symbol.for("rua-ui.Detail.Metadata.TagList");
+const DETAIL_METADATA_TAGLIST_ITEM_TYPE = Symbol.for("rua-ui.Detail.Metadata.TagList.Item");
+const DETAIL_METADATA_SEPARATOR_TYPE = Symbol.for("rua-ui.Detail.Metadata.Separator");
 
 /**
  * Detail.Metadata component - container for metadata items
  */
 function DetailMetadata({ children }: DetailMetadataProps) {
-  return (
-    <div className="detail-metadata">
-      {children}
-    </div>
-  );
+  return <div className="detail-metadata">{children}</div>;
 }
-DetailMetadata.displayName = 'Detail.Metadata';
+DetailMetadata.displayName = "Detail.Metadata";
 (DetailMetadata as any).__ruaType = DETAIL_METADATA_TYPE;
 
 /**
@@ -44,7 +40,7 @@ function DetailMetadataLabel({ title, text, icon }: DetailMetadataLabelProps) {
     </div>
   );
 }
-DetailMetadataLabel.displayName = 'Detail.Metadata.Label';
+DetailMetadataLabel.displayName = "Detail.Metadata.Label";
 (DetailMetadataLabel as any).__ruaType = DETAIL_METADATA_LABEL_TYPE;
 
 /**
@@ -53,10 +49,10 @@ DetailMetadataLabel.displayName = 'Detail.Metadata.Label';
 function DetailMetadataLink({ title, target, text }: DetailMetadataLinkProps) {
   const handleClick = () => {
     // Open link in browser using rua API if available, otherwise use window.open
-    if (typeof window !== 'undefined' && (window as any).rua?.shell?.openUrl) {
+    if (typeof window !== "undefined" && (window as any).rua?.shell?.openUrl) {
       (window as any).rua.shell.openUrl(target);
     } else {
-      window.open(target, '_blank', 'noopener,noreferrer');
+      window.open(target, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -76,7 +72,7 @@ function DetailMetadataLink({ title, target, text }: DetailMetadataLinkProps) {
     </div>
   );
 }
-DetailMetadataLink.displayName = 'Detail.Metadata.Link';
+DetailMetadataLink.displayName = "Detail.Metadata.Link";
 (DetailMetadataLink as any).__ruaType = DETAIL_METADATA_LINK_TYPE;
 
 /**
@@ -92,7 +88,7 @@ function DetailMetadataTagListItem({ text, color }: DetailMetadataTagListItemPro
     </span>
   );
 }
-DetailMetadataTagListItem.displayName = 'Detail.Metadata.TagList.Item';
+DetailMetadataTagListItem.displayName = "Detail.Metadata.TagList.Item";
 (DetailMetadataTagListItem as any).__ruaType = DETAIL_METADATA_TAGLIST_ITEM_TYPE;
 
 /**
@@ -102,13 +98,11 @@ function DetailMetadataTagList({ title, children }: DetailMetadataTagListProps) 
   return (
     <div className="detail-metadata-taglist">
       <span className="detail-metadata-taglist-title">{title}</span>
-      <div className="detail-metadata-taglist-items">
-        {children}
-      </div>
+      <div className="detail-metadata-taglist-items">{children}</div>
     </div>
   );
 }
-DetailMetadataTagList.displayName = 'Detail.Metadata.TagList';
+DetailMetadataTagList.displayName = "Detail.Metadata.TagList";
 (DetailMetadataTagList as any).__ruaType = DETAIL_METADATA_TAGLIST_TYPE;
 // Attach Item sub-component
 DetailMetadataTagList.Item = DetailMetadataTagListItem;
@@ -119,7 +113,7 @@ DetailMetadataTagList.Item = DetailMetadataTagListItem;
 function DetailMetadataSeparator(_props: DetailMetadataSeparatorProps) {
   return <hr className="detail-metadata-separator" />;
 }
-DetailMetadataSeparator.displayName = 'Detail.Metadata.Separator';
+DetailMetadataSeparator.displayName = "Detail.Metadata.Separator";
 (DetailMetadataSeparator as any).__ruaType = DETAIL_METADATA_SEPARATOR_TYPE;
 
 // Attach sub-components to DetailMetadata
@@ -143,48 +137,35 @@ export function Detail({
   return (
     <div className="detail-container">
       {/* Navigation title */}
-      {navigationTitle && (
-        <div className="detail-navigation-title">{navigationTitle}</div>
-      )}
-      
+      {navigationTitle && <div className="detail-navigation-title">{navigationTitle}</div>}
+
       {/* Loading state */}
       {isLoading && (
         <div className="detail-loading">
           <div className="detail-loading-spinner" />
         </div>
       )}
-      
+
       {/* Main content area with optional metadata sidebar */}
-      <div className={`detail-content-wrapper ${metadata ? 'with-metadata' : ''}`}>
+      <div className={`detail-content-wrapper ${metadata ? "with-metadata" : ""}`}>
         {/* Main content */}
         <div className="detail-main">
           {title && <h1 className="detail-title">{title}</h1>}
           {markdown && (
-            <div
-              className="detail-markdown"
-              dangerouslySetInnerHTML={{ __html: markdown }}
-            />
+            <div className="detail-markdown" dangerouslySetInnerHTML={{ __html: markdown }} />
           )}
           {children && <div className="detail-content">{children}</div>}
         </div>
-        
+
         {/* Metadata sidebar */}
-        {metadata && (
-          <div className="detail-metadata-sidebar">
-            {metadata}
-          </div>
-        )}
+        {metadata && <div className="detail-metadata-sidebar">{metadata}</div>}
       </div>
-      
+
       {/* Actions */}
       {actions && actions.length > 0 && (
         <div className="detail-actions">
           {actions.map((action) => (
-            <button
-              key={action.id}
-              onClick={action.onAction}
-              className="detail-action-button"
-            >
+            <button key={action.id} onClick={action.onAction} className="detail-action-button">
               {action.icon && <span className="action-icon">{action.icon}</span>}
               {action.title}
             </button>

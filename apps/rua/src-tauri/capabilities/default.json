@@ -2,9 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": [
-    "main"
-  ],
+  "windows": ["main"],
   "permissions": [
     "core:path:default",
     "core:event:default",
@@ -29,7 +27,7 @@
     "http:allow-fetch-send",
     {
       "identifier": "http:default",
-      "allow": [{ "url": "http://**" },{"url": "https://**"}]
+      "allow": [{ "url": "http://**" }, { "url": "https://**" }]
     }
   ]
 }

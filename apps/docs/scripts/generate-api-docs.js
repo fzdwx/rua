@@ -5,30 +5,30 @@
  * Uses TypeDoc to extract API information and generate MDX files
  */
 
-const { Application, TSConfigReader, TypeDocReader } = require('typedoc');
-const fs = require('fs').promises;
-const path = require('path');
+const { Application, TSConfigReader, TypeDocReader } = require("typedoc");
+const fs = require("fs").promises;
+const path = require("path");
 
 // Configuration
 const CONFIG = {
   // TypeDoc configuration
   typedoc: {
-    entryPoints: ['../../packages/rua-api/src/index.ts'],
-    tsconfig: '../../packages/rua-api/tsconfig.json',
+    entryPoints: ["../../packages/rua-api/src/index.ts"],
+    tsconfig: "../../packages/rua-api/tsconfig.json",
     excludeExternals: true,
     excludePrivate: true,
     excludeProtected: true,
     skipErrorChecking: true,
-    plugin: ['typedoc-plugin-markdown'],
-    readme: 'none',
-    out: './generated-api-docs'
+    plugin: ["typedoc-plugin-markdown"],
+    readme: "none",
+    out: "./generated-api-docs",
   },
-  
+
   // Output configuration
   output: {
-    dir: './content/docs/api/generated',
-    indexFile: 'typescript-api.mdx'
-  }
+    dir: "./content/docs/api/generated",
+    indexFile: "typescript-api.mdx",
+  },
 };
 
 /**
@@ -36,14 +36,14 @@ const CONFIG = {
  */
 function createTypeDocApp() {
   const app = new Application();
-  
+
   // Load TypeDoc configuration
   app.options.addReader(new TSConfigReader());
   app.options.addReader(new TypeDocReader());
-  
+
   // Bootstrap with configuration
   app.bootstrap(CONFIG.typedoc);
-  
+
   return app;
 }
 
@@ -51,31 +51,30 @@ function createTypeDocApp() {
  * Generate API documentation
  */
 async function generateApiDocs() {
-  console.log('🚀 Generating TypeScript API documentation...');
-  
+  console.log("🚀 Generating TypeScript API documentation...");
+
   try {
     // Create TypeDoc application
     const app = createTypeDocApp();
-    
+
     // Convert TypeScript files
     const project = app.convert();
-    
+
     if (!project) {
-      throw new Error('Failed to convert TypeScript project');
+      throw new Error("Failed to convert TypeScript project");
     }
-    
+
     // Generate documentation
     await app.generateDocs(project, CONFIG.typedoc.out);
-    
-    console.log('✅ TypeDoc generation completed');
-    
+
+    console.log("✅ TypeDoc generation completed");
+
     // Process generated files
     await processGeneratedDocs();
-    
-    console.log('✅ API documentation generated successfully');
-    
+
+    console.log("✅ API documentation generated successfully");
   } catch (error) {
-    console.error('❌ Failed to generate API documentation:', error);
+    console.error("❌ Failed to generate API documentation:", error);
     process.exit(1);
   }
 }
@@ -86,21 +85,21 @@ async function generateApiDocs() {
 async function processGeneratedDocs() {
   const generatedDir = CONFIG.typedoc.out;
   const outputDir = CONFIG.output.dir;
-  
+
   // Ensure output directory exists
   await fs.mkdir(outputDir, { recursive: true });
-  
+
   // Read generated files
   const files = await fs.readdir(generatedDir);
-  const markdownFiles = files.filter(file => file.endsWith('.md'));
-  
+  const markdownFiles = files.filter((file) => file.endsWith(".md"));
+
   console.log(`📝 Processing ${markdownFiles.length} generated files...`);
-  
+
   // Process each markdown file
   for (const file of markdownFiles) {
     await processMarkdownFile(path.join(generatedDir, file), outputDir);
   }
-  
+
   // Generate index file
   await generateIndexFile(outputDir, markdownFiles);
 }
@@ -109,16 +108,16 @@ async function processGeneratedDocs() {
  * Process individual markdown file
  */
 async function processMarkdownFile(inputPath, outputDir) {
-  const content = await fs.readFile(inputPath, 'utf-8');
-  const fileName = path.basename(inputPath, '.md');
-  
+  const content = await fs.readFile(inputPath, "utf-8");
+  const fileName = path.basename(inputPath, ".md");
+
   // Convert to MDX format with frontmatter
   const mdxContent = convertToMDX(content, fileName);
-  
+
   // Write to output directory
   const outputPath = path.join(outputDir, `${fileName}.mdx`);
   await fs.writeFile(outputPath, mdxContent);
-  
+
   console.log(`  ✓ Processed ${fileName}.mdx`);
 }
 
@@ -129,7 +128,7 @@ function convertToMDX(content, fileName) {
   // Extract title from content or use filename
   const titleMatch = content.match(/^# (.+)$/m);
   const title = titleMatch ? titleMatch[1] : formatTitle(fileName);
-  
+
   // Generate frontmatter
   const frontmatter = `---
 title: ${title}
@@ -143,14 +142,14 @@ generated: true
   // Clean up content
   let cleanContent = content
     // Remove TypeDoc headers
-    .replace(/^#{1,6}\s*\[.*?\]\(.*?\)$/gm, '')
+    .replace(/^#{1,6}\s*\[.*?\]\(.*?\)$/gm, "")
     // Fix relative links
-    .replace(/\]\(\.\/([^)]+)\)/g, '](/docs/api/generated/$1)')
+    .replace(/\]\(\.\/([^)]+)\)/g, "](/docs/api/generated/$1)")
     // Add code block language hints
-    .replace(/```\n/g, '```typescript\n')
+    .replace(/```\n/g, "```typescript\n")
     // Clean up excessive newlines
-    .replace(/\n{3,}/g, '\n\n');
-  
+    .replace(/\n{3,}/g, "\n\n");
+
   return frontmatter + cleanContent;
 }
 
@@ -159,9 +158,9 @@ generated: true
  */
 function formatTitle(fileName) {
   return fileName
-    .replace(/[-_]/g, ' ')
-    .replace(/\b\w/g, l => l.toUpperCase())
-    .replace(/Api$/, 'API');
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase())
+    .replace(/Api$/, "API");
 }
 
 /**
@@ -184,11 +183,13 @@ This section contains auto-generated API documentation extracted from the TypeSc
 
 ## Available APIs
 
-${files.map(file => {
-  const name = path.basename(file, '.md');
-  const title = formatTitle(name);
-  return `- [${title}](/docs/api/generated/${name})`;
-}).join('\n')}
+${files
+  .map((file) => {
+    const name = path.basename(file, ".md");
+    const title = formatTitle(name);
+    return `- [${title}](/docs/api/generated/${name})`;
+  })
+  .join("\n")}
 
 ## Usage
 
@@ -208,8 +209,8 @@ The complete type definitions are available in the source code and through your 
 
   const indexPath = path.join(outputDir, CONFIG.output.indexFile);
   await fs.writeFile(indexPath, indexContent);
-  
-  console.log('  ✓ Generated index file');
+
+  console.log("  ✓ Generated index file");
 }
 
 /**
@@ -218,7 +219,7 @@ The complete type definitions are available in the source code and through your 
 async function cleanup() {
   try {
     await fs.rm(CONFIG.typedoc.out, { recursive: true, force: true });
-    console.log('🧹 Cleaned up temporary files');
+    console.log("🧹 Cleaned up temporary files");
   } catch (error) {
     // Ignore cleanup errors
   }

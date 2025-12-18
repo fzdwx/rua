@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { Action } from '../types';
+import { useState, useCallback } from "react";
+import { Action } from "../types";
 
 export interface UseActionsResult {
   actions: Action[];

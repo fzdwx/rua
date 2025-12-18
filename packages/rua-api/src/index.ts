@@ -6,12 +6,12 @@
  */
 
 // Export version
-export const VERSION = '0.1.0';
+export const VERSION = "0.1.0";
 
 // Export all types
-export * from './types';
+export * from "./types";
 
 // Components removed - not currently used
 
 // Export browser API for extensions
-export * from './browser';
+export * from "./browser";

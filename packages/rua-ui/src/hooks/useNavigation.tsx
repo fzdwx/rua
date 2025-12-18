@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useCallback } from 'react';
-import type { ReactElement, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 /**
  * Navigation context value interface
@@ -32,14 +32,14 @@ const NavigationContext = createContext<NavigationContextValue | null>(null);
 /**
  * Hook to access navigation context
  * Returns navigation methods for push/pop operations
- * 
+ *
  * @returns NavigationContextValue with push, pop, canPop, navigationTitle, and setNavigationTitle
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
  *   const { push, pop, canPop } = useNavigation();
- *   
+ *
  *   return (
  *     <button onClick={() => push(<DetailView />)}>
  *       View Details
@@ -54,11 +54,12 @@ export function useNavigation(): NavigationContextValue {
     // Return a no-op implementation if not in navigation context
     // This allows components to be used outside of NavigationProvider
     return {
-      push: () => console.warn('[useNavigation] Navigation push called outside NavigationProvider'),
-      pop: () => console.warn('[useNavigation] Navigation pop called outside NavigationProvider'),
+      push: () => console.warn("[useNavigation] Navigation push called outside NavigationProvider"),
+      pop: () => console.warn("[useNavigation] Navigation pop called outside NavigationProvider"),
       canPop: false,
       navigationTitle: undefined,
-      setNavigationTitle: () => console.warn('[useNavigation] setNavigationTitle called outside NavigationProvider'),
+      setNavigationTitle: () =>
+        console.warn("[useNavigation] setNavigationTitle called outside NavigationProvider"),
     };
   }
   return context;
@@ -78,7 +79,7 @@ export interface NavigationProviderProps {
  * Navigation provider component that manages a navigation stack
  * Wrap your application or component tree with this provider to enable
  * push/pop navigation using Action.Push and Action.Pop components
- * 
+ *
  * @example
  * ```tsx
  * function App() {
@@ -96,27 +97,27 @@ export function NavigationProvider({ children, initialTitle }: NavigationProvide
     currentIndex: -1,
     navigationTitle: initialTitle,
   });
-  
+
   /**
    * Push a new view onto the navigation stack
    * The new view will be displayed, replacing the current view
    */
   const push = useCallback((view: ReactElement) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       stack: [...prev.stack, view],
       currentIndex: prev.stack.length,
     }));
   }, []);
-  
+
   /**
    * Pop the current view from the navigation stack
    * Returns to the previous view, or the original children if stack is empty
    */
   const pop = useCallback(() => {
-    setState(prev => {
+    setState((prev) => {
       if (prev.stack.length === 0) {
-        console.warn('[NavigationProvider] Cannot pop: navigation stack is empty');
+        console.warn("[NavigationProvider] Cannot pop: navigation stack is empty");
         return prev;
       }
       return {
@@ -126,20 +127,20 @@ export function NavigationProvider({ children, initialTitle }: NavigationProvide
       };
     });
   }, []);
-  
+
   /**
    * Set the navigation title
    */
   const setNavigationTitle = useCallback((title: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       navigationTitle: title,
     }));
   }, []);
-  
+
   const canPop = state.stack.length > 0;
   const currentView = state.stack.length > 0 ? state.stack[state.stack.length - 1] : null;
-  
+
   const contextValue: NavigationContextValue = {
     push,
     pop,
@@ -147,7 +148,7 @@ export function NavigationProvider({ children, initialTitle }: NavigationProvide
     navigationTitle: state.navigationTitle,
     setNavigationTitle,
   };
-  
+
   return (
     <NavigationContext.Provider value={contextValue}>
       {currentView || children}

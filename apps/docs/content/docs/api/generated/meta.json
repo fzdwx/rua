@@ -2,7 +2,5 @@
   "title": "Generated API",
   "description": "Auto-generated TypeScript API documentation",
   "icon": "FileCode",
-  "pages": [
-    "typescript-api"
-  ]
+  "pages": ["typescript-api"]
 }

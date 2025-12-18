@@ -1,14 +1,14 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 
 export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        init: 'src/init.ts',
+        init: "src/init.ts",
       },
       output: {
-        entryFileNames: '[name].js',
-        format: 'iife',
+        entryFileNames: "[name].js",
+        format: "iife",
       },
     },
   },

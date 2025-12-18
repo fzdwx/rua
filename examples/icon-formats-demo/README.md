@@ -10,6 +10,7 @@ This example demonstrates the different icon formats supported by `DynamicAction
 ## Usage
 
 1. Build the extension:
+
    ```bash
    npm install
    npm run build
@@ -22,33 +23,37 @@ This example demonstrates the different icon formats supported by `DynamicAction
 ## Icon Formats
 
 ### Iconify Icons
+
 The easiest way to use icons. Browse available icons at [icon-sets.iconify.design](https://icon-sets.iconify.design/).
 
 ```typescript
-icon: 'tabler:puzzle'
+icon: "tabler:puzzle";
 ```
 
 ### Data URI
+
 Useful for embedding small SVG icons directly:
 
 ```typescript
-const svg = '<svg>...</svg>';
+const svg = "<svg>...</svg>";
 const dataUri = `data:image/svg+xml;base64,${btoa(svg)}`;
-icon: dataUri
+icon: dataUri;
 ```
 
 ### SVG String
+
 Directly use SVG markup:
 
 ```typescript
-icon: '<svg width="24" height="24">...</svg>'
+icon: '<svg width="24" height="24">...</svg>';
 ```
 
 ### Asset Path
+
 Reference images in your extension folder:
 
 ```typescript
-icon: './icon.png'
+icon: "./icon.png";
 ```
 
 ## See Also

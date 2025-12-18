@@ -5,10 +5,10 @@
  * by connecting to the ExtensionSystemContext.
  */
 
-import { useExtensionSystem } from '@/contexts/ExtensionSystemContext.tsx';
-import { ExtensionView } from './ExtensionView.tsx';
-import type { DynamicAction } from '@/extension/extension-server-api.ts';
-import type { ExtensionPermission, ParsedPermission } from 'rua-api';
+import { useExtensionSystem } from "@/contexts/ExtensionSystemContext.tsx";
+import { ExtensionView } from "./ExtensionView.tsx";
+import type { DynamicAction } from "@/extension/extension-server-api.ts";
+import type { ExtensionPermission, ParsedPermission } from "rua-api";
 
 interface ExtensionViewWrapperProps {
   /** The extension's UI entry path with action query param */
@@ -37,63 +37,64 @@ export function ExtensionViewWrapper({
   onInputVisibilityChange,
   search,
 }: ExtensionViewWrapperProps) {
-  const { devRefreshKey, extensions, registerDynamicActions, unregisterDynamicActions } = useExtensionSystem();
+  const { devRefreshKey, extensions, registerDynamicActions, unregisterDynamicActions } =
+    useExtensionSystem();
 
   // Find the extension to get its permissions and version
-  const extension = extensions.find(p => p.manifest.id === extensionId);
+  const extension = extensions.find((p) => p.manifest.id === extensionId);
   const extensionVersion = extension?.manifest.version;
-  
+
   // Parse permissions - extract simple permission strings and detailed configs
   const rawPermissions = extension?.manifest.permissions || [];
   const { simplePermissions, parsedPermissions } = parsePermissions(rawPermissions);
 
-/**
- * Parse permissions array into simple strings and detailed configs
- */
-function parsePermissions(permissions: ExtensionPermission[]): {
-  simplePermissions: string[];
-  parsedPermissions: ParsedPermission[];
-} {
-  const simplePermissions: string[] = [];
-  const parsedPermissions: ParsedPermission[] = [];
-  
-  for (const perm of permissions) {
-    if (typeof perm === 'string') {
-      simplePermissions.push(perm);
-    } else {
-      // Detailed permission config
-      simplePermissions.push(perm.permission);
-      
-      const parsed: ParsedPermission = {
-        permission: perm.permission,
-      };
-      
-      if (perm.allow) {
-        const allowPaths: string[] = [];
-        const allowCommands: Array<{ program: string; args?: string[] }> = [];
-        
-        for (const rule of perm.allow) {
-          if ('path' in rule) {
-            allowPaths.push(rule.path);
-          } else if ('cmd' in rule) {
-            allowCommands.push(rule.cmd);
+  /**
+   * Parse permissions array into simple strings and detailed configs
+   */
+  function parsePermissions(permissions: ExtensionPermission[]): {
+    simplePermissions: string[];
+    parsedPermissions: ParsedPermission[];
+  } {
+    const simplePermissions: string[] = [];
+    const parsedPermissions: ParsedPermission[] = [];
+
+    for (const perm of permissions) {
+      if (typeof perm === "string") {
+        simplePermissions.push(perm);
+      } else {
+        // Detailed permission config
+        simplePermissions.push(perm.permission);
+
+        const parsed: ParsedPermission = {
+          permission: perm.permission,
+        };
+
+        if (perm.allow) {
+          const allowPaths: string[] = [];
+          const allowCommands: Array<{ program: string; args?: string[] }> = [];
+
+          for (const rule of perm.allow) {
+            if ("path" in rule) {
+              allowPaths.push(rule.path);
+            } else if ("cmd" in rule) {
+              allowCommands.push(rule.cmd);
+            }
+          }
+
+          if (allowPaths.length > 0) {
+            parsed.allowPaths = allowPaths;
+          }
+          if (allowCommands.length > 0) {
+            parsed.allowCommands = allowCommands;
           }
         }
-        
-        if (allowPaths.length > 0) {
-          parsed.allowPaths = allowPaths;
-        }
-        if (allowCommands.length > 0) {
-          parsed.allowCommands = allowCommands;
-        }
+
+        parsedPermissions.push(parsed);
       }
-      
-      parsedPermissions.push(parsed);
     }
+
+    return { simplePermissions, parsedPermissions };
   }
-  
-  return { simplePermissions, parsedPermissions };
-}
 
   // Handle dynamic action registration
   const handleRegisterActions = (actions: DynamicAction[]) => {

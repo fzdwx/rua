@@ -1,27 +1,37 @@
-import { useState, useRef, useEffect, useMemo, useCallback, ReactNode, ReactElement, Children, isValidElement } from 'react';
-import { 
-  GridProps, 
-  GridItemProps, 
-  GridSectionProps, 
+import {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+  ReactNode,
+  ReactElement,
+  Children,
+  isValidElement,
+} from "react";
+import {
+  GridProps,
+  GridItemProps,
+  GridSectionProps,
   GridEmptyViewProps,
   FilteringOptions,
-  Action 
-} from '../types';
-import { SearchInput } from './SearchInput';
-import { ActionPanel } from './ActionPanel';
-import { useKeyboard } from '../hooks/useKeyboard';
-import { attemptFocusWithRetry } from './List';
+  Action,
+} from "../types";
+import { SearchInput } from "./SearchInput";
+import { ActionPanel } from "./ActionPanel";
+import { useKeyboard } from "../hooks/useKeyboard";
+import { attemptFocusWithRetry } from "./List";
 
 /**
  * Internal grid item type for processing
  */
 interface GridItemData {
   id: string;
-  content: GridItemProps['content'];
+  content: GridItemProps["content"];
   title?: string;
   subtitle?: string;
   keywords?: string[];
-  accessory?: GridItemProps['accessory'];
+  accessory?: GridItemProps["accessory"];
   actions?: ReactElement;
 }
 
@@ -31,10 +41,10 @@ interface GridItemData {
 interface GridSectionData {
   title?: string;
   subtitle?: string;
-  aspectRatio?: GridSectionProps['aspectRatio'];
+  aspectRatio?: GridSectionProps["aspectRatio"];
   columns?: number;
-  fit?: GridSectionProps['fit'];
-  inset?: GridSectionProps['inset'];
+  fit?: GridSectionProps["fit"];
+  inset?: GridSectionProps["inset"];
   items: GridItemData[];
 }
 
@@ -45,7 +55,7 @@ export function GridItemComponent(_props: GridItemProps) {
   return null;
 }
 
-GridItemComponent.displayName = 'Grid.Item';
+GridItemComponent.displayName = "Grid.Item";
 GridItemComponent.__isGridItem = true;
 
 /**
@@ -55,19 +65,13 @@ export function GridSectionComponent(_props: GridSectionProps) {
   return null;
 }
 
-GridSectionComponent.displayName = 'Grid.Section';
+GridSectionComponent.displayName = "Grid.Section";
 GridSectionComponent.__isGridSection = true;
-
 
 /**
  * Grid.EmptyView component for custom empty state
  */
-export function GridEmptyView({
-  icon,
-  title,
-  description,
-  actions,
-}: GridEmptyViewProps) {
+export function GridEmptyView({ icon, title, description, actions }: GridEmptyViewProps) {
   return (
     <div className="grid-empty-view">
       {icon && <div className="grid-empty-icon">{icon}</div>}
@@ -78,7 +82,7 @@ export function GridEmptyView({
   );
 }
 
-GridEmptyView.displayName = 'Grid.EmptyView';
+GridEmptyView.displayName = "Grid.EmptyView";
 GridEmptyView.__isGridEmptyView = true;
 
 /**
@@ -87,7 +91,7 @@ GridEmptyView.__isGridEmptyView = true;
 export function isGridItemComponent(element: ReactElement): element is ReactElement<GridItemProps> {
   return Boolean(
     element.type &&
-    typeof element.type === 'function' &&
+    typeof element.type === "function" &&
     (element.type as any).__isGridItem === true
   );
 }
@@ -95,10 +99,12 @@ export function isGridItemComponent(element: ReactElement): element is ReactElem
 /**
  * Type guard to check if a component is a Grid.Section
  */
-export function isGridSectionComponent(element: ReactElement): element is ReactElement<GridSectionProps> {
+export function isGridSectionComponent(
+  element: ReactElement
+): element is ReactElement<GridSectionProps> {
   return Boolean(
     element.type &&
-    typeof element.type === 'function' &&
+    typeof element.type === "function" &&
     (element.type as any).__isGridSection === true
   );
 }
@@ -106,10 +112,12 @@ export function isGridSectionComponent(element: ReactElement): element is ReactE
 /**
  * Type guard to check if a component is a Grid.EmptyView
  */
-export function isGridEmptyViewComponent(element: ReactElement): element is ReactElement<GridEmptyViewProps> {
+export function isGridEmptyViewComponent(
+  element: ReactElement
+): element is ReactElement<GridEmptyViewProps> {
   return Boolean(
     element.type &&
-    typeof element.type === 'function' &&
+    typeof element.type === "function" &&
     (element.type as any).__isGridEmptyView === true
   );
 }
@@ -117,12 +125,16 @@ export function isGridEmptyViewComponent(element: ReactElement): element is Reac
 /**
  * Get inset padding value in pixels
  */
-function getInsetPadding(inset?: 'small' | 'medium' | 'large'): string {
+function getInsetPadding(inset?: "small" | "medium" | "large"): string {
   switch (inset) {
-    case 'small': return '4px';
-    case 'medium': return '8px';
-    case 'large': return '16px';
-    default: return '8px';
+    case "small":
+      return "4px";
+    case "medium":
+      return "8px";
+    case "large":
+      return "16px";
+    default:
+      return "8px";
   }
 }
 
@@ -130,25 +142,24 @@ function getInsetPadding(inset?: 'small' | 'medium' | 'large'): string {
  * Convert aspect ratio string to CSS value
  */
 function getAspectRatioValue(aspectRatio?: string): string {
-  if (!aspectRatio) return '1';
-  return aspectRatio.replace('/', ' / ');
+  if (!aspectRatio) return "1";
+  return aspectRatio.replace("/", " / ");
 }
-
 
 /**
  * Filter items based on search query
  */
 function filterItems(items: GridItemData[], query: string): GridItemData[] {
   if (!query.trim()) return items;
-  
+
   const lowerQuery = query.toLowerCase();
-  return items.filter(item => {
+  return items.filter((item) => {
     // Check title
     if (item.title?.toLowerCase().includes(lowerQuery)) return true;
     // Check subtitle
     if (item.subtitle?.toLowerCase().includes(lowerQuery)) return true;
     // Check keywords
-    if (item.keywords?.some(kw => kw.toLowerCase().includes(lowerQuery))) return true;
+    if (item.keywords?.some((kw) => kw.toLowerCase().includes(lowerQuery))) return true;
     return false;
   });
 }
@@ -170,24 +181,24 @@ function GridItemRenderer({
   onClick: () => void;
   onPointerMove: () => void;
   aspectRatio?: string;
-  fit?: 'contain' | 'fill';
-  inset?: 'small' | 'medium' | 'large';
+  fit?: "contain" | "fill";
+  inset?: "small" | "medium" | "large";
 }) {
   const padding = getInsetPadding(inset);
-  const objectFit = fit === 'fill' ? 'cover' : 'contain';
+  const objectFit = fit === "fill" ? "cover" : "contain";
 
   return (
     <div
-      className={`grid-item ${isSelected ? 'grid-item-selected' : ''}`}
+      className={`grid-item ${isSelected ? "grid-item-selected" : ""}`}
       onClick={onClick}
       onPointerMove={onPointerMove}
       role="option"
       aria-selected={isSelected}
       data-grid-item-id={item.id}
     >
-      <div 
+      <div
         className="grid-item-content"
-        style={{ 
+        style={{
           aspectRatio: getAspectRatioValue(aspectRatio),
           padding,
         }}
@@ -195,11 +206,13 @@ function GridItemRenderer({
         {item.content.source && (
           <img
             src={item.content.source}
-            alt={item.title || ''}
+            alt={item.title || ""}
             className="grid-item-image"
-            style={{ 
+            style={{
               objectFit,
-              ...(item.content.tintColor ? { filter: `drop-shadow(0 0 0 ${item.content.tintColor})` } : {}),
+              ...(item.content.tintColor
+                ? { filter: `drop-shadow(0 0 0 ${item.content.tintColor})` }
+                : {}),
             }}
             title={item.content.tooltip}
           />
@@ -220,16 +233,15 @@ function GridItemRenderer({
   );
 }
 
-
 /**
  * Main Grid component with integrated search and grid layout
  */
 export function Grid({
   columns = 5,
-  inset = 'medium',
-  aspectRatio = '1',
-  fit = 'contain',
-  searchBarPlaceholder = 'Search...',
+  inset = "medium",
+  aspectRatio = "1",
+  fit = "contain",
+  searchBarPlaceholder = "Search...",
   filtering = true,
   isLoading = false,
   navigationTitle,
@@ -242,21 +254,21 @@ export function Grid({
   onBack,
   actions,
 }: GridProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
   // Determine if filtering is enabled
   const filteringEnabled = filtering !== false;
-  const filteringOptions: FilteringOptions | undefined = 
-    typeof filtering === 'object' ? filtering : undefined;
+  const filteringOptions: FilteringOptions | undefined =
+    typeof filtering === "object" ? filtering : undefined;
 
   // Default back handler
   const handleBack = useCallback(() => {
     if (onBack) {
       onBack();
-    } else if (typeof window !== 'undefined' && (window as any).rua) {
+    } else if (typeof window !== "undefined" && (window as any).rua) {
       (window as any).rua.ui.close();
     }
   }, [onBack]);
@@ -328,7 +340,7 @@ export function Grid({
   // Get all items (flat list for navigation)
   const allItems = useMemo(() => {
     if (sections.length > 0) {
-      return sections.flatMap(section => section.items);
+      return sections.flatMap((section) => section.items);
     }
     return items;
   }, [items, sections]);
@@ -346,12 +358,13 @@ export function Grid({
     if (!query.trim() || !filteringEnabled) {
       return sections;
     }
-    return sections.map(section => ({
-      ...section,
-      items: filterItems(section.items, query),
-    })).filter(section => section.items.length > 0);
+    return sections
+      .map((section) => ({
+        ...section,
+        items: filterItems(section.items, query),
+      }))
+      .filter((section) => section.items.length > 0);
   }, [query, sections, filteringEnabled]);
-
 
   // Handle search change
   const handleSearchChange = (value: string) => {
@@ -367,29 +380,32 @@ export function Grid({
   };
 
   // Keyboard navigation
-  const moveSelection = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
-    const totalItems = displayItems.length;
-    if (totalItems === 0) return;
+  const moveSelection = useCallback(
+    (direction: "up" | "down" | "left" | "right") => {
+      const totalItems = displayItems.length;
+      if (totalItems === 0) return;
 
-    setSelectedIndex(prev => {
-      let newIndex = prev;
-      switch (direction) {
-        case 'left':
-          newIndex = Math.max(0, prev - 1);
-          break;
-        case 'right':
-          newIndex = Math.min(totalItems - 1, prev + 1);
-          break;
-        case 'up':
-          newIndex = Math.max(0, prev - columns);
-          break;
-        case 'down':
-          newIndex = Math.min(totalItems - 1, prev + columns);
-          break;
-      }
-      return newIndex;
-    });
-  }, [displayItems.length, columns]);
+      setSelectedIndex((prev) => {
+        let newIndex = prev;
+        switch (direction) {
+          case "left":
+            newIndex = Math.max(0, prev - 1);
+            break;
+          case "right":
+            newIndex = Math.min(totalItems - 1, prev + 1);
+            break;
+          case "up":
+            newIndex = Math.max(0, prev - columns);
+            break;
+          case "down":
+            newIndex = Math.min(totalItems - 1, prev + columns);
+            break;
+        }
+        return newIndex;
+      });
+    },
+    [displayItems.length, columns]
+  );
 
   const handleEnter = useCallback(() => {
     const item = displayItems[selectedIndex];
@@ -399,10 +415,10 @@ export function Grid({
   }, [displayItems, selectedIndex, onSelectionChange]);
 
   useKeyboard({
-    onArrowUp: () => moveSelection('up'),
-    onArrowDown: () => moveSelection('down'),
-    onArrowLeft: () => moveSelection('left'),
-    onArrowRight: () => moveSelection('right'),
+    onArrowUp: () => moveSelection("up"),
+    onArrowDown: () => moveSelection("down"),
+    onArrowLeft: () => moveSelection("left"),
+    onArrowRight: () => moveSelection("right"),
     onEnter: handleEnter,
     enabled: true,
   });
@@ -410,7 +426,7 @@ export function Grid({
   // Update selected index when selectedItemId prop changes
   useEffect(() => {
     if (selectedItemId) {
-      const index = displayItems.findIndex(item => item.id === selectedItemId);
+      const index = displayItems.findIndex((item) => item.id === selectedItemId);
       if (index !== -1) {
         setSelectedIndex(index);
       }
@@ -435,32 +451,32 @@ export function Grid({
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).rua) {
+    if (typeof window !== "undefined" && (window as any).rua) {
       const rua = (window as any).rua;
       attemptFocusWithRetry(inputRef, {
         maxRetries: 3,
         initialDelay: 50,
         backoffMultiplier: 2,
       });
-      rua.on?.('activate', handleActivate);
+      rua.on?.("activate", handleActivate);
 
       return () => {
-        rua.off?.('activate', handleActivate);
+        rua.off?.("activate", handleActivate);
       };
     }
 
     const handleRuaReady = () => {
       const rua = (window as any).rua;
-      rua.on?.('activate', handleActivate);
+      rua.on?.("activate", handleActivate);
     };
 
-    window.addEventListener('rua-ready', handleRuaReady);
+    window.addEventListener("rua-ready", handleRuaReady);
 
     return () => {
-      window.removeEventListener('rua-ready', handleRuaReady);
-      if (typeof window !== 'undefined' && (window as any).rua) {
+      window.removeEventListener("rua-ready", handleRuaReady);
+      if (typeof window !== "undefined" && (window as any).rua) {
         const rua = (window as any).rua;
-        rua.off?.('activate', handleActivate);
+        rua.off?.("activate", handleActivate);
       }
     };
   }, [handleActivate]);
@@ -473,13 +489,12 @@ export function Grid({
     });
   }, []);
 
-
   // Render grid items
   const renderGridItems = (
     itemsToRender: GridItemData[],
     sectionAspectRatio?: string,
-    sectionFit?: 'contain' | 'fill',
-    sectionInset?: 'small' | 'medium' | 'large',
+    sectionFit?: "contain" | "fill",
+    sectionInset?: "small" | "medium" | "large",
     startIndex: number = 0
   ) => {
     return itemsToRender.map((item, idx) => {
@@ -501,16 +516,17 @@ export function Grid({
 
   // Calculate grid style
   const gridStyle = {
-    display: 'grid',
+    display: "grid",
     gridTemplateColumns: `repeat(${columns}, 1fr)`,
-    gap: '8px',
-    padding: '8px',
+    gap: "8px",
+    padding: "8px",
   };
 
   // Empty state
-  const hasNoItems = sections.length > 0 
-    ? displaySections.every(s => s.items.length === 0)
-    : displayItems.length === 0;
+  const hasNoItems =
+    sections.length > 0
+      ? displaySections.every((s) => s.items.length === 0)
+      : displayItems.length === 0;
 
   if (!isLoading && hasNoItems) {
     return (
@@ -524,12 +540,8 @@ export function Grid({
           onBack={handleBack}
           inputRef={inputRef}
         />
-        <div className="grid-empty">
-          {emptyView || <p>No results found</p>}
-        </div>
-        {actions && actions.length > 0 && (
-          <ActionPanel actions={actions} position="footer" />
-        )}
+        <div className="grid-empty">{emptyView || <p>No results found</p>}</div>
+        {actions && actions.length > 0 && <ActionPanel actions={actions} position="footer" />}
       </div>
     );
   }
@@ -552,10 +564,10 @@ export function Grid({
           {displaySections.map((section, sectionIdx) => {
             const sectionColumns = section.columns || columns;
             const sectionStyle = {
-              display: 'grid',
+              display: "grid",
               gridTemplateColumns: `repeat(${sectionColumns}, 1fr)`,
-              gap: '8px',
-              padding: '8px',
+              gap: "8px",
+              padding: "8px",
             };
             const startIdx = itemIndex;
             itemIndex += section.items.length;
@@ -565,7 +577,9 @@ export function Grid({
                 {(section.title || section.subtitle) && (
                   <div className="grid-section-header">
                     {section.title && <div className="grid-section-title">{section.title}</div>}
-                    {section.subtitle && <div className="grid-section-subtitle">{section.subtitle}</div>}
+                    {section.subtitle && (
+                      <div className="grid-section-subtitle">{section.subtitle}</div>
+                    )}
                   </div>
                 )}
                 <div style={sectionStyle} role="listbox">
@@ -581,9 +595,7 @@ export function Grid({
             );
           })}
         </div>
-        {actions && actions.length > 0 && (
-          <ActionPanel actions={actions} position="footer" />
-        )}
+        {actions && actions.length > 0 && <ActionPanel actions={actions} position="footer" />}
       </div>
     );
   }
@@ -605,9 +617,7 @@ export function Grid({
           {renderGridItems(displayItems)}
         </div>
       </div>
-      {actions && actions.length > 0 && (
-        <ActionPanel actions={actions} position="footer" />
-      )}
+      {actions && actions.length > 0 && <ActionPanel actions={actions} position="footer" />}
     </div>
   );
 }

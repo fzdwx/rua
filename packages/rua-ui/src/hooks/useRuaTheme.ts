@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 /**
  * Auto-sync theme for rua extensions
@@ -15,47 +15,53 @@ import { useEffect, useState } from 'react';
  * ```
  */
 export function useRuaTheme() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     // Check if rua API is available
     const rua = (window as any).rua;
 
     if (!rua) {
-      console.warn('[useRuaTheme] rua API not available yet, waiting for rua-ready event');
+      console.warn("[useRuaTheme] rua API not available yet, waiting for rua-ready event");
 
       // Listen for rua-ready event if API loads after mount
       const handleRuaReady = () => {
         const ruaApi = (window as any).rua;
         if (ruaApi?.ui?.getTheme) {
-          ruaApi.ui.getTheme().then((initialTheme: 'light' | 'dark') => {
-            setTheme(initialTheme);
-          }).catch(console.error);
+          ruaApi.ui
+            .getTheme()
+            .then((initialTheme: "light" | "dark") => {
+              setTheme(initialTheme);
+            })
+            .catch(console.error);
         }
       };
 
-      window.addEventListener('rua-ready', handleRuaReady);
-      return () => window.removeEventListener('rua-ready', handleRuaReady);
+      window.addEventListener("rua-ready", handleRuaReady);
+      return () => window.removeEventListener("rua-ready", handleRuaReady);
     }
 
     // Get initial theme
     if (rua.ui?.getTheme) {
-      rua.ui.getTheme().then((initialTheme: 'light' | 'dark') => {
-        setTheme(initialTheme);
-      }).catch(console.error);
+      rua.ui
+        .getTheme()
+        .then((initialTheme: "light" | "dark") => {
+          setTheme(initialTheme);
+        })
+        .catch(console.error);
     }
 
     // Listen for theme changes
     if (rua.on) {
-      const handleThemeChange = (newTheme: 'light' | 'dark') => {
+      const handleThemeChange = (newTheme: "light" | "dark") => {
         setTheme(newTheme);
       };
 
-      rua.on('theme-change', handleThemeChange);
+      rua.on("theme-change", handleThemeChange);
 
       return () => {
         if (rua.off) {
-          rua.off('theme-change', handleThemeChange);
+          rua.off("theme-change", handleThemeChange);
         }
       };
     }
@@ -64,10 +70,10 @@ export function useRuaTheme() {
   // Apply theme to document.documentElement
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
+    if (theme === "dark") {
+      root.classList.add("dark");
     } else {
-      root.classList.remove('dark');
+      root.classList.remove("dark");
     }
   }, [theme]);
 

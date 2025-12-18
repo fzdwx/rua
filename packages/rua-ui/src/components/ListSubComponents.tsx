@@ -1,5 +1,5 @@
-import { ReactElement } from 'react';
-import { ListItemComponentProps, ListSectionComponentProps, ListEmptyViewProps } from '../types';
+import { ReactElement } from "react";
+import { ListItemComponentProps, ListSectionComponentProps, ListEmptyViewProps } from "../types";
 
 /**
  * List.Item component for use as a child of List
@@ -12,7 +12,7 @@ export function ListItemComponent(_props: ListItemComponentProps) {
 }
 
 // Mark this component for identification
-ListItemComponent.displayName = 'List.Item';
+ListItemComponent.displayName = "List.Item";
 ListItemComponent.__isListItem = true;
 
 /**
@@ -25,18 +25,13 @@ export function ListSectionComponent(_props: ListSectionComponentProps) {
 }
 
 // Mark this component for identification
-ListSectionComponent.displayName = 'List.Section';
+ListSectionComponent.displayName = "List.Section";
 ListSectionComponent.__isListSection = true;
 
 /**
  * List.EmptyView component for custom empty state
  */
-export function ListEmptyView({
-  icon,
-  title,
-  description,
-  actions,
-}: ListEmptyViewProps) {
+export function ListEmptyView({ icon, title, description, actions }: ListEmptyViewProps) {
   return (
     <div className="list-empty-view">
       {icon && <div className="list-empty-icon">{icon}</div>}
@@ -47,16 +42,18 @@ export function ListEmptyView({
   );
 }
 
-ListEmptyView.displayName = 'List.EmptyView';
+ListEmptyView.displayName = "List.EmptyView";
 ListEmptyView.__isListEmptyView = true;
 
 /**
  * Type guard to check if a component is a List.Item
  */
-export function isListItemComponent(element: ReactElement): element is ReactElement<ListItemComponentProps> {
+export function isListItemComponent(
+  element: ReactElement
+): element is ReactElement<ListItemComponentProps> {
   return Boolean(
     element.type &&
-    typeof element.type === 'function' &&
+    typeof element.type === "function" &&
     (element.type as any).__isListItem === true
   );
 }
@@ -64,10 +61,12 @@ export function isListItemComponent(element: ReactElement): element is ReactElem
 /**
  * Type guard to check if a component is a List.Section
  */
-export function isListSectionComponent(element: ReactElement): element is ReactElement<ListSectionComponentProps> {
+export function isListSectionComponent(
+  element: ReactElement
+): element is ReactElement<ListSectionComponentProps> {
   return Boolean(
     element.type &&
-    typeof element.type === 'function' &&
+    typeof element.type === "function" &&
     (element.type as any).__isListSection === true
   );
 }
@@ -75,10 +74,12 @@ export function isListSectionComponent(element: ReactElement): element is ReactE
 /**
  * Type guard to check if a component is a List.EmptyView
  */
-export function isListEmptyViewComponent(element: ReactElement): element is ReactElement<ListEmptyViewProps> {
+export function isListEmptyViewComponent(
+  element: ReactElement
+): element is ReactElement<ListEmptyViewProps> {
   return Boolean(
     element.type &&
-    typeof element.type === 'function' &&
+    typeof element.type === "function" &&
     (element.type as any).__isListEmptyView === true
   );
 }

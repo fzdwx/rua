@@ -1,19 +1,18 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Popover as PopoverPrimitive } from '@base-ui-components/react/popover';
-import { AnimatePresence, motion, type HTMLMotionProps } from 'motion/react';
+import * as React from "react";
+import { Popover as PopoverPrimitive } from "@base-ui-components/react/popover";
+import { AnimatePresence, motion, type HTMLMotionProps } from "motion/react";
 
-import { getStrictContext } from '@/lib/get-strict-context';
-import { useControlledState } from '@/hooks/use-controlled-state';
+import { getStrictContext } from "@/lib/get-strict-context";
+import { useControlledState } from "@/hooks/use-controlled-state";
 
 type PopoverContextType = {
   isOpen: boolean;
-  setIsOpen: PopoverProps['onOpenChange'];
+  setIsOpen: PopoverProps["onOpenChange"];
 };
 
-const [PopoverProvider, usePopover] =
-  getStrictContext<PopoverContextType>('PopoverContext');
+const [PopoverProvider, usePopover] = getStrictContext<PopoverContextType>("PopoverContext");
 
 type PopoverProps = React.ComponentProps<typeof PopoverPrimitive.Root>;
 
@@ -26,64 +25,42 @@ function Popover(props: PopoverProps) {
 
   return (
     <PopoverProvider value={{ isOpen, setIsOpen }}>
-      <PopoverPrimitive.Root
-        data-slot="popover"
-        {...props}
-        onOpenChange={setIsOpen}
-      />
+      <PopoverPrimitive.Root data-slot="popover" {...props} onOpenChange={setIsOpen} />
     </PopoverProvider>
   );
 }
 
-type PopoverTriggerProps = React.ComponentProps<
-  typeof PopoverPrimitive.Trigger
->;
+type PopoverTriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>;
 
 function PopoverTrigger(props: PopoverTriggerProps) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
-type PopoverPortalProps = Omit<
-  React.ComponentProps<typeof PopoverPrimitive.Portal>,
-  'keepMounted'
->;
+type PopoverPortalProps = Omit<React.ComponentProps<typeof PopoverPrimitive.Portal>, "keepMounted">;
 
 function PopoverPortal(props: PopoverPortalProps) {
   const { isOpen } = usePopover();
 
   return (
     <AnimatePresence>
-      {isOpen && (
-        <PopoverPrimitive.Portal
-          keepMounted
-          data-slot="popover-portal"
-          {...props}
-        />
-      )}
+      {isOpen && <PopoverPrimitive.Portal keepMounted data-slot="popover-portal" {...props} />}
     </AnimatePresence>
   );
 }
 
-type PopoverPositionerProps = React.ComponentProps<
-  typeof PopoverPrimitive.Positioner
->;
+type PopoverPositionerProps = React.ComponentProps<typeof PopoverPrimitive.Positioner>;
 
 function PopoverPositioner(props: PopoverPositionerProps) {
-  return (
-    <PopoverPrimitive.Positioner data-slot="popover-positioner" {...props} />
-  );
+  return <PopoverPrimitive.Positioner data-slot="popover-positioner" {...props} />;
 }
 
-type PopoverPopupProps = Omit<
-  React.ComponentProps<typeof PopoverPrimitive.Popup>,
-  'render'
-> &
-  HTMLMotionProps<'div'>;
+type PopoverPopupProps = Omit<React.ComponentProps<typeof PopoverPrimitive.Popup>, "render"> &
+  HTMLMotionProps<"div">;
 
 function PopoverPopup({
   initialFocus,
   finalFocus,
-  transition = { type: 'spring', stiffness: 300, damping: 25 },
+  transition = { type: "spring", stiffness: 300, damping: 25 },
   ...props
 }: PopoverPopupProps) {
   return (
@@ -105,9 +82,7 @@ function PopoverPopup({
   );
 }
 
-type PopoverBackdropProps = React.ComponentProps<
-  typeof PopoverPrimitive.Backdrop
->;
+type PopoverBackdropProps = React.ComponentProps<typeof PopoverPrimitive.Backdrop>;
 
 function PopoverBackdrop(props: PopoverBackdropProps) {
   return <PopoverPrimitive.Backdrop data-slot="popover-backdrop" {...props} />;
@@ -125,14 +100,10 @@ function PopoverTitle(props: PopoverTitleProps) {
   return <PopoverPrimitive.Title data-slot="popover-title" {...props} />;
 }
 
-type PopoverDescriptionProps = React.ComponentProps<
-  typeof PopoverPrimitive.Description
->;
+type PopoverDescriptionProps = React.ComponentProps<typeof PopoverPrimitive.Description>;
 
 function PopoverDescription(props: PopoverDescriptionProps) {
-  return (
-    <PopoverPrimitive.Description data-slot="popover-description" {...props} />
-  );
+  return <PopoverPrimitive.Description data-slot="popover-description" {...props} />;
 }
 
 type PopoverCloseProps = React.ComponentProps<typeof PopoverPrimitive.Close>;

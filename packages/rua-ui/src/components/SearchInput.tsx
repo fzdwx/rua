@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from "react";
 
 export interface SearchInputProps {
   value: string;
@@ -17,7 +17,7 @@ export interface SearchInputProps {
 export function SearchInput({
   value,
   onChange,
-  placeholder = 'Search...',
+  placeholder = "Search...",
   autoFocus = true,
   loading = false,
   showBackButton = false,
@@ -40,7 +40,7 @@ export function SearchInput({
 
   // Handle backspace key to navigate back when input is empty
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Backspace' && inputValue === '' && onBack) {
+    if (event.key === "Backspace" && inputValue === "" && onBack) {
       const input = event.currentTarget;
       const cursorAtStart = input.selectionStart === 0 && input.selectionEnd === 0;
 
@@ -54,12 +54,7 @@ export function SearchInput({
   return (
     <div className="search-input-container">
       {showBackButton && onBack && (
-        <button
-          className="search-input-back-button"
-          onClick={onBack}
-          title="Back"
-          type="button"
-        >
+        <button className="search-input-back-button" onClick={onBack} title="Back" type="button">
           <svg
             className="search-input-back-icon"
             width="20"

@@ -1,7 +1,7 @@
-import { forwardRef } from 'react';
-import { motion } from 'motion/react';
-import { ListItem as ListItemType } from '../types';
-import type { Accessory as AccessoryType } from '../types';
+import { forwardRef } from "react";
+import { motion } from "motion/react";
+import { ListItem as ListItemType } from "../types";
+import type { Accessory as AccessoryType } from "../types";
 
 export interface ListItemProps {
   item: ListItemType;
@@ -19,7 +19,7 @@ export const ListItem = forwardRef<HTMLDivElement, ListItemProps>(
     return (
       <motion.div
         ref={ref}
-        className={active ? 'command-item-active' : 'command-item'}
+        className={active ? "command-item-active" : "command-item"}
         onClick={onClick}
         onPointerMove={onPointerMove}
         onPointerDown={onPointerDown}
@@ -31,9 +31,7 @@ export const ListItem = forwardRef<HTMLDivElement, ListItemProps>(
           {item.icon && <div className="command-item-icon">{item.icon}</div>}
           <div className="command-item-text">
             <div className="command-item-title">{item.title}</div>
-            {item.subtitle && (
-              <div className="command-item-subtitle">{item.subtitle}</div>
-            )}
+            {item.subtitle && <div className="command-item-subtitle">{item.subtitle}</div>}
           </div>
         </div>
         {item.accessories && item.accessories.length > 0 && (
@@ -48,7 +46,7 @@ export const ListItem = forwardRef<HTMLDivElement, ListItemProps>(
   }
 );
 
-ListItem.displayName = 'ListItem';
+ListItem.displayName = "ListItem";
 
 /**
  * Accessory component for displaying additional info on the right side

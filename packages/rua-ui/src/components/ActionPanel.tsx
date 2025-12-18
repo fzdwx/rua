@@ -1,8 +1,8 @@
-import React, { ReactElement, ReactNode, useState, useCallback, useEffect, useRef } from 'react';
-import type { KeyboardShortcut } from '../types';
-import { useShortcut } from '../hooks/useShortcuts';
-import { useNavigation, NavigationProvider, NavigationContext } from '../hooks/useNavigation';
-import type { NavigationContextValue, NavigationProviderProps } from '../hooks/useNavigation';
+import React, { ReactElement, ReactNode, useState, useCallback, useEffect, useRef } from "react";
+import type { KeyboardShortcut } from "../types";
+import { useShortcut } from "../hooks/useShortcuts";
+import { useNavigation, NavigationProvider, NavigationContext } from "../hooks/useNavigation";
+import type { NavigationContextValue, NavigationProviderProps } from "../hooks/useNavigation";
 
 // Re-export navigation components for backward compatibility
 export { useNavigation, NavigationProvider, NavigationContext };
@@ -17,10 +17,13 @@ declare global {
         readText: () => Promise<string>;
       };
       shell: {
-        execute: (program: string, args: string[]) => Promise<{ success: boolean; stdout: string; stderr: string; exitCode: number | null }>;
+        execute: (
+          program: string,
+          args: string[]
+        ) => Promise<{ success: boolean; stdout: string; stderr: string; exitCode: number | null }>;
       };
       os: {
-        platform: () => Promise<'windows' | 'linux' | 'darwin'>;
+        platform: () => Promise<"windows" | "linux" | "darwin">;
       };
     };
   }
@@ -33,7 +36,7 @@ export interface ActionPanelProps {
   /** @deprecated Use children-based API instead */
   actions?: LegacyAction[];
   /** @deprecated Use children-based API instead */
-  position?: 'footer' | 'inline';
+  position?: "footer" | "inline";
   /** Panel title displayed in the header */
   title?: string;
   /** Action or ActionPanel.Section children */
@@ -141,33 +144,31 @@ export interface ActionPopProps {
   shortcut?: KeyboardShortcut;
 }
 
-
-
 /**
  * Format keyboard shortcut for display
  */
 export function formatShortcut(shortcut: KeyboardShortcut): string {
   const mods = shortcut.modifiers || [];
   // Order: cmd → ctrl → alt → shift → key
-  const orderedMods = ['cmd', 'ctrl', 'alt', 'shift'].filter(m => 
-    mods.includes(m as 'cmd' | 'ctrl' | 'alt' | 'shift')
+  const orderedMods = ["cmd", "ctrl", "alt", "shift"].filter((m) =>
+    mods.includes(m as "cmd" | "ctrl" | "alt" | "shift")
   );
-  
+
   const modStrings = orderedMods.map((mod) => {
     switch (mod) {
-      case 'cmd':
-        return '⌘';
-      case 'ctrl':
-        return 'Ctrl';
-      case 'alt':
-        return 'Alt';
-      case 'shift':
-        return 'Shift';
+      case "cmd":
+        return "⌘";
+      case "ctrl":
+        return "Ctrl";
+      case "alt":
+        return "Alt";
+      case "shift":
+        return "Shift";
       default:
         return mod;
     }
   });
-  return [...modStrings, shortcut.key.toUpperCase()].join('+');
+  return [...modStrings, shortcut.key.toUpperCase()].join("+");
 }
 
 /**
@@ -175,22 +176,22 @@ export function formatShortcut(shortcut: KeyboardShortcut): string {
  */
 function LegacyActionButton({ action }: { action: LegacyAction }) {
   const onActionRef = useRef(action.onAction);
-  
+
   useEffect(() => {
     onActionRef.current = action.onAction;
   }, [action.onAction]);
-  
+
   const handleAction = useCallback(async () => {
     try {
       await onActionRef.current();
     } catch (error) {
-      console.error('[ActionPanel] Error executing action:', error);
+      console.error("[ActionPanel] Error executing action:", error);
     }
   }, []);
-  
+
   // Register keyboard shortcut
   useShortcut(action.shortcut, handleAction);
-  
+
   return (
     <button
       onClick={handleAction}
@@ -210,17 +211,16 @@ function LegacyActionButton({ action }: { action: LegacyAction }) {
  * ActionPanel component for displaying actions
  * Supports both legacy array-based API and new children-based API
  */
-export function ActionPanel({ actions, position = 'footer', title, children }: ActionPanelProps) {
+export function ActionPanel({ actions, position = "footer", title, children }: ActionPanelProps) {
   // Use children-based API if children are provided
   const hasChildren = React.Children.count(children) > 0;
-  
+
   if (!hasChildren && (!actions || actions.length === 0)) {
     return null;
   }
 
-  const containerClass = position === 'footer' 
-    ? 'action-panel command-footer' 
-    : 'action-panel action-panel-inline';
+  const containerClass =
+    position === "footer" ? "action-panel command-footer" : "action-panel action-panel-inline";
 
   // Legacy array-based rendering
   if (!hasChildren && actions) {
@@ -237,9 +237,7 @@ export function ActionPanel({ actions, position = 'footer', title, children }: A
   return (
     <div className={containerClass}>
       {title && <div className="action-panel-header">{title}</div>}
-      <div className="action-panel-content">
-        {children}
-      </div>
+      <div className="action-panel-content">{children}</div>
     </div>
   );
 }
@@ -251,9 +249,7 @@ function ActionPanelSection({ title, children }: ActionPanelSectionProps) {
   return (
     <div className="action-panel-section">
       {title && <div className="action-panel-section-title">{title}</div>}
-      <div className="action-panel-section-content">
-        {children}
-      </div>
+      <div className="action-panel-section-content">{children}</div>
     </div>
   );
 }
@@ -263,7 +259,7 @@ function ActionPanelSection({ title, children }: ActionPanelSectionProps) {
  */
 function ActionPanelSubmenu({ title, icon, shortcut, children }: ActionPanelSubmenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   return (
     <div className="action-panel-submenu">
       <button
@@ -274,15 +270,9 @@ function ActionPanelSubmenu({ title, icon, shortcut, children }: ActionPanelSubm
         {icon && <span className="action-icon">{icon}</span>}
         <span className="action-title">{title}</span>
         <span className="action-submenu-indicator">▶</span>
-        {shortcut && (
-          <span className="action-shortcut">{formatShortcut(shortcut)}</span>
-        )}
+        {shortcut && <span className="action-shortcut">{formatShortcut(shortcut)}</span>}
       </button>
-      {isOpen && (
-        <div className="action-panel-submenu-content">
-          {children}
-        </div>
-      )}
+      {isOpen && <div className="action-panel-submenu-content">{children}</div>}
     </div>
   );
 }
@@ -292,23 +282,23 @@ function ActionPanelSubmenu({ title, icon, shortcut, children }: ActionPanelSubm
  */
 export function Action({ title, icon, shortcut, onAction }: ActionProps) {
   const onActionRef = useRef(onAction);
-  
+
   // Keep the ref up to date
   useEffect(() => {
     onActionRef.current = onAction;
   }, [onAction]);
-  
+
   const handleAction = useCallback(async () => {
     try {
       await onActionRef.current();
     } catch (error) {
-      console.error('[Action] Error executing action:', error);
+      console.error("[Action] Error executing action:", error);
     }
   }, []);
-  
+
   // Register keyboard shortcut
   useShortcut(shortcut, handleAction);
-  
+
   return (
     <button
       className="action-panel-button"
@@ -317,9 +307,7 @@ export function Action({ title, icon, shortcut, onAction }: ActionProps) {
     >
       {icon && <span className="action-icon">{icon}</span>}
       <span className="action-title">{title}</span>
-      {shortcut && (
-        <span className="action-shortcut">{formatShortcut(shortcut)}</span>
-      )}
+      {shortcut && <span className="action-shortcut">{formatShortcut(shortcut)}</span>}
     </button>
   );
 }
@@ -327,85 +315,73 @@ export function Action({ title, icon, shortcut, onAction }: ActionProps) {
 /**
  * Action.CopyToClipboard component
  */
-function ActionCopyToClipboard({ 
-  title = 'Copy to Clipboard', 
-  content, 
+function ActionCopyToClipboard({
+  title = "Copy to Clipboard",
+  content,
   shortcut,
-  onCopy 
+  onCopy,
 }: ActionCopyToClipboardProps) {
   const handleCopy = async () => {
     try {
       const textContent = String(content);
-      
+
       // Try to use rua clipboard API if available
-      if (typeof window !== 'undefined' && window.rua?.clipboard) {
+      if (typeof window !== "undefined" && window.rua?.clipboard) {
         await window.rua.clipboard.writeText(textContent);
       } else {
         // Fallback to browser clipboard API
         await navigator.clipboard.writeText(textContent);
       }
-      
+
       onCopy?.();
     } catch (error) {
-      console.error('[Action.CopyToClipboard] Failed to copy:', error);
+      console.error("[Action.CopyToClipboard] Failed to copy:", error);
     }
   };
-  
-  return (
-    <Action
-      title={title}
-      shortcut={shortcut}
-      onAction={handleCopy}
-    />
-  );
+
+  return <Action title={title} shortcut={shortcut} onAction={handleCopy} />;
 }
 
 /**
  * Action.OpenInBrowser component
  */
-function ActionOpenInBrowser({ 
-  title = 'Open in Browser', 
-  url, 
-  shortcut 
+function ActionOpenInBrowser({
+  title = "Open in Browser",
+  url,
+  shortcut,
 }: ActionOpenInBrowserProps) {
   const handleOpen = async () => {
     try {
       // Try to use rua shell API if available
-      if (typeof window !== 'undefined' && window.rua?.shell) {
+      if (typeof window !== "undefined" && window.rua?.shell) {
         // Use xdg-open on Linux, open on macOS, start on Windows
         const platform = await window.rua.os.platform();
         let command: string;
-        
+
         switch (platform) {
-          case 'darwin':
-            command = 'open';
+          case "darwin":
+            command = "open";
             break;
-          case 'windows':
-            command = 'start';
+          case "windows":
+            command = "start";
             break;
           default:
-            command = 'xdg-open';
+            command = "xdg-open";
         }
-        
+
         await window.rua.shell.execute(command, [url]);
       } else {
         // Fallback to window.open
-        window.open(url, '_blank', 'noopener,noreferrer');
+        window.open(url, "_blank", "noopener,noreferrer");
       }
     } catch (error) {
-      console.error('[Action.OpenInBrowser] Failed to open URL:', error);
+      console.error("[Action.OpenInBrowser] Failed to open URL:", error);
       // Fallback to window.open on error
-      window.open(url, '_blank', 'noopener,noreferrer');
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
-  
-  return (
-    <Action
-      title={title}
-      shortcut={shortcut}
-      onAction={handleOpen}
-    />
-  );
+
+  return <Action title={title} shortcut={shortcut} onAction={handleOpen} />;
 }
 
 /**
@@ -413,46 +389,32 @@ function ActionOpenInBrowser({
  */
 function ActionPush({ title, icon, shortcut, target }: ActionPushProps) {
   const { push } = useNavigation();
-  
+
   const handlePush = () => {
     push(target);
   };
-  
-  return (
-    <Action
-      title={title}
-      icon={icon}
-      shortcut={shortcut}
-      onAction={handlePush}
-    />
-  );
+
+  return <Action title={title} icon={icon} shortcut={shortcut} onAction={handlePush} />;
 }
 
 /**
  * Action.Pop component for navigation
  */
-function ActionPop({ title = 'Go Back', icon, shortcut }: ActionPopProps) {
+function ActionPop({ title = "Go Back", icon, shortcut }: ActionPopProps) {
   const { pop, canPop } = useNavigation();
-  
+
   const handlePop = () => {
     if (canPop) {
       pop();
     }
   };
-  
+
   // Don't render if we can't pop
   if (!canPop) {
     return null;
   }
-  
-  return (
-    <Action
-      title={title}
-      icon={icon}
-      shortcut={shortcut}
-      onAction={handlePop}
-    />
-  );
+
+  return <Action title={title} icon={icon} shortcut={shortcut} onAction={handlePop} />;
 }
 
 // Attach sub-components to ActionPanel

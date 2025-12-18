@@ -60,51 +60,51 @@ export WEBKIT_DISABLE_COMPOSITING_MODE=1
 The application uses a custom command palette system inspired by kbar:
 
 1. **Action System** (`src/command/action/`):
-    - `ActionInterface.ts` - Manages action registration and hierarchies
-    - `ActionImpl.ts` - Implementation of individual actions with parent-child relationships
-    - `Command.ts` - Core command execution logic
-    - `HistoryImpl.ts` - Command history management
+   - `ActionInterface.ts` - Manages action registration and hierarchies
+   - `ActionImpl.ts` - Implementation of individual actions with parent-child relationships
+   - `Command.ts` - Core command execution logic
+   - `HistoryImpl.ts` - Command history management
 
 2. **Action Store** (`src/command/useActionStore.tsx`):
-    - Central state management for actions using a custom hook
-    - Handles action registration, current root action, and active index
-    - Similar to Zustand pattern but specialized for command palette
+   - Central state management for actions using a custom hook
+   - Handles action registration, current root action, and active index
+   - Similar to Zustand pattern but specialized for command palette
 
 3. **Matching & Search** (`src/command/useMatches.tsx`):
-    - Uses Fuse.js for fuzzy search across actions
-    - Searches action names, keywords, and subtitles
-    - Groups results by section with priority sorting
+   - Uses Fuse.js for fuzzy search across actions
+   - Searches action names, keywords, and subtitles
+   - Groups results by section with priority sorting
 
 4. **Main Application Flow** (`src/home/Home.tsx`):
-    - Combines built-in actions (translate, theme toggle) with system applications
-    - Manages search state, active action, and result handling
-    - Coordinates between Input, ResultsRender, Footer, and custom views
+   - Combines built-in actions (translate, theme toggle) with system applications
+   - Manages search state, active action, and result handling
+   - Coordinates between Input, ResultsRender, Footer, and custom views
 
 ### Backend Architecture (Rust)
 
 Located in `src-tauri/src/lib.rs`:
 
 1. **Application Discovery**:
-    - Scans `.desktop` files from system directories
-    - Parses using `freedesktop-desktop-entry` crate
-    - Caches icon lookups for performance
-    - Handles icon resolution from multiple system paths
+   - Scans `.desktop` files from system directories
+   - Parses using `freedesktop-desktop-entry` crate
+   - Caches icon lookups for performance
+   - Handles icon resolution from multiple system paths
 
 2. **Application Launch**:
-    - Supports both GUI and terminal applications
-    - Auto-detects terminal emulator (konsole, gnome-terminal, alacritty, etc.)
-    - Cleans exec commands (removes field codes like %f, %u)
+   - Supports both GUI and terminal applications
+   - Auto-detects terminal emulator (konsole, gnome-terminal, alacritty, etc.)
+   - Cleans exec commands (removes field codes like %f, %u)
 
 3. **Tauri Commands**:
-    - `get_applications()` - Returns all desktop applications
-    - `launch_application(exec, terminal)` - Launches app and hides window
-    - `refresh_applications_cache()` - Clears cached application data, forcing reload on next request
+   - `get_applications()` - Returns all desktop applications
+   - `launch_application(exec, terminal)` - Launches app and hides window
+   - `refresh_applications_cache()` - Clears cached application data, forcing reload on next request
 
 4. **Application Caching**:
-    - Desktop applications are cached in `$XDG_CACHE_HOME/rua/applications.json` (defaults to `~/.cache/rua/`)
-    - Cache is invalidated automatically when `.desktop` files are modified
-    - Cache includes timestamp-based validation against file modification times
-    - Icon paths are cached in-memory using `lazy_static` for performance
+   - Desktop applications are cached in `$XDG_CACHE_HOME/rua/applications.json` (defaults to `~/.cache/rua/`)
+   - Cache is invalidated automatically when `.desktop` files are modified
+   - Cache includes timestamp-based validation against file modification times
+   - Icon paths are cached in-memory using `lazy_static` for performance
 
 ### Key Components
 
@@ -212,6 +212,7 @@ border-[var(--gray6)]    // 边框色
 ```
 
 **颜色层级**：
+
 - `gray-1` 到 `gray-12`：灰度色阶（1 最浅，12 最深）
 - `grayA-1` 到 `grayA-12`：带透明度的灰度
 - `blue-1` 到 `blue-12`：蓝色色阶
@@ -219,6 +220,7 @@ border-[var(--gray6)]    // 边框色
 - `primary-2`：主色调变体（#30ab7a）
 
 **使用规范**：
+
 - 背景色：使用 `bg-[var(--gray3)]` 或 `bg-gray-3`（推荐直接使用 CSS 变量）
 - 文本色：使用 `text-gray-11` 或 `text-[var(--gray11)]`
 - 边框色：使用 `border-[var(--gray6)]` 或 `border-gray-6`
@@ -229,17 +231,19 @@ border-[var(--gray6)]    // 边框色
 使用标准 Tailwind CSS 阴影类：
 
 ```typescript
-shadow-sm               // 小阴影
-shadow-md               // 中等阴影（推荐用于 hover 状态）
-shadow-lg               // 大阴影
+shadow - sm; // 小阴影
+shadow - md; // 中等阴影（推荐用于 hover 状态）
+shadow - lg; // 大阴影
 ```
 
 **使用场景**：
+
 - Card 组件：hover 时使用 `hover:shadow-md transition-shadow`
 - 弹出层（Select、Popover）：使用 `shadow-md`
 - 按钮：hover 时使用 `hover:shadow-md`
 
 **⚠️ 禁止使用**：
+
 - ❌ `shadow-raycast`、`shadow-raycast-hover` 等自定义类（未定义）
 
 #### 4. 圆角系统
@@ -247,18 +251,20 @@ shadow-lg               // 大阴影
 使用标准 Tailwind CSS 圆角类：
 
 ```typescript
-rounded-sm              // 0.125rem (2px)
-rounded-md              // 0.375rem (6px) - 默认圆角
-rounded-lg              // 0.5rem (8px)
-rounded-xl              // 0.75rem (12px)
+rounded - sm; // 0.125rem (2px)
+rounded - md; // 0.375rem (6px) - 默认圆角
+rounded - lg; // 0.5rem (8px)
+rounded - xl; // 0.75rem (12px)
 ```
 
 **使用规范**：
+
 - Card 组件：使用 `rounded-lg`
 - 按钮：使用 `rounded-md`（shadcn/ui 默认）
 - 输入框：使用 `rounded-md`
 
 **⚠️ 禁止使用**：
+
 - ❌ `rounded-raycast` 等自定义类（未定义）
 
 #### 5. 过渡动画
@@ -273,11 +279,13 @@ transition-colors             // 仅颜色过渡
 ```
 
 **使用规范**：
+
 - 按钮、输入框：使用 `transition-colors duration-150`
 - Card hover：使用 `transition-shadow` 配合 `hover:shadow-md`
 - 页面切换：使用 `duration-200` 或 `duration-300`
 
 **⚠️ 禁止使用**：
+
 - ❌ `duration-raycast`、`duration-raycast-fast` 等自定义类（未定义）
 
 #### 6. 模糊效果
@@ -285,17 +293,19 @@ transition-colors             // 仅颜色过渡
 使用标准 Tailwind CSS backdrop blur 类：
 
 ```typescript
-backdrop-blur-sm        // 4px
-backdrop-blur           // 8px
-backdrop-blur-md        // 12px
-backdrop-blur-lg        // 16px
+backdrop - blur - sm; // 4px
+backdrop - blur; // 8px
+backdrop - blur - md; // 12px
+backdrop - blur - lg; // 16px
 ```
 
 **使用场景**：
+
 - Select 下拉菜单：使用 `backdrop-blur-md`
 - Popover、Modal：使用 `backdrop-blur-md` 或 `backdrop-blur-lg`
 
 **⚠️ 禁止使用**：
+
 - ❌ `backdrop-blur-raycast` 等自定义类（未定义）
 
 #### 7. 动画库
@@ -325,6 +335,7 @@ import { motion, AnimatePresence } from "motion/react"
 ```
 
 **动画原则**：
+
 - 列表项：淡入 + 轻微上移（y: 4）
 - 页面切换：淡入淡出 + 轻微上移（y: 8）
 - 持续时间：150-300ms
@@ -333,40 +344,48 @@ import { motion, AnimatePresence } from "motion/react"
 #### 8. 布局规范
 
 **Flex 布局**：
+
 - 使用 `flex flex-col` 进行垂直布局
 - 使用 `flex-1` 让子元素占据剩余空间
 - 避免在 `ResultsRender` 等已有内部布局的组件外包裹额外的 flex 容器
 
 **滚动容器**：
+
 - `ResultsRender` 组件内部已处理滚动，不要在外层添加 `overflow-hidden`
 - 确保滚动容器有明确的高度约束（`flex-1` 或固定高度）
 
 **Footer 固定**：
+
 - Footer 应放在 flex 容器的最底部
 - 使用 `flex-1 flex flex-col` 确保内容区域可滚动，Footer 固定在底部
 
 #### 9. 交互反馈
 
 **Hover 效果**：
+
 - Card：`hover:shadow-md transition-shadow` + 轻微缩放 `hover:scale-[1.01]`
 - 按钮：`hover:shadow-md` + `active:scale-[0.98]`
 - 输入框：`hover:bg-[var(--gray4)]`
 
 **Focus 状态**：
+
 - 所有可交互元素必须有清晰的 focus 状态
 - 使用 `focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`
 
 **键盘导航**：
+
 - 确保所有列表项支持键盘导航（上下键）
 - 使用 `handleKeyEvent` prop 控制键盘事件处理
 
 #### 10. 加载和空状态
 
 **加载状态**：
+
 - 使用 `Skeleton` 组件或加载动画
 - 显示进度指示器（如进度条）
 
 **空状态**：
+
 - 添加图标和友好的提示文本
 - 使用 `motion` 添加淡入动画
 - 居中显示：`flex-1 flex items-center justify-center`
@@ -418,11 +437,11 @@ The application registers a global hotkey (`Alt+Space`) in `src/App.tsx`:
 - When showing window: automatically centers, focuses, and makes visible
 - When hiding window: simply hides without destroying
 - Window configuration (`src-tauri/tauri.conf.json`):
-    - Size: 900x540px
-    - Decorations: disabled (custom frameless window)
-    - Transparent background supported
-    - Always on top, skips taskbar
-    - Vite dev server: `http://localhost:1421`
+  - Size: 900x540px
+  - Decorations: disabled (custom frameless window)
+  - Transparent background supported
+  - Always on top, skips taskbar
+  - Vite dev server: `http://localhost:1421`
 
 ### Control Server (HTTP API)
 

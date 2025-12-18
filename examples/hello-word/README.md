@@ -1,6 +1,6 @@
 # hello-word
 
- rua extension demo 1
+rua extension demo 1
 
 ## Development
 

@@ -1,26 +1,44 @@
-import {useState, useRef, useEffect, useMemo, useCallback, ReactNode, ReactElement, Children, isValidElement} from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { ListProps, ListItem as ListItemType, ListSection, FilteringOptions, ListItemComponentProps, ListSectionComponentProps, ListEmptyViewProps } from '../types';
-import { SearchInput } from './SearchInput';
-import { ListItem } from './ListItem';
-import { ActionPanel } from './ActionPanel';
-import { useSearch } from '../hooks/useSearch';
-import { useKeyboard } from '../hooks/useKeyboard';
-import { 
-  ListItemComponent, 
-  ListSectionComponent, 
+import {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+  ReactNode,
+  ReactElement,
+  Children,
+  isValidElement,
+} from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import {
+  ListProps,
+  ListItem as ListItemType,
+  ListSection,
+  FilteringOptions,
+  ListItemComponentProps,
+  ListSectionComponentProps,
+  ListEmptyViewProps,
+} from "../types";
+import { SearchInput } from "./SearchInput";
+import { ListItem } from "./ListItem";
+import { ActionPanel } from "./ActionPanel";
+import { useSearch } from "../hooks/useSearch";
+import { useKeyboard } from "../hooks/useKeyboard";
+import {
+  ListItemComponent,
+  ListSectionComponent,
   ListEmptyView,
-  isListItemComponent, 
+  isListItemComponent,
   isListSectionComponent,
-  isListEmptyViewComponent 
-} from './ListSubComponents';
+  isListEmptyViewComponent,
+} from "./ListSubComponents";
 
 /**
  * Focus retry options for exponential backoff
  */
 export interface FocusRetryOptions {
-  maxRetries?: number;        // Default: 3
-  initialDelay?: number;      // Default: 50ms
+  maxRetries?: number; // Default: 3
+  initialDelay?: number; // Default: 50ms
   backoffMultiplier?: number; // Default: 2
 }
 
@@ -45,29 +63,25 @@ export async function attemptFocusWithRetry(
   inputRef: React.RefObject<HTMLInputElement | null>,
   options: FocusRetryOptions = {}
 ): Promise<boolean> {
-  const {
-    maxRetries = 3,
-    initialDelay = 50,
-    backoffMultiplier = 2,
-  } = options;
+  const { maxRetries = 3, initialDelay = 50, backoffMultiplier = 2 } = options;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     const delay = calculateBackoffDelay(attempt, initialDelay, backoffMultiplier);
-    
-    await new Promise(resolve => setTimeout(resolve, delay));
-    
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
+
     if (inputRef.current) {
       inputRef.current.focus();
-      
+
       // Check if focus was successful
       if (document.activeElement === inputRef.current) {
         return true;
       }
     }
   }
-  
+
   // All retries exhausted
-  console.warn('Focus retry: All attempts exhausted, focus may not have succeeded');
+  console.warn("Focus retry: All attempts exhausted, focus may not have succeeded");
   return false;
 }
 
@@ -76,7 +90,7 @@ export async function attemptFocusWithRetry(
  */
 export function List({
   searchPlaceholder,
-  searchBarPlaceholder = 'Search...',
+  searchBarPlaceholder = "Search...",
   items = [],
   sections,
   onSearch,
@@ -96,12 +110,12 @@ export function List({
   children,
 }: ListProps) {
   // Use searchBarPlaceholder, fallback to deprecated searchPlaceholder for backward compatibility
-  const placeholder = searchBarPlaceholder || searchPlaceholder || 'Search...';
-  
+  const placeholder = searchBarPlaceholder || searchPlaceholder || "Search...";
+
   // Determine if filtering is enabled
   const filteringEnabled = filtering !== false;
-  const filteringOptions: FilteringOptions | undefined = 
-    typeof filtering === 'object' ? filtering : undefined;
+  const filteringOptions: FilteringOptions | undefined =
+    typeof filtering === "object" ? filtering : undefined;
 
   // Process children to extract items, sections, and empty view
   const { childItems, childSections, childEmptyView } = useMemo(() => {
@@ -180,7 +194,7 @@ export function List({
   // Use childEmptyView if provided, otherwise use emptyView prop
   const effectiveEmptyView = childEmptyView || emptyView;
 
-  const [query, setQuery] = useState(initialSearch || '');
+  const [query, setQuery] = useState(initialSearch || "");
   const [activeIndex, setActiveIndex] = useState(0);
   const [initialSearchLoaded, setInitialSearchLoaded] = useState(!!initialSearch);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -191,7 +205,7 @@ export function List({
   const handleBack = useCallback(() => {
     if (onBack) {
       onBack();
-    } else if (typeof window !== 'undefined' && (window as any).rua) {
+    } else if (typeof window !== "undefined" && (window as any).rua) {
       (window as any).rua.ui.close();
     }
   }, [onBack]);
@@ -213,7 +227,7 @@ export function List({
 
   // Search logic
   const searchResults = useSearch({
-    items: allItems.filter((item): item is ListItemType => typeof item !== 'string'),
+    items: allItems.filter((item): item is ListItemType => typeof item !== "string"),
     query,
     enablePinyin,
   });
@@ -239,7 +253,7 @@ export function List({
       if (prev >= displayItems.length - 1) return prev;
       let nextIndex = prev + 1;
       // Skip section headers
-      while (nextIndex < displayItems.length && typeof displayItems[nextIndex] === 'string') {
+      while (nextIndex < displayItems.length && typeof displayItems[nextIndex] === "string") {
         nextIndex++;
       }
       return nextIndex >= displayItems.length ? prev : nextIndex;
@@ -251,7 +265,7 @@ export function List({
       if (prev <= 0) return prev;
       let nextIndex = prev - 1;
       // Skip section headers
-      while (nextIndex >= 0 && typeof displayItems[nextIndex] === 'string') {
+      while (nextIndex >= 0 && typeof displayItems[nextIndex] === "string") {
         nextIndex--;
       }
       return nextIndex < 0 ? prev : nextIndex;
@@ -260,7 +274,7 @@ export function List({
 
   const handleEnter = () => {
     const item = displayItems[activeIndex];
-    if (item && typeof item !== 'string') {
+    if (item && typeof item !== "string") {
       onSelect?.(item);
     }
   };
@@ -288,14 +302,14 @@ export function List({
   useEffect(() => {
     if (displayItems.length > 0) {
       rowVirtualizer.scrollToIndex(activeIndex, {
-        align: activeIndex <= 1 ? 'end' : 'auto',
+        align: activeIndex <= 1 ? "end" : "auto",
       });
     }
   }, [activeIndex, rowVirtualizer, displayItems.length]);
 
   // Reset active index when search changes
   useEffect(() => {
-    const firstItemIndex = typeof displayItems[0] === 'string' ? 1 : 0;
+    const firstItemIndex = typeof displayItems[0] === "string" ? 1 : 0;
     setActiveIndex(firstItemIndex);
   }, [query, displayItems]);
 
@@ -311,7 +325,7 @@ export function List({
   // Listen for activate event from rua API and focus input
   useEffect(() => {
     // Check if rua API is available
-    if (typeof window !== 'undefined' && (window as any).rua) {
+    if (typeof window !== "undefined" && (window as any).rua) {
       const rua = (window as any).rua;
       // Use retry mechanism for initial focus
       attemptFocusWithRetry(inputRef, {
@@ -319,26 +333,26 @@ export function List({
         initialDelay: 50,
         backoffMultiplier: 2,
       });
-      rua.on?.('activate', handleActivate);
+      rua.on?.("activate", handleActivate);
 
       return () => {
-        rua.off?.('activate', handleActivate);
+        rua.off?.("activate", handleActivate);
       };
     }
 
     // Also listen for rua-ready event in case API loads after component mount
     const handleRuaReady = () => {
       const rua = (window as any).rua;
-      rua.on?.('activate', handleActivate);
+      rua.on?.("activate", handleActivate);
     };
 
-    window.addEventListener('rua-ready', handleRuaReady);
+    window.addEventListener("rua-ready", handleRuaReady);
 
     return () => {
-      window.removeEventListener('rua-ready', handleRuaReady);
-      if (typeof window !== 'undefined' && (window as any).rua) {
+      window.removeEventListener("rua-ready", handleRuaReady);
+      if (typeof window !== "undefined" && (window as any).rua) {
         const rua = (window as any).rua;
-        rua.off?.('activate', handleActivate);
+        rua.off?.("activate", handleActivate);
       }
     };
   }, [handleActivate]);
@@ -357,9 +371,9 @@ export function List({
   // Load initial search value from rua API if not provided via props
   useEffect(() => {
     if (initialSearchLoaded) return;
-    
+
     const loadInitialSearch = async () => {
-      if (typeof window !== 'undefined' && (window as any).rua) {
+      if (typeof window !== "undefined" && (window as any).rua) {
         try {
           const rua = (window as any).rua;
           const initialValue = await rua.ui.getInitialSearch();
@@ -368,7 +382,7 @@ export function List({
             onSearch?.(initialValue);
           }
         } catch (err) {
-          console.warn('[List] Failed to get initial search:', err);
+          console.warn("[List] Failed to get initial search:", err);
         }
       }
       setInitialSearchLoaded(true);
@@ -390,12 +404,8 @@ export function List({
           onBack={handleBack}
           inputRef={inputRef}
         />
-        <div className="list-empty">
-          {effectiveEmptyView || <p>No results found</p>}
-        </div>
-        {actions && actions.length > 0 && (
-          <ActionPanel actions={actions} position="footer" />
-        )}
+        <div className="list-empty">{effectiveEmptyView || <p>No results found</p>}</div>
+        {actions && actions.length > 0 && <ActionPanel actions={actions} position="footer" />}
       </div>
     );
   }
@@ -417,7 +427,7 @@ export function List({
           className="list-virtual-container"
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
-            width: '100%',
+            width: "100%",
           }}
         >
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -425,16 +435,16 @@ export function List({
             const active = virtualRow.index === activeIndex;
 
             // Section header
-            if (typeof item === 'string') {
+            if (typeof item === "string") {
               return (
                 <div
                   key={virtualRow.index}
                   data-index={virtualRow.index}
                   style={{
-                    position: 'absolute',
+                    position: "absolute",
                     top: 0,
                     left: 0,
-                    width: '100%',
+                    width: "100%",
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                   className="list-section-header"
@@ -452,10 +462,10 @@ export function List({
                 role="option"
                 aria-selected={active}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top: 0,
                   left: 0,
-                  width: '100%',
+                  width: "100%",
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
@@ -479,9 +489,7 @@ export function List({
           })}
         </div>
       </div>
-      {actions && actions.length > 0 && (
-        <ActionPanel actions={actions} position="footer" />
-      )}
+      {actions && actions.length > 0 && <ActionPanel actions={actions} position="footer" />}
     </div>
   );
 }

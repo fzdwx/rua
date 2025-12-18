@@ -27,57 +27,55 @@
     "storage",
     "http",
     {
-        "permission": "shell",
-        "allow": [
-            {
-                "cmd": {
-                    "program": "echo",
-                    "args": [
-                        ".+"
-                    ]
-                }
-            }
-        ]
+      "permission": "shell",
+      "allow": [
+        {
+          "cmd": {
+            "program": "echo",
+            "args": [".+"]
+          }
+        }
+      ]
     },
     {
-        "permission": "fs:read",
-        "allow": [
-            {
-                "path": "$HOME/**"
-            }
-        ]
+      "permission": "fs:read",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        }
+      ]
     },
     {
-        "permission": "fs:read-dir",
-        "allow": [
-            {
-                "path": "$HOME/**"
-            }
-        ]
+      "permission": "fs:read-dir",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        }
+      ]
     },
     {
-        "permission": "fs:write",
-        "allow": [
-            {
-                "path": "$HOME/**"
-            }
-        ]
+      "permission": "fs:write",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        }
+      ]
     },
     {
-        "permission": "fs:exists",
-        "allow": [
-            {
-                "path": "$HOME/**"
-            }
-        ]
+      "permission": "fs:exists",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        }
+      ]
     },
     {
-        "permission": "fs:stat",
-        "allow": [
-            {
-                "path": "$HOME/**"
-            }
-        ]
+      "permission": "fs:stat",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        }
+      ]
     }
   ]
 }

@@ -1,7 +1,7 @@
-import { useMemo, useCallback } from 'react';
-import Fuse, { IFuseOptions } from 'fuse.js';
-import pinyinMatch from 'pinyin-match';
-import { ListItem } from '../types';
+import { useMemo, useCallback } from "react";
+import Fuse, { IFuseOptions } from "fuse.js";
+import pinyinMatch from "pinyin-match";
+import { ListItem } from "../types";
 
 export interface UseSearchOptions {
   items: ListItem[];
@@ -13,16 +13,16 @@ export interface UseSearchOptions {
 const defaultFuseOptions: IFuseOptions<ListItem> = {
   keys: [
     {
-      name: 'title',
+      name: "title",
       weight: 0.5,
     },
     {
-      name: 'keywords',
+      name: "keywords",
       getFn: (item) => item.keywords || [],
       weight: 0.5,
     },
     {
-      name: 'subtitle',
+      name: "subtitle",
       weight: 0.3,
     },
   ],

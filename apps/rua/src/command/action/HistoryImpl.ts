@@ -33,10 +33,7 @@ class HistoryImpl implements History {
     if (typeof window === "undefined") return;
 
     window.addEventListener("keydown", (event) => {
-      if (
-        (!this.redoStack.length && !this.undoStack.length) ||
-        shouldRejectKeystrokes()
-      ) {
+      if ((!this.redoStack.length && !this.undoStack.length) || shouldRejectKeystrokes()) {
         return;
       }
       const key = event.key?.toLowerCase();

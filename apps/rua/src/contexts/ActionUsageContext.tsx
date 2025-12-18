@@ -49,9 +49,12 @@ export function ActionUsageProvider({ children }: { children: React.ReactNode })
   const [usageData, setUsageData] = useState<UsageData>(() => loadUsageData());
 
   // Get usage count for a specific action
-  const getUsageCount = useCallback((actionId: ActionId): number => {
-    return usageData[actionId] || 0;
-  }, [usageData]);
+  const getUsageCount = useCallback(
+    (actionId: ActionId): number => {
+      return usageData[actionId] || 0;
+    },
+    [usageData]
+  );
 
   // Increment usage count for an action
   const incrementUsage = useCallback((actionId: ActionId): void => {
@@ -77,11 +80,7 @@ export function ActionUsageProvider({ children }: { children: React.ReactNode })
     [getUsageCount, incrementUsage, getAllUsageData]
   );
 
-  return (
-    <ActionUsageContext.Provider value={value}>
-      {children}
-    </ActionUsageContext.Provider>
-  );
+  return <ActionUsageContext.Provider value={value}>{children}</ActionUsageContext.Provider>;
 }
 
 /**

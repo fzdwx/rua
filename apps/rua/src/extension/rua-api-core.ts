@@ -5,232 +5,237 @@
  * This module provides the core Tauri invoke calls for all Rua APIs.
  */
 
-import {invoke} from '@tauri-apps/api/core';
-import {DirEntry, ExtensionHostInfo, FileStat, ParsedPermission, ShellResult} from 'rua-api';
-
+import { invoke } from "@tauri-apps/api/core";
+import { DirEntry, ExtensionHostInfo, FileStat, ParsedPermission, ShellResult } from "rua-api";
 
 /**
  * Core API implementations - direct Tauri invoke calls
  */
 export const apiCore = {
-    // Clipboard
-    async clipboardReadText(): Promise<string> {
-        return await invoke<string>('read_clipboard');
-    },
+  // Clipboard
+  async clipboardReadText(): Promise<string> {
+    return await invoke<string>("read_clipboard");
+  },
 
-    async clipboardWriteText(text: string): Promise<void> {
-        await invoke('write_clipboard', {text});
-    },
+  async clipboardWriteText(text: string): Promise<void> {
+    await invoke("write_clipboard", { text });
+  },
 
-    // Notification
-    async notificationShow(options: { title: string; body?: string }): Promise<void> {
-        await invoke('show_notification', options);
-    },
+  // Notification
+  async notificationShow(options: { title: string; body?: string }): Promise<void> {
+    await invoke("show_notification", options);
+  },
 
-    // Storage
-    async storageGet(extensionId: string, key: string): Promise<string | null> {
-        return await invoke<string | null>('extension_storage_get', {
-            extensionId,
-            key,
-        });
-    },
+  // Storage
+  async storageGet(extensionId: string, key: string): Promise<string | null> {
+    return await invoke<string | null>("extension_storage_get", {
+      extensionId,
+      key,
+    });
+  },
 
-    async storageSet(extensionId: string, key: string, value: string): Promise<void> {
-        await invoke('extension_storage_set', {
-            extensionId,
-            key,
-            value,
-        });
-    },
+  async storageSet(extensionId: string, key: string, value: string): Promise<void> {
+    await invoke("extension_storage_set", {
+      extensionId,
+      key,
+      value,
+    });
+  },
 
-    async storageRemove(extensionId: string, key: string): Promise<void> {
-        await invoke('extension_storage_remove', {
-            extensionId,
-            key,
-        });
-    },
+  async storageRemove(extensionId: string, key: string): Promise<void> {
+    await invoke("extension_storage_remove", {
+      extensionId,
+      key,
+    });
+  },
 
-    // File System
-    async fsReadTextFile(path: string): Promise<string> {
-        return await invoke<string>('fs_read_text_file', {path});
-    },
+  // File System
+  async fsReadTextFile(path: string): Promise<string> {
+    return await invoke<string>("fs_read_text_file", { path });
+  },
 
-    async fsReadBinaryFile(path: string): Promise<Uint8Array> {
-        return await invoke<Uint8Array>('fs_read_binary_file', {path});
-    },
+  async fsReadBinaryFile(path: string): Promise<Uint8Array> {
+    return await invoke<Uint8Array>("fs_read_binary_file", { path });
+  },
 
-    async fsWriteTextFile(path: string, contents: string): Promise<void> {
-        await invoke('fs_write_text_file', {path, contents});
-    },
+  async fsWriteTextFile(path: string, contents: string): Promise<void> {
+    await invoke("fs_write_text_file", { path, contents });
+  },
 
-    async fsWriteBinaryFile(path: string, contents: Uint8Array): Promise<void> {
-        await invoke('fs_write_binary_file', {path, contents});
-    },
+  async fsWriteBinaryFile(path: string, contents: Uint8Array): Promise<void> {
+    await invoke("fs_write_binary_file", { path, contents });
+  },
 
-    async fsReadDir(path: string): Promise<DirEntry[]> {
-        return await invoke('fs_read_dir', {path});
-    },
+  async fsReadDir(path: string): Promise<DirEntry[]> {
+    return await invoke("fs_read_dir", { path });
+  },
 
-    async fsExists(path: string): Promise<boolean> {
-        return await invoke<boolean>('fs_exists', {path});
-    },
+  async fsExists(path: string): Promise<boolean> {
+    return await invoke<boolean>("fs_exists", { path });
+  },
 
-    async fsStat(path: string): Promise<FileStat> {
-        return await invoke('fs_stat', {path});
-    },
+  async fsStat(path: string): Promise<FileStat> {
+    return await invoke("fs_stat", { path });
+  },
 
-    async platform(): Promise<'windows' | 'linux' | 'darwin'> {
-        const platform = navigator.platform.toLowerCase();
-        if (platform.includes('win')) return 'windows';
-        if (platform.includes('mac')) return 'darwin';
-        if (platform.includes('linux')) return 'linux';
-        // @ts-ignore
-        return platform;
-    },
+  async platform(): Promise<"windows" | "linux" | "darwin"> {
+    const platform = navigator.platform.toLowerCase();
+    if (platform.includes("win")) return "windows";
+    if (platform.includes("mac")) return "darwin";
+    if (platform.includes("linux")) return "linux";
+    // @ts-ignore
+    return platform;
+  },
 
-    // Shell
-    async shellExecute(command: string): Promise<ShellResult> {
-        return await invoke<ShellResult>('execute_shell_command', {command});
-    },
+  // Shell
+  async shellExecute(command: string): Promise<ShellResult> {
+    return await invoke<ShellResult>("execute_shell_command", { command });
+  },
 
-    async shellExecuteSpawn(command: string): Promise<string> {
-        return await invoke<string>('execute_shell_command_async', {command})
-    },
+  async shellExecuteSpawn(command: string): Promise<string> {
+    return await invoke<string>("execute_shell_command_async", { command });
+  },
 
+  async uiHideWindow(): Promise<void> {
+    await invoke("hide_window_command");
+  },
 
-    async uiHideWindow(): Promise<void> {
-        await invoke('hide_window_command');
-    },
+  /**
+   * Resolve a path with optional base directory
+   */
+  resolvePath(path: string, baseDir?: string): string {
+    if (!baseDir) {
+      return path;
+    }
 
-    /**
-     * Resolve a path with optional base directory
-     */
-    resolvePath(path: string, baseDir?: string): string {
-        if (!baseDir) {
-            return path;
-        }
+    const basePath = getBaseDirectoryPath(baseDir);
+    if (!basePath) {
+      return path;
+    }
 
-        const basePath = getBaseDirectoryPath(baseDir);
-        if (!basePath) {
-            return path;
-        }
-
-        return `${basePath}/${path}`;
-    },
+    return `${basePath}/${path}`;
+  },
 };
 
 /**
  * Get the actual path for a base directory
  */
 function getBaseDirectoryPath(baseDir: string): string | null {
-    const home = '$HOME';
+  const home = "$HOME";
 
-    switch (baseDir) {
-        case 'home':
-            return home;
-        case 'appData':
-        case 'appLocalData':
-            return `${home}/.local/share`;
-        case 'appConfig':
-            return `${home}/.config`;
-        case 'desktop':
-            return `${home}/Desktop`;
-        case 'document':
-            return `${home}/Documents`;
-        case 'download':
-            return `${home}/Downloads`;
-        case 'picture':
-            return `${home}/Pictures`;
-        case 'video':
-            return `${home}/Videos`;
-        case 'audio':
-            return `${home}/Music`;
-        case 'temp':
-            return '/tmp';
-        default:
-            return null;
-    }
+  switch (baseDir) {
+    case "home":
+      return home;
+    case "appData":
+    case "appLocalData":
+      return `${home}/.local/share`;
+    case "appConfig":
+      return `${home}/.config`;
+    case "desktop":
+      return `${home}/Desktop`;
+    case "document":
+      return `${home}/Documents`;
+    case "download":
+      return `${home}/Downloads`;
+    case "picture":
+      return `${home}/Pictures`;
+    case "video":
+      return `${home}/Videos`;
+    case "audio":
+      return `${home}/Music`;
+    case "temp":
+      return "/tmp";
+    default:
+      return null;
+  }
 }
-
 
 /**
  * Check if a simple permission is present
  */
 export function hasSimplePermission(permissions: string[], permission: string): boolean {
-    return permissions.includes(permission);
+  return permissions.includes(permission);
 }
 
 /**
  * Check if extension has permission for a specific shell command
  */
-export function hasShellPermission(extensionInfo: ExtensionHostInfo, program: string, args: string[]): boolean {
-    if (!hasSimplePermission(extensionInfo.permissions, 'shell')) {
+export function hasShellPermission(
+  extensionInfo: ExtensionHostInfo,
+  program: string,
+  args: string[]
+): boolean {
+  if (!hasSimplePermission(extensionInfo.permissions, "shell")) {
+    return false;
+  }
+
+  const parsedPermissions = extensionInfo.parsedPermissions;
+  if (!parsedPermissions) {
+    return true;
+  }
+
+  const permConfig = parsedPermissions.find((p: ParsedPermission) => p.permission === "shell");
+  if (!permConfig) {
+    return true;
+  }
+
+  if (!permConfig.allowCommands || permConfig.allowCommands.length === 0) {
+    return true;
+  }
+
+  return permConfig.allowCommands.some((rule) => {
+    if (rule.program !== program) {
+      return false;
+    }
+
+    if (!rule.args || rule.args.length === 0) {
+      return true;
+    }
+
+    if (args.length > rule.args.length) {
+      return false;
+    }
+
+    return args.every((arg, index) => {
+      const pattern = rule.args![index];
+      if (!pattern) return false;
+      try {
+        const regex = new RegExp(`^${pattern}$`);
+        return regex.test(arg);
+      } catch {
         return false;
-    }
-
-    const parsedPermissions = extensionInfo.parsedPermissions;
-    if (!parsedPermissions) {
-        return true;
-    }
-
-    const permConfig = parsedPermissions.find((p: ParsedPermission) => p.permission === 'shell');
-    if (!permConfig) {
-        return true;
-    }
-
-    if (!permConfig.allowCommands || permConfig.allowCommands.length === 0) {
-        return true;
-    }
-
-    return permConfig.allowCommands.some((rule) => {
-        if (rule.program !== program) {
-            return false;
-        }
-
-        if (!rule.args || rule.args.length === 0) {
-            return true;
-        }
-
-        if (args.length > rule.args.length) {
-            return false;
-        }
-
-        return args.every((arg, index) => {
-            const pattern = rule.args![index];
-            if (!pattern) return false;
-            try {
-                const regex = new RegExp(`^${pattern}$`);
-                return regex.test(arg);
-            } catch {
-                return false;
-            }
-        });
+      }
     });
+  });
 }
 
 /**
  * Check if extension has permission for a specific path
  */
-export function hasPathPermission(extensionInfo: ExtensionHostInfo, permission: string, path: string): boolean {
-    if (!hasSimplePermission(extensionInfo.permissions, permission)) {
-        return false;
-    }
+export function hasPathPermission(
+  extensionInfo: ExtensionHostInfo,
+  permission: string,
+  path: string
+): boolean {
+  if (!hasSimplePermission(extensionInfo.permissions, permission)) {
+    return false;
+  }
 
-    const parsedPermissions = extensionInfo.parsedPermissions;
-    if (!parsedPermissions) {
-        return true;
-    }
+  const parsedPermissions = extensionInfo.parsedPermissions;
+  if (!parsedPermissions) {
+    return true;
+  }
 
-    const permConfig = parsedPermissions.find((p: ParsedPermission) => p.permission === permission);
-    if (!permConfig) {
-        return true;
-    }
+  const permConfig = parsedPermissions.find((p: ParsedPermission) => p.permission === permission);
+  if (!permConfig) {
+    return true;
+  }
 
-    if (!permConfig.allowPaths || permConfig.allowPaths.length === 0) {
-        return true;
-    }
+  if (!permConfig.allowPaths || permConfig.allowPaths.length === 0) {
+    return true;
+  }
 
-    return permConfig.allowPaths.some((pattern: string) => pathMatches(path, pattern));
+  return permConfig.allowPaths.some((pattern: string) => pathMatches(path, pattern));
 }
 
 /**
@@ -238,24 +243,24 @@ export function hasPathPermission(extensionInfo: ExtensionHostInfo, permission: 
  * Both path and pattern may contain $HOME which should be treated as equivalent
  */
 function pathMatches(path: string, pattern: string): boolean {
-    // Convert glob pattern to regex
-    // Escape special regex chars except * and ?
-    const regexPattern = pattern
-        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-        .replace(/\*\*/g, '<<<GLOBSTAR>>>')
-        .replace(/\*/g, '[^/]*')
-        .replace(/<<<GLOBSTAR>>>/g, '.*');
+  // Convert glob pattern to regex
+  // Escape special regex chars except * and ?
+  const regexPattern = pattern
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*\*/g, "<<<GLOBSTAR>>>")
+    .replace(/\*/g, "[^/]*")
+    .replace(/<<<GLOBSTAR>>>/g, ".*");
 
-    const regex = new RegExp(`^${regexPattern}$`);
-    return regex.test(path);
+  const regex = new RegExp(`^${regexPattern}$`);
+  return regex.test(path);
 }
 
 /**
  * Create permission error message
  */
 export function permissionError(permission: string, detail?: string): Error {
-    const message = detail
-        ? `PERMISSION_DENIED: ${permission} permission required for ${detail}`
-        : `PERMISSION_DENIED: ${permission} permission required`;
-    return new Error(message);
+  const message = detail
+    ? `PERMISSION_DENIED: ${permission} permission required for ${detail}`
+    : `PERMISSION_DENIED: ${permission} permission required`;
+  return new Error(message);
 }

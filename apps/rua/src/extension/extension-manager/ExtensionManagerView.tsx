@@ -5,9 +5,9 @@
  * Based on Requirements 6.1, 6.2, 6.3
  */
 
-import { useState } from 'react';
-import { Icon } from '@iconify/react';
-import { useExtensionSystem } from '@/contexts/ExtensionSystemContext.tsx';
+import { useState } from "react";
+import { Icon } from "@iconify/react";
+import { useExtensionSystem } from "@/contexts/ExtensionSystemContext.tsx";
 
 interface ExtensionManagerViewProps {
   onClose: () => void;
@@ -26,10 +26,10 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
     setDevExtensionPath,
   } = useExtensionSystem();
 
-  const [installPath, setInstallPath] = useState('');
+  const [installPath, setInstallPath] = useState("");
   const [installing, setInstalling] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [devPath, setDevPath] = useState(devExtensionPath || '');
+  const [devPath, setDevPath] = useState(devExtensionPath || "");
   const [reloading, setReloading] = useState(false);
 
   const handleReload = async () => {
@@ -45,7 +45,7 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
     if (devExtensionPath) {
       // Stop dev mode
       setDevExtensionPath(null);
-      setDevPath('');
+      setDevPath("");
     } else {
       // Start dev mode
       setDevExtensionPath(devPath.trim() || null);
@@ -60,7 +60,7 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
 
     try {
       await installExtension(installPath.trim());
-      setInstallPath('');
+      setInstallPath("");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -92,7 +92,7 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
             className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
             title="Reload extensions"
           >
-            <Icon icon="tabler:refresh" className={`text-lg ${reloading ? 'animate-spin' : ''}`} />
+            <Icon icon="tabler:refresh" className={`text-lg ${reloading ? "animate-spin" : ""}`} />
           </button>
           <button
             onClick={onClose}
@@ -107,7 +107,9 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-amber-50 dark:bg-amber-900/20">
         <div className="flex items-center gap-2 mb-2">
           <Icon icon="tabler:code" className="text-amber-600 dark:text-amber-400" />
-          <span className="text-sm font-medium text-amber-700 dark:text-amber-300">Development Mode</span>
+          <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+            Development Mode
+          </span>
         </div>
         <div className="flex gap-2">
           <input
@@ -120,13 +122,13 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
           <button
             onClick={handleSetDevPath}
             className={`px-3 py-1.5 text-sm rounded flex items-center gap-1 ${
-              devExtensionPath 
-                ? 'bg-amber-500 text-white hover:bg-amber-600' 
-                : 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-800 dark:text-amber-200'
+              devExtensionPath
+                ? "bg-amber-500 text-white hover:bg-amber-600"
+                : "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-800 dark:text-amber-200"
             }`}
           >
-            <Icon icon={devExtensionPath ? 'tabler:player-stop' : 'tabler:player-play'} />
-            {devExtensionPath ? 'Stop' : 'Start'}
+            <Icon icon={devExtensionPath ? "tabler:player-stop" : "tabler:player-play"} />
+            {devExtensionPath ? "Stop" : "Start"}
           </button>
         </div>
         {devExtensionPath && (
@@ -160,11 +162,12 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
             Install
           </button>
         </div>
-        {error && (
-          <p className="mt-2 text-sm text-red-500">{error}</p>
-        )}
+        {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         <p className="mt-2 text-xs text-gray-500">
-          GitHub: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">github:owner/repo</code> or local path: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">/path/to/extension</code>
+          GitHub:{" "}
+          <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">github:owner/repo</code> or
+          local path:{" "}
+          <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">/path/to/extension</code>
         </p>
       </div>
 
@@ -199,19 +202,18 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
                       {extension.manifest.description || extension.manifest.id}
                     </p>
                     {extension.manifest.author && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        by {extension.manifest.author}
-                      </p>
+                      <p className="text-xs text-gray-400 mt-1">by {extension.manifest.author}</p>
                     )}
                     <div className="flex items-center gap-2 mt-2">
                       <span className="text-xs text-gray-500">
                         {extension.manifest.rua.actions.length} action(s)
                       </span>
-                      {extension.manifest.permissions && extension.manifest.permissions.length > 0 && (
-                        <span className="text-xs text-gray-500">
-                          • {extension.manifest.permissions.length} permission(s)
-                        </span>
-                      )}
+                      {extension.manifest.permissions &&
+                        extension.manifest.permissions.length > 0 && (
+                          <span className="text-xs text-gray-500">
+                            • {extension.manifest.permissions.length} permission(s)
+                          </span>
+                        )}
                     </div>
                     {extension.error && (
                       <p className="text-xs text-red-400 mt-1">{extension.error}</p>
@@ -219,14 +221,18 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => extension.enabled ? disableExtension(extension.manifest.id) : enableExtension(extension.manifest.id)}
+                      onClick={() =>
+                        extension.enabled
+                          ? disableExtension(extension.manifest.id)
+                          : enableExtension(extension.manifest.id)
+                      }
                       className={`px-3 py-1 text-sm rounded ${
                         extension.enabled
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                          : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                       }`}
                     >
-                      {extension.enabled ? 'Enabled' : 'Disabled'}
+                      {extension.enabled ? "Enabled" : "Disabled"}
                     </button>
                     <button
                       onClick={() => uninstallExtension(extension.manifest.id, extension.path)}
@@ -246,8 +252,9 @@ export function ExtensionManagerView({ onClose }: ExtensionManagerViewProps) {
       {/* Footer */}
       <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
         <p className="text-xs text-gray-500">
-          Extensions extend Rua with custom actions and views.
-          Use <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">bunx create-rua-ext</code> to create a new extension.
+          Extensions extend Rua with custom actions and views. Use{" "}
+          <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">bunx create-rua-ext</code> to
+          create a new extension.
         </p>
       </div>
     </div>

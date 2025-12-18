@@ -70,9 +70,7 @@ Documentation is organized into the following sections:
 The documentation supports various Fumadocs UI components:
 
 ```mdx
-<Callout type="info">
-  This is an info callout
-</Callout>
+<Callout type="info">This is an info callout</Callout>
 
 <Cards>
   <Card title="Card Title" href="/link">
@@ -80,7 +78,7 @@ The documentation supports various Fumadocs UI components:
   </Card>
 </Cards>
 
-<Tabs items={['Tab 1', 'Tab 2']}>
+<Tabs items={["Tab 1", "Tab 2"]}>
   <Tab value="Tab 1">Content for tab 1</Tab>
   <Tab value="Tab 2">Content for tab 2</Tab>
 </Tabs>

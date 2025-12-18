@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 
 type DataStateValue = string | boolean | null;
 
 function parseDatasetValue(value: string | null): DataStateValue {
   if (value === null) return null;
-  if (value === '' || value === 'true') return true;
-  if (value === 'false') return false;
+  if (value === "" || value === "true") return true;
+  if (value === "false") return false;
   return value;
 }
 
 function useDataState<T extends HTMLElement = HTMLElement>(
   key: string,
   forwardedRef?: React.Ref<T | null>,
-  onChange?: (value: DataStateValue) => void,
+  onChange?: (value: DataStateValue) => void
 ): [DataStateValue, React.RefObject<T | null>] {
   const localRef = React.useRef<T | null>(null);
   React.useImperativeHandle(forwardedRef, () => localRef.current as T);

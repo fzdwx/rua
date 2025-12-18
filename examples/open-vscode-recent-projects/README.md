@@ -1,6 +1,6 @@
 # open-vscode-recent-projects
 
- Open VsCode Recent Projects
+Open VsCode Recent Projects
 
 ## Development
 
@@ -31,10 +31,7 @@ bun build
 - `fs:exists`
 - `fs:stat`
 
-
 ## Features
-
-
 
 - Local storage for extension data
 - UI control (hide/show input, close extension)

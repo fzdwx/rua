@@ -2,4 +2,4 @@
  * Extension Manager exports
  */
 
-export { ExtensionManagerView } from './ExtensionManagerView.tsx';
+export { ExtensionManagerView } from "./ExtensionManagerView.tsx";
