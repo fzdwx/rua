@@ -8,7 +8,7 @@
   --hover: #0000000c;
   --hover2: #00000019;
   --text: var(--gray12);
-  --app-bg: rgb(255 255 255 / 0.9);
+  --app-bg: rgb(255 255 255);
   --lowContrast: #ffffff;
   --highContrast: #000000;
   --gray1: hsl(0, 0%, 99%);
@@ -52,7 +52,7 @@
 .dark {
   --text: var(--gray12);
   --hover: var(--grayA3);
-  --app-bg: rgb(34 34 34 / 0.9);
+  --app-bg: rgb(34 34 34);
   --lowContrast: #000000;
   --highContrast: #ffffff;
   --gray1: hsl(0, 0%, 8.5%);

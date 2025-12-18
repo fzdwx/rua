@@ -1,18 +1,20 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import {
-    ToastProvider,
-    NavigationProvider,
-} from '@rua/ui'
-import './style.css'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import {ToastProvider, NavigationProvider, Container, Background} from "@rua/ui";
+import "./style.css";
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
     <ToastProvider>
-        <NavigationProvider>
-            <React.StrictMode>
-                <App/>
-            </React.StrictMode>,
-        </NavigationProvider>
+      <NavigationProvider>
+        <Container>
+          <Background>
+            <App/>
+          </Background>
+        </Container>
+        ,
+      </NavigationProvider>
     </ToastProvider>
-)
+  </React.StrictMode>
+);

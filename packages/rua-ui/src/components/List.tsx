@@ -1,4 +1,4 @@
-import {
+import React, {
   useState,
   useRef,
   useEffect,
@@ -89,7 +89,6 @@ export async function attemptFocusWithRetry(
  * Main list component with integrated search and virtualized results
  */
 export function List({
-  searchPlaceholder,
   searchBarPlaceholder = "Search...",
   items = [],
   sections,
@@ -110,7 +109,7 @@ export function List({
   children,
 }: ListProps) {
   // Use searchBarPlaceholder, fallback to deprecated searchPlaceholder for backward compatibility
-  const placeholder = searchBarPlaceholder || searchPlaceholder || "Search...";
+  const placeholder = searchBarPlaceholder || "Search...";
 
   // Determine if filtering is enabled
   const filteringEnabled = filtering !== false;
@@ -314,6 +313,7 @@ export function List({
   }, [query, displayItems]);
 
   const handleActivate = useCallback(() => {
+    console.log("handleActivatehandleActivatehandleActivatehandleActivate")
     // Focus input when extension view is activated using retry mechanism
     attemptFocusWithRetry(inputRef, {
       maxRetries: 3,
@@ -397,7 +397,7 @@ export function List({
       <div className="list-container">
         <SearchInput
           value={query}
-          onChange={handleSearchChange}
+          onValueChange={handleSearchChange}
           placeholder={placeholder}
           loading={isLoading}
           showBackButton={showBackButton}
@@ -414,7 +414,7 @@ export function List({
     <div className="list-container">
       <SearchInput
         value={query}
-        onChange={handleSearchChange}
+        onValueChange={handleSearchChange}
         placeholder={placeholder}
         loading={isLoading}
         showBackButton={showBackButton}

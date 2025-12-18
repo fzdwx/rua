@@ -59,6 +59,15 @@ pre:
     cd packages/rua-ui && bun install
     cd packages/rua-ui && bun run build
     cd apps/rua && bun install
+    cd apps/rua && bun run build
+
+format:
+     bun run format:changed
+check:
+     cd packages/create-rua-ext && bun tsc
+     cd packages/rua-api && bun tsc
+     cd packages/rua-ui && bun tsc --noEmit
+     cd apps/rua && bun tsc
 
 # Run Rua in development mode
 dev:

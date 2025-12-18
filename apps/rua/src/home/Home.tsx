@@ -1,13 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Action,
-  ActionImpl,
-  Background,
-  Container,
-  Input,
-  useActionStore,
-  useMatches,
-} from "@/command";
+import { Action, ActionImpl, Input, useActionStore, useMatches } from "@/command";
 import { useApplications } from "@/hooks/useApplications";
 import { useBuiltInActions } from "@/hooks/useBuiltInActions";
 import { useExtensionActionsForPalette } from "@/hooks/useExtensionActions";
@@ -22,6 +14,7 @@ import { AnimatedView } from "./AnimatedView";
 import { createViewConfigs } from "./viewConfig";
 import { ViewContext } from "./viewContext";
 import { useExtensionSystem } from "@/contexts/ExtensionSystemContext";
+import { Background, Container } from "@rua/ui";
 
 export default function Home() {
   const [search, setSearch] = useState("");

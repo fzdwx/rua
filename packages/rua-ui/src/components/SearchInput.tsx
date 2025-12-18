@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { LeftButton, InputLoading } from "../common/tools.tsx";
 
 export interface SearchInputProps {
   value: string;
-  onChange: (value: string) => void;
+  onValueChange: (value: string) => void;
   placeholder?: string;
   autoFocus?: boolean;
   loading?: boolean;
@@ -16,9 +17,8 @@ export interface SearchInputProps {
  */
 export function SearchInput({
   value,
-  onChange,
+  onValueChange,
   placeholder = "Search...",
-  autoFocus = true,
   loading = false,
   showBackButton = false,
   onBack,
@@ -35,7 +35,7 @@ export function SearchInput({
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
     setInputValue(newValue);
-    onChange(newValue);
+    onValueChange(newValue);
   };
 
   // Handle backspace key to navigate back when input is empty
@@ -53,26 +53,10 @@ export function SearchInput({
 
   return (
     <div className="search-input-container">
-      {showBackButton && onBack && (
-        <button className="search-input-back-button" onClick={onBack} title="Back" type="button">
-          <svg
-            className="search-input-back-icon"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-      )}
+      {showBackButton && onBack && <LeftButton onClick={onBack} />}
       <input
         ref={inputRef}
-        autoFocus={autoFocus}
+        autoFocus
         className="command-input"
         autoComplete="off"
         role="combobox"
@@ -82,11 +66,7 @@ export function SearchInput({
         onChange={handleChange}
         onKeyDown={handleKeyDown}
       />
-      {loading && (
-        <div className="search-loading-indicator">
-          <div className="search-loading-bar" />
-        </div>
-      )}
+      <InputLoading loading={loading} />
     </div>
   );
 }

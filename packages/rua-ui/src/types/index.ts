@@ -109,8 +109,6 @@ export interface FilteringOptions {
  * Props for the List component
  */
 export interface ListProps {
-  /** @deprecated Use searchBarPlaceholder instead */
-  searchPlaceholder?: string;
   /** Placeholder text for the search bar */
   searchBarPlaceholder?: string;
   items?: ListItem[];

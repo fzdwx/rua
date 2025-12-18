@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ActionId, ActionTree } from "./types";
 import { ActionImpl } from "./action";
-import { Icon } from "@iconify/react";
+import { LeftButton, InputLoading } from "@rua/ui";
 
 export const KBAR_LISTBOX = "kbar-listbox";
 export const getListboxItemId = (id: number) => `kbar-listbox-item-${id}`;
@@ -183,41 +183,7 @@ export function Input({
     <div style={{ position: "relative", borderBottom: "1px solid var(--gray6)" }}>
       <div style={{ display: "flex", alignItems: "center" }}>
         {/* Back arrow when inside an action */}
-        {currentRootActionId && (
-          <div
-            onClick={handleBackClick}
-            style={{
-              marginLeft: "12px",
-              marginRight: "12px",
-              padding: "6px",
-              cursor: "pointer",
-              color: "var(--gray11)",
-              fontSize: "20px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.2s ease",
-              borderRadius: "6px",
-              background: "var(--gray3)",
-              border: "1px solid var(--gray6)",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "var(--gray12)";
-              e.currentTarget.style.background = "var(--gray4)";
-              e.currentTarget.style.borderColor = "var(--gray7)";
-              e.currentTarget.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "var(--gray11)";
-              e.currentTarget.style.background = "var(--gray3)";
-              e.currentTarget.style.borderColor = "var(--gray6)";
-              e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.1)";
-            }}
-          >
-            <Icon icon="tabler:arrow-left" />
-          </div>
-        )}
+        {currentRootActionId && <LeftButton onClick={handleBackClick} />}
 
         <div style={{ position: "relative", flex: 1 }}>
           <input
@@ -286,28 +252,7 @@ export function Input({
       </div>
 
       {/* Loading indicator at bottom of entire input area */}
-      {loading && (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: "1px",
-            background: "var(--gray6)",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              width: "50%",
-              height: "100%",
-              background: "var(--primary)",
-              animation: "loading 1.5s ease-in-out infinite",
-            }}
-          />
-        </div>
-      )}
+      <InputLoading loading={loading} />
     </div>
   );
 }

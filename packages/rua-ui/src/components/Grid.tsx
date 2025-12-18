@@ -533,7 +533,7 @@ export function Grid({
       <div className="grid-container">
         <SearchInput
           value={query}
-          onChange={handleSearchChange}
+          onValueChange={handleSearchChange}
           placeholder={searchBarPlaceholder}
           loading={isLoading}
           showBackButton={showBackButton}
@@ -553,7 +553,7 @@ export function Grid({
       <div className="grid-container">
         <SearchInput
           value={query}
-          onChange={handleSearchChange}
+          onValueChange={handleSearchChange}
           placeholder={searchBarPlaceholder}
           loading={isLoading}
           showBackButton={showBackButton}
@@ -605,7 +605,7 @@ export function Grid({
     <div className="grid-container">
       <SearchInput
         value={query}
-        onChange={handleSearchChange}
+        onValueChange={handleSearchChange}
         placeholder={searchBarPlaceholder}
         loading={isLoading}
         showBackButton={showBackButton}

@@ -64,7 +64,6 @@ async function attemptActivateWithRetry(
   return false;
 }
 
-import { Icon } from "@iconify/react";
 import { RPCChannel, IframeParentIO } from "kkrpc/browser";
 import {
   createExtensionServerAPI,
@@ -120,7 +119,6 @@ export function ExtensionView({
   const rpcRef = useRef<RPCChannel<RuaServerAPI, RuaClientCallbacks> | null>(null);
   const iframeDocRef = useRef<Document | null>(null);
   const [_loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [_title, setTitle] = useState(extensionName);
   const { theme } = useTheme();
 
@@ -199,7 +197,6 @@ export function ExtensionView({
   // Reset loading state when refreshKey changes (hot reload)
   useEffect(() => {
     setLoading(true);
-    setError(null);
     setTitle(extensionName);
     iframeDocRef.current = null;
   }, [refreshKey, extensionName]);
@@ -302,16 +299,7 @@ export function ExtensionView({
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    const handleError = () => {
-      setLoading(false);
-      setError("Failed to load extension view");
-    };
-
-    iframe.addEventListener("error", handleError);
-
-    return () => {
-      iframe.removeEventListener("error", handleError);
-    };
+    return () => {};
   }, [refreshKey]);
 
   // Notify extension when theme changes (rua-api will handle applying theme class)
@@ -327,27 +315,14 @@ export function ExtensionView({
   }, [theme]);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Content */}
-      <div className="flex-1 relative">
-        {error ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <Icon icon="tabler:alert-circle" className="text-4xl mb-2 text-red-500" />
-            <p>{error}</p>
-            <p className="text-sm mt-1">{uiEntry}</p>
-          </div>
-        ) : (
-          <iframe
-            key={`extension-iframe-${refreshKey}`}
-            ref={iframeRef}
-            src={extUrl}
-            className="w-full h-full border-0"
-            sandbox="allow-scripts allow-same-origin allow-forms"
-            title={extensionName}
-            onLoad={handleIframeLoad}
-          />
-        )}
-      </div>
-    </div>
+    <iframe
+      key={`extension-iframe-${refreshKey}`}
+      ref={iframeRef}
+      src={extUrl}
+      className="w-full h-full border-0"
+      sandbox="allow-scripts allow-same-origin allow-forms"
+      title={extensionName}
+      onLoad={handleIframeLoad}
+    />
   );
 }

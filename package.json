@@ -17,7 +17,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\" && cargo fmt --manifest-path apps/rua/src-tauri/Cargo.toml",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\" && cargo fmt --manifest-path apps/rua/src-tauri/Cargo.toml --check",
     "format:ts": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:rust": "cargo fmt --manifest-path apps/rua/src-tauri/Cargo.toml"
+    "format:rust": "cargo fmt --manifest-path apps/rua/src-tauri/Cargo.toml",
+    "format:changed": "git diff --name-only --diff-filter=ACMR HEAD | grep -E '\\.(ts|tsx|js|jsx|json|css|md)$' | xargs -r prettier --write; cargo fmt --manifest-path apps/rua/src-tauri/Cargo.toml",
+    "format:staged": "git diff --cached --name-only --diff-filter=ACMR | grep -E '\\.(ts|tsx|js|jsx|json|css|md)$' | xargs -r prettier --write; cargo fmt --manifest-path apps/rua/src-tauri/Cargo.toml"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.16",

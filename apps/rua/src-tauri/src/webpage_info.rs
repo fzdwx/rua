@@ -10,46 +10,51 @@ pub struct PageInfo {
   pub image: Option<String>,
 }
 
+fn fetch(url: &str) -> Result<PageInfo, String> {
+  let mut options = WebpageOptions::default();
+  options.allow_insecure = true;
+  options.follow_location = true;
+  options.max_redirections = 5;
+  options.timeout = std::time::Duration::from_secs(10);
+  options.useragent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".to_string();
+
+  match Webpage::from_url(&url, options) {
+    Ok(page) => {
+      let html = &page.html;
+
+      // Get title from HTML or Open Graph
+      let title = html
+        .title
+        .clone()
+        .or_else(|| html.opengraph.properties.get("title").cloned());
+
+      // Get description from meta or Open Graph
+      let description = html
+        .description
+        .clone()
+        .or_else(|| html.opengraph.properties.get("description").cloned());
+
+      // Get icon - try multiple sources
+      let icon = get_best_icon(html, &url);
+
+      // Get image from Open Graph
+      let image = html.opengraph.images.first().map(|img| img.url.clone());
+
+      Ok(PageInfo {
+        title,
+        description,
+        icon,
+        image,
+      })
+    }
+    Err(e) => Err(format!("Failed to fetch page: {}", e)),
+  }
+}
+
 #[tauri::command]
 pub async fn fetch_page_info(url: String) -> Result<PageInfo, String> {
   // Run blocking operation in a separate thread
-  let result = tokio::task::spawn_blocking(move || {
-        let mut options = WebpageOptions::default();
-        options.allow_insecure = true;
-        options.follow_location = true;
-        options.max_redirections = 5;
-        options.timeout = std::time::Duration::from_secs(10);
-        options.useragent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".to_string();
-
-        match Webpage::from_url(&url, options) {
-            Ok(page) => {
-                let html = &page.html;
-                
-                // Get title from HTML or Open Graph
-                let title = html.title.clone()
-                    .or_else(|| html.opengraph.properties.get("title").cloned());
-                
-                // Get description from meta or Open Graph
-                let description = html.description.clone()
-                    .or_else(|| html.opengraph.properties.get("description").cloned());
-                
-                // Get icon - try multiple sources
-                let icon = get_best_icon(html, &url);
-                
-                // Get image from Open Graph
-                let image = html.opengraph.images.first()
-                    .map(|img| img.url.clone());
-                
-                Ok(PageInfo {
-                    title,
-                    description,
-                    icon,
-                    image,
-                })
-            }
-            Err(e) => Err(format!("Failed to fetch page: {}", e))
-        }
-    })
+  let result = tokio::task::spawn_blocking(move || fetch(&url))
     .await
     .map_err(|e| format!("Task join error: {}", e))?;
 
