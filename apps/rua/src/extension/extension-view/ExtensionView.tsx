@@ -72,6 +72,10 @@ import {
 } from "@/extension/extension-server-api.ts";
 import type { ParsedPermission, RuaServerAPI } from "rua-api";
 import { useTheme } from "@/hooks/useTheme";
+import {
+  registerViewExtension,
+  unregisterViewExtension,
+} from "@/extension/view-extension-manager.ts";
 
 interface ExtensionViewProps {
   /** The extension's UI entry path with action query param */
@@ -204,11 +208,13 @@ export function ExtensionView({
   // Cleanup RPC on unmount or refresh
   useEffect(() => {
     return () => {
+      // Unregister view extension when unmounting
+      unregisterViewExtension(extensionId);
       ioRef.current?.destroy();
       ioRef.current = null;
       rpcRef.current = null;
     };
-  }, [refreshKey]);
+  }, [refreshKey, extensionId]);
 
   // Setup RPC when iframe loads
   const handleIframeLoad = useCallback(async () => {
@@ -263,6 +269,9 @@ export function ExtensionView({
       rpcRef.current = rpc;
 
       console.log(`[ExtensionView] kkrpc connection established for ${extensionId}`);
+
+      // Register this view extension so it can receive activate/deactivate notifications
+      registerViewExtension(extensionId, rpc.getAPI());
 
       // Auto-focus iframe and notify extension to focus its input with retry mechanism
       iframeRef.current?.focus();

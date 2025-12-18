@@ -1,0 +1,31 @@
+# Rust formatting configuration
+# 2-space indentation
+
+# Indentation
+tab_spaces = 2
+hard_tabs = false
+
+# Line width
+max_width = 100
+comment_width = 100
+
+# Imports
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
+
+# Formatting style
+edition = "2021"
+newline_style = "Unix"
+use_small_heuristics = "Default"
+
+# Trailing comma
+trailing_comma = "Vertical"
+trailing_semicolon = true
+
+# Other preferences
+reorder_imports = true
+reorder_modules = true
+remove_nested_parens = true
+normalize_comments = true
+wrap_comments = true
+format_code_in_doc_comments = true

@@ -23,6 +23,10 @@ import {
   cleanupExtension as cleanupBackgroundExtension,
   isBackgroundScriptLoaded,
 } from "@/extension/background-executor.ts";
+import {
+  notifyViewExtensionsActivate,
+  notifyViewExtensionsDeactivate,
+} from "@/extension/view-extension-manager.ts";
 
 // Import types from rua-api package
 import {
@@ -655,13 +659,13 @@ export function ExtensionSystemProvider({ children }: ExtensionSystemProviderPro
     };
   }, [registerDynamicActions, unregisterDynamicActions]);
 
-  // Notify functions that call background executor
+  // Notify functions that call both background and view extensions
   const notifyActivate = useCallback(async () => {
-    await notifyActivateBackground();
+    await Promise.all([notifyActivateBackground(), notifyViewExtensionsActivate()]);
   }, []);
 
   const notifyDeactivate = useCallback(async () => {
-    await notifyDeactivateBackground();
+    await Promise.all([notifyDeactivateBackground(), notifyViewExtensionsDeactivate()]);
   }, []);
 
   const notifySearchChange = useCallback(async (query: string) => {
