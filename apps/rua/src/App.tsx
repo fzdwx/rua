@@ -1,13 +1,12 @@
 import Home from "./home/Home";
-import { ActionUsageProvider } from "@/hooks/useActionUsage";
-import { WeatherConfigProvider } from "@/hooks/useWeatherConfig";
-import { ExtensionSystemProvider } from "@/contexts/ExtensionSystemContext.tsx";
-import { Toaster } from "@/components/ui/sonner";
+import {ActionUsageProvider} from "@/hooks/useActionUsage";
+import {WeatherConfigProvider} from "@/hooks/useWeatherConfig";
+import {ExtensionSystemProvider} from "@/contexts/ExtensionSystemContext.tsx";
 
 function AppContent() {
   return (
     <>
-      <Home />
+      <Home/>
     </>
   );
 }
@@ -17,8 +16,8 @@ function App() {
     <ExtensionSystemProvider>
       <WeatherConfigProvider>
         <ActionUsageProvider>
-          <AppContent />
-          <Toaster />
+          <AppContent/>
+          <Toaster/>
         </ActionUsageProvider>
       </WeatherConfigProvider>
     </ExtensionSystemProvider>

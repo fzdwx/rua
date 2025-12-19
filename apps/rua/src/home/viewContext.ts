@@ -1,5 +1,5 @@
 import React from "react";
-import { ActionImpl } from "@/command";
+import { ActionImpl } from "@rua/ui";
 
 // Context passed to view configs
 export interface ViewContext {

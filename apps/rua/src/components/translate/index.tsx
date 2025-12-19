@@ -1,9 +1,9 @@
 import * as React from "react";
 import { translate, Language } from "./Google.tsx";
-import { Action, ActionId } from "@/command";
+import { Action, ActionId } from "@rua/ui";
 import { useKeyPress } from "ahooks";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent } from "../../../../../packages/rua-ui/src/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "../../../../../packages/rua-ui/src/components/ui/alert";
 import { Icon } from "@iconify/react";
 import { motion } from "motion/react";
 

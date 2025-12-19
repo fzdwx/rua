@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Action, ActionImpl, Input, useActionStore, useMatches } from "@/command";
+import { Action, ActionImpl, Input, useActionStore, useMatches } from "@rua/ui";
 import { useApplications } from "@/hooks/useApplications";
 import { useBuiltInActions } from "@/hooks/useBuiltInActions";
 import { useExtensionActionsForPalette } from "@/hooks/useExtensionActions";

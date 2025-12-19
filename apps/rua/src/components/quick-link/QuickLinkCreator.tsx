@@ -1,13 +1,13 @@
 import * as React from "react";
 import { QuickLink, QuickLinkOpenType, useQuickLinks } from "@/hooks/useQuickLinks";
-import { Footer } from "@/command";
+import { Footer } from "@rua/ui";
 import { Icon } from "@iconify/react";
 import { useKeyPress, useDebounceFn } from "ahooks";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import { Label } from "../../../../../packages/rua-ui/src/components/ui/label";
+import { Input } from "../../../../../packages/rua-ui/src/components/ui/input";
+import { Kbd, KbdGroup } from "../../../../../packages/rua-ui/src/components/ui/kbd";
+import { Button } from "../../../../../packages/rua-ui/src/components/ui/button";
+import { Switch } from "../../../../../packages/rua-ui/src/components/ui/switch";
 import { invoke } from "@tauri-apps/api/core";
 import {
   Select,
@@ -15,7 +15,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "../../../../../packages/rua-ui/src/components/ui/select";
 
 interface QuickLinkCreatorProps {
   onLoadingChange?: (loading: boolean) => void;

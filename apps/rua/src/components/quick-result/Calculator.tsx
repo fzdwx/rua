@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "../../../../../packages/rua-ui/src/components/ui/card";
 
 interface CalculatorProps {
   expression: string;

@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
-import { Card, CardContent } from "@/components/ui/card";
+import { Toaster } from "../../../../../packages/rua-ui/src/components/ui/sonner";
+import { Card, CardContent } from "../../../../../packages/rua-ui/src/components/ui/card";
 
 interface DateTimeDisplayProps {
   input: string;

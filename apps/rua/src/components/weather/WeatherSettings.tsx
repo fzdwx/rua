@@ -1,21 +1,21 @@
 import * as React from "react";
 import { useWeatherConfig } from "@/hooks/useWeatherConfig";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Label } from "../../../../../packages/rua-ui/src/components/ui/label";
+import { Input } from "../../../../../packages/rua-ui/src/components/ui/input";
+import { Button } from "../../../../../packages/rua-ui/src/components/ui/button";
 import { useKeyPress } from "ahooks";
 import { clearQWeatherCache } from "./hefeng/qweather-cache.ts";
-import { Footer } from "@/command";
+import { Footer } from "@rua/ui";
 import { Icon } from "@iconify/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../packages/rua-ui/src/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+} from "../../../../../packages/rua-ui/src/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "../../../../../packages/rua-ui/src/components/ui/alert";
 
 interface WeatherSettingsProps {
   onClose?: () => void;

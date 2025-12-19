@@ -7,7 +7,7 @@
 
 import { useMemo } from "react";
 import { Icon } from "@iconify/react";
-import type { Action, ActionId } from "@/command";
+import type { Action, ActionId } from "@rua/ui";
 import {
   useExtensionSystem,
   type ManifestDerivedAction,

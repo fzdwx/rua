@@ -1,9 +1,9 @@
 import { Icon } from "@iconify/react";
-import { Footer } from "@/command";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Footer } from "@rua/ui";
+import { Kbd, KbdGroup } from "../../../../../packages/rua-ui/src/components/ui/kbd";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../packages/rua-ui/src/components/ui/card";
+import { Badge } from "../../../../../packages/rua-ui/src/components/ui/badge";
+import { Separator } from "../../../../../packages/rua-ui/src/components/ui/separator";
 import { WeatherConfig } from "@/hooks/useWeatherConfig.tsx";
 import {
   fetchQWeatherDaily,

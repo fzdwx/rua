@@ -1,4 +1,4 @@
-import { Action, ActionId } from "@/command";
+import { Action, ActionId } from "@rua/ui";
 import { QuickLink } from "@/hooks/useQuickLinks";
 import { Icon } from "@iconify/react";
 import { QuickLinkCreator } from "@/components/quick-link/QuickLinkCreator.tsx";
