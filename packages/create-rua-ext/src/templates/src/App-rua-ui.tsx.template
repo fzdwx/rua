@@ -1,130 +1,297 @@
-import { useState, useEffect } from 'react'
+/**
+ * {{name}} - Todo List Extension
+ * Demonstrates command palette components with CRUD operations
+ */
+import { useState, useEffect, useMemo } from 'react'
 import { initializeRuaAPI, type RuaAPI } from 'rua-api/browser'
-import { List } from '@rua/ui'
-import type { ListItem } from '@rua/ui'
+import {
+  Input,
+  ResultsRender,
+  RenderItem,
+  Footer,
+  useActionStore,
+  useMatches,
+  type Action,
+  type ActionImpl,
+} from '@rua/ui'
 
+// Todo data structure
+interface Todo {
+  id: string
+  title: string
+  done: boolean
+  createdAt: string
+}
+
+// Format relative date (e.g., "2m ago", "5h ago", "3d ago")
+function formatRelativeDate(isoDate: string): string {
+  const now = new Date()
+  const date = new Date(isoDate)
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return "Just now"
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  return date.toLocaleDateString()
+}
+
+// Main App component
 function App() {
-  const params = new URLSearchParams(window.location.search)
-  const action = params.get('action')
-
   const [rua, setRua] = useState<RuaAPI | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    initializeRuaAPI().then(api => {
-      setRua(api)
-    }).catch(err => {
-      setError('Failed to initialize: ' + err.message)
-    })
+    initializeRuaAPI()
+      .then(setRua)
+      .catch((err) => setError(err.message))
   }, [])
 
   if (error) {
     return (
-      <div className="p-6 text-red-500">
-        <h3>Error</h3>
-        <p>{error}</p>
+      <div
+        style={{
+          padding: "24px",
+          color: "var(--red11)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+        }}
+      >
+        <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚠️</div>
+        <h3 style={{ margin: "0 0 8px 0" }}>Error</h3>
+        <p style={{ margin: 0, color: "var(--gray11)" }}>{error}</p>
       </div>
     )
   }
 
   if (!rua) {
-    return <div className="p-6">Loading...</div>
+    return (
+      <div
+        style={{
+          padding: "24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          color: "var(--gray11)",
+        }}
+      >
+        Loading...
+      </div>
+    )
   }
 
-  return (
-      <MainList rua={rua} action={action} />
-  )
+  return <TodoCommandPalette rua={rua} />
 }
 
-function MainList({ rua, action }: { rua: RuaAPI; action: string | null }) {
-  const items: ListItem[] = [
-    {{#hasClipboard}}{
-      id: 'read-clipboard',
-      title: 'Read Clipboard',
-      subtitle: 'Read text from system clipboard',
-      icon: <span>📋</span>,
-    },
-    {
-      id: 'write-clipboard',
-      title: 'Write to Clipboard',
-      subtitle: 'Copy text to system clipboard',
-      icon: <span>✍️</span>,
-    },{{/hasClipboard}}
-    {{#hasNotification}}{
-      id: 'show-notification',
-      title: 'Show Notification',
-      subtitle: 'Display a system notification',
-      icon: <span>🔔</span>,
-    },{{/hasNotification}}
-    {{#hasStorage}}{
-      id: 'save-storage',
-      title: 'Save to Storage',
-      subtitle: 'Save timestamp to local storage',
-      icon: <span>💾</span>,
-    },
-    {
-      id: 'load-storage',
-      title: 'Load from Storage',
-      subtitle: 'Load timestamp from local storage',
-      icon: <span>📂</span>,
-    },{{/hasStorage}}
-    {
-      id: 'close',
-      title: 'Close Extension',
-      subtitle: 'Close the extension window',
-      icon: <span>❌</span>,
-    },
-  ]
+// Todo command palette component
+function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
+  // === STATE ===
+  const [todos, setTodos] = useState<Todo[]>([])
+  const [search, setSearch] = useState("")
+  const [resultHandleEvent, setResultHandleEvent] = useState(true)
+  const [focusQueryInput, setFocusQueryInput] = useState(false)
 
-  const handleSelect = async (item: ListItem) => {
-    try {
-      switch (item.id) {
-        {{#hasClipboard}}case 'read-clipboard': {
-          const text = await rua.clipboard.readText()
-          await rua.notification.show({ title: 'Clipboard', body: text || '(empty)' })
-          break
-        }
-        case 'write-clipboard': {
-          await rua.clipboard.writeText('Hello from {{name}}!')
-          await rua.notification.show({ title: 'Success', body: 'Text copied to clipboard' })
-          break
-        }{{/hasClipboard}}
-        {{#hasNotification}}case 'show-notification': {
-          await rua.notification.show({
-            title: 'Hello from {{name}}!',
-            body: 'This notification was sent from the {{name}} extension.'
-          })
-          break
-        }{{/hasNotification}}
-        {{#hasStorage}}case 'save-storage': {
-          const timestamp = new Date().toISOString()
-          await rua.storage.set('lastUsed', timestamp)
-          await rua.notification.show({ title: 'Saved', body: timestamp })
-          break
-        }
-        case 'load-storage': {
-          const value = await rua.storage.get<string>('lastUsed')
-          await rua.notification.show({ title: 'Loaded', body: value || '(no data)' })
-          break
-        }{{/hasStorage}}
-        case 'close': {
-          await rua.ui.close()
-          break
-        }
+  // === ACTION STORE ===
+  const { useRegisterActions, state, setActiveIndex, setRootActionId } = useActionStore()
+
+  // === LOAD TODOS FROM STORAGE ===
+  useEffect(() => {
+    rua.storage
+      .get<Todo[]>("todos")
+      .then((data) => {
+        setTodos(data || [])
+      })
+      .catch((err) => {
+        console.error("Failed to load todos:", err)
+      })
+  }, [rua])
+
+  // === FOOTER ACTIONS FOR EACH TODO ===
+  const getFooterActions = (todo: Todo, changeVisible: () => void): Action[] => {
+    return [
+      {
+        id: `toggle-${todo.id}`,
+        name: todo.done ? "Mark as Active" : "Mark as Done",
+        icon: todo.done ? "⭕" : "✅",
+        perform: async () => {
+          const updated = todos.map((t) => (t.id === todo.id ? { ...t, done: !t.done } : t))
+          await rua.storage.set("todos", updated)
+          setTodos(updated)
+          changeVisible()
+        },
+      },
+      {
+        id: `delete-${todo.id}`,
+        name: "Delete",
+        icon: "🗑️",
+        perform: async () => {
+          const updated = todos.filter((t) => t.id !== todo.id)
+          await rua.storage.set("todos", updated)
+          setTodos(updated)
+          changeVisible()
+        },
+      },
+    ]
+  }
+
+  // === BUILD ACTIONS FROM TODOS ===
+  const actions = useMemo(() => {
+    const todoActions: Action[] = todos.map((todo) => ({
+      id: `todo-${todo.id}`,
+      name: todo.title,
+      icon: todo.done ? "✅" : "⭕",
+      subtitle: formatRelativeDate(todo.createdAt),
+      section: todo.done ? "Completed" : "Active",
+      priority: todo.done ? 0 : 10,
+      badge: todo.done ? "Done" : undefined,
+      item: todo,
+      footerAction: (changeVisible) => getFooterActions(todo, changeVisible),
+    }))
+
+    return [
+      {
+        id: "create-todo",
+        name: "Create New Todo",
+        icon: "➕",
+        subtitle: "Add a new task",
+        section: "Actions",
+        priority: 100,
+        query: true,
+        footerAction: () => [],
+      },
+      ...todoActions,
+    ]
+  }, [todos])
+
+  // === REGISTER ACTIONS ===
+  useRegisterActions(actions, [actions])
+
+  // === SEARCH & MATCHES ===
+  const { results } = useMatches(search, state.actions, state.rootActionId)
+
+  // === GET ACTIVE ACTION ===
+  const activeAction = results[state.activeIndex]
+  const activeActionImpl = typeof activeAction !== "string" ? activeAction : null
+
+  // === HANDLE QUERY SUBMIT (CREATE TODO) ===
+  const handleQuerySubmit = async (query: string, actionId: string) => {
+    if (actionId === "create-todo" && query.trim()) {
+      const newTodo: Todo = {
+        id: Date.now().toString(),
+        title: query.trim(),
+        done: false,
+        createdAt: new Date().toISOString(),
       }
-    } catch (e: unknown) {
-      const message = (e as Error).message
-      await rua.notification.show({ title: 'Error', body: message })
+      const newTodos = [...todos, newTodo]
+      await rua.storage.set("todos", newTodos)
+      setTodos(newTodos)
+      setSearch("")
     }
   }
 
+  // === HANDLE QUERY ACTION ENTER (TAB PRESS) ===
+  const handleQueryActionEnter = () => {
+    setFocusQueryInput(true)
+    setTimeout(() => setFocusQueryInput(false), 100)
+  }
+
+  // === FOOTER CONTENT & ICON ===
+  const footerIcon = activeActionImpl?.item ? "📝" : "✨"
+  const footerContent = (current: ActionImpl | null) => {
+    if (!current) return "Select an action"
+    if (current.id === "create-todo") return "Type todo title and press Enter"
+    const todo = current.item as Todo
+    return todo ? `${todo.done ? "Completed" : "Active"} • ${formatRelativeDate(todo.createdAt)}` : ""
+  }
+
+  // === RENDER ===
   return (
-    <List
-      searchPlaceholder="Search actions..."
-      items={items}
-      onSelect={handleSelect}
-      enablePinyin={false}
-    />
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "var(--app-bg)",
+      }}
+    >
+      <Input
+        value={search}
+        onValueChange={setSearch}
+        actions={state.actions}
+        currentRootActionId={state.rootActionId}
+        onCurrentRootActionIdChange={setRootActionId}
+        activeAction={activeActionImpl}
+        onQuerySubmit={handleQuerySubmit}
+        setResultHandleEvent={setResultHandleEvent}
+        defaultPlaceholder="Search {{name}} todos or create new..."
+        focusQueryInput={focusQueryInput}
+      />
+
+      <div style={{ flex: 1, overflow: "hidden" }}>
+        {results.length === 0 && !search && todos.length === 0 ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "48px 24px",
+              color: "var(--gray11)",
+              height: "100%",
+            }}
+          >
+            <div style={{ fontSize: "48px", marginBottom: "16px" }}>📝</div>
+            <div style={{ fontSize: "14px" }}>No todos yet. Create your first one!</div>
+          </div>
+        ) : (
+          <ResultsRender
+            items={results}
+            height="auto"
+            handleKeyEvent={resultHandleEvent}
+            setActiveIndex={setActiveIndex}
+            search={search}
+            setSearch={setSearch}
+            setRootActionId={setRootActionId}
+            currentRootActionId={state.rootActionId}
+            activeIndex={state.activeIndex}
+            onQueryActionEnter={handleQueryActionEnter}
+            onRender={({ item, active }) => {
+              if (typeof item === "string") {
+                return (
+                  <div
+                    style={{
+                      padding: "8px 16px",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      color: "var(--gray11)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    {item}
+                  </div>
+                )
+              }
+              return <RenderItem action={item} active={active} currentRootActionId={state.rootActionId ?? ""} />
+            }}
+          />
+        )}
+      </div>
+
+      <Footer
+        current={activeActionImpl}
+        icon={footerIcon}
+        content={footerContent}
+        actions={(current, changeVisible) => (current?.footerAction?.(changeVisible) || [])}
+      />
+    </div>
   )
 }
 
