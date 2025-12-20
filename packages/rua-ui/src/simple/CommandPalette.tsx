@@ -1,10 +1,23 @@
-import React, {useEffect, useRef} from "react"
+import {useCallback, useEffect, useMemo, useRef, useState} from "react"
 import {useCommand} from "./useCommand"
 import {Input} from "@/command"
 import {ResultsRender} from "@/command"
 import {Footer} from "@/command"
-import type {CommandPaletteProps, UseCommandReturn} from "./types"
+import type {CommandPaletteProps} from "./types"
+import type {PanelProps, Action} from "@/command/types"
 import {attemptFocusWithRetry} from "./utils"
+
+/**
+ * Panel state for custom action panels
+ */
+interface PanelState {
+  /** The panel render function */
+  render: (props: PanelProps) => React.ReactElement
+  /** The action ID that opened this panel */
+  actionId: string
+  /** Footer actions for this panel */
+  panelFooterActions?: (onClose: () => void) => Action[]
+}
 
 /**
  * Pre-built command palette component with sensible defaults
@@ -38,6 +51,9 @@ export function CommandPalette(props: CommandPaletteProps) {
     ...hookOptions
   } = props
 
+  // Panel state for custom action panels
+  const [activePanel, setActivePanel] = useState<PanelState | null>(null)
+
   const command = useCommand({
     actions,
     ...hookOptions,
@@ -51,6 +67,42 @@ export function CommandPalette(props: CommandPaletteProps) {
     commandRef.current = command
   }, [command])
 
+  // Close panel handler
+  const handleClosePanel = useCallback(() => {
+    setActivePanel(null)
+    // Re-focus input after closing panel
+    setTimeout(() => {
+      commandRef.current.focusInput()
+    }, 0)
+  }, [])
+
+  // Watch for active action changes to detect panel actions
+  useEffect(() => {
+    const activeAction = command.activeAction
+    if (!activeAction) return
+
+    // Check if the active action has a panel and user pressed Enter
+    // We need to intercept the perform action
+  }, [command.activeAction])
+
+  // Handle panel action enter - called from ResultsRender
+  const handlePanelActionEnter = useCallback((action: any) => {
+    if (!action?.panel) return
+
+    setActivePanel({
+      render: action.panel,
+      actionId: action.id,
+      panelFooterActions: action.panelFooterActions,
+    })
+  }, [])
+
+  // Override the resultsProps to intercept action selection for panel actions
+  const enhancedResultsProps = {
+    ...command.resultsProps,
+    onRender: command.resultsProps.onRender,
+    onPanelActionEnter: handlePanelActionEnter,
+  }
+
   // Auto-focus input on mount when autoFocus is enabled
   useEffect(() => {
     if (!autoFocus) return
@@ -58,8 +110,8 @@ export function CommandPalette(props: CommandPaletteProps) {
     // Focus immediately on mount
     const focusOnMount = async () => {
       await attemptFocusWithRetry(() => commandRef.current, {
-        maxRetries: 5,
-        initialDelay: 10,
+        maxRetries: 7,
+        initialDelay: 30,
         backoffMultiplier: 2,
       })
     }
@@ -73,8 +125,8 @@ export function CommandPalette(props: CommandPaletteProps) {
 
     const handleActivate = async () => {
       await attemptFocusWithRetry(() => commandRef.current, {
-        maxRetries: 3,
-        initialDelay: 50,
+        maxRetries: 7,
+        initialDelay: 30,
         backoffMultiplier: 2,
       })
     }
@@ -91,6 +143,14 @@ export function CommandPalette(props: CommandPaletteProps) {
     if (!rua) return // Only add listener if rua is provided
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // If panel is open, ESC should close the panel first
+      if (activePanel && event.key === "Escape") {
+        event.preventDefault()
+        event.stopPropagation()
+        handleClosePanel()
+        return
+      }
+
       // Only handle ESC and Backspace
       if (event.key !== "Escape" && event.key !== "Backspace") {
         return
@@ -134,32 +194,75 @@ export function CommandPalette(props: CommandPaletteProps) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown, {capture: true})
     }
-  }, [rua, command.rootActionId, command.search])
+  }, [rua, command.rootActionId, command.search, activePanel, handleClosePanel])
 
 
   // Determine if we should show empty state
   const showEmptyState = command.results.length === 0 && !command.search && actions.length === 0
+
+  // Check if input should be disabled (when panel is open)
+  const isInputDisabled = !!activePanel
+
+  // Build footer props for panel mode
+  const panelFooterProps = useMemo(() => {
+    if (!activePanel) return null
+
+    // Find the action that opened the panel to get its info
+    const panelAction = actions.find(a => a.id === activePanel.actionId)
+    const icon = typeof panelAction?.icon === 'string' ? panelAction.icon : "📝"
+
+    return {
+      current: null,
+      icon,
+      content: () => panelAction?.name || "Panel",
+      actions: activePanel.panelFooterActions
+        ? () => activePanel.panelFooterActions!(handleClosePanel)
+        : () => [{
+          id: "close-panel",
+          name: "Close",
+          icon: "←",
+          perform: handleClosePanel,
+        }],
+      mainInputRef: command.footerProps.mainInputRef,
+    }
+  }, [activePanel, actions, handleClosePanel, command.footerProps.mainInputRef])
 
   return (
     <div
       ref={containerRef}
       className={`flex h-screen flex-col bg-[var(--app-bg)] ${className}`}
     >
-      <Input {...command.inputProps} autoFocus={autoFocus} />
+      <Input
+        {...command.inputProps}
+        autoFocus={autoFocus && !isInputDisabled}
+        disableTabFocus={isInputDisabled}
+      />
 
       <div className="flex-1 overflow-hidden">
-        {showEmptyState && emptyState ? (
+        {activePanel ? (
+          // Render custom panel
+          (() => {
+            const PanelContent = activePanel.render
+            return <PanelContent onClose={handleClosePanel} />
+          })()
+        ) : showEmptyState && emptyState ? (
           <div
             className={`flex h-full flex-col items-center justify-center px-6 py-12 ${emptyStateClassName}`}
           >
             {emptyState({search: command.search, actions})}
           </div>
         ) : (
-          <ResultsRender {...command.resultsProps} />
+          <ResultsRender {...enhancedResultsProps} />
         )}
       </div>
 
-      {showFooter && <Footer {...command.footerProps} rightElement={rightElement}/>}
+      {showFooter && (
+        activePanel && panelFooterProps ? (
+          <Footer {...panelFooterProps} rightElement={rightElement}/>
+        ) : (
+          <Footer {...command.footerProps} rightElement={rightElement}/>
+        )
+      )}
     </div>
   )
 }

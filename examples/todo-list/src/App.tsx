@@ -2,9 +2,9 @@
  * todo-list - Todo List Extension
  * Demonstrates simplified command palette API with CRUD operations
  */
-import {useState, useEffect, useMemo} from 'react'
+import {useState, useEffect, useMemo, useCallback} from 'react'
 import {initializeRuaAPI, type RuaAPI} from 'rua-api/browser'
-import {CommandPalette, createQuerySubmitHandler, type Action, useCommand} from '@rua/ui'
+import {CommandPalette, createQuerySubmitHandler, type Action} from '@rua/ui'
 
 // Todo data structure
 interface Todo {
@@ -28,6 +28,66 @@ function formatRelativeDate(isoDate: string): string {
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays < 7) return `${diffDays}d ago`
   return date.toLocaleDateString()
+}
+
+// Create Todo Panel Component
+function CreateTodoPanel({
+  onClose,
+  onSubmit
+}: {
+  onClose: () => void
+  onSubmit: (title: string) => Promise<void>
+}) {
+  const [title, setTitle] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async () => {
+    if (!title.trim() || isSubmitting) return
+
+    setIsSubmitting(true)
+    try {
+      await onSubmit(title.trim())
+      onClose()
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Expose submit function globally for footer to call
+  useEffect(() => {
+    (window as any).__createTodoSubmit = handleSubmit;
+    (window as any).__createTodoCanSubmit = () => !!title.trim() && !isSubmitting;
+    return () => {
+      delete (window as any).__createTodoSubmit;
+      delete (window as any).__createTodoCanSubmit;
+    }
+  }, [title, isSubmitting])
+
+  return (
+    <div className="flex h-full flex-col p-4">
+      <h2 className="mb-4 text-lg font-semibold text-[var(--gray12)]">Create New Todo</h2>
+      <div>
+        <label htmlFor="todo-title" className="mb-2 block text-sm text-[var(--gray11)]">
+          Title
+        </label>
+        <input
+          id="todo-title"
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && title.trim()) {
+              e.preventDefault()
+              handleSubmit()
+            }
+          }}
+          placeholder="Enter todo title..."
+          autoFocus
+          className="w-full rounded-md border border-[var(--gray6)] bg-[var(--gray2)] px-3 py-2 text-[var(--gray12)] placeholder-[var(--gray9)] focus:border-[var(--blue8)] focus:outline-none"
+        />
+      </div>
+    </div>
+  )
 }
 
 // Main App component
@@ -74,6 +134,21 @@ function TodoCommandPalette({rua}: { rua: RuaAPI }) {
       .catch((err) => console.error("Failed to load todos:", err))
   }, [rua])
 
+  // Create todo handler - memoized to avoid recreating on every render
+  const handleCreateTodo = useCallback(async (title: string) => {
+    const newTodo: Todo = {
+      id: Date.now().toString(),
+      title,
+      done: false,
+      createdAt: new Date().toISOString(),
+    }
+    setTodos(prev => {
+      const newTodos = [...prev, newTodo]
+      rua.storage.set("todos", newTodos)
+      return newTodos
+    })
+  }, [rua])
+
   // Build actions from todos
   const actions = useMemo<Action[]>(() => {
     const todoActions = todos.map((todo) => ({
@@ -112,35 +187,55 @@ function TodoCommandPalette({rua}: { rua: RuaAPI }) {
     }))
 
     return [
-      // {
-      //   id: "create-todo",
-      //   name: "Create New Todo",
-      //   icon: "➕",
-      //   subtitle: "Add a new task",
-      //   section: "Actions",
-      //   priority: 100,
-      //   query: true,
-      // },
+      // Quick create with query input
+      {
+        id: "create-todo",
+        name: "Quick Create Todo",
+        icon: "⚡",
+        subtitle: "Press Tab to type title",
+        section: "Actions",
+        priority: 100,
+        query: true,
+      },
+      // Create with panel (sub-page)
+      {
+        id: "create-todo-panel",
+        name: "Create New Todo",
+        icon: "➕",
+        subtitle: "Open form to create todo",
+        section: "Actions",
+        priority: 99,
+        panel: ({onClose}: {onClose: () => void}) => {
+          return <CreateTodoPanel onClose={onClose} onSubmit={handleCreateTodo} />
+        },
+        panelFooterActions: (onClose: () => void) => [
+          {
+            id: "cancel",
+            name: "Cancel",
+            icon: "←",
+            perform: onClose,
+          },
+          {
+            id: "create",
+            name: "Create",
+            icon: "✓",
+            perform: () => {
+              const submit = (window as any).__createTodoSubmit
+              if (submit) submit()
+            },
+          },
+        ],
+      },
       ...todoActions,
     ]
-  }, [todos])
+  }, [todos, handleCreateTodo, rua])
 
   return (
     <CommandPalette
       actions={actions}
       rua={rua}
       placeholder="Search todo-list todos or create new..."
-      onQuerySubmit={createQuerySubmitHandler("create-todo", async (query) => {
-        const newTodo: Todo = {
-          id: Date.now().toString(),
-          title: query,
-          done: false,
-          createdAt: new Date().toISOString(),
-        }
-        const newTodos = [...todos, newTodo]
-        await rua.storage.set("todos", newTodos)
-        setTodos(newTodos)
-      })}
+      onQuerySubmit={createQuerySubmitHandler("create-todo", handleCreateTodo)}
       emptyState={() => (
         <div className="flex flex-col items-center justify-center">
           <div className="mb-4 text-5xl">📝</div>

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    {{#useVite}}"dev": "vite build --watch",
+    {{#useVite}}"dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview"{{/useVite}}{{^useVite}}"start": "echo 'No build step required'"{{/useVite}}
   },

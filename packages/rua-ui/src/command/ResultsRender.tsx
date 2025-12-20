@@ -31,6 +31,7 @@ interface ResultsRenderProps {
   setRootActionId: (rootActionId: ActionId) => void;
   currentRootActionId: ActionId | null;
   onQueryActionEnter?: () => void; // Called when Enter is pressed on a query action
+  onPanelActionEnter?: (action: ActionImpl) => void; // Called when Enter is pressed on a panel action
 }
 
 export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
@@ -145,6 +146,9 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
         if (activeItem && typeof activeItem !== "string" && activeItem.query) {
           // For query actions, trigger the callback to focus query input
           props.onQueryActionEnter?.();
+        } else if (activeItem && typeof activeItem !== "string" && activeItem.panel) {
+          // For panel actions, trigger the callback to open panel
+          props.onPanelActionEnter?.(activeItem);
         } else {
           // For non-query actions, execute normally
           activeRef.current?.click();

@@ -12,6 +12,14 @@ export type ActionSection =
       priority: Priority;
     };
 
+/**
+ * Props passed to panel render function
+ */
+export interface PanelProps {
+  /** Callback to close the panel and return to the list */
+  onClose: () => void;
+}
+
 export type Action = {
   id: ActionId;
   name: string;
@@ -32,6 +40,18 @@ export type Action = {
   disableSearchFocus?: boolean; // If true, prevents automatic focus to search box when this action is active
   hideSearchBox?: boolean; // If true, hides the search box when this action is active
   uiEntry?: string; // UI entry path for extension view mode actions
+  /**
+   * Custom panel component to render instead of the results list.
+   * When provided, the action will show this panel in the content area,
+   * with the input disabled.
+   * @param props.onClose - Callback to close the panel and return to the list
+   */
+  panel?: (props: PanelProps) => React.ReactElement;
+  /**
+   * Footer actions to show when this action's panel is open.
+   * If not provided, default footer will be shown.
+   */
+  panelFooterActions?: (onClose: () => void) => Action[];
 };
 
 export type ActionStore = Record<ActionId, ActionImpl>;

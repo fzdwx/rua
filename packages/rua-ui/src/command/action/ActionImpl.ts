@@ -35,6 +35,8 @@ export class ActionImpl implements Action {
   disableSearchFocus?: Action["disableSearchFocus"];
   hideSearchBox?: Action["hideSearchBox"];
   uiEntry?: Action["uiEntry"];
+  panel?: Action["panel"];
+  panelFooterActions?: Action["panelFooterActions"];
   /**
    * @deprecated use action.command.perform
    */
