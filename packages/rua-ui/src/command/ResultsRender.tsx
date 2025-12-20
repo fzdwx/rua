@@ -235,16 +235,17 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
   return (
     <div
       className="flex"
-      style={{ flex: props.height === "auto" ? 1 : undefined, overflow: "hidden" }}
+      style={{ flex: 1, overflow: "hidden", minHeight: 0 }}
     >
       <div
         ref={parentRef}
         style={{
           maxHeight: props.maxHeight || "100%",
-          height: props.height === "auto" ? "100%" : props.height || "450px",
+          height: "100%",
           position: "relative",
           overflow: "auto",
           width: props.width || "100%",
+          minHeight: 0,
         }}
         className={["command-listbox-container", props.className ?? ""].join(" ")}
       >

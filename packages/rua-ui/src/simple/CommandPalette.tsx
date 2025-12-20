@@ -238,46 +238,42 @@ export function CommandPalette(props: CommandPaletteProps) {
           autoFocus={autoFocus && !isInputDisabled}
           disableTabFocus={isInputDisabled}
         />
-        <div className="flex-1 overflow-hidden flex flex-col relative">
-          <div className='flex-1 flex flex-col overflow-hidden'>
-            {activePanel ? (
-              // Render custom panel
-              (() => {
-                const PanelContent = activePanel.render;
-                return (
-                  <div
-                    className="command-listbox-container"
-                    style={{
-                      maxHeight: "100%",
-                      height: "100%",
-                      position: "relative",
-                      overflow: "auto",
-                      width: "100%",
-                    }}
-                  >
-                    <PanelContent onClose={handleClosePanel}/>
-                  </div>
-                );
-              })()
-            ) : showEmptyState && emptyState ? (
-              <div
-                className={`flex h-full flex-col items-center justify-center px-6 py-12 ${emptyStateClassName}`}
-              >
-                {emptyState({search: command.search, actions})}
-              </div>
-            ) : (
-              <ResultsRender {...enhancedResultsProps} />
-            )}
-
-            {
-              (activePanel && panelFooterProps ? (
-                <Footer {...panelFooterProps} rightElement={rightElement}/>
-              ) : (
-                <Footer {...command.footerProps} rightElement={rightElement}/>
-              ))}
-          </div>
+        <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          {activePanel ? (
+            // Render custom panel
+            (() => {
+              const PanelContent = activePanel.render;
+              return (
+                <div
+                  className="command-listbox-container"
+                  style={{
+                    flex: 1,
+                    minHeight: 0,
+                    position: "relative",
+                    overflow: "auto",
+                    width: "100%",
+                  }}
+                >
+                  <PanelContent onClose={handleClosePanel}/>
+                </div>
+              );
+            })()
+          ) : showEmptyState && emptyState ? (
+            <div
+              className={`flex flex-col items-center justify-center px-6 py-12 overflow-auto ${emptyStateClassName}`}
+              style={{ flex: 1, minHeight: 0 }}
+            >
+              {emptyState({search: command.search, actions})}
+            </div>
+          ) : (
+            <ResultsRender {...enhancedResultsProps} />
+          )}
         </div>
-
+        {activePanel && panelFooterProps ? (
+          <Footer {...panelFooterProps} rightElement={rightElement}/>
+        ) : (
+          <Footer {...command.footerProps} rightElement={rightElement}/>
+        )}
       </Background>
     </Container>
   );
