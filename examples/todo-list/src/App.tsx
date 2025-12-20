@@ -2,56 +2,56 @@
  * todo-list - Todo List Extension
  * Demonstrates simplified command palette API with CRUD operations
  */
-import {useState, useEffect, useMemo, useCallback} from 'react'
-import {initializeRuaAPI, type RuaAPI} from 'rua-api/browser'
-import {CommandPalette, createQuerySubmitHandler, type Action} from '@rua/ui'
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { initializeRuaAPI, type RuaAPI } from "rua-api/browser";
+import { CommandPalette, createQuerySubmitHandler, type Action } from "@rua/ui";
 
 // Todo data structure
 interface Todo {
-  id: string
-  title: string
-  done: boolean
-  createdAt: string
+  id: string;
+  title: string;
+  done: boolean;
+  createdAt: string;
 }
 
 // Format relative date (e.g., "2m ago", "5h ago", "3d ago")
 function formatRelativeDate(isoDate: string): string {
-  const now = new Date()
-  const date = new Date(isoDate)
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
+  const now = new Date();
+  const date = new Date(isoDate);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return "Just now"
-  if (diffMins < 60) return `${diffMins}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  if (diffDays < 7) return `${diffDays}d ago`
-  return date.toLocaleDateString()
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
 }
 
 // Create Todo Panel Component
 function CreateTodoPanel({
   onClose,
-  onSubmit
+  onSubmit,
 }: {
-  onClose: () => void
-  onSubmit: (title: string) => Promise<void>
+  onClose: () => void;
+  onSubmit: (title: string) => Promise<void>;
 }) {
-  const [title, setTitle] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [title, setTitle] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!title.trim() || isSubmitting) return
+    if (!title.trim() || isSubmitting) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      await onSubmit(title.trim())
-      onClose()
+      await onSubmit(title.trim());
+      onClose();
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   // Expose submit function globally for footer to call
   useEffect(() => {
@@ -60,8 +60,8 @@ function CreateTodoPanel({
     return () => {
       delete (window as any).__createTodoSubmit;
       delete (window as any).__createTodoCanSubmit;
-    }
-  }, [title, isSubmitting])
+    };
+  }, [title, isSubmitting]);
 
   return (
     <div className="flex h-full flex-col p-4">
@@ -76,9 +76,9 @@ function CreateTodoPanel({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && title.trim()) {
-              e.preventDefault()
-              handleSubmit()
+            if (e.key === "Enter" && title.trim()) {
+              e.preventDefault();
+              handleSubmit();
             }
           }}
           placeholder="Enter todo title..."
@@ -87,19 +87,19 @@ function CreateTodoPanel({
         />
       </div>
     </div>
-  )
+  );
 }
 
 // Main App component
 function App() {
-  const [rua, setRua] = useState<RuaAPI | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [rua, setRua] = useState<RuaAPI | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     initializeRuaAPI()
       .then(setRua)
-      .catch((err) => setError(err.message))
-  }, [])
+      .catch((err) => setError(err.message));
+  }, []);
 
   if (error) {
     return (
@@ -108,7 +108,7 @@ function App() {
         <h3 className="mb-2">Error</h3>
         <p className="m-0 text-[var(--gray11)]">{error}</p>
       </div>
-    )
+    );
   }
 
   if (!rua) {
@@ -116,38 +116,41 @@ function App() {
       <div className="flex h-screen items-center justify-center p-6 text-[var(--gray11)]">
         Loading...
       </div>
-    )
+    );
   }
 
-  return <TodoCommandPalette rua={rua}/>
+  return <TodoCommandPalette rua={rua} />;
 }
 
 // Todo command palette component
-function TodoCommandPalette({rua}: { rua: RuaAPI }) {
-  const [todos, setTodos] = useState<Todo[]>([])
+function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
+  const [todos, setTodos] = useState<Todo[]>([]);
 
   // Load todos from storage
   useEffect(() => {
     rua.storage
       .get<Todo[]>("todos")
       .then((data) => setTodos(data || []))
-      .catch((err) => console.error("Failed to load todos:", err))
-  }, [rua])
+      .catch((err) => console.error("Failed to load todos:", err));
+  }, [rua]);
 
   // Create todo handler - memoized to avoid recreating on every render
-  const handleCreateTodo = useCallback(async (title: string) => {
-    const newTodo: Todo = {
-      id: Date.now().toString(),
-      title,
-      done: false,
-      createdAt: new Date().toISOString(),
-    }
-    setTodos(prev => {
-      const newTodos = [...prev, newTodo]
-      rua.storage.set("todos", newTodos)
-      return newTodos
-    })
-  }, [rua])
+  const handleCreateTodo = useCallback(
+    async (title: string) => {
+      const newTodo: Todo = {
+        id: Date.now().toString(),
+        title,
+        done: false,
+        createdAt: new Date().toISOString(),
+      };
+      setTodos((prev) => {
+        const newTodos = [...prev, newTodo];
+        rua.storage.set("todos", newTodos);
+        return newTodos;
+      });
+    },
+    [rua]
+  );
 
   // Build actions from todos
   const actions = useMemo<Action[]>(() => {
@@ -166,10 +169,10 @@ function TodoCommandPalette({rua}: { rua: RuaAPI }) {
           name: todo.done ? "Mark as Active" : "Mark as Done",
           icon: todo.done ? "⭕" : "✅",
           perform: async () => {
-            const updated = todos.map((t) => (t.id === todo.id ? {...t, done: !t.done} : t))
-            await rua.storage.set("todos", updated)
-            setTodos(updated)
-            changeVisible()
+            const updated = todos.map((t) => (t.id === todo.id ? { ...t, done: !t.done } : t));
+            await rua.storage.set("todos", updated);
+            setTodos(updated);
+            changeVisible();
           },
         },
         {
@@ -177,14 +180,14 @@ function TodoCommandPalette({rua}: { rua: RuaAPI }) {
           name: "Delete",
           icon: "🗑️",
           perform: async () => {
-            const updated = todos.filter((t) => t.id !== todo.id)
-            await rua.storage.set("todos", updated)
-            setTodos(updated)
-            changeVisible()
+            const updated = todos.filter((t) => t.id !== todo.id);
+            await rua.storage.set("todos", updated);
+            setTodos(updated);
+            changeVisible();
           },
         },
       ],
-    }))
+    }));
 
     return [
       // Quick create with query input
@@ -205,9 +208,10 @@ function TodoCommandPalette({rua}: { rua: RuaAPI }) {
         subtitle: "Open form to create todo",
         section: "Actions",
         priority: 99,
-        panel: ({onClose}: {onClose: () => void}) => {
-          return <CreateTodoPanel onClose={onClose} onSubmit={handleCreateTodo} />
+        panel: ({ onClose }: { onClose: () => void }) => {
+          return <CreateTodoPanel onClose={onClose} onSubmit={handleCreateTodo} />;
         },
+        panelTitle: "New Todo",
         panelFooterActions: (onClose: () => void) => [
           {
             id: "cancel",
@@ -220,15 +224,15 @@ function TodoCommandPalette({rua}: { rua: RuaAPI }) {
             name: "Create",
             icon: "✓",
             perform: () => {
-              const submit = (window as any).__createTodoSubmit
-              if (submit) submit()
+              const submit = (window as any).__createTodoSubmit;
+              if (submit) submit();
             },
           },
         ],
       },
       ...todoActions,
-    ]
-  }, [todos, handleCreateTodo, rua])
+    ];
+  }, [todos, handleCreateTodo, rua]);
 
   return (
     <CommandPalette
@@ -243,7 +247,7 @@ function TodoCommandPalette({rua}: { rua: RuaAPI }) {
         </div>
       )}
     />
-  )
+  );
 }
 
-export default App
+export default App;

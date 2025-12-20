@@ -48,8 +48,13 @@ export type Action = {
    */
   panel?: (props: PanelProps) => React.ReactElement;
   /**
+   * Title to show in footer when panel is open.
+   * If not provided, uses action name.
+   */
+  panelTitle?: string;
+  /**
    * Footer actions to show when this action's panel is open.
-   * If not provided, default footer will be shown.
+   * If not provided, default close action will be shown.
    */
   panelFooterActions?: (onClose: () => void) => Action[];
 };

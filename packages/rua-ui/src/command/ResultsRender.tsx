@@ -198,6 +198,13 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
         return;
       }
 
+      // For actions with panel:
+      // - Trigger the callback to open the panel
+      if (item.panel) {
+        props.onPanelActionEnter?.(item);
+        return;
+      }
+
       // For built-in view actions (like weather, translate when accessed directly)
       // They may have perform for tracking, but should also navigate
       if (item.kind === "built-in" && !item.parent && item.children.length === 0) {
@@ -220,7 +227,7 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
         props.setRootActionId(item.id);
       }
     },
-    [props.setSearch, props.setRootActionId]
+    [props.setSearch, props.setRootActionId, props.onPanelActionEnter]
   );
 
   const pointerMoved = usePointerMovedSinceMount();

@@ -28,6 +28,7 @@ export const Footer: React.FC<{
   mainInputRef?: React.RefObject<HTMLInputElement | null>;
   settings?: Action[]; // Settings actions for settings menu
   rightElement?: React.ReactElement; // Custom element to display on the right side
+  loading?: boolean; // Show loading indicator
 }> = ({
   current,
   actions,
@@ -38,11 +39,15 @@ export const Footer: React.FC<{
   mainInputRef,
   settings,
   rightElement,
+  loading,
 }) => {
   return (
     <div className="command-footer">
       <div className="command-footer-icon">{icon}</div>
-      <div style={{ marginRight: "auto" }}>{content(current)}</div>
+      <div style={{ marginRight: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
+        {content(current)}
+        {loading && <FooterLoading />}
+      </div>
 
       {rightElement && <>{rightElement}</>}
 
@@ -65,6 +70,14 @@ export const Footer: React.FC<{
           />
         </>
       )}
+    </div>
+  );
+};
+
+const FooterLoading: React.FC = () => {
+  return (
+    <div className="command-footer-loading">
+      <div className="command-footer-loading-spinner" />
     </div>
   );
 };

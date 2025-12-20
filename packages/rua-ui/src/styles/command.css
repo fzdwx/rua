@@ -1402,3 +1402,22 @@ button:not([class]) {
   padding: 12px 16px 8px;
   border-bottom: 1px solid var(--gray6);
 }
+
+/* ========================================
+   Footer Loading Styles
+   ======================================== */
+
+.command-footer-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.command-footer-loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--gray6);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
