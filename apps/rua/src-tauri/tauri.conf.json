@@ -27,10 +27,17 @@
     ],
     "security": {
       "csp": null,
-      "capabilities": ["default"],
+      "capabilities": [
+        "default"
+      ],
       "assetProtocol": {
         "enable": true,
-        "scope": ["$HOME/.local/share/**", "/usr/share/**", "$RESOURCE/**", "**"]
+        "scope": [
+          "$HOME/.local/share/**",
+          "/usr/share/**",
+          "$RESOURCE/**",
+          "**"
+        ]
       }
     }
   },

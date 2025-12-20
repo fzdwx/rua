@@ -12,7 +12,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import {fileURLToPath} from "node:url";
 import prompts from "prompts";
 import pc from "picocolors";
 import Handlebars from "handlebars";
@@ -39,7 +39,7 @@ const TEMPLATES = {
     description: "Simple extension with vanilla JS/HTML",
   },
   view: {
-    name: "View Extension",
+    name: "Framework",
     description: "Vite + React + @rua/ui + shadcn/ui + Tailwind CSS",
   },
 };
@@ -50,7 +50,7 @@ const EXTENSION_TYPES = [
     value: "both",
     description: "Background script and UI view",
   },
-  { title: "View Only", value: "view", description: "UI view without background script" },
+  {title: "View Only", value: "view", description: "UI view without background script"},
   {
     title: "Background Only",
     value: "background",
@@ -59,23 +59,23 @@ const EXTENSION_TYPES = [
 ];
 
 const PACKAGE_MANAGERS = [
-  { title: "pnpm", value: "pnpm" },
-  { title: "bun", value: "bun" },
-  { title: "yarn", value: "yarn" },
-  { title: "npm", value: "npm" },
+  {title: "bun", value: "bun"},
+  {title: "pnpm", value: "pnpm"},
+  {title: "yarn", value: "yarn"},
+  {title: "npm", value: "npm"},
 ];
 
 const PERMISSIONS = [
-  { title: "Clipboard", value: "clipboard", description: "Read/write clipboard" },
-  { title: "Notification", value: "notification", description: "Show system notifications" },
-  { title: "Storage", value: "storage", description: "Local storage access" },
-  { title: "HTTP", value: "http", description: "Make HTTP requests" },
-  { title: "Shell", value: "shell", description: "Execute shell commands" },
-  { title: "FS Read", value: "fs:read", description: "Read files from file system" },
-  { title: "FS Read Dir", value: "fs:read-dir", description: "Read directory contents" },
-  { title: "FS Write", value: "fs:write", description: "Write files to file system" },
-  { title: "FS Exists", value: "fs:exists", description: "Check if file exists" },
-  { title: "FS Stat", value: "fs:stat", description: "Get file metadata" },
+  {title: "Clipboard", value: "clipboard", description: "Read/write clipboard"},
+  {title: "Notification", value: "notification", description: "Show system notifications"},
+  {title: "Storage", value: "storage", description: "Local storage access"},
+  {title: "HTTP", value: "http", description: "Make HTTP requests"},
+  {title: "Shell", value: "shell", description: "Execute shell commands"},
+  {title: "FS Read", value: "fs:read", description: "Read files from file system"},
+  {title: "FS Read Dir", value: "fs:read-dir", description: "Read directory contents"},
+  {title: "FS Write", value: "fs:write", description: "Write files to file system"},
+  {title: "FS Exists", value: "fs:exists", description: "Check if file exists"},
+  {title: "FS Stat", value: "fs:stat", description: "Get file metadata"},
 ];
 
 function toKebabCase(str: string): string {
@@ -223,7 +223,7 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
   const templatesDir = getTemplatesDir();
   const context = createTemplateContext(config);
 
-  fs.mkdirSync(targetDir, { recursive: true });
+  fs.mkdirSync(targetDir, {recursive: true});
 
   // Create manifest.json
   const manifestTemplate = path.join(templatesDir, "manifest.json.template");
@@ -242,7 +242,7 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
 
   if (config.buildTool === "vite") {
     // Vite project structure
-    fs.mkdirSync(path.join(targetDir, "src"), { recursive: true });
+    fs.mkdirSync(path.join(targetDir, "src"), {recursive: true});
 
     // package.json
     const packageTemplate = path.join(templatesDir, "package.json.template");
@@ -293,7 +293,7 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
       }
 
       // Create lib/utils.ts for shadcn
-      fs.mkdirSync(path.join(targetDir, "src/lib"), { recursive: true });
+      fs.mkdirSync(path.join(targetDir, "src/lib"), {recursive: true});
       const utilsTemplate = path.join(templatesDir, "src/lib/utils.ts.template");
       if (fs.existsSync(utilsTemplate)) {
         const utilsContent = renderTemplate(utilsTemplate, context);
@@ -327,7 +327,7 @@ async function createExtension(targetDir: string, config: ExtensionConfig) {
 
   // Create GitHub Action workflow for Vite projects
   if (config.buildTool === "vite") {
-    fs.mkdirSync(path.join(targetDir, ".github/workflows"), { recursive: true });
+    fs.mkdirSync(path.join(targetDir, ".github/workflows"), {recursive: true});
     const workflowTemplate = path.join(templatesDir, ".github/workflows/release.yml.template");
     if (fs.existsSync(workflowTemplate)) {
       const workflowContent = renderTemplate(workflowTemplate, context);
@@ -375,7 +375,7 @@ async function main() {
         type: "select",
         name: "template",
         message: "Template:",
-        choices: Object.entries(TEMPLATES).map(([value, { name, description }]) => ({
+        choices: Object.entries(TEMPLATES).map(([value, {name, description}]) => ({
           title: name,
           description,
           value,
@@ -387,7 +387,7 @@ async function main() {
         name: "packageManager",
         message: "Package manager:",
         choices: PACKAGE_MANAGERS,
-        initial: 1,
+        initial: 0,
       },
       {
         type: "multiselect",
@@ -427,7 +427,7 @@ async function main() {
   const targetDir = path.resolve(process.cwd(), kebabName);
 
   if (fs.existsSync(targetDir)) {
-    const { overwrite } = await prompts({
+    const {overwrite} = await prompts({
       type: "confirm",
       name: "overwrite",
       message: `Directory ${pc.yellow(kebabName)} already exists. Overwrite?`,
@@ -439,7 +439,7 @@ async function main() {
       process.exit(1);
     }
 
-    fs.rmSync(targetDir, { recursive: true });
+    fs.rmSync(targetDir, {recursive: true});
   }
 
   console.log();

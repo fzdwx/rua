@@ -1,5 +1,5 @@
 /**
- * {{name}} - Todo List Extension
+ * todo-list - Todo List Extension
  * Demonstrates simplified command palette API with CRUD operations
  */
 import { useState, useEffect, useMemo } from 'react'
@@ -128,7 +128,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
   return (
     <CommandPalette
       actions={actions}
-      placeholder="Search {{name}} todos or create new..."
+      placeholder="Search todo-list todos or create new..."
       onQuerySubmit={createQuerySubmitHandler("create-todo", async (query) => {
         const newTodo: Todo = {
           id: Date.now().toString(),

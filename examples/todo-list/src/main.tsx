@@ -6,12 +6,11 @@ import "./style.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <Toaster>
-        <Container>
-          <Background>
-            <App/>
-          </Background>
-        </Container>
-    </Toaster>
+    <Container>
+      <Background>
+        <App/>
+      </Background>
+    </Container>
+    <Toaster />
   </React.StrictMode>
 );
