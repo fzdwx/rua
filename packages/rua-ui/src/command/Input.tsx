@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ActionId, ActionTree } from "./types.ts";
 import { ActionImpl } from "./action";
-import { LeftButton, InputLoading } from "@rua/ui";
+import { LeftButton, InputLoading } from "../common//tools";
 
 export const KBAR_LISTBOX = "kbar-listbox";
 export const getListboxItemId = (id: number) => `kbar-listbox-item-${id}`;
@@ -18,6 +18,7 @@ interface InputProps {
   loading?: boolean; // Show loading indicator in input
   disableTabFocus?: boolean; // Remove search box from tab order
   focusQueryInput?: boolean; // Signal to focus query input
+  autoFocus?: boolean; // Auto-focus input on mount
 
   defaultPlaceholder?: string;
   inputRefSetter?: (ref: HTMLInputElement) => void;
@@ -37,6 +38,7 @@ export function Input({
   loading,
   disableTabFocus,
   focusQueryInput,
+  autoFocus = true,
 }: InputProps) {
   const [inputValue, setInputValue] = React.useState(value);
   const [queryValue, setQueryValue] = React.useState("");
@@ -188,7 +190,7 @@ export function Input({
         <div style={{ position: "relative", flex: 1 }}>
           <input
             ref={mainInputRef}
-            autoFocus
+            autoFocus={autoFocus}
             id="command-input"
             className="command-input"
             autoComplete="off"

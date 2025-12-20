@@ -151,7 +151,7 @@ export function mergeActions(userActions: Action[], defaults: Partial<Action> = 
  * Returns true if focus was successful, false otherwise
  */
 export async function attemptFocusWithRetry(
-  cmdRet: UseCommandReturn,
+  getCommandRef: () => UseCommandReturn,
   options: FocusRetryOptions = {}
 ): Promise<boolean> {
   const {
@@ -160,17 +160,16 @@ export async function attemptFocusWithRetry(
     backoffMultiplier = 2,
   } = options;
 
-  // Get inputRef from footerProps
-  const inputRef = cmdRet.footerProps.mainInputRef;
-
-  console.log('[Focus] Starting focus retry, inputRef exists:', !!inputRef?.current);
-
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     const delay = calculateBackoffDelay(attempt, initialDelay, backoffMultiplier);
 
     await new Promise(resolve => setTimeout(resolve, delay));
 
-    console.log(`[Focus] Attempt ${attempt + 1}/${maxRetries}, delay: ${delay}ms`);
+    // Get fresh reference on each attempt
+    const cmdRet = getCommandRef();
+    const inputRef = cmdRet.footerProps.mainInputRef;
+
+    console.log(`[Focus] Attempt ${attempt + 1}/${maxRetries}, delay: ${delay}ms, inputRef exists: ${!!inputRef?.current}`);
 
     // Attempt to focus
     cmdRet.focusInput()

@@ -76,8 +76,6 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
           });
         },
         onActivate: async () => {
-          console.log("rua-extension-activaterua-extension-activaterua-extension-activaterua-extension-activaterua-extension-activaterua-extension-activate")
-          window.dispatchEvent(new CustomEvent("rua-extension-activate"));
           const handlers = eventHandlers.get("activate") || [];
           handlers.forEach((handler) => {
             try {
@@ -88,7 +86,6 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
           });
         },
         onDeactivate: async () => {
-          window.dispatchEvent(new CustomEvent("rua-extension-deActivate"));
           const handlers = eventHandlers.get("deactivate") || [];
           handlers.forEach((handler) => {
             try {

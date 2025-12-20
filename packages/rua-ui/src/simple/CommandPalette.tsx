@@ -51,12 +51,28 @@ export function CommandPalette(props: CommandPaletteProps) {
     commandRef.current = command
   }, [command])
 
-  // Auto-focus input when extension is activated
+  // Auto-focus input on mount when autoFocus is enabled
   useEffect(() => {
-    if (!rua || !props.autoFocus) return
+    if (!autoFocus) return
+
+    // Focus immediately on mount
+    const focusOnMount = async () => {
+      await attemptFocusWithRetry(() => commandRef.current, {
+        maxRetries: 5,
+        initialDelay: 10,
+        backoffMultiplier: 2,
+      })
+    }
+
+    focusOnMount()
+  }, [autoFocus])
+
+  // Auto-focus input when extension is activated (for subsequent activations)
+  useEffect(() => {
+    if (!rua || !autoFocus) return
 
     const handleActivate = async () => {
-      await attemptFocusWithRetry(commandRef.current, {
+      await attemptFocusWithRetry(() => commandRef.current, {
         maxRetries: 3,
         initialDelay: 50,
         backoffMultiplier: 2,
@@ -68,7 +84,7 @@ export function CommandPalette(props: CommandPaletteProps) {
     return () => {
       rua.off('activate', handleActivate)
     }
-  }, [props.autoFocus, rua])
+  }, [autoFocus, rua])
 
   // Handle ESC and Backspace for window hiding
   useEffect(() => {
@@ -129,7 +145,7 @@ export function CommandPalette(props: CommandPaletteProps) {
       ref={containerRef}
       className={`flex h-screen flex-col bg-[var(--app-bg)] ${className}`}
     >
-      <Input {...command.inputProps} />
+      <Input {...command.inputProps} autoFocus={autoFocus} />
 
       <div className="flex-1 overflow-hidden">
         {showEmptyState && emptyState ? (
