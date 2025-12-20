@@ -1,6 +1,7 @@
 import type * as React from "react"
-import type { Action, ActionId } from "../command/types"
-import type { ActionImpl } from "../command"
+import type {Action, ActionId} from "../command/types"
+import type {ActionImpl} from "../command"
+import {UseCommandOptions, UseCommandReturn} from "@/simple/types.ts";
 
 /**
  * Safely get the active action, filtering out string types (section headers)
@@ -142,4 +143,70 @@ export function mergeActions(userActions: Action[], defaults: Partial<Action> = 
     ...defaults,
     ...action,
   }))
+}
+
+
+/**
+ * Attempt to focus an input element with exponential backoff retry
+ * Returns true if focus was successful, false otherwise
+ */
+export async function attemptFocusWithRetry(
+  cmdRet: UseCommandReturn,
+  options: FocusRetryOptions = {}
+): Promise<boolean> {
+  const {
+    maxRetries = 3,
+    initialDelay = 50,
+    backoffMultiplier = 2,
+  } = options;
+
+  // Get inputRef from footerProps
+  const inputRef = cmdRet.footerProps.mainInputRef;
+
+  console.log('[Focus] Starting focus retry, inputRef exists:', !!inputRef?.current);
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const delay = calculateBackoffDelay(attempt, initialDelay, backoffMultiplier);
+
+    await new Promise(resolve => setTimeout(resolve, delay));
+
+    console.log(`[Focus] Attempt ${attempt + 1}/${maxRetries}, delay: ${delay}ms`);
+
+    // Attempt to focus
+    cmdRet.focusInput()
+
+    // Check if focus was successful
+    if (inputRef?.current && document.activeElement === inputRef.current) {
+      console.log('[Focus] ✓ Focus successful');
+      return true;
+    }
+
+    console.log('[Focus] × Focus failed, activeElement:', document.activeElement?.tagName);
+  }
+
+  // All retries exhausted
+  console.warn('[Focus] All attempts exhausted, final activeElement:', document.activeElement);
+  return false;
+}
+
+/**
+ * Focus retry options for exponential backoff
+ */
+export interface FocusRetryOptions {
+  maxRetries?: number;        // Default: 3
+  initialDelay?: number;      // Default: 50ms
+  backoffMultiplier?: number; // Default: 2
+}
+
+/**
+ * Calculate delay for a given attempt using exponential backoff
+ * Formula: initialDelay * (backoffMultiplier ^ attempt)
+ * For attempt 0: 50ms, attempt 1: 100ms, attempt 2: 200ms
+ */
+export function calculateBackoffDelay(
+  attempt: number,
+  initialDelay: number = 50,
+  backoffMultiplier: number = 2
+): number {
+  return initialDelay * Math.pow(backoffMultiplier, attempt);
 }

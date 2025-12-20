@@ -20,6 +20,12 @@ export {
   createFooterActionsGetter,
   createFooterContentRenderer,
   mergeActions,
+  attemptFocusWithRetry,
+} from "./utils"
+
+// Utility types
+export type {
+  FocusRetryOptions,
 } from "./utils"
 
 // Types

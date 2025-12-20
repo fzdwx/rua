@@ -1,34 +1,5 @@
-@import "tailwindcss";
+/* Custom styles for your {{name}} extension */
+/* Global styles are imported from @rua/ui/styles in main.tsx */
 
-/* Custom styles for your extension */
-:root {
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --app-bg: rgb(255 255 255 / 0.9);
-  --text: #1a1a1a;
-  --primary: #6ee7b7;
-  --gray6: #e5e5e5;
-  --gray11: #6b7280;
-}
+/* Add your custom styles here */
 
-.dark {
-  --app-bg: rgb(34 34 34 / 0.9);
-  --text: #f5f5f5;
-  --gray6: #404040;
-  --gray11: #9ca3af;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: var(--font-sans);
-  background: transparent;
-}
-
-#root {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--app-bg);
-  color: var(--text);
-}

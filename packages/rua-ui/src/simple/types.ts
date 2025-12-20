@@ -1,6 +1,7 @@
 import type * as React from "react"
 import type {Action, ActionId, ActionTree} from "../command/types"
 import type {ActionImpl} from "../command"
+import {EventHandler} from "react";
 
 /**
  * Callback when a query is submitted (e.g., creating a new item)
@@ -252,5 +253,15 @@ export interface CommandPaletteProps extends UseCommandOptions {
       /** Get initial search value passed from main app */
       getInitialSearch(): Promise<string>;
     };
+    on(
+      event: "activate" | "deactivate" | "action-triggered" | "theme-change",
+      handler: (data: unknown) => void
+    ): void;
+
+    /** Unregister event handler */
+    off(
+      event: "activate" | "deactivate" | "action-triggered" | "theme-change",
+      handler: (data: unknown) => void
+    ): void;
   }
 }

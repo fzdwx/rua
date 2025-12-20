@@ -1,0 +1,15 @@
+/**
+ * Rua UI Styles
+ *
+ * This is the main entry point for all rua-ui styles.
+ * Import this file in your application to get all necessary styles.
+ *
+ * Usage:
+ * import '@rua/ui/styles'
+ */
+
+/* Global styles and Tailwind configuration */
+@import './global.css';
+
+/* Command palette and component styles */
+@import './command.css';

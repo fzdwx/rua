@@ -11,10 +11,13 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles": "./dist/index.css"
+    "./styles": "./src/styles/index.css",
+    "./styles/global.css": "./src/styles/global.css",
+    "./styles/command.css": "./src/styles/command.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/styles"
   ],
   "scripts": {
     "build": "vite build && tsc --emitDeclarationOnly --declaration --outDir dist",
@@ -32,5 +35,8 @@
   "peerDependencies": {
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "rollup-plugin-visualizer": "^6.0.5"
   }
 }

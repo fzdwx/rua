@@ -1,9 +1,9 @@
-import { useState, useMemo, useCallback, useRef } from "react"
-import { useActionStore } from "../command/useActionStore"
-import { useMatches } from "../command/useMatches"
-import { RenderItem } from "../command/RenderItem"
-import type { UseCommandOptions, UseCommandReturn } from "./types"
-import { getActiveAction } from "./utils"
+import {useState, useMemo, useCallback, useRef, useEffect} from "react"
+import {useActionStore} from "../command/useActionStore"
+import {useMatches} from "../command/useMatches"
+import {RenderItem} from "../command/RenderItem"
+import type {UseCommandOptions, UseCommandReturn} from "./types"
+import {calculateBackoffDelay, getActiveAction} from "./utils"
 
 /**
  * Unified hook for managing command palette state and behavior
@@ -59,11 +59,11 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
   const inputRef = externalInputRef || internalInputRef
 
   // Action store management
-  const { useRegisterActions, state, setActiveIndex, setRootActionId } = useActionStore()
+  const {useRegisterActions, state, setActiveIndex, setRootActionId} = useActionStore()
   useRegisterActions(actions, [actions])
 
   // Match results
-  const { results } = useMatches(search, state.actions, state.rootActionId)
+  const {results} = useMatches(search, state.actions, state.rootActionId)
 
   // Active action (filtered to remove string section headers)
   const activeAction = useMemo(
@@ -145,7 +145,7 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
       }
 
       // Use default RenderItem component
-      return <RenderItem action={item} active={active} currentRootActionId={state.rootActionId ?? ""} />
+      return <RenderItem action={item} active={active} currentRootActionId={state.rootActionId ?? ""}/>
     },
     [renderItem, state.rootActionId, defaultSectionRenderer]
   )
@@ -195,7 +195,7 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
       currentRootActionId: state.rootActionId,
       activeIndex: state.activeIndex,
       onQueryActionEnter: handleQueryActionEnter,
-      onRender: ({ item, active }) => defaultItemRenderer(item, active),
+      onRender: ({item, active}) => defaultItemRenderer(item, active),
     },
 
     footerProps: {

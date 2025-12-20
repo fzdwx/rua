@@ -4,19 +4,7 @@ import {Input} from "@/command"
 import {ResultsRender} from "@/command"
 import {Footer} from "@/command"
 import type {CommandPaletteProps, UseCommandReturn} from "./types"
-
-function autoFocusInput(command: UseCommandReturn) {
-  useEffect(() => {
-    let listener = () => {
-      console.log("command palette activated - focusing input aaaaaaaaaaaaaaaaa")
-      command.focusInput()
-    };
-    window.addEventListener('rua-extension-activate', listener)
-    return () => {
-      window.removeEventListener('rua-extension-activate', listener)
-    }
-  }, [])
-}
+import {attemptFocusWithRetry} from "./utils"
 
 /**
  * Pre-built command palette component with sensible defaults
@@ -57,10 +45,30 @@ export function CommandPalette(props: CommandPaletteProps) {
 
   const containerRef = useRef<HTMLDivElement>(null)
 
-  console.log("props.autoFocus:",props.autoFocus)
-  if (props.autoFocus) {
-    autoFocusInput(command);
-  }
+  // Store command in ref to avoid re-registering event listeners on every render
+  const commandRef = useRef(command)
+  useEffect(() => {
+    commandRef.current = command
+  }, [command])
+
+  // Auto-focus input when extension is activated
+  useEffect(() => {
+    if (!rua || !props.autoFocus) return
+
+    const handleActivate = async () => {
+      await attemptFocusWithRetry(commandRef.current, {
+        maxRetries: 3,
+        initialDelay: 50,
+        backoffMultiplier: 2,
+      })
+    }
+
+    rua.on('activate', handleActivate)
+
+    return () => {
+      rua.off('activate', handleActivate)
+    }
+  }, [props.autoFocus, rua])
 
   // Handle ESC and Backspace for window hiding
   useEffect(() => {

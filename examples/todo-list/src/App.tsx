@@ -2,9 +2,9 @@
  * todo-list - Todo List Extension
  * Demonstrates simplified command palette API with CRUD operations
  */
-import { useState, useEffect, useMemo } from 'react'
-import { initializeRuaAPI, type RuaAPI } from 'rua-api/browser'
-import { CommandPalette, createQuerySubmitHandler, type Action } from '@rua/ui'
+import {useState, useEffect, useMemo} from 'react'
+import {initializeRuaAPI, type RuaAPI} from 'rua-api/browser'
+import {CommandPalette, createQuerySubmitHandler, type Action, useCommand} from '@rua/ui'
 
 // Todo data structure
 interface Todo {
@@ -59,11 +59,11 @@ function App() {
     )
   }
 
-  return <TodoCommandPalette rua={rua} />
+  return <TodoCommandPalette rua={rua}/>
 }
 
 // Todo command palette component
-function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
+function TodoCommandPalette({rua}: { rua: RuaAPI }) {
   const [todos, setTodos] = useState<Todo[]>([])
 
   // Load todos from storage
@@ -91,7 +91,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
           name: todo.done ? "Mark as Active" : "Mark as Done",
           icon: todo.done ? "⭕" : "✅",
           perform: async () => {
-            const updated = todos.map((t) => (t.id === todo.id ? { ...t, done: !t.done } : t))
+            const updated = todos.map((t) => (t.id === todo.id ? {...t, done: !t.done} : t))
             await rua.storage.set("todos", updated)
             setTodos(updated)
             changeVisible()
@@ -112,15 +112,15 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
     }))
 
     return [
-      {
-        id: "create-todo",
-        name: "Create New Todo",
-        icon: "➕",
-        subtitle: "Add a new task",
-        section: "Actions",
-        priority: 100,
-        query: true,
-      },
+      // {
+      //   id: "create-todo",
+      //   name: "Create New Todo",
+      //   icon: "➕",
+      //   subtitle: "Add a new task",
+      //   section: "Actions",
+      //   priority: 100,
+      //   query: true,
+      // },
       ...todoActions,
     ]
   }, [todos])

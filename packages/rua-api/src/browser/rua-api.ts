@@ -19,30 +19,6 @@ let ruaInstance: RuaClientAPI | null = null;
 let initPromise: Promise<RuaClientAPI> | null = null;
 
 /**
- * Inject CSS styles into the document
- */
-function injectStyles(cssContent: string): void {
-  // Remove old style tag if exists
-  const oldStyle = document.getElementById("rua-main-app-styles");
-  if (oldStyle) {
-    oldStyle.remove();
-  }
-
-  // Create new style tag
-  const styleElement = document.createElement("style");
-  styleElement.id = "rua-main-app-styles";
-  styleElement.textContent = cssContent;
-
-  // Insert at the beginning of head
-  const head = document.head;
-  if (head.firstChild) {
-    head.insertBefore(styleElement, head.firstChild);
-  } else {
-    head.appendChild(styleElement);
-  }
-}
-
-/**
  * Apply theme class to html element
  */
 function applyTheme(theme: "light" | "dark"): void {
@@ -100,6 +76,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
           });
         },
         onActivate: async () => {
+          console.log("rua-extension-activaterua-extension-activaterua-extension-activaterua-extension-activaterua-extension-activaterua-extension-activate")
           window.dispatchEvent(new CustomEvent("rua-extension-activate"));
           const handlers = eventHandlers.get("activate") || [];
           handlers.forEach((handler) => {
@@ -144,21 +121,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
     const extensionMeta = await hostAPI.getExtensionInfo();
     console.log("[Rua API] Extension info from host:", extensionMeta);
 
-    // Get and inject main app CSS styles
-    try {
-      const cssStyles = await hostAPI.uiGetStyles();
-      if (cssStyles) {
-        injectStyles(cssStyles);
-        console.log("[Rua API] Main app CSS injected:", cssStyles.length, "bytes");
-      }
-
-      // Also apply theme class to html element
-      const theme = await hostAPI.uiGetTheme();
-      applyTheme(theme);
-    } catch (err) {
-      console.warn("[Rua API] Failed to inject styles:", err);
-    }
-
+    // remove inject
     // Define the Rua API
     const ruaAPI: RuaClientAPI = {
       extension: extensionMeta,
