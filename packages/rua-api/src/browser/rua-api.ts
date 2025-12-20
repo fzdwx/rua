@@ -5,14 +5,14 @@
  * Uses kkrpc for communication with the host application.
  */
 
-import { IframeChildIO, RPCChannel } from "kkrpc/browser";
-import type { RuaClientAPI, EventHandler, FsOptions } from "../types";
-import { RuaServerAPI } from "../types/rua";
+import {IframeChildIO, RPCChannel} from "kkrpc/browser";
+import type {RuaClientAPI, EventHandler, FsOptions} from "../types";
+import {RuaServerAPI} from "../types/rua";
 
 // Re-export types for convenience
-export type { ExtensionMeta, DynamicAction, RuaClientAPI as RuaAPI } from "../types/rua";
-export type { RuaClientAPI } from "../types/rua";
-export { BaseDirectory } from "../types";
+export type {ExtensionMeta, DynamicAction, RuaClientAPI as RuaAPI} from "../types/rua";
+export type {RuaClientAPI} from "../types/rua";
+export {BaseDirectory} from "../types";
 
 // Singleton instance
 let ruaInstance: RuaClientAPI | null = null;
@@ -93,13 +93,14 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
           const handlers = eventHandlers.get("action-triggered") || [];
           handlers.forEach((handler) => {
             try {
-              handler({ actionId, context });
+              handler({actionId, context});
             } catch (e) {
               console.error("[Rua API] Event handler error:", e);
             }
           });
         },
         onActivate: async () => {
+          window.dispatchEvent(new CustomEvent("rua-extension-activate"));
           const handlers = eventHandlers.get("activate") || [];
           handlers.forEach((handler) => {
             try {
@@ -110,6 +111,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
           });
         },
         onDeactivate: async () => {
+          window.dispatchEvent(new CustomEvent("rua-extension-deActivate"));
           const handlers = eventHandlers.get("deactivate") || [];
           handlers.forEach((handler) => {
             try {
@@ -206,8 +208,6 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
       },
 
       ui: {
-        hideInput: () => hostAPI.uiHideInput(),
-        showInput: () => hostAPI.uiShowInput(),
         close: () => hostAPI.uiClose(),
         setTitle: (title) => hostAPI.uiSetTitle(title),
         getTheme: () => hostAPI.uiGetTheme(),
@@ -243,7 +243,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
     ruaInstance = ruaAPI;
 
     // Dispatch ready event
-    window.dispatchEvent(new CustomEvent("rua-ready", { detail: ruaAPI.extension }));
+    window.dispatchEvent(new CustomEvent("rua-ready", {detail: ruaAPI.extension}));
 
     console.log("[Rua API] Initialized for extension:", ruaAPI.extension.id);
 

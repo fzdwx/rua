@@ -158,8 +158,6 @@ export interface FsOptions {
  */
 export interface RuaClientAPI extends CommonRuaAPI {
   ui: {
-    hideInput(): Promise<void>;
-    showInput(): Promise<void>;
     /** close action back to main view */
     close(): Promise<void>;
     setTitle(title: string): Promise<void>;
@@ -226,10 +224,6 @@ export interface RuaServerAPI {
   shellExecuteSpawn(program: string, args: string[]): Promise<string>;
 
   // UI API
-  uiHideInput(): Promise<void>;
-
-  uiShowInput(): Promise<void>;
-
   uiClose(): Promise<void>;
 
   uiSetTitle(title: string): Promise<void>;
@@ -255,8 +249,6 @@ export interface RuaServerAPI {
 
 /** Callbacks for UI control from host side */
 export interface RuaHostCallbacks {
-  onHideInput?: () => void;
-  onShowInput?: () => void;
   onClose?: () => void;
   onSetTitle?: (title: string) => void;
   onRegisterActions?: (actions: DynamicAction[]) => void;

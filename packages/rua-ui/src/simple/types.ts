@@ -1,6 +1,6 @@
 import type * as React from "react"
-import type { Action, ActionId, ActionTree } from "../command/types"
-import type { ActionImpl } from "../command"
+import type {Action, ActionId, ActionTree} from "../command/types"
+import type {ActionImpl} from "../command"
 
 /**
  * Callback when a query is submitted (e.g., creating a new item)
@@ -219,6 +219,11 @@ export interface CommandPaletteProps extends UseCommandOptions {
   emptyStateClassName?: string
 
   /**
+   * Whether to auto-focus the input on mount
+   */
+  autoFocus?: boolean
+
+  /**
    * Whether to show the footer
    * @default true
    */
@@ -234,4 +239,18 @@ export interface CommandPaletteProps extends UseCommandOptions {
    * Shown when there are no actions and no search
    */
   emptyState?: EmptyStateRenderer
+
+  /**
+   * Optional Rua API instance for window control
+   * When provided, enables window hiding on ESC/Backspace at root level with empty search
+   */
+  rua?: {
+    hideWindow(): Promise<void>
+    ui: {
+      /** close action back to main view */
+      close(): Promise<void>;
+      /** Get initial search value passed from main app */
+      getInitialSearch(): Promise<string>;
+    };
+  }
 }

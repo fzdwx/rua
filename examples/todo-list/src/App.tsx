@@ -128,6 +128,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
   return (
     <CommandPalette
       actions={actions}
+      rua={rua}
       placeholder="Search todo-list todos or create new..."
       onQuerySubmit={createQuerySubmitHandler("create-todo", async (query) => {
         const newTodo: Todo = {

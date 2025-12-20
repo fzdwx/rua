@@ -159,15 +159,6 @@ export function createRuaAPI(
       return await apiCore.shellExecuteSpawn(command);
     },
 
-    // UI API (no permission required)
-    async uiHideInput(): Promise<void> {
-      callbacks.onHideInput?.();
-    },
-
-    async uiShowInput(): Promise<void> {
-      callbacks.onShowInput?.();
-    },
-
     async uiClose(): Promise<void> {
       callbacks.onClose?.();
     },

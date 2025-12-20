@@ -252,8 +252,6 @@ export function ExtensionView({
           parsedPermissions,
         },
         {
-          onHideInput: () => onInputVisibilityChange?.(false),
-          onShowInput: () => onInputVisibilityChange?.(true),
           onClose: handleClose,
           onSetTitle: setTitle,
           onRegisterActions,
