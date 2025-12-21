@@ -163,6 +163,8 @@ export interface UseCommandReturn {
     actions: (current: ActionImpl | null, changeVisible: () => void) => Action[];
     settings?: Action[];
     mainInputRef?: React.RefObject<HTMLInputElement>;
+    onSubCommandShow?: () => void;
+    onSubCommandHide?: () => void;
   };
 
   // State accessors (for advanced usage)

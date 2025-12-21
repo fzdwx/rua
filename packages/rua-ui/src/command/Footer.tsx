@@ -94,16 +94,8 @@ const FooterActionRender: React.FC<{
       <FooterHr />
       <FooterActions
         current={current}
-        onSubCommandShow={() => {
-          if (onSubCommandShow) {
-            onSubCommandShow();
-          }
-        }}
-        onSubCommandHide={() => {
-          if (onSubCommandHide) {
-            onSubCommandHide();
-          }
-        }}
+        onSubCommandShow={onSubCommandShow}
+        onSubCommandHide={onSubCommandHide}
         actions={actions}
         mainInputRef={mainInputRef}
       />
@@ -145,13 +137,13 @@ const FooterActions: React.FC<{
 
   React.useEffect(() => {
     if (open) {
-      onSubCommandShow();
+      onSubCommandShow?.();
       // Focus footer input when opened
       setTimeout(() => {
         footerInputRef.current?.focus();
       }, 0);
     }
-  }, [open, onSubCommandShow, mainInputRef]);
+  }, [open]); // Only depend on open state, callbacks are stable
 
   const [currentActions, setCurrentActions] = useState<Action[]>([]);
 

@@ -1,9 +1,9 @@
-import {useState, useMemo, useCallback, useRef, useEffect} from "react"
-import {useActionStore} from "../command/useActionStore"
-import {useMatches} from "../command/useMatches"
-import {RenderItem} from "../command/RenderItem"
-import type {UseCommandOptions, UseCommandReturn} from "./types"
-import {calculateBackoffDelay, getActiveAction} from "./utils"
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useActionStore } from "../command/useActionStore";
+import { useMatches } from "../command/useMatches";
+import { RenderItem } from "../command/RenderItem";
+import type { UseCommandOptions, UseCommandReturn } from "./types";
+import { calculateBackoffDelay, getActiveAction } from "./utils";
 
 /**
  * Unified hook for managing command palette state and behavior
@@ -47,81 +47,81 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
     settingsActions,
     renderItem,
     inputRef: externalInputRef,
-  } = options
+  } = options;
 
   // Internal state
-  const [search, setSearch] = useState("")
-  const [resultHandleEvent, setResultHandleEvent] = useState(true)
-  const [focusQueryInput, setFocusQueryInput] = useState(false)
-  const internalInputRef = useRef<HTMLInputElement | null>(null)
+  const [search, setSearch] = useState("");
+  const [resultHandleEvent, setResultHandleEvent] = useState(true);
+  const [focusQueryInput, setFocusQueryInput] = useState(false);
+  const internalInputRef = useRef<HTMLInputElement | null>(null);
 
   // Use external ref if provided, otherwise use internal
-  const inputRef = externalInputRef || internalInputRef
+  const inputRef = externalInputRef || internalInputRef;
 
   // Action store management
-  const {useRegisterActions, state, setActiveIndex, setRootActionId} = useActionStore()
-  useRegisterActions(actions, [actions])
+  const { useRegisterActions, state, setActiveIndex, setRootActionId } = useActionStore();
+  useRegisterActions(actions, [actions]);
 
   // Match results
-  const {results} = useMatches(search, state.actions, state.rootActionId)
+  const { results } = useMatches(search, state.actions, state.rootActionId);
 
   // Active action (filtered to remove string section headers)
   const activeAction = useMemo(
     () => getActiveAction(results, state.activeIndex),
     [results, state.activeIndex]
-  )
+  );
 
   // Query submit handler
   const handleQuerySubmit = useCallback(
     async (query: string, actionId: string) => {
       if (onQuerySubmit) {
-        await onQuerySubmit(query, actionId)
+        await onQuerySubmit(query, actionId);
       }
       // Clear search after submit
-      setSearch("")
+      setSearch("");
     },
     [onQuerySubmit]
-  )
+  );
 
   // Query action enter handler (Tab press)
   const handleQueryActionEnter = useCallback(() => {
-    setFocusQueryInput(true)
-    setTimeout(() => setFocusQueryInput(false), 100)
+    setFocusQueryInput(true);
+    setTimeout(() => setFocusQueryInput(false), 100);
 
     if (onQueryActionEnter) {
-      onQueryActionEnter()
+      onQueryActionEnter();
     }
-  }, [onQueryActionEnter])
+  }, [onQueryActionEnter]);
 
   // Default footer content renderer
   const defaultFooterContent = useCallback(
     (current: any) => {
-      if (!current) return "Select an action"
-      if (footerContent) return footerContent(current)
+      if (!current) return "Select an action";
+      if (footerContent) return footerContent(current);
 
       // Default: show subtitle or instruction for query actions
-      if (current.query) return "Type your query and press Enter"
-      return current.subtitle || current.name
+      if (current.query) return "Type your query and press Enter";
+      return current.subtitle || current.name;
     },
     [footerContent]
-  )
+  );
 
   // Default footer actions getter
   const defaultFooterActions = useCallback(
     (current: any, changeVisible: () => void) => {
       if (footerActions) {
-        return footerActions(current, changeVisible)
+        return footerActions(current, changeVisible);
       }
 
       // Get footer actions from the action itself
       if (current?.footerAction) {
-        return current.footerAction(changeVisible)
+        return current.footerAction(changeVisible);
       }
 
-      return []
+      return [];
     },
     [footerActions]
-  )
+  );
 
   // Default section header renderer
   const defaultSectionRenderer = useCallback(
@@ -131,36 +131,47 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
       </div>
     ),
     []
-  )
+  );
 
   // Default item renderer
   const defaultItemRenderer = useCallback(
     (item: any, active: boolean) => {
       if (typeof item === "string") {
-        return defaultSectionRenderer(item)
+        return defaultSectionRenderer(item);
       }
 
       if (renderItem) {
-        return renderItem(item, active)
+        return renderItem(item, active);
       }
 
       // Use default RenderItem component
-      return <RenderItem action={item} active={active} currentRootActionId={state.rootActionId ?? ""}/>
+      return (
+        <RenderItem action={item} active={active} currentRootActionId={state.rootActionId ?? ""} />
+      );
     },
     [renderItem, state.rootActionId, defaultSectionRenderer]
-  )
+  );
 
   // Reset function
   const reset = useCallback(() => {
-    setSearch("")
-    setRootActionId(null)
-    setActiveIndex(0)
-  }, [setRootActionId, setActiveIndex])
+    setSearch("");
+    setRootActionId(null);
+    setActiveIndex(0);
+  }, [setRootActionId, setActiveIndex]);
 
   // Focus input function
   const focusInput = useCallback(() => {
-    inputRef.current?.focus()
-  }, [inputRef])
+    inputRef.current?.focus();
+  }, [inputRef]);
+
+  // Stable callbacks for footer to avoid unnecessary re-renders
+  const handleSubCommandShow = useCallback(() => {
+    setResultHandleEvent(false);
+  }, []);
+
+  const handleSubCommandHide = useCallback(() => {
+    setResultHandleEvent(true);
+  }, []);
 
   // Build return object with pre-processed props
   return {
@@ -179,7 +190,7 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
       focusQueryInput,
       inputRefSetter: (ref: HTMLInputElement) => {
         if (inputRef && "current" in inputRef) {
-          inputRef.current = ref
+          inputRef.current = ref;
         }
       },
     },
@@ -195,7 +206,7 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
       currentRootActionId: state.rootActionId,
       activeIndex: state.activeIndex,
       onQueryActionEnter: handleQueryActionEnter,
-      onRender: ({item, active}) => defaultItemRenderer(item, active),
+      onRender: ({ item, active }) => defaultItemRenderer(item, active),
     },
 
     footerProps: {
@@ -205,6 +216,8 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
       actions: defaultFooterActions,
       settings: settingsActions,
       mainInputRef: inputRef,
+      onSubCommandShow: handleSubCommandShow,
+      onSubCommandHide: handleSubCommandHide,
     },
 
     // State accessors (for advanced usage)
@@ -218,5 +231,5 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
     // Control methods
     reset,
     focusInput,
-  }
+  };
 }

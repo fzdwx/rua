@@ -157,40 +157,42 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
 
   // Build actions from todos
   const actions = useMemo<Action[]>(() => {
-    const todoActions = todos.map((todo) => ({
-      id: `todo-${todo.id}`,
-      name: todo.title,
-      icon: todo.done ? "✅" : "⭕",
-      subtitle: formatRelativeDate(todo.createdAt),
-      section: todo.done ? "Completed" : "Active",
-      priority: todo.done ? 0 : 10,
-      badge: todo.done ? "Done" : undefined,
-      item: todo,
-      footerAction: (changeVisible: () => void) => [
-        {
-          id: `toggle-${todo.id}`,
-          name: todo.done ? "Mark as Active" : "Mark as Done",
-          icon: todo.done ? "⭕" : "✅",
-          perform: async () => {
-            const updated = todos.map((t) => (t.id === todo.id ? { ...t, done: !t.done } : t));
-            await rua.storage.set("todos", updated);
-            setTodos(updated);
-            changeVisible();
+    const todoActions = todos.map(
+      (todo): Action => ({
+        id: `todo-${todo.id}`,
+        name: todo.title,
+        icon: todo.done ? "✅" : "⭕",
+        subtitle: formatRelativeDate(todo.createdAt),
+        section: todo.done ? "Completed" : "Active",
+        priority: todo.done ? 0 : 10,
+        badge: todo.done ? "Done" : undefined,
+        item: todo,
+        footerAction: (changeVisible: () => void): Action[] => [
+          {
+            id: `toggle-${todo.id}`,
+            name: todo.done ? "Mark as Active" : "Mark as Done",
+            icon: todo.done ? "⭕" : "✅",
+            perform: async () => {
+              const updated = todos.map((t) => (t.id === todo.id ? { ...t, done: !t.done } : t));
+              await rua.storage.set("todos", updated);
+              setTodos(updated);
+              changeVisible();
+            },
           },
-        },
-        {
-          id: `delete-${todo.id}`,
-          name: "Delete",
-          icon: "🗑️",
-          perform: async () => {
-            const updated = todos.filter((t) => t.id !== todo.id);
-            await rua.storage.set("todos", updated);
-            setTodos(updated);
-            changeVisible();
+          {
+            id: `delete-${todo.id}`,
+            name: "Delete",
+            icon: "🗑️",
+            perform: async () => {
+              const updated = todos.filter((t) => t.id !== todo.id);
+              await rua.storage.set("todos", updated);
+              setTodos(updated);
+              changeVisible();
+            },
           },
-        },
-      ],
-    }));
+        ],
+      })
+    );
 
     return [
       // Quick create with query input
