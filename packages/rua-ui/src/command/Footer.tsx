@@ -87,7 +87,7 @@ export const Footer: React.FC<{
   content: (current?: string | ActionImpl | null) => string | React.ReactElement;
   onSubCommandHide?: () => void;
   onSubCommandShow?: () => void;
-  mainInputRef?: React.RefObject<HTMLInputElement | null>;
+  mainInputRef?: React.RefObject<HTMLElement | null>;
   settings?: Action[]; // Settings actions for settings menu
   rightElement?: React.ReactElement; // Custom element to display on the right side
   loading?: boolean; // Show loading indicator
@@ -152,7 +152,7 @@ const FooterActionRender: React.FC<{
   current: string | ActionImpl | null;
   onSubCommandHide?: () => void;
   onSubCommandShow?: () => void;
-  mainInputRef?: React.RefObject<HTMLInputElement | null>;
+  mainInputRef?: React.RefObject<HTMLElement | null>;
   onPanelActionEnter?: (action: any) => void;
 }> = ({ actions, onSubCommandHide, onSubCommandShow, current, mainInputRef, onPanelActionEnter }) => {
   return (
@@ -313,7 +313,7 @@ const FooterSettings: React.FC<{
   settings: Action[];
   onSubCommandHide?: () => void;
   onSubCommandShow?: () => void;
-  mainInputRef?: React.RefObject<HTMLInputElement | null>;
+  mainInputRef?: React.RefObject<HTMLElement | null>;
 }> = ({ settings, onSubCommandHide, onSubCommandShow, mainInputRef }) => {
   const [open, setOpen] = React.useState(false);
 

@@ -323,6 +323,7 @@ export function CommandPalette(props: CommandPaletteProps) {
           command={command}
           rightElement={rightElement}
           onPanelActionEnter={handlePanelActionEnter}
+          panelInputRef={panelInputRef}
         />
       </Background>
     </Container>
@@ -335,12 +336,14 @@ export interface ActiveFooterProps {
   rightElement?: React.ReactElement<unknown, string | React.JSXElementConstructor<any>>;
   panelFooterActions?: (current: any, changeVisible: () => void) => Action[];
   onPanelActionEnter?: (action: any) => void;
+  panelInputRef?: React.RefObject<HTMLElement>;
 }
 
-function ActiveFooter({activePanel, command, rightElement, panelFooterActions, onPanelActionEnter}: ActiveFooterProps) {
+function ActiveFooter({activePanel, command, rightElement, panelFooterActions, onPanelActionEnter, panelInputRef}: ActiveFooterProps) {
   // When panel is open, use panel footer actions but keep navigation from command
+  // Also override mainInputRef to panelInputRef so focus returns to panel input after popover closes
   const footerProps = activePanel && panelFooterActions
-    ? { ...command.footerProps, actions: panelFooterActions }
+    ? { ...command.footerProps, actions: panelFooterActions, mainInputRef: panelInputRef }
     : command.footerProps;
 
   return <Footer {...footerProps} rightElement={rightElement} onPanelActionEnter={onPanelActionEnter}/>;
