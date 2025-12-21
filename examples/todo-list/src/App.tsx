@@ -129,6 +129,36 @@ function App() {
 function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
   const [todos, setTodos] = useState<Todo[]>([]);
 
+  // ============================================================================
+  // MANUAL NAVIGATION EXAMPLE (Optional)
+  // ============================================================================
+  // If you need custom navigation when a panel is open, manage state externally:
+  //
+  // const [customNavigation, setCustomNavigation] = useState<{
+  //   title?: string;
+  //   icon?: string;
+  // } | null>(null);
+  //
+  // Then in your panel action, update the navigation when opening:
+  //   panel: ({ onClose }) => {
+  //     // Set custom navigation when panel opens
+  //     useEffect(() => {
+  //       setCustomNavigation({ title: "New Todo", icon: "➕" });
+  //       return () => setCustomNavigation(null); // Reset on close
+  //     }, []);
+  //     return <CreateTodoPanel onClose={onClose} ... />;
+  //   }
+  //
+  // And pass to CommandPalette:
+  //   <CommandPalette
+  //     navigationTitle={customNavigation?.title}
+  //     navigationIcon={customNavigation?.icon}
+  //     ...
+  //   />
+  //
+  // By default, navigation uses manifest action info (title: "todo-list", icon: "./icon.png")
+  // ============================================================================
+
   // Load todos from storage
   useEffect(() => {
     rua.storage
@@ -155,6 +185,46 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
     [rua]
   );
 
+  const defualtFootAction = [
+      // Create with panel (sub-page)
+      {
+        id: "create-todo-panel",
+        name: "Create New Todo",
+        icon: "➕",
+        subtitle: "Open form to create todo",
+        section: "Actions",
+        priority: 99,
+        panel: ({ onClose, afterPopoverFocusElement }: PanelProps) => {
+          return (
+            <CreateTodoPanel
+              onClose={onClose}
+              onSubmit={handleCreateTodo}
+              inputRef={afterPopoverFocusElement}
+            />
+          );
+        },
+        // Note: panelTitle removed - navigation now comes from manifest action info
+        // panelFooterActions is still used for footer action buttons
+        panelFooterActions: (onClose: () => void) => [
+          {
+            id: "cancel",
+            name: "Cancel",
+            icon: "←",
+            perform: onClose,
+          },
+          {
+            id: "create",
+            name: "Create",
+            icon: "✓",
+            perform: () => {
+              const submit = (window as any).__createTodoSubmit;
+              if (submit) submit();
+            },
+          },
+        ],
+      },
+  ]
+
   // Build actions from todos
   const actions = useMemo<Action[]>(() => {
     const todoActions = todos.map(
@@ -168,6 +238,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
         badge: todo.done ? "Done" : undefined,
         item: todo,
         footerAction: (changeVisible: () => void): Action[] => [
+          ...defualtFootAction,
           {
             id: `toggle-${todo.id}`,
             name: todo.done ? "Mark as Active" : "Mark as Done",
@@ -195,52 +266,6 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
     );
 
     return [
-      // Quick create with query input
-      {
-        id: "create-todo",
-        name: "Quick Create Todo",
-        icon: "⚡",
-        subtitle: "Press Tab to type title",
-        section: "Actions",
-        priority: 80,
-        query: true,
-      },
-      // Create with panel (sub-page)
-      {
-        id: "create-todo-panel",
-        name: "Create New Todo",
-        icon: "➕",
-        subtitle: "Open form to create todo",
-        section: "Actions",
-        priority: 99,
-        panel: ({ onClose, afterPopoverFocusElement }: PanelProps) => {
-          return (
-            <CreateTodoPanel
-              onClose={onClose}
-              onSubmit={handleCreateTodo}
-              inputRef={afterPopoverFocusElement}
-            />
-          );
-        },
-        panelTitle: "New Todo",
-        panelFooterActions: (onClose: () => void) => [
-          {
-            id: "cancel",
-            name: "Cancel",
-            icon: "←",
-            perform: onClose,
-          },
-          {
-            id: "create",
-            name: "Create",
-            icon: "✓",
-            perform: () => {
-              const submit = (window as any).__createTodoSubmit;
-              if (submit) submit();
-            },
-          },
-        ],
-      },
       ...todoActions,
     ];
   }, [todos, handleCreateTodo, rua]);

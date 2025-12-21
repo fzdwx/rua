@@ -7,11 +7,27 @@
 
 import { CommonRuaAPI } from "../browser";
 
+/** Current action information from manifest */
+export interface CurrentActionInfo {
+  /** Action name from manifest */
+  name: string;
+  /** Display title from manifest */
+  title: string;
+  /** Icon path or iconify icon name */
+  icon?: string;
+  /** Subtitle from manifest */
+  subtitle?: string;
+}
+
 /** Extension metadata */
 export interface ExtensionMeta {
   id: string;
   name: string;
   version: string;
+  /** Extension directory path (for resolving relative asset paths) */
+  path?: string;
+  /** Current action info from manifest (populated when running in view mode) */
+  currentAction?: CurrentActionInfo;
 }
 
 /** Dynamic action definition */
@@ -284,10 +300,14 @@ export interface ExtensionHostInfo {
   id: string;
   name: string;
   version: string;
+  /** Extension directory path (for resolving relative asset paths) */
+  path?: string;
   /** Simple permission strings for backward compatibility */
   permissions: string[];
   /** Detailed parsed permissions with allow rules */
   parsedPermissions?: ParsedPermission[];
+  /** Current action info from manifest (populated when running in view mode) */
+  currentAction?: CurrentActionInfo;
 }
 
 /** State for a loaded background script */

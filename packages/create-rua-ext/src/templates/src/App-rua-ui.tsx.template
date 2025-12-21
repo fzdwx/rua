@@ -129,6 +129,36 @@ function App() {
 function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
   const [todos, setTodos] = useState<Todo[]>([]);
 
+  // ============================================================================
+  // MANUAL NAVIGATION EXAMPLE (Optional)
+  // ============================================================================
+  // If you need custom navigation when a panel is open, manage state externally:
+  //
+  // const [customNavigation, setCustomNavigation] = useState<{
+  //   title?: string;
+  //   icon?: string;
+  // } | null>(null);
+  //
+  // Then in your panel action, update the navigation when opening:
+  //   panel: ({ onClose }) => {
+  //     // Set custom navigation when panel opens
+  //     useEffect(() => {
+  //       setCustomNavigation({ title: "New Todo", icon: "➕" });
+  //       return () => setCustomNavigation(null); // Reset on close
+  //     }, []);
+  //     return <CreateTodoPanel onClose={onClose} ... />;
+  //   }
+  //
+  // And pass to CommandPalette:
+  //   <CommandPalette
+  //     navigationTitle={customNavigation?.title}
+  //     navigationIcon={customNavigation?.icon}
+  //     ...
+  //   />
+  //
+  // By default, navigation uses manifest action info (title: "{{name}}", icon: "./icon.png")
+  // ============================================================================
+
   // Load todos from storage
   useEffect(() => {
     rua.storage
@@ -222,7 +252,8 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
             />
           );
         },
-        panelTitle: "New Todo",
+        // Note: panelTitle removed - navigation now comes from manifest action info
+        // panelFooterActions is still used for footer action buttons
         panelFooterActions: (onClose: () => void) => [
           {
             id: "cancel",

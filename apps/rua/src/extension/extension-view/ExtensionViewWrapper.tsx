@@ -8,7 +8,7 @@
 import { useExtensionSystem } from "@/contexts/ExtensionSystemContext.tsx";
 import { ExtensionView } from "./ExtensionView.tsx";
 import type { DynamicAction } from "@/extension/extension-server-api.ts";
-import type { ExtensionPermission, ParsedPermission } from "rua-api";
+import type { CurrentActionInfo, ExtensionPermission, ParsedPermission } from "rua-api";
 
 interface ExtensionViewWrapperProps {
   /** The extension's UI entry path with action query param */
@@ -43,10 +43,43 @@ export function ExtensionViewWrapper({
   // Find the extension to get its permissions and version
   const extension = extensions.find((p) => p.manifest.id === extensionId);
   const extensionVersion = extension?.manifest.version;
+  const extensionPath = extension?.path;
 
   // Parse permissions - extract simple permission strings and detailed configs
   const rawPermissions = extension?.manifest.permissions || [];
   const { simplePermissions, parsedPermissions } = parsePermissions(rawPermissions);
+
+  // Extract current action info from manifest based on uiEntry action param
+  const currentAction = extractCurrentActionInfo(uiEntry, extension?.manifest);
+
+  /**
+   * Extract current action info from manifest based on action query param in uiEntry
+   */
+  function extractCurrentActionInfo(
+    uiEntry: string,
+    manifest?: { rua?: { actions?: Array<{ name: string; title: string; icon?: string; subtitle?: string }> } }
+  ): CurrentActionInfo | undefined {
+    if (!manifest?.rua?.actions) return undefined;
+
+    // Parse action name from uiEntry query string (e.g., "...?action=main")
+    const queryStart = uiEntry.indexOf("?");
+    if (queryStart === -1) return undefined;
+
+    const params = new URLSearchParams(uiEntry.substring(queryStart));
+    const actionName = params.get("action");
+    if (!actionName) return undefined;
+
+    // Find the action in manifest
+    const action = manifest.rua.actions.find((a) => a.name === actionName);
+    if (!action) return undefined;
+
+    return {
+      name: action.name,
+      title: action.title,
+      icon: action.icon,
+      subtitle: action.subtitle,
+    };
+  }
 
   /**
    * Parse permissions array into simple strings and detailed configs
@@ -116,8 +149,10 @@ export function ExtensionViewWrapper({
         extensionName={extensionName}
         extensionId={extensionId}
         extensionVersion={extensionVersion}
+        extensionPath={extensionPath}
         permissions={simplePermissions}
         parsedPermissions={parsedPermissions}
+        currentAction={currentAction}
         onReturn={onReturn}
         onInputVisibilityChange={onInputVisibilityChange}
         onRegisterActions={handleRegisterActions}

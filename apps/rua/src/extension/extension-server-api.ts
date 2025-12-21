@@ -67,6 +67,8 @@ export function createRuaAPI(
         id: extensionInfo.id,
         name: extensionInfo.name,
         version: extensionInfo.version,
+        path: extensionInfo.path,
+        currentAction: extensionInfo.currentAction,
       };
     },
 

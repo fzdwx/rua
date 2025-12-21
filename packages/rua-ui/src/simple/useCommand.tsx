@@ -1,9 +1,9 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
 import { useActionStore } from "../command/useActionStore";
 import { useMatches } from "../command/useMatches";
 import { RenderItem } from "../command/RenderItem";
 import type { UseCommandOptions, UseCommandReturn } from "./types";
-import { calculateBackoffDelay, getActiveAction } from "./utils";
+import { getActiveAction } from "./utils";
 
 /**
  * Unified hook for managing command palette state and behavior
@@ -39,10 +39,9 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
     placeholder = "Type a command or search...",
     loading = false,
     onQuerySubmit,
-    onSelect,
     onQueryActionEnter,
-    footerIcon = "✨",
-    footerContent,
+    navigationIcon,
+    navigationTitle,
     footerActions,
     settingsActions,
     renderItem,
@@ -97,14 +96,28 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
   const defaultFooterContent = useCallback(
     (current: any) => {
       if (!current) return "Select an action";
-      if (footerContent) return footerContent(current);
+      if (typeof navigationTitle === 'string') return navigationTitle;
+      if (typeof navigationTitle === 'function') return navigationTitle(current);
 
       // Default: show subtitle or instruction for query actions
       if (current.query) return "Type your query and press Enter";
       return current.subtitle || current.name;
     },
-    [footerContent]
+    [navigationTitle]
   );
+
+  // Resolve navigation icon - uses provided value, active action's icon, or fallback
+  const resolvedNavigationIcon = useMemo((): string | React.ReactElement => {
+    if (navigationIcon !== undefined) return navigationIcon;
+    // Only use activeAction.icon if it's a string or ReactElement (not other ReactNode types)
+    if (activeAction?.icon !== undefined && activeAction.icon !== null) {
+      const icon = activeAction.icon;
+      if (typeof icon === 'string' || React.isValidElement(icon)) {
+        return icon;
+      }
+    }
+    return "✨";
+  }, [navigationIcon, activeAction]);
 
   // Default footer actions getter
   const defaultFooterActions = useCallback(
@@ -211,7 +224,7 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
 
     footerProps: {
       current: activeAction,
-      icon: footerIcon,
+      icon: resolvedNavigationIcon,
       content: defaultFooterContent,
       actions: defaultFooterActions,
       settings: settingsActions,

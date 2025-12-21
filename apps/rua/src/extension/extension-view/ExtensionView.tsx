@@ -70,7 +70,7 @@ import {
   type DynamicAction,
   type RuaClientCallbacks,
 } from "@/extension/extension-server-api.ts";
-import type { ParsedPermission, RuaServerAPI } from "rua-api";
+import type { CurrentActionInfo, ParsedPermission, RuaServerAPI } from "rua-api";
 import { useTheme } from "@/hooks/useTheme";
 import {
   registerViewExtension,
@@ -86,10 +86,14 @@ interface ExtensionViewProps {
   extensionId?: string;
   /** Extension version */
   extensionVersion?: string;
+  /** Extension directory path (for resolving relative asset paths) */
+  extensionPath?: string;
   /** Extension permissions (simple strings) */
   permissions?: string[];
   /** Parsed permissions with allow rules */
   parsedPermissions?: ParsedPermission[];
+  /** Current action info from manifest */
+  currentAction?: CurrentActionInfo;
   /** Callback when user wants to return */
   onReturn: () => void;
   /** Callback when extension requests input visibility change */
@@ -109,8 +113,10 @@ export function ExtensionView({
   extensionName,
   extensionId = "unknown",
   extensionVersion = "0.0.0",
+  extensionPath,
   permissions = [],
   parsedPermissions = [],
+  currentAction,
   onReturn,
   onInputVisibilityChange,
   onRegisterActions,
@@ -248,8 +254,10 @@ export function ExtensionView({
           id: extensionId,
           name: extensionName,
           version: extensionVersion,
+          path: extensionPath,
           permissions,
           parsedPermissions,
+          currentAction,
         },
         {
           onClose: handleClose,
@@ -292,8 +300,10 @@ export function ExtensionView({
     extensionId,
     extensionName,
     extensionVersion,
+    extensionPath,
     permissions,
     parsedPermissions,
+    currentAction,
     onInputVisibilityChange,
     handleClose,
     onRegisterActions,

@@ -105,13 +105,25 @@ Both APIs provide access to your extension's metadata:
 ```typescript
 // View mode
 const rua = await initializeRuaAPI();
-const { id, name, version } = rua.extension;
+const { id, name, version, path, currentAction } = rua.extension;
 
 // Background mode
 const rua = createMainContextRuaAPI();
 const { id, name, version } = rua.extension;
 
 console.log(`${name} v${version} (${id})`);
+
+// In view mode, you can also access current action info from manifest
+if (currentAction) {
+  console.log('Current action:', currentAction.title);
+  console.log('Action icon:', currentAction.icon);
+}
+
+// The path field contains the extension directory path
+// Useful for resolving relative asset paths
+if (path) {
+  console.log('Extension path:', path);
+}
 ```
 
 ## API Availability by Mode

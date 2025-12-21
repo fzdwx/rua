@@ -183,7 +183,9 @@ Actions define how users can interact with your extension:
 - **icon**: Icon identifier
   - Format: `tabler:icon-name` for Tabler icons
   - Format: `lucide:icon-name` for Lucide icons
-  - Custom icons: `./path/to/icon.svg`
+  - Custom icons: `./path/to/icon.svg` or `./path/to/icon.png`
+  - Data URIs: `data:image/svg+xml;base64,...`
+  - Note: Relative paths (starting with `./`) are automatically converted to `ext://` protocol URLs for loading extension assets
 
 - **description**: Optional detailed description
   - Shown in search results

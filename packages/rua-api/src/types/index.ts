@@ -17,6 +17,7 @@ export type {
 
 // Rua extension API types
 export type {
+  CurrentActionInfo,
   ExtensionMeta,
   EventHandler,
   DynamicAction,

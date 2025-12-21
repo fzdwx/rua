@@ -3,10 +3,22 @@ import {useCommand} from "./useCommand";
 import {Input} from "@/command";
 import {ResultsRender} from "@/command";
 import {Footer} from "@/command";
-import type {CommandPaletteProps, PanelFooter, UseCommandReturn} from "./types";
+import type {CommandPaletteProps, UseCommandReturn} from "./types";
 import type {PanelProps, Action} from "@/command/types";
 import {attemptFocusWithRetry} from "./utils";
 import {Background, Container} from "@/common/tools";
+
+/**
+ * Convert a relative path to an ext:// protocol URL
+ * @param path - Relative path (e.g., "./icon.png")
+ * @param extPath - Extension directory path
+ * @returns ext:// URL
+ */
+function toExtURL(path: string, extPath: string): string {
+  const encodedBaseDir = btoa(extPath).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  let fileName = path.replace(/^\.\//, "");
+  return `ext://${encodedBaseDir}/${fileName}`;
+}
 
 /**
  * Panel state for custom action panels
@@ -16,8 +28,6 @@ interface PanelState {
   render: (props: PanelProps) => React.ReactElement;
   /** The action ID that opened this panel */
   actionId: string;
-  /** Title for footer when panel is open */
-  panelTitle?: string;
   /** Footer actions for this panel */
   panelFooterActions?: (onClose: () => void) => Action[];
 }
@@ -50,6 +60,8 @@ export function CommandPalette(props: CommandPaletteProps) {
     emptyState,
     actions,
     rua,
+    navigationIcon,
+    navigationTitle,
     ...hookOptions
   } = props;
 
@@ -57,8 +69,32 @@ export function CommandPalette(props: CommandPaletteProps) {
   const [activePanel, setActivePanel] = useState<PanelState | null>(null);
   const panelInputRef = useRef<HTMLElement>(null);
 
+  // Get default navigation from manifest action info (when rua is provided)
+  // rua.extension.currentAction contains the current action's info from manifest
+  const currentAction = rua?.extension?.currentAction;
+  const extensionPath = rua?.extension?.path;
+  const defaultNavigationTitle = currentAction?.title || undefined;
+  
+  // Convert icon path to ext:// URL if it's a relative path and extension path is available
+  const defaultNavigationIcon = useMemo(() => {
+    const icon = currentAction?.icon;
+    if (!icon) return undefined;
+    
+    // Check if it's a relative path that needs conversion
+    if (extensionPath && (icon.startsWith("./") || icon.startsWith("../") || icon.startsWith("/"))) {
+      return toExtURL(icon, extensionPath);
+    }
+    return icon;
+  }, [currentAction?.icon, extensionPath]);
+
+  // Resolve final navigation values - custom props override manifest defaults
+  const resolvedNavigationIcon = navigationIcon ?? defaultNavigationIcon;
+  const resolvedNavigationTitle = navigationTitle ?? defaultNavigationTitle;
+
   const command = useCommand({
     actions,
+    navigationIcon: resolvedNavigationIcon,
+    navigationTitle: resolvedNavigationTitle,
     ...hookOptions,
   });
 
@@ -93,7 +129,6 @@ export function CommandPalette(props: CommandPaletteProps) {
     setActivePanel({
       render: action.panel,
       actionId: action.id,
-      panelTitle: action.panelTitle,
       panelFooterActions: action.panelFooterActions,
     });
   }, []);
@@ -208,45 +243,28 @@ export function CommandPalette(props: CommandPaletteProps) {
   // Check if input should be disabled (when panel is open)
   const isInputDisabled = !!activePanel;
 
-  // Build footer props for panel mode
-  const panelFooterProps: PanelFooter = useMemo(() => {
-    if (!activePanel) return null;
+  // Build footer actions for panel mode (only for action buttons, not navigation)
+  const panelFooterActions = useMemo(() => {
+    if (!activePanel) return undefined;
 
-    // Find the action that opened the panel to get its info
-    const panelAction = actions.find((a) => a.id === activePanel.actionId);
-    const icon = typeof panelAction?.icon === "string" ? panelAction.icon : "📝";
-    const title = activePanel.panelTitle || panelAction?.name || "Panel";
-    const panelActions = (current, closePopver) => {
+    return (current: any, changeVisible: () => void) => {
+      const close = () => {
+        changeVisible();
+        handleClosePanel();
+      };
       if (activePanel.panelFooterActions) {
-        return activePanel.panelFooterActions!(handleClosePanel)
+        return activePanel.panelFooterActions(close);
       }
-    }
-
-    return {
-      current: null,
-      icon,
-      content: () => title,
-      actions: (current, changeVisible) => {
-        const close = ()=>{
-          changeVisible()
-          handleClosePanel()
-        }
-        if (activePanel.panelFooterActions) {
-          return activePanel.panelFooterActions!(close)
-        }
-        return [
-          {
-            id: "close-panel",
-            name: "Close",
-            icon: "←",
-            perform: close,
-          },
-        ]
-      },
-      // mainInputRef: panelInputRef,
-      mainInputRef: command.footerProps.mainInputRef,
+      return [
+        {
+          id: "close-panel",
+          name: "Close",
+          icon: "←",
+          perform: close,
+        },
+      ];
     };
-  }, [activePanel, actions, handleClosePanel, command.footerProps.mainInputRef]);
+  }, [activePanel, handleClosePanel]);
 
   return (
     <Container>
@@ -301,9 +319,10 @@ export function CommandPalette(props: CommandPaletteProps) {
 
         <ActiveFooter
           activePanel={activePanel}
-          panelFooterProps={panelFooterProps}
+          panelFooterActions={panelFooterActions}
           command={command}
           rightElement={rightElement}
+          onPanelActionEnter={handlePanelActionEnter}
         />
       </Background>
     </Container>
@@ -311,16 +330,18 @@ export function CommandPalette(props: CommandPaletteProps) {
 }
 
 export interface ActiveFooterProps {
-  activePanel?: PanelState;
+  activePanel?: PanelState | null;
   command?: UseCommandReturn;
   rightElement?: React.ReactElement<unknown, string | React.JSXElementConstructor<any>>;
-  panelFooterProps?: PanelFooter;
+  panelFooterActions?: (current: any, changeVisible: () => void) => Action[];
+  onPanelActionEnter?: (action: any) => void;
 }
 
-function ActiveFooter({activePanel, command, rightElement, panelFooterProps}: ActiveFooterProps) {
-  if (activePanel == null) {
-    return <Footer {...command.footerProps} rightElement={rightElement}/>;
-  }
-  // @ts-ignore
-  return <Footer {...panelFooterProps} rightElement={rightElement}/>;
+function ActiveFooter({activePanel, command, rightElement, panelFooterActions, onPanelActionEnter}: ActiveFooterProps) {
+  // When panel is open, use panel footer actions but keep navigation from command
+  const footerProps = activePanel && panelFooterActions
+    ? { ...command.footerProps, actions: panelFooterActions }
+    : command.footerProps;
+
+  return <Footer {...footerProps} rightElement={rightElement} onPanelActionEnter={onPanelActionEnter}/>;
 }

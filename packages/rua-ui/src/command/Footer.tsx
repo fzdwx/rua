@@ -8,7 +8,7 @@ import {
   useMatches,
 } from "./index.tsx";
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useKeyPress } from "ahooks";
 import {
   Popover,
@@ -17,6 +17,68 @@ import {
 } from "../components/animate-ui/components/base/popover.tsx";
 import { Icon } from "@iconify/react";
 import { Kbd } from "../components/ui/kbd.tsx";
+
+/**
+ * Render footer icon with support for multiple formats:
+ * - React elements (passed through)
+ * - Emoji strings (rendered as text)
+ * - ext:// URLs (rendered as img)
+ * - data: URIs (rendered as img)
+ * - SVG strings (rendered with dangerouslySetInnerHTML)
+ * - Iconify icon names (rendered with Icon component)
+ */
+function FooterIconRenderer({ icon }: { icon: string | React.ReactElement }) {
+  const iconContent = useMemo(() => {
+    // If it's already a React element, return it directly
+    if (React.isValidElement(icon)) {
+      return icon;
+    }
+
+    // Must be a string at this point
+    const iconStr = icon as string;
+
+    // Check if it's an ext:// URL or data URI - render as image
+    if (iconStr.startsWith("ext://") || iconStr.startsWith("data:") || iconStr.startsWith("http://") || iconStr.startsWith("https://")) {
+      return (
+        <img
+          src={iconStr}
+          alt="icon"
+          style={{
+            width: "16px",
+            height: "16px",
+            objectFit: "contain",
+          }}
+        />
+      );
+    }
+
+    // Check if it's an SVG string
+    if (iconStr.trim().startsWith("<svg")) {
+      return (
+        <div
+          style={{
+            width: "16px",
+            height: "16px",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          dangerouslySetInnerHTML={{ __html: iconStr }}
+        />
+      );
+    }
+
+    // Check if it looks like an iconify icon name (contains ":")
+    if (iconStr.includes(":")) {
+      return <Icon icon={iconStr} style={{ fontSize: "16px" }} />;
+    }
+
+    // Default: treat as emoji or text
+    return iconStr;
+  }, [icon]);
+
+  return <>{iconContent}</>;
+}
 
 export const Footer: React.FC<{
   current: string | ActionImpl | null;
@@ -29,6 +91,7 @@ export const Footer: React.FC<{
   settings?: Action[]; // Settings actions for settings menu
   rightElement?: React.ReactElement; // Custom element to display on the right side
   loading?: boolean; // Show loading indicator
+  onPanelActionEnter?: (action: any) => void; // Callback when a panel action is selected
 }> = ({
   current,
   actions,
@@ -40,10 +103,11 @@ export const Footer: React.FC<{
   settings,
   rightElement,
   loading,
+  onPanelActionEnter,
 }) => {
   return (
     <div className="command-footer">
-      <div className="command-footer-icon">{icon}</div>
+      <div className="command-footer-icon"><FooterIconRenderer icon={icon} /></div>
       <div style={{ marginRight: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
         {content(current)}
         {loading && <FooterLoading />}
@@ -57,6 +121,7 @@ export const Footer: React.FC<{
         actions={actions}
         current={current}
         mainInputRef={mainInputRef}
+        onPanelActionEnter={onPanelActionEnter}
       />
 
       {settings && settings.length > 0 && (
@@ -88,7 +153,8 @@ const FooterActionRender: React.FC<{
   onSubCommandHide?: () => void;
   onSubCommandShow?: () => void;
   mainInputRef?: React.RefObject<HTMLInputElement | null>;
-}> = ({ actions, onSubCommandHide, onSubCommandShow, current, mainInputRef }) => {
+  onPanelActionEnter?: (action: any) => void;
+}> = ({ actions, onSubCommandHide, onSubCommandShow, current, mainInputRef, onPanelActionEnter }) => {
   return (
     <>
       <FooterHr />
@@ -98,6 +164,7 @@ const FooterActionRender: React.FC<{
         onSubCommandHide={onSubCommandHide}
         actions={actions}
         mainInputRef={mainInputRef}
+        onPanelActionEnter={onPanelActionEnter}
       />
     </>
   );
@@ -115,6 +182,7 @@ const FooterActions: React.FC<{
   onSubCommandShow: () => void;
   onSubCommandHide: () => void;
   mainInputRef?: React.RefObject<HTMLElement | null>;
+  onPanelActionEnter?: (action: any) => void;
 }> = ({
   actions,
   initialOpen,
@@ -123,6 +191,7 @@ const FooterActions: React.FC<{
   onSubCommandHide,
   current,
   mainInputRef,
+  onPanelActionEnter,
 }) => {
   const [open, setOpen] = React.useState(initialOpen || false);
   const [shortcut] = React.useState(initialShortcut || "ctrl.k");
@@ -205,6 +274,11 @@ const FooterActions: React.FC<{
             setRootActionId={setRootActionId}
             currentRootActionId={state.rootActionId}
             activeIndex={state.activeIndex}
+            onPanelActionEnter={(action) => {
+              // Close the popover first, then trigger panel
+              setOpen(false);
+              onPanelActionEnter?.(action);
+            }}
             onRender={({ item, active }) => {
               if (typeof item === "string") {
                 return <div>{item}</div>;

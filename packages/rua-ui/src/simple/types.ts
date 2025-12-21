@@ -1,7 +1,6 @@
 import type * as React from "react";
 import type { Action, ActionId, ActionTree } from "../command/types";
 import type { ActionImpl } from "../command";
-import { EventHandler } from "react";
 
 /**
  * Callback when a query is submitted (e.g., creating a new item)
@@ -76,16 +75,17 @@ export interface UseCommandOptions {
   onQueryActionEnter?: OnQueryActionEnterCallback;
 
   /**
-   * Icon to display in the footer
-   * @default "✨"
+   * Icon to display in the footer navigation
+   * @default Uses the extension's current action icon from manifest, or active action's icon, or "✨"
    */
-  footerIcon?: string | React.ReactElement;
+  navigationIcon?: string | React.ReactElement;
 
   /**
-   * Custom footer content renderer
-   * If not provided, uses sensible defaults
+   * Title/content to display in the footer navigation
+   * Can be a string or a function that receives the current action
+   * @default Uses the extension's current action title from manifest, or active action's name/subtitle
    */
-  footerContent?: FooterContentRenderer;
+  navigationTitle?: string | FooterContentRenderer;
 
   /**
    * Function to generate footer actions for the current action
@@ -248,7 +248,9 @@ export interface CommandPaletteProps extends UseCommandOptions {
 
   /**
    * Optional Rua API instance for window control
-   * When provided, enables window hiding on ESC/Backspace at root level with empty search
+   * When provided, enables:
+   * - Window hiding on ESC/Backspace at root level with empty search
+   * - Default navigation values from manifest action info
    */
   rua?: {
     hideWindow(): Promise<void>;
@@ -268,15 +270,25 @@ export interface CommandPaletteProps extends UseCommandOptions {
       event: "activate" | "deactivate" | "action-triggered" | "theme-change",
       handler: (data: unknown) => void
     ): void;
-  };
-}
 
-export interface PanelFooter {
-  current?: null;
-  icon: string | React.ReactElement;
-  content: () => string;
-  actions: (current: string | ActionImpl | null, changeVisible: () => void) => Action[];
-  mainInputRef: React.RefObject<HTMLElement>;
-  onSubCommandHide?: () => void;
-  onSubCommandShow?: () => void;
+    /** Extension metadata including current action info from manifest */
+    extension?: {
+      id: string;
+      name: string;
+      version: string;
+      /** Extension directory path (for resolving relative asset paths) */
+      path?: string;
+      /** Current action info from manifest (populated when running in view mode) */
+      currentAction?: {
+        /** Action name from manifest */
+        name: string;
+        /** Display title from manifest */
+        title: string;
+        /** Icon path or iconify icon name */
+        icon?: string;
+        /** Subtitle from manifest */
+        subtitle?: string;
+      };
+    };
+  };
 }
