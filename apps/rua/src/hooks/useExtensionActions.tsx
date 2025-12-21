@@ -14,7 +14,7 @@ import {
   type DynamicAction,
 } from "@/contexts/ExtensionSystemContext";
 import { notifyActionTriggered } from "@/extension/background-executor.ts";
-import { ActionIcon } from "@/components/ActionIcon";
+import { ActionIcon } from "@/extension/ActionIcon";
 import { useActionUsage } from "@/contexts/ActionUsageContext.tsx";
 
 /**

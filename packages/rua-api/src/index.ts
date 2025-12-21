@@ -15,3 +15,9 @@ export * from "./types";
 
 // Export browser API for extensions
 export * from "./browser";
+
+export function toExtURL(path: string, extPath: string) {
+  const encodedBaseDir = btoa(extPath).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  let fileName = path.replace(/^\.\//, "");
+  return `ext://${encodedBaseDir}/${fileName}`;
+}

@@ -8,8 +8,9 @@
  * - Extension asset paths (e.g., "./icon.png")
  */
 
-import { Icon } from "@iconify/react";
-import { useMemo } from "react";
+import {Icon} from "@iconify/react";
+import {useMemo} from "react";
+import {toExtURL} from "rua-api";
 
 interface ActionIconProps {
   icon: string;
@@ -20,12 +21,12 @@ interface ActionIconProps {
 }
 
 export function ActionIcon({
-  icon,
-  extensionPath,
-  size = "20px",
-  className = "",
-  style = {},
-}: ActionIconProps) {
+                             icon,
+                             extensionPath,
+                             size = "20px",
+                             className = "",
+                             style = {},
+                           }: ActionIconProps) {
   const iconContent = useMemo(() => {
     // Check if it's a data URI
     if (icon.startsWith("data:")) {
@@ -57,7 +58,7 @@ export function ActionIcon({
             justifyContent: "center",
             ...style,
           }}
-          dangerouslySetInnerHTML={{ __html: icon }}
+          dangerouslySetInnerHTML={{__html: icon}}
         />
       );
     }
@@ -65,8 +66,10 @@ export function ActionIcon({
     // Check if it's a relative path (extension asset)
     if (icon.startsWith("./") || icon.startsWith("../") || icon.startsWith("/")) {
       // Build full URL using extension path
-      const fullUrl = extensionPath ? `${extensionPath}/${icon.replace(/^\.\//, "")}` : icon;
-
+      let fullUrl = icon;
+      if (extensionPath) {
+        fullUrl = toExtURL(icon, extensionPath)
+      }
       return (
         <img
           src={fullUrl}
@@ -83,7 +86,7 @@ export function ActionIcon({
     }
 
     // Default: treat as iconify icon name
-    return <Icon icon={icon} className={className} style={{ fontSize: size, ...style }} />;
+    return <Icon icon={icon} className={className} style={{fontSize: size, ...style}}/>;
   }, [icon, extensionPath, size, className, style]);
 
   return iconContent;
