@@ -225,6 +225,11 @@ export interface UseCommandReturn {
 }
 
 /**
+ * Split ratio type for details panel layout
+ */
+export type DetailsRatio = "1:1" | "1:2" | "1:3" | "2:3";
+
+/**
  * Props for CommandPalette component
  */
 export interface CommandPaletteProps extends UseCommandOptions {
@@ -257,8 +262,22 @@ export interface CommandPaletteProps extends UseCommandOptions {
   /**
    * Custom empty state renderer
    * Shown when there are no actions and no search
+   * Also used as empty view in details panel when action has no details
    */
   emptyState?: EmptyStateRenderer;
+
+  /**
+   * Whether to show the details panel on the right side
+   * @default false
+   */
+  isShowDetails?: boolean;
+
+  /**
+   * Split ratio between list and details panel
+   * Format: "list:details" (e.g., "1:2" means list takes 1/3, details takes 2/3)
+   * @default "1:2"
+   */
+  detailsRatio?: DetailsRatio;
 
   /**
    * Optional Rua API instance for window control

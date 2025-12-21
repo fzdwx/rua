@@ -206,3 +206,45 @@ export function calculateBackoffDelay(
 ): number {
   return initialDelay * Math.pow(backoffMultiplier, attempt);
 }
+
+
+/**
+ * Details panel split ratio type
+ */
+export type DetailsRatio = "1:1" | "1:2" | "1:3" | "2:3";
+
+/**
+ * Split ratio width percentages
+ */
+export interface SplitWidths {
+  listWidth: string;
+  detailsWidth: string;
+}
+
+/**
+ * Ratio mapping for split layout
+ */
+const RATIO_MAP: Record<DetailsRatio, SplitWidths> = {
+  "1:1": { listWidth: "50%", detailsWidth: "50%" },
+  "1:2": { listWidth: "33.33%", detailsWidth: "66.67%" },
+  "1:3": { listWidth: "25%", detailsWidth: "75%" },
+  "2:3": { listWidth: "40%", detailsWidth: "60%" },
+};
+
+/**
+ * Calculate split layout widths from ratio string
+ * Returns default "1:2" ratio if invalid ratio provided
+ *
+ * @param ratio - Split ratio string (e.g., "1:2")
+ * @returns Object with listWidth and detailsWidth percentages
+ *
+ * @example
+ * const { listWidth, detailsWidth } = calculateSplitWidths("1:2")
+ * // { listWidth: "33.33%", detailsWidth: "66.67%" }
+ */
+export function calculateSplitWidths(ratio?: DetailsRatio): SplitWidths {
+  if (!ratio || !RATIO_MAP[ratio]) {
+    return RATIO_MAP["1:2"];
+  }
+  return RATIO_MAP[ratio];
+}

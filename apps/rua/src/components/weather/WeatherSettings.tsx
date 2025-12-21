@@ -239,7 +239,7 @@ export function WeatherSettings({ onClose }: WeatherSettingsProps) {
         icon={<Icon icon="tabler:settings" className="size-5" />}
         actions={() => []}
         content={() => <div className="text-[11px] text-gray-10">天气设置</div>}
-        rightElement={
+        accessory={
           <div className="flex items-center gap-3 pr-4 flex-shrink-0">
             <Button onClick={handleSave} variant="outline" size="sm" className="whitespace-nowrap">
               <Icon icon="tabler:device-floppy" className="mr-1.5 size-3.5" />

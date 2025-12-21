@@ -12,7 +12,7 @@
     "actions": [
       {
         "name": "main",
-        "title": "todo-list",
+        "title": "Todo List",
         "mode": "view",
         "keywords": ["todo-list"],
         "icon": "./icon.png",

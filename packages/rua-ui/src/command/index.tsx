@@ -4,5 +4,6 @@ export * from "./useMatches.tsx";
 export * from "./RenderItem.tsx";
 export * from "./Footer.tsx";
 export * from "./ResultsRender.tsx";
+export * from "./DetailsPanel.tsx";
 export * from "./types.ts";
 export * from "./action";

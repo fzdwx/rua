@@ -161,7 +161,6 @@ export const Footer: React.FC<{
   mainInputRef?: React.RefObject<HTMLElement | null>;
   settings?: Action[]; // Settings actions for settings menu
   accessory?: React.ReactElement; // Custom accessory element to display on the right side
-  onPanelActionEnter?: (action: any) => void; // Callback when a panel action is selected
 }> = ({
   current,
   actions,
@@ -172,7 +171,6 @@ export const Footer: React.FC<{
   mainInputRef,
   settings,
   accessory,
-  onPanelActionEnter,
 }) => {
   // Subscribe to toast store
   const [toast, setToast] = useState<Toast | null>(null);
@@ -209,7 +207,6 @@ export const Footer: React.FC<{
           actions={actions}
           current={current}
           mainInputRef={mainInputRef}
-          onPanelActionEnter={onPanelActionEnter}
         />
 
         {settings && settings.length > 0 && (
@@ -234,14 +231,12 @@ const FooterActionRender: React.FC<{
   onSubCommandHide?: () => void;
   onSubCommandShow?: () => void;
   mainInputRef?: React.RefObject<HTMLElement | null>;
-  onPanelActionEnter?: (action: any) => void;
 }> = ({
   actions,
   onSubCommandHide,
   onSubCommandShow,
   current,
   mainInputRef,
-  onPanelActionEnter,
 }) => {
   return (
     <>
@@ -252,7 +247,6 @@ const FooterActionRender: React.FC<{
         onSubCommandHide={onSubCommandHide}
         actions={actions}
         mainInputRef={mainInputRef}
-        onPanelActionEnter={onPanelActionEnter}
       />
     </>
   );
@@ -270,7 +264,6 @@ const FooterActions: React.FC<{
   onSubCommandShow: () => void;
   onSubCommandHide: () => void;
   mainInputRef?: React.RefObject<HTMLElement | null>;
-  onPanelActionEnter?: (action: any) => void;
 }> = ({
   actions,
   initialOpen,
@@ -279,7 +272,6 @@ const FooterActions: React.FC<{
   onSubCommandHide,
   current,
   mainInputRef,
-  onPanelActionEnter,
 }) => {
   const [open, setOpen] = React.useState(initialOpen || false);
   const [shortcut] = React.useState(initialShortcut || "ctrl.k");
@@ -362,11 +354,6 @@ const FooterActions: React.FC<{
             setRootActionId={setRootActionId}
             currentRootActionId={state.rootActionId}
             activeIndex={state.activeIndex}
-            onPanelActionEnter={(action) => {
-              // Close the popover first, then trigger panel
-              setOpen(false);
-              onPanelActionEnter?.(action);
-            }}
             onRender={({ item, active }) => {
               if (typeof item === "string") {
                 return <div>{item}</div>;

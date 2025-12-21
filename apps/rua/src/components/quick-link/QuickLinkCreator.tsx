@@ -497,7 +497,7 @@ export function QuickLinkCreator({
         icon={<Icon icon="tabler:link-plus" className="size-5" />}
         actions={() => []}
         content={() => <div />}
-        rightElement={
+        accessory={
           <div className="flex items-center gap-3 pr-6">
             <Button onClick={handleSubmit} size="sm" variant="outline" className="">
               {editingId ? "更新" : "创建"}

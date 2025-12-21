@@ -12,24 +12,6 @@ export type ActionSection =
       priority: Priority;
     };
 
-/**
- * Props passed to panel render function
- */
-export interface PanelProps {
-  /** Callback to close the panel and return to the list */
-  onClose: () => void;
-  /** Ref for the main focusable element in the panel (for footer keyboard navigation) */
-  afterPopoverFocusElement?: React.RefObject<HTMLElement>;
-}
-
-/**
- * Extended panel props that includes footer customization
- */
-export interface PanelRenderProps extends PanelProps {
-  /** Set custom accessory element for footer when panel is open */
-  setAccessory?: (element: React.ReactElement | null) => void;
-}
-
 export type Action = {
   id: ActionId;
   name: string;
@@ -51,22 +33,11 @@ export type Action = {
   hideSearchBox?: boolean; // If true, hides the search box when this action is active
   uiEntry?: string; // UI entry path for extension view mode actions
   /**
-   * Custom panel component to render instead of the results list.
-   * When provided, the action will show this panel in the content area,
-   * with the input disabled.
-   * @param props.onClose - Callback to close the panel and return to the list
+   * Function that returns a React component to display in the details panel.
+   * Receives the action item as parameter for dynamic content.
+   * Only used when CommandPalette's isShowDetails is true.
    */
-  panel?: (props: PanelProps) => React.ReactElement;
-  /**
-   * Title to show in footer when panel is open.
-   * If not provided, uses action name.
-   */
-  panelTitle?: string;
-  /**
-   * Footer actions to show when this action's panel is open.
-   * If not provided, default close action will be shown.
-   */
-  panelFooterActions?: (onClose: () => void) => Action[];
+  details?: (item?: any) => React.ReactElement;
 };
 
 export type ActionStore = Record<ActionId, ActionImpl>;

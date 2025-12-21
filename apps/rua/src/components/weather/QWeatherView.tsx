@@ -271,7 +271,7 @@ export function QWeatherView({ weatherData, isDefaultCity }: QWeatherViewProps) 
         content={() => (
           <div className="text-[11px] text-center text-gray-10">Powered by 和风天气</div>
         )}
-        rightElement={
+        accessory={
           <div className="flex items-center gap-3 pr-6 flex-shrink-0">
             <div className="flex items-center gap-1.5 text-xs text-gray-11">
               <Icon icon="tabler:settings" className="size-5" />

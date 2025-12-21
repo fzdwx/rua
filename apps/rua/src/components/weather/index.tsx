@@ -228,7 +228,7 @@ export function WeatherView({
           content={() => (
             <div className="text-[11px] text-center text-gray-10">Powered by wttr.in</div>
           )}
-          rightElement={
+          accessory={
             <div className="flex items-center gap-3 pr-6 flex-shrink-0">
               <div className="flex items-center gap-1.5 text-xs text-gray-11">
                 <span>设置</span>
@@ -264,7 +264,7 @@ export function WeatherView({
           icon={<Icon icon="tabler:cloud" className="size-5" />}
           actions={() => []}
           content={() => <div />}
-          rightElement={
+          accessory={
             <div className="flex items-center gap-3 pr-6">
               <div className="flex items-center gap-1.5 text-xs text-gray-11">
                 <span>设置</span>

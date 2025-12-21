@@ -195,6 +195,39 @@ const handleCreateTodo = useCallback(
         priority: todo.done ? 0 : 10,
         badge: todo.done ? "Done" : undefined,
         item: todo,
+        perform:()=>{},
+        details: () => (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">{todo.done ? "✅" : "⭕"}</span>
+              <div>
+                <h2 className="text-lg font-semibold text-[var(--gray12)]">{todo.title}</h2>
+                <span className={`text-sm ${todo.done ? "text-green-500" : "text-[var(--gray11)]"}`}>
+                  {todo.done ? "Completed" : "Active"}
+                </span>
+              </div>
+            </div>
+            <div className="rounded-lg bg-[var(--gray3)] p-4">
+              <div className="mb-2 text-xs font-medium uppercase text-[var(--gray11)]">Details</div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-[var(--gray11)]">Created</span>
+                  <span className="text-[var(--gray12)]">{new Date(todo.createdAt).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[var(--gray11)]">Status</span>
+                  <span className={todo.done ? "text-green-500" : "text-yellow-500"}>
+                    {todo.done ? "Done" : "Pending"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[var(--gray11)]">ID</span>
+                  <span className="font-mono text-xs text-[var(--gray10)]">{todo.id}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ),
         footerAction: (changeVisible: () => void): Action[] => [
           {
             id: "toggle-" + todo.id,
@@ -234,6 +267,8 @@ const handleCreateTodo = useCallback(
       loading={false}
       rua={rua}
       placeholder="Search todos or create new..."
+      isShowDetails={true}
+      detailsRatio="1:2"
       accessory={<MainAccessory onCreateTodo={handleCreateTodo} />}
       emptyState={() => (
         <div className="flex flex-col items-center justify-center">

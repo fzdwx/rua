@@ -11,9 +11,10 @@ import { useCommand } from "./useCommand";
 import { Input } from "@/command";
 import { ResultsRender } from "@/command";
 import { Footer } from "@/command";
+import { DetailsPanel } from "@/command";
 import type { CommandPaletteProps, UseCommandReturn } from "./types";
 import type { Action } from "@/command/types";
-import { attemptFocusWithRetry } from "./utils";
+import { attemptFocusWithRetry, calculateSplitWidths } from "./utils";
 import { Background, Container } from "@/common/tools";
 
 /**
@@ -86,6 +87,8 @@ export function CommandPalette(props: CommandPaletteProps) {
     rua,
     navigationIcon,
     navigationTitle,
+    isShowDetails = false,
+    detailsRatio = "1:2",
     ...hookOptions
   } = props;
 
@@ -184,24 +187,9 @@ export function CommandPalette(props: CommandPaletteProps) {
     [push, pop, replace, popToRoot, setCurrentAccessory, viewStack.length]
   );
 
-  // Handle panel action enter - called from ResultsRender
-  const handlePanelActionEnter = useCallback(
-    (action: any) => {
-      if (!action?.panel) return;
-
-      push({
-        id: action.id,
-        component: action.panel,
-        footerActions: action.panelFooterActions,
-      });
-    },
-    [push]
-  );
-
   const enhancedResultsProps = {
     ...command.resultsProps,
     onRender: command.resultsProps.onRender,
-    onPanelActionEnter: handlePanelActionEnter,
   };
 
   // Auto-focus
@@ -310,6 +298,69 @@ export function CommandPalette(props: CommandPaletteProps) {
   // Resolve current accessory
   const currentAccessory = currentView ? currentView.accessory : accessory;
 
+  // Calculate split widths for details panel
+  const splitWidths = useMemo(() => calculateSplitWidths(detailsRatio), [detailsRatio]);
+
+  // Empty state element for details panel
+  const emptyStateElement = useMemo(() => {
+    if (!emptyState) return undefined;
+    return emptyState({ search: command.search, actions });
+  }, [emptyState, command.search, actions]);
+
+  // Render content area (list or split layout)
+  const renderContent = () => {
+    if (currentView) {
+      return (
+        <div
+          className="command-listbox-container"
+          style={{
+            flex: 1,
+            minHeight: 0,
+            position: "relative",
+            overflow: "auto",
+            width: "100%",
+          }}
+        >
+          {currentView.component}
+        </div>
+      );
+    }
+
+    if (showEmptyState && emptyState) {
+      return (
+        <div
+          className={`flex flex-col items-center justify-center px-6 py-12 overflow-auto ${emptyStateClassName}`}
+          style={{ flex: 1, minHeight: 0 }}
+        >
+          {emptyState({ search: command.search, actions })}
+        </div>
+      );
+    }
+
+    // Split layout with details panel
+    if (isShowDetails) {
+      return (
+        <div className="command-split-layout">
+          <div
+            className="command-split-list"
+            style={{ width: splitWidths.listWidth }}
+          >
+            <ResultsRender {...enhancedResultsProps} />
+          </div>
+          <DetailsPanel
+            action={command.activeAction}
+            emptyView={emptyStateElement}
+            className="details-panel"
+            style={{ width: splitWidths.detailsWidth }}
+          />
+        </div>
+      );
+    }
+
+    // Normal layout without details panel
+    return <ResultsRender {...enhancedResultsProps} />;
+  };
+
   return (
     <NavigationContext.Provider value={navigationValue}>
       <Container>
@@ -328,29 +379,7 @@ export function CommandPalette(props: CommandPaletteProps) {
               flexDirection: "column",
             }}
           >
-            {currentView ? (
-              <div
-                className="command-listbox-container"
-                style={{
-                  flex: 1,
-                  minHeight: 0,
-                  position: "relative",
-                  overflow: "auto",
-                  width: "100%",
-                }}
-              >
-                {currentView.component}
-              </div>
-            ) : showEmptyState && emptyState ? (
-              <div
-                className={`flex flex-col items-center justify-center px-6 py-12 overflow-auto ${emptyStateClassName}`}
-                style={{ flex: 1, minHeight: 0 }}
-              >
-                {emptyState({ search: command.search, actions })}
-              </div>
-            ) : (
-              <ResultsRender {...enhancedResultsProps} />
-            )}
+            {renderContent()}
           </div>
 
           <ActiveFooter
@@ -358,7 +387,6 @@ export function CommandPalette(props: CommandPaletteProps) {
             currentFooterActions={currentFooterActions}
             command={command}
             accessory={currentAccessory}
-            onPanelActionEnter={handlePanelActionEnter}
             focusRef={focusRef}
           />
         </Background>
@@ -372,7 +400,6 @@ interface ActiveFooterProps {
   command?: UseCommandReturn;
   accessory?: React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null;
   currentFooterActions?: (current: any, changeVisible: () => void) => Action[];
-  onPanelActionEnter?: (action: any) => void;
   focusRef?: React.RefObject<HTMLElement>;
 }
 
@@ -381,7 +408,6 @@ function ActiveFooter({
   command,
   accessory,
   currentFooterActions,
-  onPanelActionEnter,
   focusRef,
 }: ActiveFooterProps) {
   const footerProps =
@@ -389,5 +415,5 @@ function ActiveFooter({
       ? { ...command.footerProps, actions: currentFooterActions, mainInputRef: focusRef }
       : command.footerProps;
 
-  return <Footer {...footerProps} accessory={accessory} onPanelActionEnter={onPanelActionEnter} />;
+  return <Footer {...footerProps} accessory={accessory} />;
 }

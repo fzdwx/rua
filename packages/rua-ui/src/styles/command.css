@@ -1632,3 +1632,82 @@ button:not([class]) {
 .footer-toast-exiting {
   animation: footer-toast-fade-out 0.15s ease-in forwards;
 }
+
+
+/* ========================================
+   Details Panel Styles
+   ======================================== */
+
+/* Split layout container */
+.command-split-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* List container in split layout */
+.command-split-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--gray6);
+  transition: width 0.3s ease;
+}
+
+/* Details panel container */
+.details-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--gray1);
+  animation: details-panel-slide-in 0.3s ease;
+}
+
+.details-panel-content {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+  transition: opacity 0.15s ease;
+}
+
+.details-panel-animating {
+  opacity: 0.5;
+}
+
+.details-panel-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--gray11);
+}
+
+.details-panel-empty-text {
+  font-size: 14px;
+}
+
+/* Slide-in animation for details panel */
+@keyframes details-panel-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Layout transition animation */
+@keyframes details-layout-expand {
+  from {
+    opacity: 0;
+    width: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
