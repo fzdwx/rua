@@ -17,6 +17,8 @@ import {
 } from "../components/animate-ui/components/base/popover.tsx";
 import { Icon } from "@iconify/react";
 import { Kbd } from "../components/ui/kbd.tsx";
+import type { Toast } from "./types";
+import { subscribeToast } from "./toastStore";
 
 /**
  * Render footer icon with support for multiple formats:
@@ -85,6 +87,70 @@ function FooterIconRenderer({ icon }: { icon: string | React.ReactElement }) {
   return <>{iconContent}</>;
 }
 
+/**
+ * Get CSS class for toast type
+ */
+export function getToastTypeClass(type: Toast["type"]): string {
+  switch (type) {
+    case "success":
+      return "footer-toast-success animate-ping";
+    case "failure":
+      return "footer-toast-failure animate-ping";
+    case "animated":
+      return "footer-toast-animated";
+    default:
+      return "footer-toast-success";
+  }
+}
+
+/**
+ * Toast indicator component - renders dot or spinner based on type
+ */
+const ToastIndicator: React.FC<{ type: Toast["type"] }> = ({ type }) => {
+  if (type === "animated") {
+    return (
+      <svg
+        className="footer-toast-spinner"
+        width="14"
+        height="14"
+        viewBox="0 0 14 14"
+        fill="none"
+      >
+        <circle
+          cx="7"
+          cy="7"
+          r="5.5"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="20 10"
+        />
+      </svg>
+    );
+  }
+
+  // Success or failure - render colored dot
+  return <div className="footer-toast-dot" />;
+};
+
+/**
+ * FooterToast component - displays toast overlay in footer's left side (Raycast style)
+ */
+const FooterToast: React.FC<{
+  toast: Toast;
+}> = ({ toast }) => {
+  const typeClass = getToastTypeClass(toast.type);
+
+  return (
+    <div className={`footer-toast ${typeClass}`} key={toast.id}>
+      <div className="footer-toast-indicator">
+        <ToastIndicator type={toast.type} />
+      </div>
+      <span className="footer-toast-message">{toast.message}</span>
+    </div>
+  );
+};
+
 export const Footer: React.FC<{
   current: string | ActionImpl | null;
   icon: string | React.ReactElement;
@@ -95,7 +161,6 @@ export const Footer: React.FC<{
   mainInputRef?: React.RefObject<HTMLElement | null>;
   settings?: Action[]; // Settings actions for settings menu
   accessory?: React.ReactElement; // Custom accessory element to display on the right side
-  loading?: boolean; // Show loading indicator
   onPanelActionEnter?: (action: any) => void; // Callback when a panel action is selected
 }> = ({
   current,
@@ -107,49 +172,58 @@ export const Footer: React.FC<{
   mainInputRef,
   settings,
   accessory,
-  loading,
   onPanelActionEnter,
 }) => {
+  // Subscribe to toast store
+  const [toast, setToast] = useState<Toast | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToast(setToast);
+    return unsubscribe;
+  }, []);
+
   return (
-    <div className="command-footer">
-      <div className="command-footer-icon">
-        <FooterIconRenderer icon={icon} />
+    <div className="command-footer-wrapper">
+      <div className="command-footer">
+        {/* Left side: icon + content area (can be covered by toast) */}
+        <div className="command-footer-left">
+          {toast ? (
+            <FooterToast toast={toast} />
+          ) : (
+            <>
+              <div className="command-footer-icon">
+                <FooterIconRenderer icon={icon} />
+              </div>
+              <div style={{ marginRight: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
+                {content(current)}
+              </div>
+            </>
+          )}
+        </div>
+
+        {accessory && <div className="flex-shrink-0">{accessory}</div>}
+
+        <FooterActionRender
+          onSubCommandHide={onSubCommandHide}
+          onSubCommandShow={onSubCommandShow}
+          actions={actions}
+          current={current}
+          mainInputRef={mainInputRef}
+          onPanelActionEnter={onPanelActionEnter}
+        />
+
+        {settings && settings.length > 0 && (
+          <>
+            <FooterHr />
+            <FooterSettings
+              onSubCommandHide={onSubCommandHide}
+              onSubCommandShow={onSubCommandShow}
+              settings={settings}
+              mainInputRef={mainInputRef}
+            />
+          </>
+        )}
       </div>
-      <div style={{ marginRight: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
-        {content(current)}
-        {loading && <FooterLoading />}
-      </div>
-
-      {accessory && <div className="flex-shrink-0">{accessory}</div>}
-
-      <FooterActionRender
-        onSubCommandHide={onSubCommandHide}
-        onSubCommandShow={onSubCommandShow}
-        actions={actions}
-        current={current}
-        mainInputRef={mainInputRef}
-        onPanelActionEnter={onPanelActionEnter}
-      />
-
-      {settings && settings.length > 0 && (
-        <>
-          <FooterHr />
-          <FooterSettings
-            onSubCommandHide={onSubCommandHide}
-            onSubCommandShow={onSubCommandShow}
-            settings={settings}
-            mainInputRef={mainInputRef}
-          />
-        </>
-      )}
-    </div>
-  );
-};
-
-const FooterLoading: React.FC = () => {
-  return (
-    <div className="command-footer-loading">
-      <div className="command-footer-loading-spinner" />
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import type * as React from "react";
-import type { Action, ActionId, ActionTree } from "../command/types";
+import type { Action, ActionId, ActionTree, ToastType } from "../command/types";
 import type { ActionImpl } from "../command";
 
 /**
@@ -55,12 +55,6 @@ export interface UseCommandOptions {
    * @default false
    */
   loading?: boolean;
-
-  /**
-   * Whether to show loading indicator next to the navigation title
-   * @default false
-   */
-  navigationLoading?: boolean;
 
   /**
    * Callback when a query is submitted
@@ -171,7 +165,6 @@ export interface UseCommandReturn {
     mainInputRef?: React.RefObject<HTMLInputElement>;
     onSubCommandShow?: () => void;
     onSubCommandHide?: () => void;
-    loading?: boolean;
   };
 
   // State accessors (for advanced usage)
@@ -215,6 +208,20 @@ export interface UseCommandReturn {
    * Focus the input element
    */
   focusInput: () => void;
+
+  // Toast methods
+  /**
+   * Show a toast message in the footer area (Raycast style)
+   * @param message - The message text to display
+   * @param type - Toast type: 'success' (green dot) | 'failure' (red dot) | 'animated' (spinner)
+   * @param duration - Auto-dismiss duration in ms. Default 3000. Set to 0 for persistent toast
+   */
+  showToast: (message: string, type: ToastType, duration?: number) => void;
+
+  /**
+   * Hide the current toast
+   */
+  hideToast: () => void;
 }
 
 /**

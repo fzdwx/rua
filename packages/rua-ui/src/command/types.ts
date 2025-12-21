@@ -177,3 +177,25 @@ export interface History {
   redo: (item?: HistoryItem) => void;
   reset: () => void;
 }
+
+/**
+ * Toast type determines the visual style of the toast (Raycast style)
+ * - success: Green dot indicator
+ * - failure: Red dot indicator
+ * - animated: Spinning loading indicator
+ */
+export type ToastType = "success" | "failure" | "animated";
+
+/**
+ * Toast interface for displaying feedback messages in the Footer area
+ */
+export interface Toast {
+  /** Unique identifier for the toast, used for animation keys */
+  id: string;
+  /** The message text to display */
+  message: string;
+  /** Type determines the indicator style (green dot, red dot, or spinner) */
+  type: ToastType;
+  /** Auto-dismiss duration in ms. Default 3000. Set to 0 for persistent toast */
+  duration?: number;
+}

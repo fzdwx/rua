@@ -2,11 +2,11 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { initializeRuaAPI, type RuaAPI } from "rua-api/browser";
 import {
   CommandPalette,
-  createQuerySubmitHandler,
   useNavigation,
-  Button,
   Kbd,
+  showToast,
   type Action,
+  toast,
 } from "@rua/ui";
 import { useKeyPress } from "ahooks";
 
@@ -60,7 +60,7 @@ function CreateTodoPanel({ onSubmit }: { onSubmit: (title: string) => Promise<vo
         <span>Create</span>
         <Kbd>⌘</Kbd>
       +
-      <Kbd>N</Kbd>
+      <Kbd>Enter</Kbd>
       </div>
     );
     return () => setAccessory(null);
@@ -156,22 +156,33 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
       .catch((err) => console.error("Failed to load todos:", err));
   }, [rua]);
 
-  const handleCreateTodo = useCallback(
-    async (title: string) => {
-      const newTodo: Todo = {
-        id: Date.now().toString(),
-        title,
-        done: false,
-        createdAt: new Date().toISOString(),
-      };
-      setTodos((prev) => {
-        const newTodos = [...prev, newTodo];
-        rua.storage.set("todos", newTodos);
-        return newTodos;
-      });
-    },
-    [rua]
-  );
+const handleCreateTodo = useCallback(
+  async (title: string) => {
+    toast.promise(
+      (async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const newTodo: Todo = {
+          id: Date.now().toString(),
+          title,
+          done: false,
+          createdAt: new Date().toISOString(),
+        };
+        setTodos((prev) => {
+          const newTodos = [...prev, newTodo];
+          rua.storage.set("todos", newTodos);
+          return newTodos;
+        });
+      })(),
+      {
+        loading: "Creating todo...",
+        success: "Todo created!",
+        failure: "Failed to create todo",
+      }
+    );
+  },
+  [rua]
+);
+
 
   const actions = useMemo<Action[]>(() => {
     return todos.map(
@@ -194,6 +205,10 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
               await rua.storage.set("todos", updated);
               setTodos(updated);
               changeVisible();
+              showToast(
+                todo.done ? `"${todo.title}" marked as active` : `"${todo.title}" completed`,
+                "success"
+              );
             },
           },
           {
@@ -205,6 +220,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
               await rua.storage.set("todos", updated);
               setTodos(updated);
               changeVisible();
+              showToast(`Deleted "${todo.title}"`, "success");
             },
           },
         ],
@@ -216,7 +232,6 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
     <CommandPalette
       actions={actions}
       loading={false}
-      navigationLoading={false}
       rua={rua}
       placeholder="Search todos or create new..."
       accessory={<MainAccessory onCreateTodo={handleCreateTodo} />}

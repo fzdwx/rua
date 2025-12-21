@@ -12,3 +12,14 @@ export { Kbd, KbdGroup } from "./components/ui/kbd.tsx";
 
 // Simplified command palette API
 export * from "./simple";
+
+// =============================================================================
+// TOAST
+// =============================================================================
+
+// Toast types
+export type { Toast, ToastType } from "./command/types";
+export type { ToastPromiseOptions } from "./command/toastStore";
+
+// Toast functions
+export { showToast, hideToast, subscribeToast, getCurrentToast, toast } from "./command/toastStore";

@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useRef } from "react";
 import { useActionStore } from "../command/useActionStore";
 import { useMatches } from "../command/useMatches";
 import { RenderItem } from "../command/RenderItem";
+import { showToast, hideToast } from "../command/toastStore";
 import type { UseCommandOptions, UseCommandReturn } from "./types";
 import { getActiveAction } from "./utils";
 
@@ -38,7 +39,6 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
     actions,
     placeholder = "Type a command or search...",
     loading = false,
-    navigationLoading = false,
     onQuerySubmit,
     onQueryActionEnter,
     navigationIcon,
@@ -232,7 +232,6 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
       mainInputRef: inputRef,
       onSubCommandShow: handleSubCommandShow,
       onSubCommandHide: handleSubCommandHide,
-      loading: navigationLoading,
     },
 
     // State accessors (for advanced usage)
@@ -246,5 +245,9 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
     // Control methods
     reset,
     focusInput,
+
+    // Toast methods (re-exported from toastStore for convenience)
+    showToast,
+    hideToast,
   };
 }
