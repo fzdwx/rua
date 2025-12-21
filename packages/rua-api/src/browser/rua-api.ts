@@ -5,14 +5,14 @@
  * Uses kkrpc for communication with the host application.
  */
 
-import {IframeChildIO, RPCChannel} from "kkrpc/browser";
-import type {RuaClientAPI, EventHandler, FsOptions} from "../types";
-import {RuaServerAPI} from "../types/rua";
+import { IframeChildIO, RPCChannel } from "kkrpc/browser";
+import type { RuaClientAPI, EventHandler, FsOptions } from "../types";
+import { RuaServerAPI } from "../types/rua";
 
 // Re-export types for convenience
-export type {ExtensionMeta, DynamicAction, RuaClientAPI as RuaAPI} from "../types/rua";
-export type {RuaClientAPI} from "../types/rua";
-export {BaseDirectory} from "../types";
+export type { ExtensionMeta, DynamicAction, RuaClientAPI as RuaAPI } from "../types/rua";
+export type { RuaClientAPI } from "../types/rua";
+export { BaseDirectory } from "../types";
 
 // Singleton instance
 let ruaInstance: RuaClientAPI | null = null;
@@ -69,7 +69,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
           const handlers = eventHandlers.get("action-triggered") || [];
           handlers.forEach((handler) => {
             try {
-              handler({actionId, context});
+              handler({ actionId, context });
             } catch (e) {
               console.error("[Rua API] Event handler error:", e);
             }
@@ -117,6 +117,10 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
     // Get extension info from host (read from manifest)
     const extensionMeta = await hostAPI.getExtensionInfo();
     console.log("[Rua API] Extension info from host:", extensionMeta);
+
+    // change theme
+    const currentTheme = await hostAPI.uiGetTheme();
+    applyTheme(currentTheme);
 
     // remove inject
     // Define the Rua API
@@ -203,7 +207,7 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
     ruaInstance = ruaAPI;
 
     // Dispatch ready event
-    window.dispatchEvent(new CustomEvent("rua-ready", {detail: ruaAPI.extension}));
+    window.dispatchEvent(new CustomEvent("rua-ready", { detail: ruaAPI.extension }));
 
     console.log("[Rua API] Initialized for extension:", ruaAPI.extension.id);
 

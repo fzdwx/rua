@@ -18,6 +18,8 @@ export type ActionSection =
 export interface PanelProps {
   /** Callback to close the panel and return to the list */
   onClose: () => void;
+  /** Ref for the main focusable element in the panel (for footer keyboard navigation) */
+  afterPopoverFocusElement?: React.RefObject<HTMLElement>;
 }
 
 export type Action = {

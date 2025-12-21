@@ -89,10 +89,6 @@ const FooterActionRender: React.FC<{
   onSubCommandShow?: () => void;
   mainInputRef?: React.RefObject<HTMLInputElement | null>;
 }> = ({ actions, onSubCommandHide, onSubCommandShow, current, mainInputRef }) => {
-  if (actions.length === 0) {
-    return <></>;
-  }
-
   return (
     <>
       <FooterHr />
@@ -126,7 +122,7 @@ const FooterActions: React.FC<{
   initialShortcut?: string; // default 'ctrl.k'
   onSubCommandShow: () => void;
   onSubCommandHide: () => void;
-  mainInputRef?: React.RefObject<HTMLInputElement | null>;
+  mainInputRef?: React.RefObject<HTMLElement | null>;
 }> = ({
   actions,
   initialOpen,

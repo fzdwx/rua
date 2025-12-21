@@ -58,8 +58,8 @@ pre:
     cd packages/rua-api && bun run build
     cd packages/rua-ui && bun install
     cd packages/rua-ui && bun run build
-    cd apps/rua && bun install
-    cd apps/rua && bun run build
+#    cd apps/rua && bun install
+#    cd apps/rua && bun run build
 
 format:
      bun run format:changed

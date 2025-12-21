@@ -1,7 +1,7 @@
-import type * as React from "react"
-import type {Action, ActionId} from "../command/types"
-import type {ActionImpl} from "../command"
-import {UseCommandOptions, UseCommandReturn} from "@/simple/types.ts";
+import type * as React from "react";
+import type { Action, ActionId } from "../command/types";
+import type { ActionImpl } from "../command";
+import { UseCommandOptions, UseCommandReturn } from "@/simple/types.ts";
 
 /**
  * Safely get the active action, filtering out string types (section headers)
@@ -20,8 +20,8 @@ export function getActiveAction(
   results: (ActionImpl | string)[],
   activeIndex: number
 ): ActionImpl | null {
-  const activeItem = results[activeIndex]
-  return activeItem && typeof activeItem !== "string" ? activeItem : null
+  const activeItem = results[activeIndex];
+  return activeItem && typeof activeItem !== "string" ? activeItem : null;
 }
 
 /**
@@ -47,9 +47,9 @@ export function createQuerySubmitHandler(
 ): (query: string, currentActionId: ActionId) => void | Promise<void> {
   return async (query: string, currentActionId: ActionId) => {
     if (currentActionId === actionId && query.trim()) {
-      await handler(query.trim())
+      await handler(query.trim());
     }
-  }
+  };
 }
 
 /**
@@ -90,9 +90,9 @@ export function createFooterActionsGetter<T = any>(
   generator: (item: T, changeVisible: () => void) => Action[]
 ): (current: ActionImpl | null, changeVisible: () => void) => Action[] {
   return (current: ActionImpl | null, changeVisible: () => void): Action[] => {
-    if (!current || !current.item) return []
-    return generator(current.item as T, changeVisible)
-  }
+    if (!current || !current.item) return [];
+    return generator(current.item as T, changeVisible);
+  };
 }
 
 /**
@@ -114,12 +114,12 @@ export function createFooterContentRenderer(
   customRenderer?: (current: ActionImpl) => string | React.ReactElement
 ): (current: ActionImpl | null) => string | React.ReactElement {
   return (current: ActionImpl | null) => {
-    if (!current) return defaultContent
-    if (customRenderer) return customRenderer(current)
+    if (!current) return defaultContent;
+    if (customRenderer) return customRenderer(current);
 
     // Default behavior: show subtitle if available
-    return current.subtitle || current.name
-  }
+    return current.subtitle || current.name;
+  };
 }
 
 /**
@@ -142,9 +142,8 @@ export function mergeActions(userActions: Action[], defaults: Partial<Action> = 
     section: "Actions",
     ...defaults,
     ...action,
-  }))
+  }));
 }
-
 
 /**
  * Attempt to focus an input element with exponential backoff retry
@@ -154,37 +153,35 @@ export async function attemptFocusWithRetry(
   getCommandRef: () => UseCommandReturn,
   options: FocusRetryOptions = {}
 ): Promise<boolean> {
-  const {
-    maxRetries = 3,
-    initialDelay = 50,
-    backoffMultiplier = 2,
-  } = options;
+  const { maxRetries = 3, initialDelay = 50, backoffMultiplier = 2 } = options;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     const delay = calculateBackoffDelay(attempt, initialDelay, backoffMultiplier);
 
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
 
     // Get fresh reference on each attempt
     const cmdRet = getCommandRef();
     const inputRef = cmdRet.footerProps.mainInputRef;
-
-    console.log(`[Focus] Attempt ${attempt + 1}/${maxRetries}, delay: ${delay}ms, inputRef exists: ${!!inputRef?.current}`);
+    inputRef.current.focus();
+    console.log(
+      `[Focus] Attempt ${attempt + 1}/${maxRetries}, delay: ${delay}ms, inputRef exists: ${!!inputRef?.current}`
+    );
 
     // Attempt to focus
-    cmdRet.focusInput()
+    cmdRet.focusInput();
 
     // Check if focus was successful
     if (inputRef?.current && document.activeElement === inputRef.current) {
-      console.log('[Focus] ✓ Focus successful');
+      console.log("[Focus] ✓ Focus successful");
       return true;
     }
 
-    console.log('[Focus] × Focus failed, activeElement:', document.activeElement?.tagName);
+    console.log("[Focus] × Focus failed, activeElement:", document.activeElement?.tagName);
   }
 
   // All retries exhausted
-  console.warn('[Focus] All attempts exhausted, final activeElement:', document.activeElement);
+  console.warn("[Focus] All attempts exhausted, final activeElement:", document.activeElement);
   return false;
 }
 
@@ -192,8 +189,8 @@ export async function attemptFocusWithRetry(
  * Focus retry options for exponential backoff
  */
 export interface FocusRetryOptions {
-  maxRetries?: number;        // Default: 3
-  initialDelay?: number;      // Default: 50ms
+  maxRetries?: number; // Default: 3
+  initialDelay?: number; // Default: 50ms
   backoffMultiplier?: number; // Default: 2
 }
 

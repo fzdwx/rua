@@ -3,7 +3,7 @@ import {useCommand} from "./useCommand";
 import {Input} from "@/command";
 import {ResultsRender} from "@/command";
 import {Footer} from "@/command";
-import type {CommandPaletteProps} from "./types";
+import type {CommandPaletteProps, PanelFooter, UseCommandReturn} from "./types";
 import type {PanelProps, Action} from "@/command/types";
 import {attemptFocusWithRetry} from "./utils";
 import {Background, Container} from "@/common/tools";
@@ -55,6 +55,7 @@ export function CommandPalette(props: CommandPaletteProps) {
 
   // Panel state for custom action panels
   const [activePanel, setActivePanel] = useState<PanelState | null>(null);
+  const panelInputRef = useRef<HTMLElement>(null);
 
   const command = useCommand({
     actions,
@@ -181,6 +182,10 @@ export function CommandPalette(props: CommandPaletteProps) {
         if (target.tagName === "INPUT" && (target as HTMLInputElement).value === "") {
           event.preventDefault();
           event.stopPropagation();
+          if (activePanel != null) {
+            handleClosePanel()
+            return;
+          }
           rua.ui.close().catch((err) => {
             console.error("Failed to hide window:", err);
           });
@@ -204,28 +209,41 @@ export function CommandPalette(props: CommandPaletteProps) {
   const isInputDisabled = !!activePanel;
 
   // Build footer props for panel mode
-  const panelFooterProps = useMemo(() => {
+  const panelFooterProps: PanelFooter = useMemo(() => {
     if (!activePanel) return null;
 
     // Find the action that opened the panel to get its info
     const panelAction = actions.find((a) => a.id === activePanel.actionId);
     const icon = typeof panelAction?.icon === "string" ? panelAction.icon : "📝";
     const title = activePanel.panelTitle || panelAction?.name || "Panel";
+    const panelActions = (current, closePopver) => {
+      if (activePanel.panelFooterActions) {
+        return activePanel.panelFooterActions!(handleClosePanel)
+      }
+    }
 
     return {
       current: null,
       icon,
       content: () => title,
-      actions: activePanel.panelFooterActions
-        ? () => activePanel.panelFooterActions!(handleClosePanel)
-        : () => [
+      actions: (current, changeVisible) => {
+        const close = ()=>{
+          changeVisible()
+          handleClosePanel()
+        }
+        if (activePanel.panelFooterActions) {
+          return activePanel.panelFooterActions!(close)
+        }
+        return [
           {
             id: "close-panel",
             name: "Close",
             icon: "←",
-            perform: handleClosePanel,
+            perform: close,
           },
-        ],
+        ]
+      },
+      // mainInputRef: panelInputRef,
       mainInputRef: command.footerProps.mainInputRef,
     };
   }, [activePanel, actions, handleClosePanel, command.footerProps.mainInputRef]);
@@ -238,7 +256,15 @@ export function CommandPalette(props: CommandPaletteProps) {
           autoFocus={autoFocus && !isInputDisabled}
           disableTabFocus={isInputDisabled}
         />
-        <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           {activePanel ? (
             // Render custom panel
             (() => {
@@ -254,14 +280,17 @@ export function CommandPalette(props: CommandPaletteProps) {
                     width: "100%",
                   }}
                 >
-                  <PanelContent onClose={handleClosePanel}/>
+                  <PanelContent
+                    onClose={handleClosePanel}
+                    afterPopoverFocusElement={panelInputRef}
+                  />
                 </div>
               );
             })()
           ) : showEmptyState && emptyState ? (
             <div
               className={`flex flex-col items-center justify-center px-6 py-12 overflow-auto ${emptyStateClassName}`}
-              style={{ flex: 1, minHeight: 0 }}
+              style={{flex: 1, minHeight: 0}}
             >
               {emptyState({search: command.search, actions})}
             </div>
@@ -269,12 +298,29 @@ export function CommandPalette(props: CommandPaletteProps) {
             <ResultsRender {...enhancedResultsProps} />
           )}
         </div>
-        {activePanel && panelFooterProps ? (
-          <Footer {...panelFooterProps} rightElement={rightElement}/>
-        ) : (
-          <Footer {...command.footerProps} rightElement={rightElement}/>
-        )}
+
+        <ActiveFooter
+          activePanel={activePanel}
+          panelFooterProps={panelFooterProps}
+          command={command}
+          rightElement={rightElement}
+        />
       </Background>
     </Container>
   );
+}
+
+export interface ActiveFooterProps {
+  activePanel?: PanelState;
+  command?: UseCommandReturn;
+  rightElement?: React.ReactElement<unknown, string | React.JSXElementConstructor<any>>;
+  panelFooterProps?: PanelFooter;
+}
+
+function ActiveFooter({activePanel, command, rightElement, panelFooterProps}: ActiveFooterProps) {
+  if (activePanel == null) {
+    return <Footer {...command.footerProps} rightElement={rightElement}/>;
+  }
+  // @ts-ignore
+  return <Footer {...panelFooterProps} rightElement={rightElement}/>;
 }

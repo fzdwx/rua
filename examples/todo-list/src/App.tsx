@@ -2,9 +2,9 @@
  * todo-list - Todo List Extension
  * Demonstrates simplified command palette API with CRUD operations
  */
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, type RefObject } from "react";
 import { initializeRuaAPI, type RuaAPI } from "rua-api/browser";
-import { CommandPalette, createQuerySubmitHandler, type Action } from "@rua/ui";
+import { CommandPalette, createQuerySubmitHandler, type Action, PanelProps } from "@rua/ui";
 
 // Todo data structure
 interface Todo {
@@ -34,9 +34,11 @@ function formatRelativeDate(isoDate: string): string {
 function CreateTodoPanel({
   onClose,
   onSubmit,
+  inputRef,
 }: {
   onClose: () => void;
   onSubmit: (title: string) => Promise<void>;
+  inputRef?: RefObject<HTMLElement>;
 }) {
   const [title, setTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,6 +73,7 @@ function CreateTodoPanel({
           Title
         </label>
         <input
+          ref={inputRef as RefObject<HTMLInputElement>}
           id="todo-title"
           type="text"
           value={title}
@@ -197,7 +200,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
         icon: "⚡",
         subtitle: "Press Tab to type title",
         section: "Actions",
-        priority: 100,
+        priority: 80,
         query: true,
       },
       // Create with panel (sub-page)
@@ -208,8 +211,14 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
         subtitle: "Open form to create todo",
         section: "Actions",
         priority: 99,
-        panel: ({ onClose }: { onClose: () => void }) => {
-          return <CreateTodoPanel onClose={onClose} onSubmit={handleCreateTodo} />;
+        panel: ({ onClose, afterPopoverFocusElement }: PanelProps) => {
+          return (
+            <CreateTodoPanel
+              onClose={onClose}
+              onSubmit={handleCreateTodo}
+              inputRef={afterPopoverFocusElement}
+            />
+          );
         },
         panelTitle: "New Todo",
         panelFooterActions: (onClose: () => void) => [

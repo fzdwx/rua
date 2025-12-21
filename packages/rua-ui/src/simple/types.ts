@@ -1,37 +1,40 @@
-import type * as React from "react"
-import type {Action, ActionId, ActionTree} from "../command/types"
-import type {ActionImpl} from "../command"
-import {EventHandler} from "react";
+import type * as React from "react";
+import type { Action, ActionId, ActionTree } from "../command/types";
+import type { ActionImpl } from "../command";
+import { EventHandler } from "react";
 
 /**
  * Callback when a query is submitted (e.g., creating a new item)
  */
-export type OnQuerySubmitCallback = (query: string, actionId: ActionId) => void | Promise<void>
+export type OnQuerySubmitCallback = (query: string, actionId: ActionId) => void | Promise<void>;
 
 /**
  * Callback when an action is selected/executed
  */
-export type OnSelectCallback = (action: ActionImpl) => void | Promise<void>
+export type OnSelectCallback = (action: ActionImpl) => void | Promise<void>;
 
 /**
  * Callback when query action is entered (Tab pressed)
  */
-export type OnQueryActionEnterCallback = () => void
+export type OnQueryActionEnterCallback = () => void;
 
 /**
  * Render function for empty state
  */
-export type EmptyStateRenderer = (props: { search: string; actions: Action[] }) => React.ReactElement
+export type EmptyStateRenderer = (props: {
+  search: string;
+  actions: Action[];
+}) => React.ReactElement;
 
 /**
  * Custom item renderer function
  */
-export type CustomItemRenderer = (action: ActionImpl, active: boolean) => React.ReactElement
+export type CustomItemRenderer = (action: ActionImpl, active: boolean) => React.ReactElement;
 
 /**
  * Footer content renderer function
  */
-export type FooterContentRenderer = (current: ActionImpl | null) => string | React.ReactElement
+export type FooterContentRenderer = (current: ActionImpl | null) => string | React.ReactElement;
 
 /**
  * Options for useCommand hook
@@ -40,72 +43,72 @@ export interface UseCommandOptions {
   /**
    * Array of actions to display in the command palette
    */
-  actions: Action[]
+  actions: Action[];
 
   /**
    * Placeholder text for the search input
    * @default "Type a command or search..."
    */
-  placeholder?: string
+  placeholder?: string;
 
   /**
    * Whether to show loading indicator
    * @default false
    */
-  loading?: boolean
+  loading?: boolean;
 
   /**
    * Callback when a query is submitted
    * Typically used for creating new items when using query actions
    */
-  onQuerySubmit?: OnQuerySubmitCallback
+  onQuerySubmit?: OnQuerySubmitCallback;
 
   /**
    * Callback when an action is selected
    * Note: This is called when action changes, not when it's executed
    */
-  onSelect?: OnSelectCallback
+  onSelect?: OnSelectCallback;
 
   /**
    * Callback when Tab is pressed on a query action
    * Can be used for additional side effects
    */
-  onQueryActionEnter?: OnQueryActionEnterCallback
+  onQueryActionEnter?: OnQueryActionEnterCallback;
 
   /**
    * Icon to display in the footer
    * @default "✨"
    */
-  footerIcon?: string | React.ReactElement
+  footerIcon?: string | React.ReactElement;
 
   /**
    * Custom footer content renderer
    * If not provided, uses sensible defaults
    */
-  footerContent?: FooterContentRenderer
+  footerContent?: FooterContentRenderer;
 
   /**
    * Function to generate footer actions for the current action
    * If not provided, uses the action's footerAction property
    */
-  footerActions?: (current: ActionImpl | null, changeVisible: () => void) => Action[]
+  footerActions?: (current: ActionImpl | null, changeVisible: () => void) => Action[];
 
   /**
    * Settings actions to display in the footer settings menu
    */
-  settingsActions?: Action[]
+  settingsActions?: Action[];
 
   /**
    * Custom item renderer
    * If not provided, uses RenderItem component
    */
-  renderItem?: CustomItemRenderer
+  renderItem?: CustomItemRenderer;
 
   /**
    * External ref for the input element
    * Useful if you need direct access to the input
    */
-  inputRef?: React.RefObject<HTMLInputElement>
+  inputRef?: React.RefObject<HTMLInputElement>;
 }
 
 /**
@@ -117,92 +120,92 @@ export interface UseCommandReturn {
    * Can be spread directly: <Input {...inputProps} />
    */
   inputProps: {
-    value: string
-    onValueChange: (value: string) => void
-    actions: ActionTree
-    currentRootActionId: ActionId | null
-    onCurrentRootActionIdChange: (id: ActionId | null) => void
-    activeAction: ActionImpl | null
-    onQuerySubmit: (query: string, actionId: ActionId) => void
-    setResultHandleEvent: (enabled: boolean) => void
-    loading?: boolean
-    defaultPlaceholder?: string
-    focusQueryInput: boolean
-    inputRefSetter?: (ref: HTMLInputElement) => void
-  }
+    value: string;
+    onValueChange: (value: string) => void;
+    actions: ActionTree;
+    currentRootActionId: ActionId | null;
+    onCurrentRootActionIdChange: (id: ActionId | null) => void;
+    activeAction: ActionImpl | null;
+    onQuerySubmit: (query: string, actionId: ActionId) => void;
+    setResultHandleEvent: (enabled: boolean) => void;
+    loading?: boolean;
+    defaultPlaceholder?: string;
+    focusQueryInput: boolean;
+    inputRefSetter?: (ref: HTMLInputElement) => void;
+  };
 
   /**
    * Pre-processed props for ResultsRender component
    * Can be spread directly: <ResultsRender {...resultsProps} />
    */
   resultsProps: {
-    items: (ActionImpl | string)[]
-    height: "auto"
-    handleKeyEvent: boolean
-    setActiveIndex: (cb: number | ((currIndex: number) => number)) => void
-    search: string
-    setSearch: (value: string) => void
-    setRootActionId: (rootActionId: ActionId) => void
-    currentRootActionId: ActionId | null
-    activeIndex: number
-    onQueryActionEnter: () => void
-    onRender: (params: { item: ActionImpl | string; active: boolean }) => React.ReactElement
-  }
+    items: (ActionImpl | string)[];
+    height: "auto";
+    handleKeyEvent: boolean;
+    setActiveIndex: (cb: number | ((currIndex: number) => number)) => void;
+    search: string;
+    setSearch: (value: string) => void;
+    setRootActionId: (rootActionId: ActionId) => void;
+    currentRootActionId: ActionId | null;
+    activeIndex: number;
+    onQueryActionEnter: () => void;
+    onRender: (params: { item: ActionImpl | string; active: boolean }) => React.ReactElement;
+  };
 
   /**
    * Pre-processed props for Footer component
    * Can be spread directly: <Footer {...footerProps} />
    */
   footerProps: {
-    current: ActionImpl | null
-    icon: string | React.ReactElement
-    content: (current: ActionImpl | null) => string | React.ReactElement
-    actions: (current: ActionImpl | null, changeVisible: () => void) => Action[]
-    settings?: Action[]
-    mainInputRef?: React.RefObject<HTMLInputElement>
-  }
+    current: ActionImpl | null;
+    icon: string | React.ReactElement;
+    content: (current: ActionImpl | null) => string | React.ReactElement;
+    actions: (current: ActionImpl | null, changeVisible: () => void) => Action[];
+    settings?: Action[];
+    mainInputRef?: React.RefObject<HTMLInputElement>;
+  };
 
   // State accessors (for advanced usage)
   /**
    * Current search query
    */
-  search: string
+  search: string;
 
   /**
    * Set search query
    */
-  setSearch: (value: string) => void
+  setSearch: (value: string) => void;
 
   /**
    * Currently active action (filtered to exclude section headers)
    */
-  activeAction: ActionImpl | null
+  activeAction: ActionImpl | null;
 
   /**
    * Current active index in results
    */
-  activeIndex: number
+  activeIndex: number;
 
   /**
    * Current root action ID (for nested navigation)
    */
-  rootActionId: ActionId | null
+  rootActionId: ActionId | null;
 
   /**
    * All search results (includes section headers as strings)
    */
-  results: (ActionImpl | string)[]
+  results: (ActionImpl | string)[];
 
   // Control methods
   /**
    * Reset all state to initial values
    */
-  reset: () => void
+  reset: () => void;
 
   /**
    * Focus the input element
    */
-  focusInput: () => void
+  focusInput: () => void;
 }
 
 /**
@@ -212,41 +215,41 @@ export interface CommandPaletteProps extends UseCommandOptions {
   /**
    * Additional className for the container
    */
-  className?: string
+  className?: string;
 
   /**
    * Additional className for the empty state container
    */
-  emptyStateClassName?: string
+  emptyStateClassName?: string;
 
   /**
    * Whether to auto-focus the input on mount
    */
-  autoFocus?: boolean
+  autoFocus?: boolean;
 
   /**
    * Whether to show the footer
    * @default true
    */
-  showFooter?: boolean
+  showFooter?: boolean;
 
   /**
    * Custom element to display on the right side of the footer
    */
-  rightElement?: React.ReactElement
+  rightElement?: React.ReactElement;
 
   /**
    * Custom empty state renderer
    * Shown when there are no actions and no search
    */
-  emptyState?: EmptyStateRenderer
+  emptyState?: EmptyStateRenderer;
 
   /**
    * Optional Rua API instance for window control
    * When provided, enables window hiding on ESC/Backspace at root level with empty search
    */
   rua?: {
-    hideWindow(): Promise<void>
+    hideWindow(): Promise<void>;
     ui: {
       /** close action back to main view */
       close(): Promise<void>;
@@ -263,5 +266,15 @@ export interface CommandPaletteProps extends UseCommandOptions {
       event: "activate" | "deactivate" | "action-triggered" | "theme-change",
       handler: (data: unknown) => void
     ): void;
-  }
+  };
+}
+
+export interface PanelFooter {
+  current?: null;
+  icon: string | React.ReactElement;
+  content: () => string;
+  actions: (current: string | ActionImpl | null, changeVisible: () => void) => Action[];
+  mainInputRef: React.RefObject<HTMLElement>;
+  onSubCommandHide?: () => void;
+  onSubCommandShow?: () => void;
 }
