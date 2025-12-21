@@ -1,0 +1,596 @@
+---
+title: Using @rua/ui Components
+description: Build beautiful extension UIs with the @rua/ui component library
+icon: Layout
+---
+
+# Using @rua/ui Components
+
+The `@rua/ui` package provides pre-built UI components designed specifically for Rua extensions. The main component is `CommandPalette`, which gives you a complete command palette interface out of the box.
+
+## Installation
+
+<Tabs items={['bun', 'npm', 'yarn', 'pnpm']}>
+  <Tab value="bun">
+```bash
+bun add @rua/ui
+```
+  </Tab>
+  <Tab value="npm">
+```bash
+npm install @rua/ui
+```
+  </Tab>
+  <Tab value="yarn">
+```bash
+yarn add @rua/ui
+```
+  </Tab>
+  <Tab value="pnpm">
+```bash
+pnpm add @rua/ui
+```
+  </Tab>
+</Tabs>
+
+## Quick Start
+
+```tsx
+import { useState, useEffect } from 'react';
+import { initializeRuaAPI, type RuaAPI } from 'rua-api/browser';
+import { CommandPalette, type Action } from '@rua/ui';
+
+function App() {
+  const [rua, setRua] = useState<RuaAPI | null>(null);
+
+  useEffect(() => {
+    initializeRuaAPI().then(setRua);
+  }, []);
+
+  if (!rua) return <div>Loading...</div>;
+
+  const actions: Action[] = [
+    {
+      id: 'hello',
+      name: 'Say Hello',
+      icon: '👋',
+      perform: () => console.log('Hello!'),
+    },
+  ];
+
+  return (
+    <CommandPalette
+      actions={actions}
+      rua={rua}
+      placeholder="Search actions..."
+    />
+  );
+}
+```
+
+## CommandPalette Component
+
+The `CommandPalette` component is the main UI component for building extension interfaces.
+
+### Basic Props
+
+```tsx
+<CommandPalette
+  // Required: Array of actions to display
+  actions={actions}
+  
+  // Optional: Rua API instance for window control and manifest integration
+  rua={rua}
+  
+  // Optional: Placeholder text for search input
+  placeholder="Type a command or search..."
+  
+  // Optional: Auto-focus input on mount (default: true)
+  autoFocus={true}
+  
+  // Optional: Custom empty state renderer
+  emptyState={({ search }) => (
+    <div>No results for "{search}"</div>
+  )}
+/>
+```
+
+### Navigation Props
+
+The footer navigation (icon and title) can be customized:
+
+```tsx
+<CommandPalette
+  actions={actions}
+  rua={rua}
+  
+  // Custom navigation icon (emoji, iconify name, or React element)
+  navigationIcon="🚀"
+  
+  // Custom navigation title (string or function)
+  navigationTitle="My Extension"
+/>
+```
+
+**Default Navigation Behavior:**
+
+When `rua` prop is provided, navigation defaults come from your extension's `manifest.json`:
+
+```json
+{
+  "rua": {
+    "actions": [
+      {
+        "name": "main",
+        "title": "My Extension",  // → default navigationTitle
+        "icon": "./icon.png"      // → default navigationIcon (converted to ext:// URL)
+      }
+    ]
+  }
+}
+```
+
+When `rua` is not provided:
+- `navigationTitle` defaults to the active action's name or "Select an action"
+- `navigationIcon` defaults to the active action's icon or "✨"
+
+### Icon Formats
+
+Icons support multiple formats:
+
+```tsx
+// Emoji
+icon: "🚀"
+
+// Iconify icon name
+icon: "tabler:rocket"
+
+// Relative path (automatically converted to ext:// URL)
+icon: "./icon.png"
+
+// Data URI
+icon: "data:image/svg+xml;base64,..."
+
+// SVG string
+icon: "<svg>...</svg>"
+
+// React element
+icon: <MyCustomIcon />
+```
+
+## Actions
+
+Actions define the items displayed in the command palette.
+
+### Basic Action
+
+```tsx
+const actions: Action[] = [
+  {
+    id: 'unique-id',
+    name: 'Action Name',
+    icon: '🎯',
+    subtitle: 'Optional description',
+    perform: () => {
+      // Action logic
+    },
+  },
+];
+```
+
+### Action Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | `string` | Unique identifier |
+| `name` | `string` | Display name |
+| `icon` | `string \| ReactElement` | Icon (emoji, iconify, path, etc.) |
+| `subtitle` | `string` | Optional description |
+| `section` | `string` | Group actions by section |
+| `priority` | `number` | Sort order (higher = first) |
+| `keywords` | `string` | Search keywords |
+| `badge` | `string` | Badge text on the right |
+| `shortcut` | `string[]` | Keyboard shortcut display |
+| `perform` | `() => void` | Action handler |
+| `query` | `boolean` | Enable query input mode |
+| `panel` | `(props) => ReactElement` | Custom panel UI |
+| `footerAction` | `(changeVisible) => Action[]` | Footer actions for this item |
+| `panelFooterActions` | `(onClose) => Action[]` | Footer actions when panel is open |
+
+### Sections
+
+Group actions by section:
+
+```tsx
+const actions: Action[] = [
+  { id: '1', name: 'Create', section: 'Actions', priority: 10 },
+  { id: '2', name: 'Edit', section: 'Actions', priority: 9 },
+  { id: '3', name: 'Item 1', section: 'Items', priority: 5 },
+  { id: '4', name: 'Item 2', section: 'Items', priority: 4 },
+];
+```
+
+### Query Actions
+
+Enable query input for user-provided data:
+
+```tsx
+const actions: Action[] = [
+  {
+    id: 'create',
+    name: 'Create Item',
+    icon: '➕',
+    subtitle: 'Press Tab to type',
+    query: true,  // Enable query mode
+  },
+];
+
+// Handle query submission
+<CommandPalette
+  actions={actions}
+  onQuerySubmit={(query, actionId) => {
+    if (actionId === 'create') {
+      createItem(query);
+    }
+  }}
+/>
+```
+
+Use the helper function for cleaner code:
+
+```tsx
+import { createQuerySubmitHandler } from '@rua/ui';
+
+<CommandPalette
+  actions={actions}
+  onQuerySubmit={createQuerySubmitHandler('create', handleCreate)}
+/>
+```
+
+### Footer Actions
+
+Add contextual actions to the footer when an item is selected:
+
+```tsx
+const actions: Action[] = [
+  {
+    id: 'item-1',
+    name: 'My Item',
+    footerAction: (changeVisible) => [
+      {
+        id: 'edit',
+        name: 'Edit',
+        icon: '✏️',
+        perform: () => {
+          editItem();
+          changeVisible(); // Close footer menu
+        },
+      },
+      {
+        id: 'delete',
+        name: 'Delete',
+        icon: '🗑️',
+        perform: () => {
+          deleteItem();
+          changeVisible();
+        },
+      },
+    ],
+  },
+];
+```
+
+## Panels
+
+Panels allow you to render custom UI when an action is selected.
+
+### Basic Panel
+
+```tsx
+function MyPanel({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="p-4">
+      <h2>Custom Panel</h2>
+      <button onClick={onClose}>Close</button>
+    </div>
+  );
+}
+
+const actions: Action[] = [
+  {
+    id: 'open-panel',
+    name: 'Open Panel',
+    icon: '📋',
+    panel: ({ onClose }) => <MyPanel onClose={onClose} />,
+  },
+];
+```
+
+### Panel with Footer Actions
+
+```tsx
+const actions: Action[] = [
+  {
+    id: 'create-form',
+    name: 'Create New Item',
+    icon: '➕',
+    panel: ({ onClose, afterPopoverFocusElement }) => (
+      <CreateForm 
+        onClose={onClose} 
+        inputRef={afterPopoverFocusElement}
+      />
+    ),
+    panelFooterActions: (onClose) => [
+      {
+        id: 'cancel',
+        name: 'Cancel',
+        icon: '←',
+        perform: onClose,
+      },
+      {
+        id: 'save',
+        name: 'Save',
+        icon: '✓',
+        perform: () => {
+          // Save logic
+          onClose();
+        },
+      },
+    ],
+  },
+];
+```
+
+### Panel in Footer Actions
+
+You can also open panels from footer actions:
+
+```tsx
+const actions: Action[] = [
+  {
+    id: 'item-1',
+    name: 'My Item',
+    footerAction: (changeVisible) => [
+      {
+        id: 'edit-panel',
+        name: 'Edit',
+        icon: '✏️',
+        panel: ({ onClose }) => <EditPanel onClose={onClose} />,
+        panelFooterActions: (onClose) => [
+          { id: 'cancel', name: 'Cancel', icon: '←', perform: onClose },
+          { id: 'save', name: 'Save', icon: '✓', perform: handleSave },
+        ],
+      },
+    ],
+  },
+];
+```
+
+## Styling
+
+### Import Styles
+
+```tsx
+// Import all styles
+import '@rua/ui/styles';
+
+// Or import individual stylesheets
+import '@rua/ui/styles/global.css';
+import '@rua/ui/styles/command.css';
+```
+
+### CSS Variables
+
+The component uses CSS variables for theming:
+
+```css
+:root {
+  --gray1: #fcfcfc;
+  --gray2: #f9f9f9;
+  --gray6: #e5e5e5;
+  --gray9: #8f8f8f;
+  --gray11: #6f6f6f;
+  --gray12: #171717;
+  --blue8: #0090ff;
+  --red11: #cd2b31;
+  --hover2: rgba(0, 0, 0, 0.05);
+}
+
+.dark {
+  --gray1: #111111;
+  --gray2: #191919;
+  /* ... dark theme values */
+}
+```
+
+### Custom Classes
+
+```tsx
+<CommandPalette
+  className="my-custom-class"
+  emptyStateClassName="my-empty-state"
+  actions={actions}
+/>
+```
+
+## Complete Example
+
+Here's a complete todo list extension example:
+
+```tsx
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { initializeRuaAPI, type RuaAPI } from 'rua-api/browser';
+import { CommandPalette, createQuerySubmitHandler, type Action, type PanelProps } from '@rua/ui';
+
+interface Todo {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
+function CreateTodoPanel({ onClose, onSubmit }: { 
+  onClose: () => void; 
+  onSubmit: (title: string) => void;
+}) {
+  const [title, setTitle] = useState('');
+
+  return (
+    <div className="p-4">
+      <h2 className="text-lg font-semibold mb-4">Create Todo</h2>
+      <input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && title.trim()) {
+            onSubmit(title.trim());
+            onClose();
+          }
+        }}
+        placeholder="Enter todo title..."
+        autoFocus
+        className="w-full p-2 border rounded"
+      />
+    </div>
+  );
+}
+
+function TodoApp({ rua }: { rua: RuaAPI }) {
+  const [todos, setTodos] = useState<Todo[]>([]);
+
+  useEffect(() => {
+    rua.storage.get<Todo[]>('todos').then((data) => setTodos(data || []));
+  }, [rua]);
+
+  const handleCreate = useCallback(async (title: string) => {
+    const newTodo: Todo = {
+      id: Date.now().toString(),
+      title,
+      done: false,
+    };
+    const updated = [...todos, newTodo];
+    setTodos(updated);
+    await rua.storage.set('todos', updated);
+  }, [todos, rua]);
+
+  const actions = useMemo<Action[]>(() => [
+    // Quick create action
+    {
+      id: 'quick-create',
+      name: 'Quick Create',
+      icon: '⚡',
+      subtitle: 'Press Tab to type',
+      section: 'Actions',
+      priority: 100,
+      query: true,
+    },
+    // Panel create action
+    {
+      id: 'create-panel',
+      name: 'Create Todo',
+      icon: '➕',
+      section: 'Actions',
+      priority: 99,
+      panel: ({ onClose }: PanelProps) => (
+        <CreateTodoPanel onClose={onClose} onSubmit={handleCreate} />
+      ),
+      panelFooterActions: (onClose) => [
+        { id: 'cancel', name: 'Cancel', icon: '←', perform: onClose },
+      ],
+    },
+    // Todo items
+    ...todos.map((todo): Action => ({
+      id: `todo-${todo.id}`,
+      name: todo.title,
+      icon: todo.done ? '✅' : '⭕',
+      section: todo.done ? 'Completed' : 'Active',
+      priority: todo.done ? 0 : 10,
+      footerAction: (changeVisible) => [
+        {
+          id: 'toggle',
+          name: todo.done ? 'Mark Active' : 'Mark Done',
+          icon: todo.done ? '⭕' : '✅',
+          perform: async () => {
+            const updated = todos.map((t) =>
+              t.id === todo.id ? { ...t, done: !t.done } : t
+            );
+            setTodos(updated);
+            await rua.storage.set('todos', updated);
+            changeVisible();
+          },
+        },
+        {
+          id: 'delete',
+          name: 'Delete',
+          icon: '🗑️',
+          perform: async () => {
+            const updated = todos.filter((t) => t.id !== todo.id);
+            setTodos(updated);
+            await rua.storage.set('todos', updated);
+            changeVisible();
+          },
+        },
+      ],
+    })),
+  ], [todos, handleCreate]);
+
+  return (
+    <CommandPalette
+      actions={actions}
+      rua={rua}
+      placeholder="Search todos..."
+      onQuerySubmit={createQuerySubmitHandler('quick-create', handleCreate)}
+      emptyState={() => (
+        <div className="text-center">
+          <div className="text-5xl mb-4">📝</div>
+          <div>No todos yet!</div>
+        </div>
+      )}
+    />
+  );
+}
+
+export default function App() {
+  const [rua, setRua] = useState<RuaAPI | null>(null);
+
+  useEffect(() => {
+    initializeRuaAPI().then(setRua);
+  }, []);
+
+  if (!rua) return <div>Loading...</div>;
+
+  return <TodoApp rua={rua} />;
+}
+```
+
+## API Reference
+
+### CommandPaletteProps
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `actions` | `Action[]` | Required | Actions to display |
+| `rua` | `RuaAPI` | - | Rua API instance |
+| `placeholder` | `string` | "Type a command..." | Input placeholder |
+| `autoFocus` | `boolean` | `true` | Auto-focus on mount |
+| `navigationIcon` | `string \| ReactElement` | From manifest | Footer icon |
+| `navigationTitle` | `string \| Function` | From manifest | Footer title |
+| `onQuerySubmit` | `Function` | - | Query submission handler |
+| `onSelect` | `Function` | - | Action selection handler |
+| `emptyState` | `Function` | - | Empty state renderer |
+| `rightElement` | `ReactElement` | - | Custom footer element |
+| `className` | `string` | - | Container class |
+| `emptyStateClassName` | `string` | - | Empty state class |
+
+### PanelProps
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `onClose` | `() => void` | Close the panel |
+| `afterPopoverFocusElement` | `RefObject<HTMLElement>` | Ref for focus management |
+
+## Next Steps
+
+- [Extension Manifest](/docs/extensions/manifest) - Configure your extension
+- [Permissions](/docs/extensions/permissions) - Set up secure system access
+- [API Overview](/docs/api/overview) - Explore the full API
+- [Debugging](/docs/extensions/debugging) - Debug your extension
