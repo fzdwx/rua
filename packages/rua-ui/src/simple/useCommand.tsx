@@ -38,6 +38,7 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
     actions,
     placeholder = "Type a command or search...",
     loading = false,
+    navigationLoading = false,
     onQuerySubmit,
     onQueryActionEnter,
     navigationIcon,
@@ -231,6 +232,7 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
       mainInputRef: inputRef,
       onSubCommandShow: handleSubCommandShow,
       onSubCommandHide: handleSubCommandHide,
+      loading: navigationLoading,
     },
 
     // State accessors (for advanced usage)

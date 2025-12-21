@@ -191,8 +191,6 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
         id: "create-todo-panel",
         name: "Create New Todo",
         icon: "➕",
-        subtitle: "Open form to create todo",
-        section: "Actions",
         priority: 99,
         panel: ({ onClose, afterPopoverFocusElement }: PanelProps) => {
           return (
@@ -273,6 +271,8 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
   return (
     <CommandPalette
       actions={actions}
+      loading={false}
+      navigationLoading={true}
       rua={rua}
       placeholder="Search todo-list todos or create new..."
       onQuerySubmit={createQuerySubmitHandler("create-todo", handleCreateTodo)}

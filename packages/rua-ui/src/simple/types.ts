@@ -51,10 +51,16 @@ export interface UseCommandOptions {
   placeholder?: string;
 
   /**
-   * Whether to show loading indicator
+   * Whether to show loading indicator in the input
    * @default false
    */
   loading?: boolean;
+
+  /**
+   * Whether to show loading indicator next to the navigation title
+   * @default false
+   */
+  navigationLoading?: boolean;
 
   /**
    * Callback when a query is submitted
@@ -165,6 +171,7 @@ export interface UseCommandReturn {
     mainInputRef?: React.RefObject<HTMLInputElement>;
     onSubCommandShow?: () => void;
     onSubCommandHide?: () => void;
+    loading?: boolean;
   };
 
   // State accessors (for advanced usage)
