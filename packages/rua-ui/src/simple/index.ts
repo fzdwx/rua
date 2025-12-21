@@ -8,10 +8,11 @@
  */
 
 // Core hook
-export { useCommand } from "./useCommand"
+export { useCommand } from "./useCommand";
 
-// Pre-built component
-export { CommandPalette } from "./CommandPalette"
+// Pre-built component and navigation
+export { CommandPalette, useNavigation } from "./CommandPalette";
+export type { ViewItem, NavigationContextValue } from "./CommandPalette";
 
 // Utility functions
 export {
@@ -21,12 +22,10 @@ export {
   createFooterContentRenderer,
   mergeActions,
   attemptFocusWithRetry,
-} from "./utils"
+} from "./utils";
 
 // Utility types
-export type {
-  FocusRetryOptions,
-} from "./utils"
+export type { FocusRetryOptions } from "./utils";
 
 // Types
 export type {
@@ -39,4 +38,4 @@ export type {
   EmptyStateRenderer,
   CustomItemRenderer,
   FooterContentRenderer,
-} from "./types"
+} from "./types";

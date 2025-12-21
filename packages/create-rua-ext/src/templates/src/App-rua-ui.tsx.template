@@ -1,10 +1,11 @@
 /**
  * {{name}} - Todo List Extension
- * Demonstrates simplified command palette API with CRUD operations
+ * Demonstrates simplified command palette API with navigation stack
  */
-import { useState, useEffect, useMemo, useCallback, type RefObject } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { initializeRuaAPI, type RuaAPI } from "rua-api/browser";
-import { CommandPalette, createQuerySubmitHandler, type Action, PanelProps } from "@rua/ui";
+import { CommandPalette, useNavigation, Kbd, type Action } from "@rua/ui";
+import { useKeyPress } from "ahooks";
 
 // Todo data structure
 interface Todo {
@@ -30,40 +31,40 @@ function formatRelativeDate(isoDate: string): string {
   return date.toLocaleDateString();
 }
 
-// Create Todo Panel Component
-function CreateTodoPanel({
-  onClose,
-  onSubmit,
-  inputRef,
-}: {
-  onClose: () => void;
-  onSubmit: (title: string) => Promise<void>;
-  inputRef?: RefObject<HTMLElement>;
-}) {
+// Create Todo Panel Component - uses navigation context
+function CreateTodoPanel({ onSubmit }: { onSubmit: (title: string) => Promise<void> }) {
+  const { pop, setAccessory, focusRef } = useNavigation();
   const [title, setTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!title.trim() || isSubmitting) return;
-
     setIsSubmitting(true);
     try {
       await onSubmit(title.trim());
-      onClose();
+      pop();
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [title, isSubmitting, onSubmit, pop]);
 
-  // Expose submit function globally for footer to call
+  // Ctrl+Enter to submit
+  useKeyPress("ctrl.enter", () => {
+    if (title.trim() && !isSubmitting) {
+      handleSubmit();
+    }
+  });
+
+  // Set footer accessory button
   useEffect(() => {
-    (window as any).__createTodoSubmit = handleSubmit;
-    (window as any).__createTodoCanSubmit = () => !!title.trim() && !isSubmitting;
-    return () => {
-      delete (window as any).__createTodoSubmit;
-      delete (window as any).__createTodoCanSubmit;
-    };
-  }, [title, isSubmitting]);
+    setAccessory(
+      <div onClick={handleSubmit} className="cursor-default command-subcommand-trigger">
+        <span>Create</span>
+        <Kbd>⌘</Kbd>+<Kbd>↵</Kbd>
+      </div>
+    );
+    return () => setAccessory(null);
+  }, [setAccessory, title, isSubmitting, handleSubmit]);
 
   return (
     <div className="flex h-full flex-col p-4">
@@ -73,22 +74,43 @@ function CreateTodoPanel({
           Title
         </label>
         <input
-          ref={inputRef as RefObject<HTMLInputElement>}
+          ref={focusRef as React.RefObject<HTMLInputElement>}
           id="todo-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && title.trim()) {
-              e.preventDefault();
-              handleSubmit();
-            }
-          }}
           placeholder="Enter todo title..."
           autoFocus
           className="w-full rounded-md border border-[var(--gray6)] bg-[var(--gray2)] px-3 py-2 text-[var(--gray12)] placeholder-[var(--gray9)] focus:border-[var(--blue8)] focus:outline-none"
         />
       </div>
+    </div>
+  );
+}
+
+// Main Accessory - shows "New Todo" button in footer
+function MainAccessory({ onCreateTodo }: { onCreateTodo: (title: string) => Promise<void> }) {
+  const { push } = useNavigation();
+
+  const openCreatePanel = useCallback(() => {
+    push({
+      id: "create-todo",
+      component: <CreateTodoPanel onSubmit={onCreateTodo} />,
+      footerActions: (onClose: () => void) => [
+        { id: "cancel", name: "Cancel", icon: "←", perform: onClose },
+      ],
+    });
+  }, [push, onCreateTodo]);
+
+  // Ctrl+O to open create panel
+  useKeyPress("ctrl.o", () => {
+    openCreatePanel();
+  });
+
+  return (
+    <div onClick={openCreatePanel} className="cursor-default command-subcommand-trigger">
+      <span>New Todo</span>
+      <Kbd>⌘</Kbd>+<Kbd>O</Kbd>
     </div>
   );
 }
@@ -129,36 +151,6 @@ function App() {
 function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
   const [todos, setTodos] = useState<Todo[]>([]);
 
-  // ============================================================================
-  // MANUAL NAVIGATION EXAMPLE (Optional)
-  // ============================================================================
-  // If you need custom navigation when a panel is open, manage state externally:
-  //
-  // const [customNavigation, setCustomNavigation] = useState<{
-  //   title?: string;
-  //   icon?: string;
-  // } | null>(null);
-  //
-  // Then in your panel action, update the navigation when opening:
-  //   panel: ({ onClose }) => {
-  //     // Set custom navigation when panel opens
-  //     useEffect(() => {
-  //       setCustomNavigation({ title: "New Todo", icon: "➕" });
-  //       return () => setCustomNavigation(null); // Reset on close
-  //     }, []);
-  //     return <CreateTodoPanel onClose={onClose} ... />;
-  //   }
-  //
-  // And pass to CommandPalette:
-  //   <CommandPalette
-  //     navigationTitle={customNavigation?.title}
-  //     navigationIcon={customNavigation?.icon}
-  //     ...
-  //   />
-  //
-  // By default, navigation uses manifest action info (title: "{{name}}", icon: "./icon.png")
-  // ============================================================================
-
   // Load todos from storage
   useEffect(() => {
     rua.storage
@@ -167,7 +159,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
       .catch((err) => console.error("Failed to load todos:", err));
   }, [rua]);
 
-  // Create todo handler - memoized to avoid recreating on every render
+  // Create todo handler
   const handleCreateTodo = useCallback(
     async (title: string) => {
       const newTodo: Todo = {
@@ -187,7 +179,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
 
   // Build actions from todos
   const actions = useMemo<Action[]>(() => {
-    const todoActions = todos.map(
+    return todos.map(
       (todo): Action => ({
         id: `todo-${todo.id}`,
         name: todo.title,
@@ -223,69 +215,22 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
         ],
       })
     );
-
-    return [
-      // Quick create with query input
-      {
-        id: "create-todo",
-        name: "Quick Create Todo",
-        icon: "⚡",
-        subtitle: "Press Tab to type title",
-        section: "Actions",
-        priority: 80,
-        query: true,
-      },
-      // Create with panel (sub-page)
-      {
-        id: "create-todo-panel",
-        name: "Create New Todo",
-        icon: "➕",
-        subtitle: "Open form to create todo",
-        section: "Actions",
-        priority: 99,
-        panel: ({ onClose, afterPopoverFocusElement }: PanelProps) => {
-          return (
-            <CreateTodoPanel
-              onClose={onClose}
-              onSubmit={handleCreateTodo}
-              inputRef={afterPopoverFocusElement}
-            />
-          );
-        },
-        // Note: panelTitle removed - navigation now comes from manifest action info
-        // panelFooterActions is still used for footer action buttons
-        panelFooterActions: (onClose: () => void) => [
-          {
-            id: "cancel",
-            name: "Cancel",
-            icon: "←",
-            perform: onClose,
-          },
-          {
-            id: "create",
-            name: "Create",
-            icon: "✓",
-            perform: () => {
-              const submit = (window as any).__createTodoSubmit;
-              if (submit) submit();
-            },
-          },
-        ],
-      },
-      ...todoActions,
-    ];
-  }, [todos, handleCreateTodo, rua]);
+  }, [todos, rua]);
 
   return (
     <CommandPalette
       actions={actions}
+      loading={false}
+      navigationLoading={false}
       rua={rua}
       placeholder="Search {{name}} todos or create new..."
-      onQuerySubmit={createQuerySubmitHandler("create-todo", handleCreateTodo)}
+      accessory={<MainAccessory onCreateTodo={handleCreateTodo} />}
       emptyState={() => (
         <div className="flex flex-col items-center justify-center">
           <div className="mb-4 text-5xl">📝</div>
-          <div className="text-sm text-[var(--gray11)]">No todos yet. Create your first one!</div>
+          <div className="text-sm text-[var(--gray11)]">
+            No todos yet. Press Ctrl+O to create one!
+          </div>
         </div>
       )}
     />

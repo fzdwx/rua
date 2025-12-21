@@ -38,7 +38,12 @@ function FooterIconRenderer({ icon }: { icon: string | React.ReactElement }) {
     const iconStr = icon as string;
 
     // Check if it's an ext:// URL or data URI - render as image
-    if (iconStr.startsWith("ext://") || iconStr.startsWith("data:") || iconStr.startsWith("http://") || iconStr.startsWith("https://")) {
+    if (
+      iconStr.startsWith("ext://") ||
+      iconStr.startsWith("data:") ||
+      iconStr.startsWith("http://") ||
+      iconStr.startsWith("https://")
+    ) {
       return (
         <img
           src={iconStr}
@@ -89,7 +94,7 @@ export const Footer: React.FC<{
   onSubCommandShow?: () => void;
   mainInputRef?: React.RefObject<HTMLElement | null>;
   settings?: Action[]; // Settings actions for settings menu
-  rightElement?: React.ReactElement; // Custom element to display on the right side
+  accessory?: React.ReactElement; // Custom accessory element to display on the right side
   loading?: boolean; // Show loading indicator
   onPanelActionEnter?: (action: any) => void; // Callback when a panel action is selected
 }> = ({
@@ -101,19 +106,21 @@ export const Footer: React.FC<{
   onSubCommandHide,
   mainInputRef,
   settings,
-  rightElement,
+  accessory,
   loading,
   onPanelActionEnter,
 }) => {
   return (
     <div className="command-footer">
-      <div className="command-footer-icon"><FooterIconRenderer icon={icon} /></div>
+      <div className="command-footer-icon">
+        <FooterIconRenderer icon={icon} />
+      </div>
       <div style={{ marginRight: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
         {content(current)}
         {loading && <FooterLoading />}
       </div>
 
-      {rightElement && <>{rightElement}</>}
+      {accessory && <div className="flex-shrink-0">{accessory}</div>}
 
       <FooterActionRender
         onSubCommandHide={onSubCommandHide}
@@ -154,7 +161,14 @@ const FooterActionRender: React.FC<{
   onSubCommandShow?: () => void;
   mainInputRef?: React.RefObject<HTMLElement | null>;
   onPanelActionEnter?: (action: any) => void;
-}> = ({ actions, onSubCommandHide, onSubCommandShow, current, mainInputRef, onPanelActionEnter }) => {
+}> = ({
+  actions,
+  onSubCommandHide,
+  onSubCommandShow,
+  current,
+  mainInputRef,
+  onPanelActionEnter,
+}) => {
   return (
     <>
       <FooterHr />

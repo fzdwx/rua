@@ -243,9 +243,9 @@ export interface CommandPaletteProps extends UseCommandOptions {
   showFooter?: boolean;
 
   /**
-   * Custom element to display on the right side of the footer
+   * Custom accessory element to display on the right side of the footer
    */
-  rightElement?: React.ReactElement;
+  accessory?: React.ReactElement;
 
   /**
    * Custom empty state renderer

@@ -26,8 +26,8 @@ export interface PanelProps {
  * Extended panel props that includes footer customization
  */
 export interface PanelRenderProps extends PanelProps {
-  /** Set custom right element for footer when panel is open */
-  setFooterRightElement?: (element: React.ReactElement | null) => void;
+  /** Set custom accessory element for footer when panel is open */
+  setAccessory?: (element: React.ReactElement | null) => void;
 }
 
 export type Action = {
