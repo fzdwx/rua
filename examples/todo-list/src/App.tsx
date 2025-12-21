@@ -4,7 +4,16 @@
  */
 import { useState, useEffect, useMemo, useCallback, type RefObject } from "react";
 import { initializeRuaAPI, type RuaAPI } from "rua-api/browser";
-import { CommandPalette, createQuerySubmitHandler, type Action, PanelProps } from "@rua/ui";
+import { CommandPalette, createQuerySubmitHandler, type Action, type PanelRenderProps } from "@rua/ui";
+
+// Simple Kbd component for keyboard shortcuts
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-sm bg-[var(--gray4)] px-1 text-[10px] font-medium text-[var(--gray11)]">
+      {children}
+    </kbd>
+  );
+}
 
 // Todo data structure
 interface Todo {
@@ -35,15 +44,17 @@ function CreateTodoPanel({
   onClose,
   onSubmit,
   inputRef,
+  setFooterRightElement,
 }: {
   onClose: () => void;
   onSubmit: (title: string) => Promise<void>;
   inputRef?: RefObject<HTMLElement>;
+  setFooterRightElement?: (element: React.ReactElement | null) => void;
 }) {
   const [title, setTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!title.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
@@ -53,17 +64,47 @@ function CreateTodoPanel({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [title, isSubmitting, onSubmit, onClose]);
 
-  // Expose submit function globally for footer to call
+  // Handle Ctrl+Enter to submit
   useEffect(() => {
-    (window as any).__createTodoSubmit = handleSubmit;
-    (window as any).__createTodoCanSubmit = () => !!title.trim() && !isSubmitting;
-    return () => {
-      delete (window as any).__createTodoSubmit;
-      delete (window as any).__createTodoCanSubmit;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && title.trim() && !isSubmitting) {
+        e.preventDefault();
+        handleSubmit();
+      }
     };
-  }, [title, isSubmitting]);
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [title, isSubmitting, handleSubmit]);
+
+  // Set footer right element with create button
+  useEffect(() => {
+    if (setFooterRightElement) {
+      setFooterRightElement(
+        <div className="flex items-center gap-2 pr-4">
+          <button
+            onClick={handleSubmit}
+            disabled={!title.trim() || isSubmitting}
+            className="flex items-center gap-1.5 rounded-md bg-[var(--blue9)] px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-[var(--blue10)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span>Create</span>
+            <span className="flex items-center gap-0.5 opacity-70">
+              <Kbd>⌘</Kbd>
+              <Kbd>↵</Kbd>
+            </span>
+          </button>
+        </div>
+      );
+    }
+
+    return () => {
+      if (setFooterRightElement) {
+        setFooterRightElement(null);
+      }
+    };
+  }, [setFooterRightElement, title, isSubmitting, handleSubmit]);
 
   return (
     <div className="flex h-full flex-col p-4">
@@ -79,7 +120,7 @@ function CreateTodoPanel({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && title.trim()) {
+            if (e.key === "Enter" && !e.ctrlKey && !e.metaKey && title.trim()) {
               e.preventDefault();
               handleSubmit();
             }
@@ -192,32 +233,24 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
         name: "Create New Todo",
         icon: "➕",
         priority: 99,
-        panel: ({ onClose, afterPopoverFocusElement }: PanelProps) => {
+        panel: ({ onClose, afterPopoverFocusElement, setFooterRightElement }: PanelRenderProps) => {
           return (
             <CreateTodoPanel
               onClose={onClose}
               onSubmit={handleCreateTodo}
               inputRef={afterPopoverFocusElement}
+              setFooterRightElement={setFooterRightElement}
             />
           );
         },
         // Note: panelTitle removed - navigation now comes from manifest action info
-        // panelFooterActions is still used for footer action buttons
+        // panelFooterActions simplified - main create button is now in rightElement
         panelFooterActions: (onClose: () => void) => [
           {
             id: "cancel",
             name: "Cancel",
             icon: "←",
             perform: onClose,
-          },
-          {
-            id: "create",
-            name: "Create",
-            icon: "✓",
-            perform: () => {
-              const submit = (window as any).__createTodoSubmit;
-              if (submit) submit();
-            },
           },
         ],
       },

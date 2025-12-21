@@ -4,7 +4,7 @@ import {Input} from "@/command";
 import {ResultsRender} from "@/command";
 import {Footer} from "@/command";
 import type {CommandPaletteProps, UseCommandReturn} from "./types";
-import type {PanelProps, Action} from "@/command/types";
+import type {PanelRenderProps, Action} from "@/command/types";
 import {attemptFocusWithRetry} from "./utils";
 import {Background, Container} from "@/common/tools";
 
@@ -25,7 +25,7 @@ function toExtURL(path: string, extPath: string): string {
  */
 interface PanelState {
   /** The panel render function */
-  render: (props: PanelProps) => React.ReactElement;
+  render: (props: PanelRenderProps) => React.ReactElement;
   /** The action ID that opened this panel */
   actionId: string;
   /** Footer actions for this panel */
@@ -68,6 +68,8 @@ export function CommandPalette(props: CommandPaletteProps) {
   // Panel state for custom action panels
   const [activePanel, setActivePanel] = useState<PanelState | null>(null);
   const panelInputRef = useRef<HTMLElement>(null);
+  // Panel-specific right element for footer
+  const [panelRightElement, setPanelRightElement] = useState<React.ReactElement | null>(null);
 
   // Get default navigation from manifest action info (when rua is provided)
   // rua.extension.currentAction contains the current action's info from manifest
@@ -107,6 +109,7 @@ export function CommandPalette(props: CommandPaletteProps) {
   // Close panel handler
   const handleClosePanel = useCallback(() => {
     setActivePanel(null);
+    setPanelRightElement(null);
     // Re-focus input after closing panel
     setTimeout(() => {
       commandRef.current.focusInput();
@@ -301,6 +304,7 @@ export function CommandPalette(props: CommandPaletteProps) {
                   <PanelContent
                     onClose={handleClosePanel}
                     afterPopoverFocusElement={panelInputRef}
+                    setFooterRightElement={setPanelRightElement}
                   />
                 </div>
               );
@@ -321,7 +325,7 @@ export function CommandPalette(props: CommandPaletteProps) {
           activePanel={activePanel}
           panelFooterActions={panelFooterActions}
           command={command}
-          rightElement={rightElement}
+          rightElement={activePanel ? panelRightElement : rightElement}
           onPanelActionEnter={handlePanelActionEnter}
           panelInputRef={panelInputRef}
         />

@@ -22,6 +22,14 @@ export interface PanelProps {
   afterPopoverFocusElement?: React.RefObject<HTMLElement>;
 }
 
+/**
+ * Extended panel props that includes footer customization
+ */
+export interface PanelRenderProps extends PanelProps {
+  /** Set custom right element for footer when panel is open */
+  setFooterRightElement?: (element: React.ReactElement | null) => void;
+}
+
 export type Action = {
   id: ActionId;
   name: string;
