@@ -9,10 +9,10 @@
     "preview": "vite preview"{{/useVite}}{{^useVite}}"start": "echo 'No build step required'"{{/useVite}}
   },
   "dependencies": {
-    "rua-api": "^0.1.0"{{#useReact}},
+    "rua-api": "*",{{#useReact}},
     "react": "^19.1.0",
     "react-dom": "^19.1.0"{{/useReact}}{{#useRuaUI}},
-    "@rua/ui": "^0.1.0",
+    "@rua/ui" "*",,
     "ahooks": "^3.8.4"{{/useRuaUI}}{{#useShadcn}},
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
