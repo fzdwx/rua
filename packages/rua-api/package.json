@@ -1,6 +1,6 @@
 {
   "name": "rua-api",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "Extension API for Rua command palette",
   "type": "module",
   "main": "./dist/index.js",
