@@ -225,6 +225,23 @@ export interface UseCommandReturn {
 }
 
 /**
+ * Layout mode for results display
+ */
+export type LayoutMode = "list" | "grid";
+
+/**
+ * Grid configuration options
+ */
+export interface GridConfig {
+  /** Number of columns in grid layout. @default 4 */
+  columns?: number;
+  /** Item height in pixels. @default 140 */
+  itemHeight?: number;
+  /** Gap between grid items in pixels. @default 12 */
+  gap?: number;
+}
+
+/**
  * Split ratio type for details panel layout
  */
 export type DetailsRatio = "1:1" | "1:2" | "1:3" | "2:3";
@@ -278,6 +295,17 @@ export interface CommandPaletteProps extends UseCommandOptions {
    * @default "1:2"
    */
   detailsRatio?: DetailsRatio;
+
+  /**
+   * Layout mode for displaying results
+   * @default "list"
+   */
+  layout?: LayoutMode;
+
+  /**
+   * Grid configuration (only used when layout="grid")
+   */
+  gridConfig?: GridConfig;
 
   /**
    * Optional Rua API instance for window control

@@ -36,8 +36,12 @@ publish-ext-cli:
     cd packages/create-rua-ext && bun run build && npm publish --registry https://registry.npmjs.org --access public
     @echo "✓ create-rua-ext published to bun"
 
+publish-rua-ui:
+    cd packages/rua-ui && bun run build && npm publish --registry https://registry.npmjs.org --access public
+    @echo "✓ rua-ui published to bun"
+
 # Publish all packages to npm
-publish-all: publish-api publish-ext-cli
+publish-all: publish-api publish-ext-cli publish-rua-ui
     @echo "✓ All packages published to bun"
 
 # Install example extension for testing
