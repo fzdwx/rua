@@ -8,151 +8,18 @@ import {
   useMatches,
 } from "./index.tsx";
 import * as React from "react";
-import { useEffect, useState, useMemo } from "react";
-import { useKeyPress } from "ahooks";
+import {useEffect, useState, useMemo} from "react";
+import {useKeyPress} from "ahooks";
 import {
   Popover,
   PopoverTrigger,
   PopoverPanel,
 } from "../components/animate-ui/components/base/popover.tsx";
-import { Icon } from "@iconify/react";
-import { Kbd } from "../components/ui/kbd.tsx";
-import type { Toast } from "./types";
-import { subscribeToast } from "./toastStore";
-
-/**
- * Render footer icon with support for multiple formats:
- * - React elements (passed through)
- * - Emoji strings (rendered as text)
- * - ext:// URLs (rendered as img)
- * - data: URIs (rendered as img)
- * - SVG strings (rendered with dangerouslySetInnerHTML)
- * - Iconify icon names (rendered with Icon component)
- */
-function FooterIconRenderer({ icon }: { icon: string | React.ReactElement }) {
-  const iconContent = useMemo(() => {
-    // If it's already a React element, return it directly
-    if (React.isValidElement(icon)) {
-      return icon;
-    }
-
-    // Must be a string at this point
-    const iconStr = icon as string;
-
-    // Check if it's an ext:// URL or data URI - render as image
-    if (
-      iconStr.startsWith("ext://") ||
-      iconStr.startsWith("data:") ||
-      iconStr.startsWith("http://") ||
-      iconStr.startsWith("https://")
-    ) {
-      return (
-        <img
-          src={iconStr}
-          alt="icon"
-          style={{
-            width: "16px",
-            height: "16px",
-            objectFit: "contain",
-          }}
-        />
-      );
-    }
-
-    // Check if it's an SVG string
-    if (iconStr.trim().startsWith("<svg")) {
-      return (
-        <div
-          style={{
-            width: "16px",
-            height: "16px",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          dangerouslySetInnerHTML={{ __html: iconStr }}
-        />
-      );
-    }
-
-    // Check if it looks like an iconify icon name (contains ":")
-    if (iconStr.includes(":")) {
-      return <Icon icon={iconStr} style={{ fontSize: "16px" }} />;
-    }
-
-    // Default: treat as emoji or text
-    return iconStr;
-  }, [icon]);
-
-  return <>{iconContent}</>;
-}
-
-/**
- * Get CSS class for toast type
- */
-export function getToastTypeClass(type: Toast["type"]): string {
-  switch (type) {
-    case "success":
-      return "footer-toast-success";
-    case "failure":
-      return "footer-toast-failure";
-    case "animated":
-      return "footer-toast-animated";
-    default:
-      return "footer-toast-success";
-  }
-}
-
-/**
- * Toast indicator component - renders dot or spinner based on type
- */
-const ToastIndicator: React.FC<{ type: Toast["type"] }> = ({ type }) => {
-  if (type === "animated") {
-    return (
-      <svg
-        className="footer-toast-spinner"
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
-        fill="none"
-      >
-        <circle
-          cx="7"
-          cy="7"
-          r="5.5"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeDasharray="20 10"
-        />
-      </svg>
-    );
-  }
-
-  // Success or failure - render colored dot
-  return <div className="footer-toast-dot" />;
-};
-
-/**
- * FooterToast component - displays toast overlay in footer's left side (Raycast style)
- */
-const FooterToast: React.FC<{
-  toast: Toast;
-}> = ({ toast }) => {
-  const typeClass = getToastTypeClass(toast.type);
-
-  return (
-    <div className={`footer-toast ${typeClass}`} key={toast.id}>
-      {/* 发光背景层 */}
-      <div className="footer-toast-glow-bg" />
-
-      <div className="footer-toast-indicator">
-        <ToastIndicator type={toast.type} />
-      </div>
-      <span className="footer-toast-message">{toast.message}</span>
-    </div>
-  );
-};
+import {Icon} from "@iconify/react";
+import {Kbd} from "../components/ui/kbd.tsx";
+import type {Toast} from "./types";
+import {subscribeToast} from "./toastStore";
+import {FooterIconRenderer, FooterToast} from "@/command/FooterUtils.tsx";
 
 export const Footer: React.FC<{
   current: string | ActionImpl | null;
@@ -165,16 +32,16 @@ export const Footer: React.FC<{
   settings?: Action[]; // Settings actions for settings menu
   accessory?: React.ReactElement; // Custom accessory element to display on the right side
 }> = ({
-  current,
-  actions,
-  icon,
-  content,
-  onSubCommandShow,
-  onSubCommandHide,
-  mainInputRef,
-  settings,
-  accessory,
-}) => {
+        current,
+        actions,
+        icon,
+        content,
+        onSubCommandShow,
+        onSubCommandHide,
+        mainInputRef,
+        settings,
+        accessory,
+      }) => {
   // Subscribe to toast store
   const [toast, setToast] = useState<Toast | null>(null);
 
@@ -189,13 +56,15 @@ export const Footer: React.FC<{
         {/* Left side: icon + content area (can be covered by toast) */}
         <div className="command-footer-left">
           {toast ? (
-            <FooterToast toast={toast} />
+            <FooterToast toast={toast}/>
           ) : (
             <>
               <div className="command-footer-icon">
-                <FooterIconRenderer icon={icon} />
+                <FooterIconRenderer icon={icon}/>
               </div>
-              <div style={{ marginRight: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{marginRight: "auto", display: "flex", alignItems: "center", gap: "8px"}}
+              >
                 {content(current)}
               </div>
             </>
@@ -214,7 +83,7 @@ export const Footer: React.FC<{
 
         {settings && settings.length > 0 && (
           <>
-            <FooterHr />
+            <FooterHr/>
             <FooterSettings
               onSubCommandHide={onSubCommandHide}
               onSubCommandShow={onSubCommandShow}
@@ -234,16 +103,10 @@ const FooterActionRender: React.FC<{
   onSubCommandHide?: () => void;
   onSubCommandShow?: () => void;
   mainInputRef?: React.RefObject<HTMLElement | null>;
-}> = ({
-  actions,
-  onSubCommandHide,
-  onSubCommandShow,
-  current,
-  mainInputRef,
-}) => {
+}> = ({actions, onSubCommandHide, onSubCommandShow, current, mainInputRef}) => {
   return (
     <>
-      <FooterHr />
+      <FooterHr/>
       <FooterActions
         current={current}
         onSubCommandShow={onSubCommandShow}
@@ -256,7 +119,7 @@ const FooterActionRender: React.FC<{
 };
 
 export const FooterHr: React.FC = () => {
-  return <hr className="command-footer-hr" />;
+  return <hr className="command-footer-hr"/>;
 };
 
 const FooterActions: React.FC<{
@@ -268,14 +131,14 @@ const FooterActions: React.FC<{
   onSubCommandHide: () => void;
   mainInputRef?: React.RefObject<HTMLElement | null>;
 }> = ({
-  actions,
-  initialOpen,
-  initialShortcut,
-  onSubCommandShow,
-  onSubCommandHide,
-  current,
-  mainInputRef,
-}) => {
+        actions,
+        initialOpen,
+        initialShortcut,
+        onSubCommandShow,
+        onSubCommandHide,
+        current,
+        mainInputRef,
+      }) => {
   const [open, setOpen] = React.useState(initialOpen || false);
   const [shortcut] = React.useState(initialShortcut || "ctrl.k");
   const footerInputRef = React.useRef<HTMLInputElement>(null);
@@ -305,10 +168,10 @@ const FooterActions: React.FC<{
   }, [current, actions]);
 
   const [inputValue, setInputValue] = React.useState("");
-  const { useRegisterActions, state, setActiveIndex, setRootActionId } = useActionStore();
+  const {useRegisterActions, state, setActiveIndex, setRootActionId} = useActionStore();
   useRegisterActions(currentActions, [currentActions]);
 
-  const { results, rootActionId } = useMatches(inputValue, state.actions, state.rootActionId);
+  const {results, rootActionId} = useMatches(inputValue, state.actions, state.rootActionId);
 
   return (
     <Popover
@@ -357,7 +220,7 @@ const FooterActions: React.FC<{
             setRootActionId={setRootActionId}
             currentRootActionId={state.rootActionId}
             activeIndex={state.activeIndex}
-            onRender={({ item, active }) => {
+            onRender={({item, active}) => {
               if (typeof item === "string") {
                 return <div>{item}</div>;
               }
@@ -392,7 +255,7 @@ const FooterSettings: React.FC<{
   onSubCommandHide?: () => void;
   onSubCommandShow?: () => void;
   mainInputRef?: React.RefObject<HTMLElement | null>;
-}> = ({ settings, onSubCommandHide, onSubCommandShow, mainInputRef }) => {
+}> = ({settings, onSubCommandHide, onSubCommandShow, mainInputRef}) => {
   const [open, setOpen] = React.useState(false);
 
   const changeVisible = () => setOpen((o) => !o);
@@ -403,10 +266,10 @@ const FooterSettings: React.FC<{
     }
   }, [open, onSubCommandShow]);
 
-  const { useRegisterActions, state, setActiveIndex, setRootActionId } = useActionStore();
+  const {useRegisterActions, state, setActiveIndex, setRootActionId} = useActionStore();
   useRegisterActions(settings, [settings]);
 
-  const { results } = useMatches("", state.actions, state.rootActionId);
+  const {results} = useMatches("", state.actions, state.rootActionId);
 
   return (
     <Popover
@@ -445,7 +308,7 @@ const FooterSettings: React.FC<{
             height: "20px",
           }}
         >
-          <Icon icon="tabler:settings" style={{ fontSize: "18px" }} />
+          <Icon icon="tabler:settings" style={{fontSize: "18px"}}/>
         </div>
       </PopoverTrigger>
       <PopoverPanel side="top" align="end" sideOffset={16} alignOffset={0} className="border-none">
@@ -457,11 +320,12 @@ const FooterSettings: React.FC<{
             handleKeyEvent={true}
             setActiveIndex={setActiveIndex}
             search=""
-            setSearch={() => {}}
+            setSearch={() => {
+            }}
             setRootActionId={setRootActionId}
             currentRootActionId={state.rootActionId}
             activeIndex={state.activeIndex}
-            onRender={({ item, active }) => {
+            onRender={({item, active}) => {
               if (typeof item === "string") {
                 return <div>{item}</div>;
               }

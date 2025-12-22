@@ -35,7 +35,6 @@ export default defineConfig({
         // Mark all dependencies as external to avoid bundling them
         "@tanstack/react-virtual",
         "fuse.js",
-        /^motion/,  // Motion animation library
         "pinyin-match",
         "react-markdown",
         "date-fns",

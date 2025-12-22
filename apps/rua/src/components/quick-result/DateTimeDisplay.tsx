@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { toast } from "sonner";
-import { Toaster } from "../../../../../packages/rua-ui/src/components/ui/sonner";
+import { toast } from "@rua/ui";
 import { Card, CardContent } from "../../../../../packages/rua-ui/src/components/ui/card";
 
 interface DateTimeDisplayProps {
@@ -591,11 +590,7 @@ export function DateTimeDisplay({ input }: DateTimeDisplayProps) {
     try {
       await navigator.clipboard.writeText(value);
       setCopiedItem(value);
-      toast.success(
-        <div>
-          Copied <span className="clip_hight">{value}</span> to Clipboard Success
-        </div>
-      );
+      toast.show(`Copied ${value}  to Clipboard Success`, "success");
       setTimeout(() => setCopiedItem(null), 1000);
     } catch (error) {
       console.error("Failed to copy to clipboard:", error);
@@ -642,7 +637,6 @@ export function DateTimeDisplay({ input }: DateTimeDisplayProps) {
 
   return (
     <div className="mx-3 my-3 flex flex-col gap-2">
-      <Toaster position="bottom-center" />
       {/* Row 1: 当前时间 (full width) */}
       <TimeCard
         label="当前时间"

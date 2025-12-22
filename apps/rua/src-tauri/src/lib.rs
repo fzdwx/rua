@@ -136,7 +136,7 @@ fn handle_ext_protocol(
     // Fallback: treat path as absolute (for backward compatibility)
     PathBuf::from(decoded_path.as_ref())
   };
-
+  println!("{:?}", file_path);
   serve_file(&file_path)
 }
 

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ActionImpl } from "./action";
+import {ActionImpl} from "./action";
 
 export type ActionId = string;
 
@@ -8,9 +8,9 @@ export type Priority = number;
 export type ActionSection =
   | string
   | {
-      name: string;
-      priority: Priority;
-    };
+  name: string;
+  priority: Priority;
+};
 
 export type Action = {
   id: ActionId;
@@ -164,7 +164,7 @@ export interface Toast {
   /** Unique identifier for the toast, used for animation keys */
   id: string;
   /** The message text to display */
-  message: string;
+  message: string | React.ReactElement;
   /** Type determines the indicator style (green dot, red dot, or spinner) */
   type: ToastType;
   /** Auto-dismiss duration in ms. Default 3000. Set to 0 for persistent toast */
