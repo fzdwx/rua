@@ -19,7 +19,7 @@ import {Icon} from "@iconify/react";
 import {Kbd} from "../components/ui/kbd.tsx";
 import type {Toast} from "./types";
 import {subscribeToast} from "./toastStore";
-import {FooterIconRenderer, FooterToast} from "@/command/FooterUtils.tsx";
+import {FooterIconRenderer, FooterMeta, FooterToast} from "@/command/FooterUtils.tsx";
 
 export const Footer: React.FC<{
   current: string | ActionImpl | null;
@@ -58,16 +58,7 @@ export const Footer: React.FC<{
           {toast ? (
             <FooterToast toast={toast}/>
           ) : (
-            <>
-              <div className="command-footer-icon">
-                <FooterIconRenderer icon={icon}/>
-              </div>
-              <div
-                style={{marginRight: "auto", display: "flex", alignItems: "center", gap: "8px"}}
-              >
-                {content(current)}
-              </div>
-            </>
+            <FooterMeta icon={icon} content={content} current={current}/>
           )}
         </div>
 

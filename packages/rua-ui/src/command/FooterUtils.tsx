@@ -1,24 +1,9 @@
 import {
-  Action,
   ActionImpl,
-  Input,
-  RenderItem,
-  ResultsRender,
-  useActionStore,
-  useMatches,
 } from "./index.tsx";
-import * as React from "react";
-import {useEffect, useState, useMemo} from "react";
-import {useKeyPress} from "ahooks";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverPanel,
-} from "../components/animate-ui/components/base/popover.tsx";
+import React, { useMemo} from "react";
 import {Icon} from "@iconify/react";
-import {Kbd} from "../components/ui/kbd.tsx";
 import type {Toast} from "./types";
-import {subscribeToast} from "./toastStore";
 
 /**
  * Render footer icon with support for multiple formats:
@@ -95,11 +80,8 @@ const FooterToast: React.FC<{
 }> = ({toast}) => {
   return (
     <div className={`footer-toast-container type-${toast.type}`} key={toast.id}>
-      {/* 动态背景 */}
       <div className="footer-toast-glow" aria-hidden="true"/>
-
       <div className="footer-toast-content">
-        {/* 指示器区 */}
         <div className="footer-toast-indicator">
           {toast.type === 'animated' ? (
             <div className="footer-toast-spinner"/>
@@ -108,7 +90,6 @@ const FooterToast: React.FC<{
           )}
         </div>
 
-        {/* 消息区 */}
         <div className="footer-toast-message">
           {toast.message}
         </div>
@@ -117,4 +98,21 @@ const FooterToast: React.FC<{
   );
 };
 
-export {FooterIconRenderer, FooterToast}
+interface FooterMetaProps {
+  icon?: string | React.ReactElement,
+  content?: (current?: (string | ActionImpl | null)) => (string | React.ReactElement),
+  current?: string | ActionImpl
+}
+
+const FooterMeta = ({icon, content, current}: FooterMetaProps) => {
+  return <div className='footer-toast-content'>
+    <div className="footer-toast-indicator">
+      <FooterIconRenderer icon={icon}/>
+    </div>
+    <div className='footer-toast-message'>
+      {content(current)}
+    </div>
+  </div>
+}
+
+export {FooterIconRenderer, FooterToast, FooterMeta}
