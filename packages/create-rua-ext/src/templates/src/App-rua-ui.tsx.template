@@ -4,7 +4,14 @@
  */
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { initializeRuaAPI, type RuaAPI } from "rua-api/browser";
-import { CommandPalette, useNavigation, Kbd, type Action } from "@rua/ui";
+import {
+  CommandPalette,
+  useNavigation,
+  Kbd,
+  showToast,
+  type Action,
+  toast,
+} from "@rua/ui";
 import { useKeyPress } from "ahooks";
 
 // Todo data structure
@@ -15,7 +22,6 @@ interface Todo {
   createdAt: string;
 }
 
-// Format relative date (e.g., "2m ago", "5h ago", "3d ago")
 function formatRelativeDate(isoDate: string): string {
   const now = new Date();
   const date = new Date(isoDate);
@@ -25,13 +31,12 @@ function formatRelativeDate(isoDate: string): string {
   const diffDays = Math.floor(diffMs / 86400000);
 
   if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 60) return diffMins + "m ago";
+  if (diffHours < 24) return diffHours + "h ago";
+  if (diffDays < 7) return diffDays + "d ago";
   return date.toLocaleDateString();
 }
 
-// Create Todo Panel Component - uses navigation context
 function CreateTodoPanel({ onSubmit }: { onSubmit: (title: string) => Promise<void> }) {
   const { pop, setAccessory, focusRef } = useNavigation();
   const [title, setTitle] = useState("");
@@ -48,19 +53,19 @@ function CreateTodoPanel({ onSubmit }: { onSubmit: (title: string) => Promise<vo
     }
   }, [title, isSubmitting, onSubmit, pop]);
 
-  // Ctrl+Enter to submit
   useKeyPress("ctrl.enter", () => {
     if (title.trim() && !isSubmitting) {
       handleSubmit();
     }
   });
 
-  // Set footer accessory button
   useEffect(() => {
     setAccessory(
       <div onClick={handleSubmit} className="cursor-default command-subcommand-trigger">
         <span>Create</span>
-        <Kbd>⌘</Kbd>+<Kbd>↵</Kbd>
+        <Kbd>⌘</Kbd>
+      +
+      <Kbd>Enter</Kbd>
       </div>
     );
     return () => setAccessory(null);
@@ -88,7 +93,6 @@ function CreateTodoPanel({ onSubmit }: { onSubmit: (title: string) => Promise<vo
   );
 }
 
-// Main Accessory - shows "New Todo" button in footer
 function MainAccessory({ onCreateTodo }: { onCreateTodo: (title: string) => Promise<void> }) {
   const { push } = useNavigation();
 
@@ -102,7 +106,6 @@ function MainAccessory({ onCreateTodo }: { onCreateTodo: (title: string) => Prom
     });
   }, [push, onCreateTodo]);
 
-  // Ctrl+O to open create panel
   useKeyPress("ctrl.o", () => {
     openCreatePanel();
   });
@@ -110,12 +113,13 @@ function MainAccessory({ onCreateTodo }: { onCreateTodo: (title: string) => Prom
   return (
     <div onClick={openCreatePanel} className="cursor-default command-subcommand-trigger">
       <span>New Todo</span>
-      <Kbd>⌘</Kbd>+<Kbd>O</Kbd>
+      <Kbd>⌘</Kbd>
+      +
+      <Kbd>O</Kbd>
     </div>
   );
 }
 
-// Main App component
 function App() {
   const [rua, setRua] = useState<RuaAPI | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -147,11 +151,9 @@ function App() {
   return <TodoCommandPalette rua={rua} />;
 }
 
-// Todo command palette component
 function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
   const [todos, setTodos] = useState<Todo[]>([]);
 
-  // Load todos from storage
   useEffect(() => {
     rua.storage
       .get<Todo[]>("todos")
@@ -159,29 +161,38 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
       .catch((err) => console.error("Failed to load todos:", err));
   }, [rua]);
 
-  // Create todo handler
-  const handleCreateTodo = useCallback(
-    async (title: string) => {
-      const newTodo: Todo = {
-        id: Date.now().toString(),
-        title,
-        done: false,
-        createdAt: new Date().toISOString(),
-      };
-      setTodos((prev) => {
-        const newTodos = [...prev, newTodo];
-        rua.storage.set("todos", newTodos);
-        return newTodos;
-      });
-    },
-    [rua]
-  );
+const handleCreateTodo = useCallback(
+  async (title: string) => {
+    toast.promise(
+      (async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const newTodo: Todo = {
+          id: Date.now().toString(),
+          title,
+          done: false,
+          createdAt: new Date().toISOString(),
+        };
+        setTodos((prev) => {
+          const newTodos = [...prev, newTodo];
+          rua.storage.set("todos", newTodos);
+          return newTodos;
+        });
+      })(),
+      {
+        loading: "Creating todo...",
+        success: "Todo created!",
+        failure: "Failed to create todo",
+      }
+    );
+  },
+  [rua]
+);
 
-  // Build actions from todos
+
   const actions = useMemo<Action[]>(() => {
     return todos.map(
       (todo): Action => ({
-        id: `todo-${todo.id}`,
+        id: "todo-" + todo.id,
         name: todo.title,
         icon: todo.done ? "✅" : "⭕",
         subtitle: formatRelativeDate(todo.createdAt),
@@ -189,6 +200,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
         priority: todo.done ? 0 : 10,
         badge: todo.done ? "Done" : undefined,
         item: todo,
+        perform:()=>{},
         details: () => (
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
@@ -223,7 +235,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
         ),
         footerAction: (changeVisible: () => void): Action[] => [
           {
-            id: `toggle-${todo.id}`,
+            id: "toggle-" + todo.id,
             name: todo.done ? "Mark as Active" : "Mark as Done",
             icon: todo.done ? "⭕" : "✅",
             perform: async () => {
@@ -231,10 +243,14 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
               await rua.storage.set("todos", updated);
               setTodos(updated);
               changeVisible();
+              showToast(
+                todo.done ? `"${todo.title}" marked as active` : `"${todo.title}" completed`,
+                "success"
+              );
             },
           },
           {
-            id: `delete-${todo.id}`,
+            id: "delete-" + todo.id,
             name: "Delete",
             icon: "🗑️",
             perform: async () => {
@@ -242,6 +258,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
               await rua.storage.set("todos", updated);
               setTodos(updated);
               changeVisible();
+              showToast(`Deleted "${todo.title}"`, "success");
             },
           },
         ],
@@ -254,7 +271,7 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
       actions={actions}
       loading={false}
       rua={rua}
-      placeholder="Search {{name}} todos or create new..."
+      placeholder="Search todos or create new..."
       isShowDetails={true}
       detailsRatio="1:2"
       accessory={<MainAccessory onCreateTodo={handleCreateTodo} />}
