@@ -93,9 +93,9 @@ function FooterIconRenderer({ icon }: { icon: string | React.ReactElement }) {
 export function getToastTypeClass(type: Toast["type"]): string {
   switch (type) {
     case "success":
-      return "footer-toast-success animate-ping";
+      return "footer-toast-success";
     case "failure":
-      return "footer-toast-failure animate-ping";
+      return "footer-toast-failure";
     case "animated":
       return "footer-toast-animated";
     default:
@@ -143,6 +143,9 @@ const FooterToast: React.FC<{
 
   return (
     <div className={`footer-toast ${typeClass}`} key={toast.id}>
+      {/* 发光背景层 */}
+      <div className="footer-toast-glow-bg" />
+
       <div className="footer-toast-indicator">
         <ToastIndicator type={toast.type} />
       </div>
