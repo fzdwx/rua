@@ -1,5 +1,5 @@
 {
-  "name": "ruaui",
+  "name": "@fzdwx/ruaui",
   "version": "0.1.0",
   "description": "Pre-built UI components for Rua extensions",
   "type": "module",

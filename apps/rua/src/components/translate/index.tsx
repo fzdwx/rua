@@ -1,6 +1,6 @@
 import * as React from "react";
 import { translate, Language } from "./Google.tsx";
-import { Action, ActionId } from"ruaui";
+import { Action, ActionId } from"@fzdwx/ruaui";
 import { useKeyPress } from "ahooks";
 import { Card, CardContent } from "../../../../../packages/rua-ui/src/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "../../../../../packages/rua-ui/src/components/ui/alert";

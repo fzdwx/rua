@@ -23,7 +23,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
-      name: "RuaUI",
+      name: "@fzdwx/ruaui",
       formats: ["es"],
       fileName: "index",
     },

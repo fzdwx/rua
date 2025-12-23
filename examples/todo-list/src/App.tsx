@@ -7,7 +7,7 @@ import {
   showToast,
   type Action,
   toast,
-} from"ruaui";
+} from"@fzdwx/ruaui";
 import { useKeyPress } from "ahooks";
 
 interface Todo {
