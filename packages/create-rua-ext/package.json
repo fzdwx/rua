@@ -1,6 +1,6 @@
 {
   "name": "create-rua-ext",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "CLI tool to create Rua extension templates",
   "type": "module",
   "bin": {
