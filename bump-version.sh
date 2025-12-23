@@ -42,6 +42,10 @@ sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${NEW_VERSION}\"/" packages/rua
 echo "📝 Updating packages/create-rua-ext/package.json..."
 sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${NEW_VERSION}\"/" packages/create-rua-ext/package.json
 
+# Update packages/rua-ui/package.json
+echo "📝 Updating packages/rua-ui/package.json..."
+sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${NEW_VERSION}\"/" packages/rua-ui/package.json
+
 # Update apps/rua/src-tauri/Cargo.toml
 echo "📝 Updating apps/rua/src-tauri/Cargo.toml..."
 sed -i "s/^version = \"[^\"]*\"/version = \"${NEW_VERSION}\"/" apps/rua/src-tauri/Cargo.toml
@@ -81,6 +85,7 @@ git add package.json \
     apps/rua/package.json \
     packages/rua-api/package.json \
     packages/create-rua-ext/package.json \
+    packages/rua-ui/package.json \
     apps/rua/src-tauri/Cargo.toml \
     apps/rua/src-tauri/tauri.conf.json \
     apps/rua/src-tauri/Cargo.lock \
