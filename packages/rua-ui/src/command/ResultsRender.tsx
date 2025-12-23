@@ -2,6 +2,7 @@ import { ActionId, ActionImpl, getListboxItemId, KBAR_LISTBOX } from "./index.ts
 import * as React from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { usePointerMovedSinceMount } from "./utils.ts";
+import { recordActionUsage } from "./search";
 
 const START_INDEX = 0;
 
@@ -184,6 +185,9 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
     (item: RenderParams["item"]) => {
       if (typeof item === "string") return;
 
+      // Record action usage for ranking algorithm
+      recordActionUsage(item.id, props.search);
+
       // For actions with query flag:
       // - Don't enter the view immediately
       // - Let the action stay selected so Input component shows query input
@@ -216,7 +220,7 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
         props.setRootActionId(item.id);
       }
     },
-    [props.setSearch, props.setRootActionId]
+    [props.setSearch, props.setRootActionId, props.search]
   );
 
   const pointerMoved = usePointerMovedSinceMount();

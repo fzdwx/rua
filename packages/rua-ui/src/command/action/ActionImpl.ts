@@ -1,7 +1,8 @@
 import invariant from "tiny-invariant";
 import { Command } from "./Command.ts";
-import type { Action, ActionStore, History } from "../types.ts";
+import type { Action, ActionStore, History, RecentUsageRecord, QueryAffinityRecord } from "../types.ts";
 import { Priority } from "../utils.ts";
+import { generateKeywords, generateKeywordVariations, getActionHistory } from "../search";
 
 interface ActionImplOptions {
   store: ActionStore;
@@ -10,18 +11,33 @@ interface ActionImplOptions {
 }
 
 /**
- * Extends the configured keywords to include the section
- * This allows section names to be searched for.
+ * Extends the configured keywords to include the section and subtitle
+ * This allows section names and subtitles to be searched for.
  */
-const extendKeywords = ({ keywords = "", section = "" }: Action): string => {
-  return `${keywords} ${typeof section === "string" ? section : section.name}`.trim();
+const extendKeywords = (action: Action): string[] => {
+  const additional: string[] = [];
+
+  // Add section name
+  if (action.section) {
+    const sectionName = typeof action.section === "string" ? action.section : action.section.name;
+    if (sectionName) {
+      additional.push(...generateKeywordVariations(sectionName));
+    }
+  }
+
+  // Add subtitle
+  if (action.subtitle) {
+    additional.push(...generateKeywordVariations(action.subtitle));
+  }
+
+  return additional;
 };
 
 export class ActionImpl implements Action {
   id: Action["id"];
   name: Action["name"];
   shortcut: Action["shortcut"];
-  keywords: Action["keywords"];
+  keywords?: string[]; // Changed from string to string[]
   section: Action["section"];
   icon: Action["icon"];
   subtitle: Action["subtitle"];
@@ -30,7 +46,14 @@ export class ActionImpl implements Action {
   kind?: Action["kind"];
   query?: Action["query"];
   footerAction?: Action["footerAction"];
-  usageCount?: Action["usageCount"];
+
+  // Usage tracking and ranking fields
+  usageCount?: number;
+  lastUsedTime?: number;
+  recentUsage?: RecentUsageRecord[];
+  queryAffinity?: Record<string, QueryAffinityRecord>;
+  stableBias?: number;
+
   badge?: Action["badge"];
   disableSearchFocus?: Action["disableSearchFocus"];
   hideSearchBox?: Action["hideSearchBox"];
@@ -51,7 +74,37 @@ export class ActionImpl implements Action {
     Object.assign(this, action);
     this.id = action.id;
     this.name = action.name;
-    this.keywords = extendKeywords(action);
+
+    // Generate keywords using multi-keyword generator
+    const baseKeywords = generateKeywords({
+      name: action.name,
+      keywords: action.keywords,
+    });
+
+    // Add extended keywords (section, subtitle)
+    const additionalKeywords = extendKeywords(action);
+
+    // Combine all keywords and ensure uniqueness
+    this.keywords = [...new Set([...baseKeywords, ...additionalKeywords])];
+
+    // Load history from localStorage
+    const history = getActionHistory(action.id);
+    if (history) {
+      this.usageCount = history.usageCount;
+      this.lastUsedTime = history.lastUsedTime;
+      this.recentUsage = history.recentUsage;
+      this.queryAffinity = history.queryAffinity;
+      // Stable bias can be overridden in action definition
+      this.stableBias = action.stableBias ?? history.stableBias;
+    } else {
+      // Initialize default values
+      this.usageCount = action.usageCount || 0;
+      this.lastUsedTime = action.lastUsedTime;
+      this.recentUsage = action.recentUsage || [];
+      this.queryAffinity = action.queryAffinity || {};
+      this.stableBias = action.stableBias;
+    }
+
     const perform = action.perform;
     this.command =
       perform &&

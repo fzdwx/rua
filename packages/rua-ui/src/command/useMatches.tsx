@@ -1,43 +1,19 @@
 import * as React from "react";
 import type { ActionImpl } from "./action";
 import { Priority, useThrottledValue } from "./utils.ts";
-import Fuse, { IFuseOptions } from "fuse.js";
 import { ActionId, ActionTree } from "./types.ts";
 import pinyinMatch from "pinyin-match";
+import { calculateBestScore, calculateFinalScore } from "./search";
 
 export const NO_GROUP = {
   name: "none",
   priority: Priority.NORMAL,
 };
 
-const fuseOptions: IFuseOptions<ActionImpl> = {
-  keys: [
-    {
-      name: "name",
-      weight: 0.3,
-    },
-    {
-      name: "keywords",
-      getFn: (item) => (item.keywords ?? "").split(","),
-      weight: 0.5,
-    },
-  ],
-  includeScore: true,
-  includeMatches: true,
-  threshold: 0.2,
-  minMatchCharLength: 1,
-  ignoreLocation: false,
-};
-
-// Weight factor for usage count in sorting
-// Higher value means usage count has more impact on sorting
-const USAGE_COUNT_WEIGHT = 5;
-
 //@ts-ignore
 function order(a, b) {
   /**
    * Larger the priority = higher up the list
-   * Now also considering usage count in the sorting
    */
   return b.priority - a.priority;
 }
@@ -51,7 +27,6 @@ export function useMatches(
   search: string,
   actions: ActionTree,
   rootActionId: ActionId | null,
-  options?: IFuseOptions<ActionImpl>
 ) {
   const rootResults = React.useMemo(() => {
     return Object.keys(actions)
@@ -96,21 +71,18 @@ export function useMatches(
     return getDeepResults(rootResults);
   }, [getDeepResults, rootResults, emptySearch]);
 
-  const fuse = React.useMemo(() => new Fuse(filtered, options ? options : fuseOptions), [filtered]);
-
-  const matches = useInternalMatches(filtered, search, fuse);
+  const matches = useInternalMatches(filtered, search);
 
   const results = React.useMemo(() => {
     /**
      * Store a reference to a section and it's list of actions.
-     * Alongside these actions, we'll keep a temporary record of the
-     * final priority calculated by taking the commandScore + the
-     * explicitly set `action.priority` value.
+     * The actions store the final ranking score which includes
+     * base matching score + history weights + query affinity.
      */
     let map: Record<SectionName, { priority: number; action: ActionImpl }[]> = {};
     /**
      * Store another reference to a list of sections alongside
-     * the section's final priority, calculated the same as above.
+     * the section's final priority, calculated from action scores.
      */
     let list: { priority: number; name: SectionName }[] = [];
     /**
@@ -124,8 +96,6 @@ export function useMatches(
       const match = matches[i];
       const action = match.action;
       const score = match.score || Priority.NORMAL;
-      // Add usage count to priority for sorting
-      const usagePriority = (action.usageCount || 0) * USAGE_COUNT_WEIGHT;
 
       const section = {
         name:
@@ -141,8 +111,9 @@ export function useMatches(
         list.push(section);
       }
 
+      // Use the final ranking score (which includes history and affinity)
       map[section.name].push({
-        priority: action.priority + score + usagePriority,
+        priority: action.priority + score,
         action,
       });
     }
@@ -184,9 +155,11 @@ export function useMatches(
 type Match = {
   action: ActionImpl;
   /**
-   * Represents the commandScore matchiness value which we use
-   * in addition to the explicitly set `action.priority` to
-   * calculate a more fine tuned fuzzy search.
+   * Represents the final ranking score which includes:
+   * - Standard matching score (edit distance + prefix + charset)
+   * - Historical usage weights
+   * - Query affinity
+   * Higher score = better match and higher priority
    */
   score: number;
 };
@@ -199,7 +172,7 @@ function containsChinese(text: string): boolean {
 }
 
 /**
- * Match action using pinyin
+ * Match action using pinyin (fallback method)
  * Returns a score if matched, undefined if not matched
  */
 function matchPinyin(action: ActionImpl, search: string): number | undefined {
@@ -207,19 +180,18 @@ function matchPinyin(action: ActionImpl, search: string): number | undefined {
   if (action.name && containsChinese(action.name)) {
     const matched = pinyinMatch.match(action.name, search);
     if (matched) {
-      // Calculate score based on match quality
-      // Full match gets higher score, partial match gets lower score
-      return 0.3; // Lower score than exact Fuse match
+      return 30; // Give it a reasonable base score
     }
   }
 
   // Check keywords
-  if (action.keywords && containsChinese(action.keywords)) {
-    const keywords = action.keywords.split(",");
-    for (const keyword of keywords) {
-      const matched = pinyinMatch.match(keyword.trim(), search);
-      if (matched) {
-        return 0.4; // Medium score for keyword match
+  if (action.keywords && Array.isArray(action.keywords)) {
+    for (const keyword of action.keywords) {
+      if (containsChinese(keyword)) {
+        const matched = pinyinMatch.match(keyword, search);
+        if (matched) {
+          return 40; // Medium score for keyword match
+        }
       }
     }
   }
@@ -227,7 +199,7 @@ function matchPinyin(action: ActionImpl, search: string): number | undefined {
   return undefined;
 }
 
-function useInternalMatches(filtered: ActionImpl[], search: string, fuse: Fuse<ActionImpl>) {
+function useInternalMatches(filtered: ActionImpl[], search: string) {
   const value = React.useMemo(
     () => ({
       filtered,
@@ -240,101 +212,50 @@ function useInternalMatches(filtered: ActionImpl[], search: string, fuse: Fuse<A
 
   return React.useMemo(() => {
     if (throttledSearch.trim() === "") {
-      return throttledFiltered.map((action) => ({ score: 0, action }));
+      // Empty search: return all actions with their base priority
+      return throttledFiltered.map((action) => ({
+        score: action.priority || Priority.NORMAL,
+        action,
+      }));
     }
 
-    // Split search into tokens and search for each token
-    const tokens = throttledSearch
-      .trim()
-      .split(/\s+/)
-      .filter((t) => t.length > 0);
-
-    if (tokens.length === 0) {
-      return throttledFiltered.map((action) => ({ score: 0, action }));
-    }
-
-    // Use a Map to store unique matches by action ID
-    const matchMap = new Map<string, Match>();
-
-    if (tokens.length === 1) {
-      const token = tokens[0];
-
-      // 1. Fuse.js search
-      const searchResults = fuse.search(token);
-      for (const { item: action, score } of searchResults) {
-        matchMap.set(action.id, {
-          score: 1 / ((score ?? 0) + 1),
-          action,
-        });
-      }
-
-      // 2. Pinyin match - add results not already in Fuse results
-      for (const action of throttledFiltered) {
-        if (!matchMap.has(action.id)) {
-          const pinyinScore = matchPinyin(action, token);
-          if (pinyinScore !== undefined) {
-            matchMap.set(action.id, {
-              score: pinyinScore,
-              action,
-            });
-          }
-        }
-      }
-
-      return Array.from(matchMap.values());
-    }
-
-    // Multiple tokens: search for each token and intersect results
-    // All tokens must match for an action to be included
-    const tokenResults = tokens.map((token) => {
-      const results = fuse.search(token);
-      return new Map(results.map((r) => [r.item.id, r.score ?? 0]));
-    });
-
-    const pinyinTokenResults = tokens.map((token) => {
-      const results = new Map<string, number>();
-      for (const action of throttledFiltered) {
-        const score = matchPinyin(action, token);
-        if (score !== undefined) {
-          results.set(action.id, score);
-        }
-      }
-      return results;
-    });
-
-    // Find actions that match all tokens (either via Fuse or pinyin)
+    const query = throttledSearch.trim().toLowerCase();
     const matches: Match[] = [];
+
     for (const action of throttledFiltered) {
-      let totalScore = 0;
-      let matchesAll = true;
+      // 1. Standard matching algorithm (primary method)
+      const keywords = action.keywords || [];
+      let standardScore = calculateBestScore(query, keywords);
 
-      for (let i = 0; i < tokens.length; i++) {
-        // Check if this token matches via Fuse or pinyin
-        const fuseScore = tokenResults[i].get(action.id);
-        const pinyinScore = pinyinTokenResults[i].get(action.id);
+      // 2. Pinyin matching (fallback for Chinese text)
+      const pinyinScore = matchPinyin(action, query);
 
-        if (fuseScore !== undefined) {
-          totalScore += fuseScore;
-        } else if (pinyinScore !== undefined) {
-          totalScore += pinyinScore;
-        } else {
-          matchesAll = false;
-          break;
-        }
+      // Choose the best score between standard and pinyin
+      let baseScore: number;
+
+      if (standardScore > -Infinity && pinyinScore !== undefined) {
+        baseScore = Math.max(standardScore, pinyinScore);
+      } else if (standardScore > -Infinity) {
+        baseScore = standardScore;
+      } else if (pinyinScore !== undefined) {
+        baseScore = pinyinScore;
+      } else {
+        // No match at all, skip this action
+        continue;
       }
 
-      if (matchesAll) {
-        // Average score across all tokens
-        const avgScore = totalScore / tokens.length;
-        matches.push({
-          score: 1 / (avgScore + 1),
-          action,
-        });
-      }
+      // 3. Calculate final ranking score (includes history and query affinity)
+      const finalScore = calculateFinalScore(action, query, baseScore);
+
+      matches.push({
+        action,
+        score: finalScore,
+      });
     }
 
-    return matches;
-  }, [throttledFiltered, throttledSearch, fuse]) as Match[];
+    // Sort by final score (descending)
+    return matches.sort((a, b) => b.score - a.score);
+  }, [throttledFiltered, throttledSearch]) as Match[];
 }
 
 /**

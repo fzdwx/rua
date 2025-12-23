@@ -1,5 +1,9 @@
 import * as React from "react";
 import {ActionImpl} from "./action";
+import type { RecentUsageRecord, QueryAffinityRecord } from "./search/types";
+
+// Export types from search for use in other modules
+export type { RecentUsageRecord, QueryAffinityRecord } from "./search/types";
 
 export type ActionId = string;
 
@@ -16,7 +20,7 @@ export type Action = {
   id: ActionId;
   name: string;
   shortcut?: string[];
-  keywords?: string; // split ,
+  keywords?: string | string[]; // String (legacy) or array of keywords for search
   section?: ActionSection;
   icon?: string | React.ReactElement | React.ReactNode;
   subtitle?: string;
@@ -27,7 +31,14 @@ export type Action = {
   kind?: string;
   query?: boolean; // If true, shows a query input box when action is active
   footerAction?: (changeVisible: () => void) => Action[]; // Footer actions specific to this main action
+
+  // Usage tracking and ranking fields
   usageCount?: number; // Number of times this action has been used
+  lastUsedTime?: number; // Last usage timestamp in milliseconds
+  recentUsage?: RecentUsageRecord[]; // Recent 7-day usage records
+  queryAffinity?: Record<string, QueryAffinityRecord>; // Query-specific affinity scores
+  stableBias?: number; // User-configured stable bias for ranking adjustment
+
   badge?: string; // Badge text to display on the right side of the action
   disableSearchFocus?: boolean; // If true, prevents automatic focus to search box when this action is active
   hideSearchBox?: boolean; // If true, hides the search box when this action is active
