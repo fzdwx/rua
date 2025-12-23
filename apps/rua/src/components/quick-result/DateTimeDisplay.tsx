@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { toast } from"@fzdwx/ruaui";
+import { toast } from "@fzdwx/ruaui";
 import { Card, CardContent } from "../../../../../packages/rua-ui/src/components/ui/card";
 
 interface DateTimeDisplayProps {
@@ -516,6 +516,41 @@ function getSmartHints(
   return hints;
 }
 
+// Reusable card component
+const TimeCard = ({
+  label,
+  value,
+  onClick,
+  copiedItem,
+}: {
+  label: string;
+  value: string;
+  onClick: (e: React.MouseEvent) => void;
+  copiedItem: string | null;
+}) => (
+  <Card
+    onClick={onClick}
+    className="relative cursor-pointer bg-[var(--gray2)] border-[var(--gray6)] hover:bg-[var(--gray3)] hover:border-[var(--gray7)] hover:scale-[1.01] transition-[background-color,border-color,transform] duration-200"
+  >
+    <CardContent className="p-3">
+      {/* Copy icon in top-right corner */}
+      <div
+        className={`absolute top-2 right-2 flex items-center justify-center w-5 h-5 text-sm transition-colors duration-200 ${
+          copiedItem === value ? "text-green-11" : "text-gray-10"
+        }`}
+      >
+        {copiedItem === value ? "✓" : "📋"}
+      </div>
+
+      {/* Label */}
+      <div className="text-[11px] text-gray-11 mb-1">{label}</div>
+
+      {/* Value */}
+      <div className="text-[15px] font-medium text-gray-12 break-all pr-6">{value}</div>
+    </CardContent>
+  </Card>
+);
+
 export function DateTimeDisplay({ input }: DateTimeDisplayProps) {
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
   const [timeInfo, setTimeInfo] = useState<TimeInfo | null>(null);
@@ -602,39 +637,6 @@ export function DateTimeDisplay({ input }: DateTimeDisplayProps) {
 
   const info = result.timeInfo;
 
-  // Reusable card component
-  const TimeCard = ({
-    label,
-    value,
-    onClick,
-  }: {
-    label: string;
-    value: string;
-    onClick: (e: React.MouseEvent) => void;
-  }) => (
-    <Card
-      onClick={onClick}
-      className="relative cursor-pointer bg-[var(--gray2)] border-[var(--gray6)] hover:bg-[var(--gray3)] hover:border-[var(--gray7)] hover:scale-[1.01] transition-[background-color,border-color,transform] duration-200"
-    >
-      <CardContent className="p-3">
-        {/* Copy icon in top-right corner */}
-        <div
-          className={`absolute top-2 right-2 flex items-center justify-center w-5 h-5 text-sm transition-colors duration-200 ${
-            copiedItem === value ? "text-green-11" : "text-gray-10"
-          }`}
-        >
-          {copiedItem === value ? "✓" : "📋"}
-        </div>
-
-        {/* Label */}
-        <div className="text-[11px] text-gray-11 mb-1">{label}</div>
-
-        {/* Value */}
-        <div className="text-[15px] font-medium text-gray-12 break-all pr-6">{value}</div>
-      </CardContent>
-    </Card>
-  );
-
   return (
     <div className="mx-3 my-3 flex flex-col gap-2">
       {/* Row 1: 当前时间 (full width) */}
@@ -642,6 +644,7 @@ export function DateTimeDisplay({ input }: DateTimeDisplayProps) {
         label="当前时间"
         value={info.dateTime}
         onClick={(e) => handleCopyItem(info.dateTime, e)}
+        copiedItem={copiedItem}
       />
 
       {/* Row 2: 时间戳 (ms) | Unix时间戳 (s) (two columns) */}
@@ -650,18 +653,30 @@ export function DateTimeDisplay({ input }: DateTimeDisplayProps) {
           label="时间戳 (ms)"
           value={info.timestampMs}
           onClick={(e) => handleCopyItem(info.timestampMs, e)}
+          copiedItem={copiedItem}
         />
         <TimeCard
           label="Unix时间戳 (s)"
           value={info.timestampS}
           onClick={(e) => handleCopyItem(info.timestampS, e)}
+          copiedItem={copiedItem}
         />
       </div>
 
       {/* Row 3: 日期 | 时间 (two columns) */}
       <div className="grid grid-cols-2 gap-2">
-        <TimeCard label="日期" value={info.date} onClick={(e) => handleCopyItem(info.date, e)} />
-        <TimeCard label="时间" value={info.time} onClick={(e) => handleCopyItem(info.time, e)} />
+        <TimeCard
+          copiedItem={copiedItem}
+          label="日期"
+          value={info.date}
+          onClick={(e) => handleCopyItem(info.date, e)}
+        />
+        <TimeCard
+          copiedItem={copiedItem}
+          label="时间"
+          value={info.time}
+          onClick={(e) => handleCopyItem(info.time, e)}
+        />
       </div>
 
       {/* Row 4: 时区 (full width) */}
@@ -669,6 +684,7 @@ export function DateTimeDisplay({ input }: DateTimeDisplayProps) {
         label="时区"
         value={info.timezone}
         onClick={(e) => handleCopyItem(info.timezone, e)}
+        copiedItem={copiedItem}
       />
 
       {/* Row 5 (optional): 目标时区时间 (full width) - only shown when timezone conversion is requested */}
@@ -677,6 +693,7 @@ export function DateTimeDisplay({ input }: DateTimeDisplayProps) {
           label={`目标时区 (${info.targetTimezone})`}
           value={info.targetDateTime}
           onClick={(e) => handleCopyItem(info.targetDateTime!, e)}
+          copiedItem={copiedItem}
         />
       )}
 

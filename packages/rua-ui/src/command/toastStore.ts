@@ -1,4 +1,4 @@
-import type { Toast, ToastType } from "./types";
+import { Toast, ToastMessage, ToastType } from "./types";
 
 type ToastListener = (toast: Toast | null) => void;
 
@@ -22,11 +22,11 @@ function generateId(): string {
  */
 export interface ToastPromiseOptions<T> {
   /** Message to show while loading */
-  loading: string;
+  loading: ToastMessage;
   /** Message to show on success (can be a function that receives the result) */
-  success: string | ((data: T) => string);
+  success: ToastMessage | ((data: T) => ToastMessage);
   /** Message to show on failure (can be a function that receives the error) */
-  failure: string | ((error: unknown) => string);
+  failure: ToastMessage | ((error: ToastMessage) => ToastMessage);
 }
 
 /**
@@ -52,13 +52,9 @@ function clearDismissTimer(): void {
  * @param type - Toast type: 'success' (green dot) | 'failure' (red dot) | 'animated' (spinner)
  * @param duration - Auto-dismiss duration in ms. Default 2000. Set to 0 for persistent toast
  */
-export function showToast(
-  message: string,
-  type: ToastType,
-  duration?: number
-): void {
+export function showToast(message: ToastMessage, type: ToastType, duration?: number): void {
   // Don't show toast for empty messages
-  if (!message || message.trim() === '') {
+  if (!message) {
     return;
   }
 
@@ -66,8 +62,8 @@ export function showToast(
   clearDismissTimer();
 
   // Validate type, default to 'success' if invalid
-  const validTypes: ToastType[] = ['success', 'failure', 'animated'];
-  const validatedType = validTypes.includes(type) ? type : 'success';
+  const validTypes: ToastType[] = ["success", "failure", "animated"];
+  const validatedType = validTypes.includes(type) ? type : "success";
 
   // Handle duration: use default if undefined, handle negative values
   let finalDuration = duration ?? DEFAULT_DURATION;
@@ -111,7 +107,7 @@ export function subscribeToast(listener: ToastListener): () => void {
   listeners.add(listener);
   // Immediately call with current state
   listener(currentToast);
-  
+
   return () => {
     listeners.delete(listener);
   };
@@ -143,10 +139,7 @@ export function getCurrentToast(): Toast | null {
  * });
  * ```
  */
-async function toastPromise<T>(
-  promise: Promise<T>,
-  options: ToastPromiseOptions<T>
-): Promise<T> {
+async function toastPromise<T>(promise: Promise<T>, options: ToastPromiseOptions<T>): Promise<T> {
   // Show loading toast (persistent until resolved)
   showToast(options.loading, "animated", 0);
 
@@ -177,6 +170,18 @@ export const toast = {
    * Show a toast message
    */
   show: showToast,
+
+  success: (message: ToastMessage) => {
+    showToast(message, "success");
+  },
+
+  failure: (message: ToastMessage) => {
+    showToast(message, "failure");
+  },
+
+  animated: (message: ToastMessage) => {
+    showToast(message, "animated");
+  },
 
   /**
    * Hide the current toast

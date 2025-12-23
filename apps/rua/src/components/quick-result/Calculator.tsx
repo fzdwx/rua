@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Card, CardContent } from "../../../../../packages/rua-ui/src/components/ui/card";
+import { toast } from "@fzdwx/ruaui";
 
 interface CalculatorProps {
   expression: string;
@@ -70,8 +71,10 @@ export function Calculator({ expression }: CalculatorProps) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(result);
+      toast.success(`Copy ${result} success`);
     } catch (error) {
       console.error("Failed to copy to clipboard:", error);
+      toast.failure(`Failed to copy to clipboard: ${error}`);
     }
   };
 

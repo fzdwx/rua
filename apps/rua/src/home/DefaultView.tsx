@@ -1,6 +1,7 @@
 import { ActionImpl, RenderItem, Footer, ResultsRender } from"@fzdwx/ruaui";
 import { QuickResult } from "@/components/quick-result";
-import { RefObject } from "react";
+import { getQuickResultInfo } from "@/components/quick-result/utils";
+import { RefObject, useMemo } from "react";
 import { motion } from "motion/react";
 import iconSvg from "@/assets/icon.svg";
 
@@ -41,12 +42,25 @@ export function DefaultView({
   getSettingsActions,
   onQueryActionEnter,
 }: DefaultViewProps) {
+  // Get quick result info once - memoized to avoid recalculation
+  const quickResultInfo = useMemo(() => getQuickResultInfo(search), [search]);
+
+  const hasResults = results.length > 0;
+  const showEmptyView = !quickResultInfo.hasContent && !hasResults;
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Quick result view for calculations and built-in functions */}
-      <QuickResult search={search} />
+      {quickResultInfo.hasContent && (
+        <QuickResult
+          search={search}
+          hasUtility={quickResultInfo.hasUtility}
+          hasDateTime={quickResultInfo.hasDateTime}
+          hasMath={quickResultInfo.hasMath}
+        />
+      )}
 
-      {results.length === 0 ? (
+      {showEmptyView ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -61,7 +75,7 @@ export function DefaultView({
             </div>
           </div>
         </motion.div>
-      ) : (
+      ) : hasResults ? (
         <ResultsRender
           items={results}
           onRender={({ item, active }) => {
@@ -90,7 +104,7 @@ export function DefaultView({
           handleKeyEvent={resultHandleEvent}
           onQueryActionEnter={onQueryActionEnter}
         />
-      )}
+      ) : null}
 
       {/* Footer with theme toggle and dynamic actions */}
       <Footer

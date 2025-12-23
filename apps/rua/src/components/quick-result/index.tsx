@@ -1,37 +1,50 @@
-import { Calculator, isMathExpression } from "./Calculator";
-import { DateTimeDisplay, isBuiltInFunction } from "./DateTimeDisplay";
-import { UtilityDisplay, isUtilityFunction } from "./UtilityDisplay";
+import { Calculator } from "./Calculator";
+import { DateTimeDisplay } from "./DateTimeDisplay";
+import { UtilityDisplay } from "./UtilityDisplay";
 
 interface QuickResultProps {
   search: string;
+  hasUtility?: boolean;
+  hasDateTime?: boolean;
+  hasMath?: boolean;
 }
 
 /**
  * QuickResult component that displays calculator, utility, or date/time results
  * based on the input type
  */
-export function QuickResult({ search }: QuickResultProps) {
-  if (!search.trim()) {
+export function QuickResult({ search, hasUtility, hasDateTime, hasMath }: QuickResultProps) {
+  const trimmedSearch = search.trim();
+
+  if (!hasUtility && !hasDateTime && !hasMath) {
     return null;
   }
 
-  const trimmedSearch = search.trim();
   const comp = [];
 
-  // Check if it's a utility function (uuid, random, etc.)
-  if (isUtilityFunction(trimmedSearch)) {
+  if (hasUtility) {
     comp.push(<UtilityDisplay key="utility" input={trimmedSearch} />);
   }
 
-  // Check if it's a date/time function or expression
-  if (isBuiltInFunction(trimmedSearch)) {
+  if (hasDateTime) {
     comp.push(<DateTimeDisplay key="datetime" input={trimmedSearch} />);
   }
 
-  // Check if it's a math expression
-  if (isMathExpression(trimmedSearch)) {
+  if (hasMath) {
     comp.push(<Calculator key="calculator" expression={trimmedSearch} />);
   }
 
-  return comp.length > 0 ? <>{comp}</> : null;
+  return (
+    <div
+      style={{
+        height: "500px",
+        position: "relative",
+        overflow: "auto",
+        width: "100%",
+        minHeight: 0,
+      }}
+    >
+      {comp}
+    </div>
+  );
 }
