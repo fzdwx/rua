@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { Footer } from "@rua/ui";
+import { Footer } from"ruaui";
 import { Kbd, KbdGroup } from "../../../../../packages/rua-ui/src/components/ui/kbd";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../../packages/rua-ui/src/components/ui/card";
 import { Badge } from "../../../../../packages/rua-ui/src/components/ui/badge";

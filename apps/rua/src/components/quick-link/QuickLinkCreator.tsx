@@ -1,6 +1,6 @@
 import * as React from "react";
 import { QuickLink, QuickLinkOpenType, useQuickLinks } from "@/hooks/useQuickLinks";
-import { Footer } from "@rua/ui";
+import { Footer } from"ruaui";
 import { Icon } from "@iconify/react";
 import { useKeyPress, useDebounceFn } from "ahooks";
 import { Label } from "../../../../../packages/rua-ui/src/components/ui/label";

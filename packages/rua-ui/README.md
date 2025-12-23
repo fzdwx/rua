@@ -1,11 +1,11 @@
-# @rua/ui
+# ruaui
 
 Pre-built React UI components for Rua extensions. This package provides a Raycast-inspired component library that allows extensions to render entire pages with integrated search and results.
 
 ## Installation
 
 ```bash
-bun add @rua/ui
+bun add ruaui
 ```
 
 ## Features
@@ -26,7 +26,7 @@ bun add @rua/ui
 Main list view component with integrated search and virtualized results.
 
 ```typescript
-import { List } from '@rua/ui';
+import { List } from 'ruaui';
 
 function MyExtension() {
   const items = [
@@ -70,7 +70,7 @@ function MyExtension() {
 Form component with built-in validation and field management.
 
 ```typescript
-import { Form } from '@rua/ui';
+import { Form } from 'ruaui';
 
 function MyForm() {
   const handleSubmit = (values) => {
@@ -108,7 +108,7 @@ function MyForm() {
 Navigation system for switching between views.
 
 ```typescript
-import { List, Form, useNavigation, NavigationProvider } from '@rua/ui';
+import { List, Form, useNavigation, NavigationProvider } from 'ruaui';
 
 function App() {
   return (
@@ -142,7 +142,7 @@ function TodoList() {
 Action buttons with keyboard shortcuts.
 
 ```typescript
-import { ActionPanel } from '@rua/ui';
+import { ActionPanel } from 'ruaui';
 
 const actions = [
   {
@@ -167,7 +167,7 @@ const actions = [
 Detail view for displaying content.
 
 ```typescript
-import { Detail } from '@rua/ui';
+import { Detail } from 'ruaui';
 
 function ItemDetail({ item }) {
   return (
@@ -193,7 +193,7 @@ function ItemDetail({ item }) {
 Hook for searching items with fuzzy search and optional pinyin support.
 
 ```typescript
-import { useSearch } from "@rua/ui";
+import { useSearch } from "ruaui";
 
 const results = useSearch({
   items: myItems,
@@ -207,7 +207,7 @@ const results = useSearch({
 Hook for handling keyboard navigation.
 
 ```typescript
-import { useKeyboard } from "@rua/ui";
+import { useKeyboard } from "ruaui";
 
 useKeyboard({
   onArrowUp: () => decrementIndex(),
@@ -223,7 +223,7 @@ useKeyboard({
 Hook for navigation between views.
 
 ```typescript
-import { useNavigation } from '@rua/ui';
+import { useNavigation } from 'ruaui';
 
 const { push, pop, canPop } = useNavigation();
 
@@ -236,7 +236,7 @@ if (canPop) pop();
 The package includes CSS with design system variables. Import the styles in your extension:
 
 ```typescript
-import "@rua/ui/styles";
+import "ruaui/styles";
 ```
 
 Or if your bundler handles CSS automatically, it will be included when you import components.
@@ -245,7 +245,7 @@ Or if your bundler handles CSS automatically, it will be included when you impor
 
 ```typescript
 import { useState } from 'react';
-import { List, Form, useNavigation, NavigationProvider } from '@rua/ui';
+import { List, Form, useNavigation, NavigationProvider } from 'ruaui';
 
 interface Todo {
   id: string;
@@ -325,7 +325,7 @@ export default TodoExtension;
 All components are fully typed. Import types from the package:
 
 ```typescript
-import type { ListItem, ListSection, Action, FormProps } from "@rua/ui";
+import type { ListItem, ListSection, Action, FormProps } from "ruaui";
 ```
 
 ## License

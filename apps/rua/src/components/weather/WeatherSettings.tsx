@@ -5,7 +5,7 @@ import { Input } from "../../../../../packages/rua-ui/src/components/ui/input";
 import { Button } from "../../../../../packages/rua-ui/src/components/ui/button";
 import { useKeyPress } from "ahooks";
 import { clearQWeatherCache } from "./hefeng/qweather-cache.ts";
-import { Footer } from "@rua/ui";
+import { Footer } from"ruaui";
 import { Icon } from "@iconify/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../packages/rua-ui/src/components/ui/card";
 import {

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
-import { ActionId } from "@rua/ui";
+import { ActionId } from"ruaui";
 
 const USAGE_STORAGE_KEY = "rua_action_usage";
 

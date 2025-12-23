@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { toast } from "@rua/ui";
+import { toast } from"ruaui";
 import { Card, CardContent } from "../../../../../packages/rua-ui/src/components/ui/card";
 
 interface DateTimeDisplayProps {

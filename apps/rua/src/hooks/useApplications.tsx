@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
-import { Action } from "@rua/ui";
+import { Action } from"ruaui";
 import { useActionUsage } from "@/hooks/useActionUsage";
 
 export interface Application {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Action, ActionId, Footer } from "@rua/ui";
+import { Action, ActionId, Footer } from"ruaui";
 import { Icon } from "@iconify/react";
 import { useWeatherConfig, WeatherConfig } from "@/hooks/useWeatherConfig";
 import { WeatherSettings } from "./WeatherSettings";

@@ -105,6 +105,17 @@ export interface UseCommandOptions {
   renderItem?: CustomItemRenderer;
 
   /**
+   * Layout mode for displaying results
+   * @default "list"
+   */
+  layout?: LayoutMode;
+
+  /**
+   * Grid configuration (only used when layout="grid")
+   */
+  gridConfig?: GridConfig;
+
+  /**
    * External ref for the input element
    * Useful if you need direct access to the input
    */

@@ -1,4 +1,4 @@
-import { ActionImpl, RenderItem, Footer, ResultsRender } from "@rua/ui";
+import { ActionImpl, RenderItem, Footer, ResultsRender } from"ruaui";
 import { QuickResult } from "@/components/quick-result";
 import { RefObject } from "react";
 import { motion } from "motion/react";

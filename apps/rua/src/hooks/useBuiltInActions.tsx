@@ -1,6 +1,6 @@
 import { useMemo, useEffect } from "react";
 import { Icon } from "@iconify/react";
-import { Action, ActionId } from "@rua/ui";
+import { Action, ActionId } from"ruaui";
 import { useActionUsage } from "@/hooks/useActionUsage";
 import { getTranslateAction } from "@/components/translate";
 import { getWeatherAction } from "@/components/weather";

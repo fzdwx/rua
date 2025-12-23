@@ -10,6 +10,7 @@ import React, {
 import { useCommand } from "./useCommand";
 import { Input } from "@/command";
 import { ResultsRender } from "@/command";
+import { GridRender } from "@/command/GridRender";
 import { Footer } from "@/command";
 import { DetailsPanel } from "@/command";
 import type { CommandPaletteProps, UseCommandReturn } from "./types";
@@ -89,8 +90,13 @@ export function CommandPalette(props: CommandPaletteProps) {
     navigationTitle,
     isShowDetails = false,
     detailsRatio = "1:2",
+    layout = "list",
+    gridConfig = {},
     ...hookOptions
   } = props;
+
+  // Destructure grid config with defaults
+  const { columns = 4, itemHeight = 140, gap = 12 } = gridConfig;
 
   // View stack for navigation
   const [viewStack, setViewStack] = useState<ViewItem[]>([]);
@@ -345,7 +351,16 @@ export function CommandPalette(props: CommandPaletteProps) {
             className="command-split-list"
             style={{ width: splitWidths.listWidth }}
           >
-            <ResultsRender {...enhancedResultsProps} />
+            {layout === "grid" ? (
+              <GridRender
+                {...enhancedResultsProps}
+                columns={columns}
+                itemHeight={itemHeight}
+                gap={gap}
+              />
+            ) : (
+              <ResultsRender {...enhancedResultsProps} />
+            )}
           </div>
           <DetailsPanel
             action={command.activeAction}
@@ -358,7 +373,16 @@ export function CommandPalette(props: CommandPaletteProps) {
     }
 
     // Normal layout without details panel
-    return <ResultsRender {...enhancedResultsProps} />;
+    return layout === "grid" ? (
+      <GridRender
+        {...enhancedResultsProps}
+        columns={columns}
+        itemHeight={itemHeight}
+        gap={gap}
+      />
+    ) : (
+      <ResultsRender {...enhancedResultsProps} />
+    );
   };
 
   return (

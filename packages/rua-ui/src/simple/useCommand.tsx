@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useRef } from "react";
 import { useActionStore } from "../command/useActionStore";
 import { useMatches } from "../command/useMatches";
 import { RenderItem } from "../command/RenderItem";
+import { GridItem } from "../command/GridItem";
 import { showToast, hideToast } from "../command/toastStore";
 import type { UseCommandOptions, UseCommandReturn } from "./types";
 import { getActiveAction } from "./utils";
@@ -47,6 +48,8 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
     settingsActions,
     renderItem,
     inputRef: externalInputRef,
+    layout = "list",
+    gridConfig,
   } = options;
 
   // Internal state
@@ -166,6 +169,27 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
     [renderItem, state.rootActionId, defaultSectionRenderer]
   );
 
+  // Default grid item renderer (for grid layout)
+  const defaultGridItemRenderer = useCallback(
+    (item: any, active: boolean) => {
+      // Skip section headers in grid mode
+      if (typeof item === "string") {
+        return null;
+      }
+
+      // Use default GridItem component
+      return (
+        <GridItem action={item} active={active} currentRootActionId={state.rootActionId ?? ""} />
+      );
+    },
+    [state.rootActionId]
+  );
+
+  // Choose renderer based on layout
+  const itemRenderer = useMemo(() => {
+    return layout === "grid" ? defaultGridItemRenderer : defaultItemRenderer;
+  }, [layout, defaultGridItemRenderer, defaultItemRenderer]);
+
   // Reset function
   const reset = useCallback(() => {
     setSearch("");
@@ -220,7 +244,7 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
       currentRootActionId: state.rootActionId,
       activeIndex: state.activeIndex,
       onQueryActionEnter: handleQueryActionEnter,
-      onRender: ({ item, active }) => defaultItemRenderer(item, active),
+      onRender: ({ item, active }) => itemRenderer(item, active),
     },
 
     footerProps: {

@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { toast } from "@rua/ui";
+import { toast } from"ruaui";
 import { useFileWatcher, type FileChangeEvent } from "@/hooks/useFileWatcher";
 import {
   executeBackgroundScript,
