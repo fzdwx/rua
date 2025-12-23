@@ -26,7 +26,7 @@ export interface ToastPromiseOptions<T> {
   /** Message to show on success (can be a function that receives the result) */
   success: ToastMessage | ((data: T) => ToastMessage);
   /** Message to show on failure (can be a function that receives the error) */
-  failure: ToastMessage | ((error: ToastMessage) => ToastMessage);
+  failure: ToastMessage | ((error: unknown) => ToastMessage);
 }
 
 /**

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { translate, Language } from "./Google.tsx";
-import { Action, ActionId, Footer } from "@fzdwx/ruaui";
+import { Action, ActionId, Footer, toast } from "@fzdwx/ruaui";
 import { useKeyPress } from "ahooks";
 import { Card, CardContent } from "../../../../../packages/rua-ui/src/components/ui/card";
 import {
@@ -199,12 +199,12 @@ export function TranslateView({ search, onLoadingChange, onReturn }: TranslateVi
 
     // Call async translation
     let cancelled = false;
-    translateText(search)
-      .then((result) => {
+    toast.promise(translateText(search), {
+      loading: "Translate ...",
+      success: (result) => {
         if (!cancelled) {
           // Handle different result types
           let translated: string;
-
           if (typeof result === "string") {
             // Simple translation mode
             translated = result;
@@ -225,8 +225,9 @@ export function TranslateView({ search, onLoadingChange, onReturn }: TranslateVi
           });
           onLoadingChange?.(false);
         }
-      })
-      .catch((error) => {
+        return "Success";
+      },
+      failure: (error) => {
         if (!cancelled) {
           console.error("Translation failed:", error);
           setTranslationResult({
@@ -238,8 +239,9 @@ export function TranslateView({ search, onLoadingChange, onReturn }: TranslateVi
           });
           onLoadingChange?.(false);
         }
-      });
-
+        return "Translation failed. Please try again.";
+      },
+    });
     return () => {
       cancelled = true;
       onLoadingChange?.(false);
