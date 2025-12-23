@@ -1,9 +1,13 @@
 import * as React from "react";
 import { translate, Language } from "./Google.tsx";
-import { Action, ActionId } from"@fzdwx/ruaui";
+import { Action, ActionId, Footer } from "@fzdwx/ruaui";
 import { useKeyPress } from "ahooks";
 import { Card, CardContent } from "../../../../../packages/rua-ui/src/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "../../../../../packages/rua-ui/src/components/ui/alert";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "../../../../../packages/rua-ui/src/components/ui/alert";
 import { Icon } from "@iconify/react";
 import { motion } from "motion/react";
 
@@ -86,6 +90,84 @@ export function getTranslateAction(
       incrementUsage(translateId);
     },
   };
+}
+
+interface TranslateContentProps {
+  translationResult: {
+    original: string;
+    translated: string;
+    fromLang: string;
+    toLang: string;
+    error?: string;
+  } | null;
+
+  handleCopy: (text: string) => Promise<void>;
+}
+
+function TranslateContent({ translationResult, handleCopy }: TranslateContentProps) {
+  if (!translationResult) {
+    return (
+      <div className="py-10 px-5 text-center text-sm overflow-y-auto flex-1">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex flex-col items-center gap-3"
+        >
+          <div className="text-4xl mb-2 opacity-50">🌐</div>
+          <div className="text-gray-11 font-medium">Type something to translate...</div>
+          <div className="text-xs text-gray-10">Supports Chinese ↔ English</div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Show error if translation failed
+  if (translationResult.error) {
+    return (
+      <div className="p-3 overflow-y-auto flex-1">
+        <Alert variant="destructive" className="my-2">
+          <Icon icon="tabler:alert-circle" className="h-4 w-4" />
+          <AlertTitle>Translation Error</AlertTitle>
+          <AlertDescription>
+            <div className="font-semibold mb-2">{translationResult.error}</div>
+            <div className="text-xs mt-2">Original: {translationResult.original}</div>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-3 overflow-y-auto flex-1">
+      {/* Translation result card */}
+      <Card
+        onClick={() => handleCopy(translationResult.translated)}
+        className="my-2 cursor-pointer bg-[var(--gray3)] border-[var(--gray6)] hover:bg-[var(--gray4)] hover:border-[var(--gray7)] hover:scale-[1.01]"
+      >
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="text-2xl">🌐</div>
+            <div className="text-xs text-gray-11">
+              {translationResult.fromLang} → {translationResult.toLang}
+            </div>
+          </div>
+
+          <div className="text-lg font-semibold mb-2 whitespace-pre-wrap text-gray-12">
+            {translationResult.translated}
+          </div>
+
+          <div className="text-[13px] mt-2 text-gray-11">
+            Original: {translationResult.original}
+          </div>
+
+          <div className="text-[11px] mt-3 px-2 py-1 rounded inline-block text-gray-10 bg-gray-5">
+            Click to copy translation
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 export function TranslateView({ search, onLoadingChange, onReturn }: TranslateViewProps) {
@@ -172,67 +254,21 @@ export function TranslateView({ search, onLoadingChange, onReturn }: TranslateVi
     }
   };
 
-  if (!translationResult) {
-    return (
-      <div className="py-10 px-5 text-center text-sm overflow-y-auto flex-1">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-col items-center gap-3"
-        >
-          <div className="text-4xl mb-2 opacity-50">🌐</div>
-          <div className="text-gray-11 font-medium">Type something to translate...</div>
-          <div className="text-xs text-gray-10">Supports Chinese ↔ English</div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Show error if translation failed
-  if (translationResult.error) {
-    return (
-      <div className="p-3 overflow-y-auto flex-1">
-        <Alert variant="destructive" className="my-2">
-          <Icon icon="tabler:alert-circle" className="h-4 w-4" />
-          <AlertTitle>Translation Error</AlertTitle>
-          <AlertDescription>
-            <div className="font-semibold mb-2">{translationResult.error}</div>
-            <div className="text-xs mt-2">Original: {translationResult.original}</div>
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-3 overflow-y-auto flex-1">
-      {/* Translation result card */}
-      <Card
-        onClick={() => handleCopy(translationResult.translated)}
-        className="my-2 cursor-pointer bg-[var(--gray3)] border-[var(--gray6)] hover:bg-[var(--gray4)] hover:border-[var(--gray7)] hover:scale-[1.01]"
-      >
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="text-2xl">🌐</div>
-            <div className="text-xs text-gray-11">
-              {translationResult.fromLang} → {translationResult.toLang}
-            </div>
-          </div>
-
-          <div className="text-lg font-semibold mb-2 whitespace-pre-wrap text-gray-12">
-            {translationResult.translated}
-          </div>
-
-          <div className="text-[13px] mt-2 text-gray-11">
-            Original: {translationResult.original}
-          </div>
-
-          <div className="text-[11px] mt-3 px-2 py-1 rounded inline-block text-gray-10 bg-gray-5">
-            Click to copy translation
-          </div>
-        </CardContent>
-      </Card>
+    <div>
+      <div className="command-content">
+        <TranslateContent translationResult={translationResult} handleCopy={handleCopy} />
+      </div>
+      <Footer
+        current={null}
+        icon={"x"}
+        actions={() => {
+          return [];
+        }}
+        content={() => {
+          return "Translate";
+        }}
+      />
     </div>
   );
 }

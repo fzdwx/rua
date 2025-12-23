@@ -1,9 +1,9 @@
 import { Icon } from "@iconify/react";
-import { Footer } from"@fzdwx/ruaui";
-import { Kbd, KbdGroup } from "../../../../../packages/rua-ui/src/components/ui/kbd";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../../packages/rua-ui/src/components/ui/card";
-import { Badge } from "../../../../../packages/rua-ui/src/components/ui/badge";
-import { Separator } from "../../../../../packages/rua-ui/src/components/ui/separator";
+import { Footer } from "@fzdwx/ruaui";
+import { Kbd } from "@fzdwx/ruaui";
+import { Card, CardContent, CardHeader, CardTitle } from "@fzdwx/ruaui";
+import { Badge } from "@fzdwx/ruaui";
+import { Separator } from "@fzdwx/ruaui";
 import { WeatherConfig } from "@/hooks/useWeatherConfig.tsx";
 import {
   fetchQWeatherDaily,
@@ -275,10 +275,8 @@ export function QWeatherView({ weatherData, isDefaultCity }: QWeatherViewProps) 
           <div className="flex items-center gap-3 pr-6 flex-shrink-0">
             <div className="flex items-center gap-1.5 text-xs text-gray-11">
               <Icon icon="tabler:settings" className="size-5" />
-              <KbdGroup className="gap-1">
-                <Kbd>Ctrl</Kbd>
-                <Kbd>K</Kbd>
-              </KbdGroup>
+              <Kbd>Ctrl</Kbd>
+              <Kbd>K</Kbd>
             </div>
           </div>
         }

@@ -14,6 +14,16 @@ export {
   PopoverPanel,
 } from "./components/animate-ui/components/base/popover.tsx";
 
+export { Alert, AlertTitle, AlertDescription } from "./components/ui/alert.tsx";
+export * from "./components/ui/card.tsx";
+export * from "./components/ui/badge.tsx";
+export { Input as ComponentsInput } from "./components/ui/input.tsx";
+export * from "./components/ui/separator.tsx";
+export * from "./components/ui/label.tsx";
+export * from "./components/ui/button.tsx";
+export * from "./components/ui/switch.tsx";
+export * from "./components/ui/select.tsx";
+
 // Simplified command palette API
 export * from "./simple";
 

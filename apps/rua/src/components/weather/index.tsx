@@ -1,12 +1,12 @@
 import * as React from "react";
-import { Action, ActionId, Footer } from"@fzdwx/ruaui";
+import { Action, ActionId, Footer } from "@fzdwx/ruaui";
 import { Icon } from "@iconify/react";
 import { useWeatherConfig, WeatherConfig } from "@/hooks/useWeatherConfig";
 import { WeatherSettings } from "./WeatherSettings";
 import { getWeatherFromWttr, WttrWeatherView } from "./WttrWeatherView";
 import { getWeatherFromQWeather, QWeatherView } from "./QWeatherView";
-import { Kbd, KbdGroup } from "../../../../../packages/rua-ui/src/components/ui/kbd";
-import { Alert, AlertDescription, AlertTitle } from "../../../../../packages/rua-ui/src/components/ui/alert";
+import { Kbd, KbdGroup } from "@fzdwx/ruaui";
+import { Alert, AlertDescription, AlertTitle } from "@fzdwx/ruaui";
 import { useKeyPress } from "ahooks";
 import { motion } from "motion/react";
 

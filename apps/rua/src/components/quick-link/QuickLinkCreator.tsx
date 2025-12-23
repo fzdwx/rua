@@ -1,21 +1,15 @@
 import * as React from "react";
 import { QuickLink, QuickLinkOpenType, useQuickLinks } from "@/hooks/useQuickLinks";
-import { Footer } from"@fzdwx/ruaui";
+import { Footer } from "@fzdwx/ruaui";
 import { Icon } from "@iconify/react";
 import { useKeyPress, useDebounceFn } from "ahooks";
-import { Label } from "../../../../../packages/rua-ui/src/components/ui/label";
-import { Input } from "../../../../../packages/rua-ui/src/components/ui/input";
-import { Kbd, KbdGroup } from "../../../../../packages/rua-ui/src/components/ui/kbd";
-import { Button } from "../../../../../packages/rua-ui/src/components/ui/button";
-import { Switch } from "../../../../../packages/rua-ui/src/components/ui/switch";
+import { Label } from "@fzdwx/ruaui";
+import { ComponentsInput } from "@fzdwx/ruaui";
+import { Kbd } from "@fzdwx/ruaui";
+import { Button } from "@fzdwx/ruaui";
+import { Switch } from "@fzdwx/ruaui";
 import { invoke } from "@tauri-apps/api/core";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../../../../packages/rua-ui/src/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@fzdwx/ruaui";
 
 interface QuickLinkCreatorProps {
   onLoadingChange?: (loading: boolean) => void;
@@ -290,7 +284,7 @@ export function QuickLinkCreator({
               {openType === "url" ? "链接地址" : "Shell 命令"}
             </Label>
             <div className="flex-1 relative">
-              <Input
+              <ComponentsInput
                 id="url-input"
                 ref={urlInputRef}
                 type="text"
@@ -363,7 +357,7 @@ export function QuickLinkCreator({
             </Label>
             <div className="flex-1">
               <div className="relative">
-                <Input
+                <ComponentsInput
                   id="name-input"
                   ref={nameInputRef}
                   type="text"
@@ -478,7 +472,7 @@ export function QuickLinkCreator({
                     return "🔗";
                   })()}
                 </div>
-                <Input
+                <ComponentsInput
                   id="icon-input"
                   type="text"
                   value={customIcon}
@@ -503,10 +497,8 @@ export function QuickLinkCreator({
               {editingId ? "更新" : "创建"}
             </Button>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <KbdGroup className="gap-1">
-                <Kbd>Ctrl</Kbd>
-                <Kbd>⏎</Kbd>
-              </KbdGroup>
+              <Kbd>Ctrl</Kbd>
+              <Kbd>⏎</Kbd>
             </div>
           </div>
         }
