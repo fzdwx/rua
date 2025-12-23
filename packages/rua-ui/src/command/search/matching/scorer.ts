@@ -9,7 +9,7 @@
  *
  * Where:
  * - editDistanceScore = 100 × (1 - minEditDist / queryLength) - log₂(keywordLength + 1)
- * - prefixScore = prefixMatchLength × 2
+ * - prefixScore = prefixMatchLength × prefixBoost (default boost: 2)
  * - charsetScore = query.length if charset match, else 0
  */
 
@@ -17,14 +17,21 @@ import { calculateEditDistanceScore } from './editDistance';
 import { calculatePrefixScore } from './prefixMatch';
 import { calculateCharsetScore } from './charsetMatch';
 
+const DEFAULT_PREFIX_BOOST = 2.0;
+
 /**
  * Calculate standard matching score for a single keyword
  *
  * @param query - The search query (should be lowercase)
  * @param keyword - The keyword to match against (should be lowercase)
+ * @param prefixBoost - Multiplier for prefix match score (default: 2.0)
  * @returns Match score (higher is better), or -Infinity if no valid match
  */
-export function calculateStandardScore(query: string, keyword: string): number {
+export function calculateStandardScore(
+  query: string,
+  keyword: string,
+  prefixBoost: number = DEFAULT_PREFIX_BOOST,
+): number {
   if (!query || !keyword) {
     return -Infinity;
   }
@@ -48,8 +55,8 @@ export function calculateStandardScore(query: string, keyword: string): number {
   const keywordLengthPenalty = Math.log2(keywordLength + 1);
   const editDistanceScore = 100 * editDistanceNormalized - keywordLengthPenalty;
 
-  // 2. Prefix match score component (doubled for emphasis)
-  const prefixScore = calculatePrefixScore(query, keyword) * 2;
+  // 2. Prefix match score component (with configurable boost)
+  const prefixScore = calculatePrefixScore(query, keyword) * prefixBoost;
 
   // 3. Character set match score component
   const charsetScore = calculateCharsetScore(query, keyword);
@@ -68,9 +75,14 @@ export function calculateStandardScore(query: string, keyword: string): number {
  *
  * @param query - The search query (should be lowercase)
  * @param keywords - Array of keywords to match against (should be lowercase)
+ * @param prefixBoost - Multiplier for prefix match score (default: 2.0)
  * @returns Best match score across all keywords, or -Infinity if no valid match
  */
-export function calculateBestScore(query: string, keywords: string[]): number {
+export function calculateBestScore(
+  query: string,
+  keywords: string[],
+  prefixBoost: number = DEFAULT_PREFIX_BOOST,
+): number {
   if (!query || keywords.length === 0) {
     return -Infinity;
   }
@@ -78,7 +90,7 @@ export function calculateBestScore(query: string, keywords: string[]): number {
   let bestScore = -Infinity;
 
   for (const keyword of keywords) {
-    const score = calculateStandardScore(query, keyword);
+    const score = calculateStandardScore(query, keyword, prefixBoost);
     if (score > bestScore) {
       bestScore = score;
     }

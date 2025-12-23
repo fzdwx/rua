@@ -42,6 +42,14 @@ export const WEIGHT_QUERY_AFFINITY = 3.0;
 export const SUPPRESSION_THRESHOLD = 15.0;
 
 /**
+ * Minimum score threshold
+ * Actions with final score below this threshold will be filtered out
+ * Set to a negative value to disable filtering
+ * Default: 0 (filter out all negative scores)
+ */
+export const MIN_SCORE_THRESHOLD = 0;
+
+/**
  * Decay factor for recent usage habit
  * Each day back is weighted by (1/DECAY_FACTOR)^dayIndex
  * Default: 1.3

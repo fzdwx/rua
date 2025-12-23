@@ -13,6 +13,7 @@
  */
 
 import type { ActionImpl } from '../../action';
+import type { SearchConfig } from '../types';
 import { getEffectiveAffinityCount } from '../storage/historyUpdater';
 import {
   WEIGHT_HISTORY,
@@ -127,10 +128,11 @@ function calculateQueryAffinityScore(
  * low-frequency but highly relevant actions.
  *
  * @param baseScore - The base matching score
+ * @param threshold - Suppression threshold (default from config)
  * @returns Suppression factor between 0 and 1
  */
-function calculateSuppressionFactor(baseScore: number): number {
-  return Math.max(0, Math.min(1, baseScore / SUPPRESSION_THRESHOLD));
+function calculateSuppressionFactor(baseScore: number, threshold: number = SUPPRESSION_THRESHOLD): number {
+  return Math.max(0, Math.min(1, baseScore / threshold));
 }
 
 /**
@@ -139,13 +141,22 @@ function calculateSuppressionFactor(baseScore: number): number {
  * @param action - The action to rank
  * @param query - The current search query
  * @param standardMatchScore - The base matching score from the standard matcher
+ * @param config - Optional search configuration to override default weights
  * @returns Final ranking score
  */
 export function calculateFinalScore(
   action: ActionImpl,
   query: string,
-  standardMatchScore: number
+  standardMatchScore: number,
+  config?: SearchConfig,
 ): number {
+  // Get weights from config or use defaults
+  const weightHistory = config?.weights?.history ?? WEIGHT_HISTORY;
+  const weightRecentHabit = config?.weights?.recentHabit ?? WEIGHT_RECENT_HABIT;
+  const weightTemporal = config?.weights?.temporal ?? WEIGHT_TEMPORAL;
+  const weightQueryAffinity = config?.weights?.queryAffinity ?? WEIGHT_QUERY_AFFINITY;
+  const suppressionThreshold = config?.suppressionThreshold ?? SUPPRESSION_THRESHOLD;
+
   // Base score = standard match score + stable bias
   const stableBias = action.stableBias || 0;
   const baseScore = standardMatchScore + stableBias;
@@ -158,18 +169,18 @@ export function calculateFinalScore(
 
   // Calculate dynamic weights sum
   const dynamicWeights =
-    historyScore * WEIGHT_HISTORY +
-    recentHabitScore * WEIGHT_RECENT_HABIT +
-    temporalScore * WEIGHT_TEMPORAL;
+    historyScore * weightHistory +
+    recentHabitScore * weightRecentHabit +
+    temporalScore * weightTemporal;
 
   // Calculate suppression factor
-  const suppressionFactor = calculateSuppressionFactor(baseScore);
+  const suppressionFactor = calculateSuppressionFactor(baseScore, suppressionThreshold);
 
   // Final score formula
   const finalScore =
     baseScore +
     dynamicWeights * suppressionFactor +
-    queryAffinityScore * WEIGHT_QUERY_AFFINITY;
+    queryAffinityScore * weightQueryAffinity;
 
   return finalScore;
 }

@@ -3,7 +3,8 @@ import type { ActionImpl } from "./action";
 import { Priority, useThrottledValue } from "./utils.ts";
 import { ActionId, ActionTree } from "./types.ts";
 import pinyinMatch from "pinyin-match";
-import { calculateBestScore, calculateFinalScore } from "./search";
+import { calculateBestScore, calculateFinalScore, MIN_SCORE_THRESHOLD } from "./search";
+import type { SearchConfig } from "./search";
 
 export const NO_GROUP = {
   name: "none",
@@ -27,6 +28,7 @@ export function useMatches(
   search: string,
   actions: ActionTree,
   rootActionId: ActionId | null,
+  searchConfig?: SearchConfig,
 ) {
   const rootResults = React.useMemo(() => {
     return Object.keys(actions)
@@ -71,7 +73,7 @@ export function useMatches(
     return getDeepResults(rootResults);
   }, [getDeepResults, rootResults, emptySearch]);
 
-  const matches = useInternalMatches(filtered, search);
+  const matches = useInternalMatches(filtered, search, searchConfig);
 
   const results = React.useMemo(() => {
     /**
@@ -199,7 +201,7 @@ function matchPinyin(action: ActionImpl, search: string): number | undefined {
   return undefined;
 }
 
-function useInternalMatches(filtered: ActionImpl[], search: string) {
+function useInternalMatches(filtered: ActionImpl[], search: string, searchConfig?: SearchConfig) {
   const value = React.useMemo(
     () => ({
       filtered,
@@ -209,6 +211,17 @@ function useInternalMatches(filtered: ActionImpl[], search: string) {
   );
 
   const { filtered: throttledFiltered, search: throttledSearch } = useThrottledValue(value);
+
+  // Extract config values to avoid dependency on the config object itself
+  const minScoreThreshold = searchConfig?.minScoreThreshold ?? MIN_SCORE_THRESHOLD;
+  const maxResults = searchConfig?.maxResults;
+  const prefixBoost = searchConfig?.prefixMatchBoost ?? 2.0;
+  const debug = searchConfig?.debug ?? false;
+  const weightHistory = searchConfig?.weights?.history;
+  const weightRecentHabit = searchConfig?.weights?.recentHabit;
+  const weightTemporal = searchConfig?.weights?.temporal;
+  const weightQueryAffinity = searchConfig?.weights?.queryAffinity;
+  const suppressionThreshold = searchConfig?.suppressionThreshold;
 
   return React.useMemo(() => {
     if (throttledSearch.trim() === "") {
@@ -222,10 +235,28 @@ function useInternalMatches(filtered: ActionImpl[], search: string) {
     const query = throttledSearch.trim().toLowerCase();
     const matches: Match[] = [];
 
+    // Reconstruct config object from extracted values
+    const config: SearchConfig | undefined =
+      weightHistory !== undefined ||
+      weightRecentHabit !== undefined ||
+      weightTemporal !== undefined ||
+      weightQueryAffinity !== undefined ||
+      suppressionThreshold !== undefined
+        ? {
+            weights: {
+              history: weightHistory,
+              recentHabit: weightRecentHabit,
+              temporal: weightTemporal,
+              queryAffinity: weightQueryAffinity,
+            },
+            suppressionThreshold,
+          }
+        : undefined;
+
     for (const action of throttledFiltered) {
       // 1. Standard matching algorithm (primary method)
       const keywords = action.keywords || [];
-      let standardScore = calculateBestScore(query, keywords);
+      let standardScore = calculateBestScore(query, keywords, prefixBoost);
 
       // 2. Pinyin matching (fallback for Chinese text)
       const pinyinScore = matchPinyin(action, query);
@@ -245,7 +276,19 @@ function useInternalMatches(filtered: ActionImpl[], search: string) {
       }
 
       // 3. Calculate final ranking score (includes history and query affinity)
-      const finalScore = calculateFinalScore(action, query, baseScore);
+      const finalScore = calculateFinalScore(action, query, baseScore, config);
+
+      // 4. Apply minimum score threshold filter
+      if (finalScore < minScoreThreshold) {
+        if (debug) {
+          console.log(`[Search] Filtered out "${action.name}" - score: ${finalScore.toFixed(2)} < threshold: ${minScoreThreshold}`);
+        }
+        continue;
+      }
+
+      if (debug) {
+        console.log(`[Search] "${action.name}" - base: ${baseScore.toFixed(2)}, final: ${finalScore.toFixed(2)}`);
+      }
 
       matches.push({
         action,
@@ -254,11 +297,25 @@ function useInternalMatches(filtered: ActionImpl[], search: string) {
     }
 
     // Sort by final score (descending)
-    return matches.sort((a, b) => b.score - a.score);
-  }, [throttledFiltered, throttledSearch]) as Match[];
-}
+    const sortedMatches = matches.sort((a, b) => b.score - a.score);
 
-/**
- * @deprecated use useMatches
- */
-export const useDeepMatches = useMatches;
+    // Apply max results limit if specified
+    if (maxResults !== undefined && maxResults > 0) {
+      return sortedMatches.slice(0, maxResults);
+    }
+
+    return sortedMatches;
+  }, [
+    throttledFiltered,
+    throttledSearch,
+    minScoreThreshold,
+    maxResults,
+    prefixBoost,
+    debug,
+    weightHistory,
+    weightRecentHabit,
+    weightTemporal,
+    weightQueryAffinity,
+    suppressionThreshold,
+  ]) as Match[];
+}

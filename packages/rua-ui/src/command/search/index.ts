@@ -10,6 +10,7 @@ export type {
   QueryAffinityRecord,
   ActionHistoryData,
   HistoryStorage,
+  SearchConfig,
 } from './types';
 
 // Storage
@@ -60,6 +61,7 @@ export {
   WEIGHT_TEMPORAL,
   WEIGHT_QUERY_AFFINITY,
   SUPPRESSION_THRESHOLD,
+  MIN_SCORE_THRESHOLD,
   RECENT_HABIT_DECAY_FACTOR,
   TEMPORAL_DECAY_TIME_S,
   TEMPORAL_HEAT_BASE,
