@@ -14,20 +14,19 @@ const fuseOptions: IFuseOptions<ActionImpl> = {
   keys: [
     {
       name: "name",
-      weight: 0.5,
+      weight: 0.3,
     },
     {
       name: "keywords",
       getFn: (item) => (item.keywords ?? "").split(","),
       weight: 0.5,
     },
-    "subtitle",
   ],
   includeScore: true,
   includeMatches: true,
   threshold: 0.2,
   minMatchCharLength: 1,
-  ignoreLocation: true,
+  ignoreLocation: false,
 };
 
 // Weight factor for usage count in sorting
@@ -211,14 +210,6 @@ function matchPinyin(action: ActionImpl, search: string): number | undefined {
       // Calculate score based on match quality
       // Full match gets higher score, partial match gets lower score
       return 0.3; // Lower score than exact Fuse match
-    }
-  }
-
-  // Check subtitle
-  if (action.subtitle && containsChinese(action.subtitle)) {
-    const matched = pinyinMatch.match(action.subtitle, search);
-    if (matched) {
-      return 0.5; // Even lower score for subtitle match
     }
   }
 
