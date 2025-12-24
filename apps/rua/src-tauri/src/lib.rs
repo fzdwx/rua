@@ -11,6 +11,9 @@ use linux::*;
 mod extension;
 #[cfg(not(target_os = "linux"))]
 mod not_linux;
+mod settigns_view;
+mod system_tray;
+
 use std::path::PathBuf;
 
 use control_server::*;
@@ -21,13 +24,15 @@ use tauri::{
   http::{Request, Response},
   menu::{Menu, MenuItem},
   tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-  App, Manager,
+  App, Manager, WebviewUrl,
 };
+
+use crate::{settigns_view::new_settings_view, system_tray::setup_tray};
 
 fn setup(app: &mut App) -> anyhow::Result<()> {
   // let win = app.get_webview_window("main").unwrap();
   // win.eval("window.location.reload()")?;
-
+  new_settings_view(app)?;
   #[cfg(desktop)]
   let _ = app
     .handle()
@@ -46,52 +51,6 @@ fn setup(app: &mut App) -> anyhow::Result<()> {
       }
     });
   });
-
-  Ok(())
-}
-
-fn setup_tray(app: &App) -> anyhow::Result<()> {
-  let show_item = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
-  let devtools_item = MenuItem::with_id(app, "devtools", "DevTools", true, None::<&str>)?;
-  let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-  let menu = Menu::with_items(app, &[&show_item, &devtools_item, &quit_item])?;
-
-  let _tray = TrayIconBuilder::new()
-    .icon(app.default_window_icon().unwrap().clone())
-    .menu(&menu)
-    .show_menu_on_left_click(false)
-    .on_menu_event(|app, event| match event.id.as_ref() {
-      "show" => {
-        if let Some(window) = app.get_webview_window("main") {
-          let _ = window.show();
-          let _ = window.set_focus();
-        }
-      }
-      "devtools" => {
-        if let Some(window) = app.get_webview_window("main") {
-          let _ = window.open_devtools();
-        }
-      }
-      "quit" => {
-        app.exit(0);
-      }
-      _ => {}
-    })
-    .on_tray_icon_event(|tray, event| {
-      if let TrayIconEvent::Click {
-        button: MouseButton::Left,
-        button_state: MouseButtonState::Up,
-        ..
-      } = event
-      {
-        let app = tray.app_handle();
-        if let Some(window) = app.get_webview_window("main") {
-          let _ = window.show();
-          let _ = window.set_focus();
-        }
-      }
-    })
-    .build(app)?;
 
   Ok(())
 }

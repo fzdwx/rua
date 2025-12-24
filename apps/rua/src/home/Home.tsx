@@ -131,17 +131,11 @@ export default function Home() {
   });
 
   // Register file actions to store so they get proper command objects
+  // Once registered, they will be automatically included in appResults via useMatches
   useRegisterActions(fileActions, [fileActions]);
 
-  // Merge file search results with app results
-  const results = useMemo(() => {
-    if (fileActions.length === 0) {
-      return appResults;
-    }
-
-    // Merge results: app results first, then file results
-    return [...appResults, ...(fileActions as any)];
-  }, [appResults, fileActions]);
+  // Use appResults directly - it already includes registered fileActions
+  const results = appResults;
 
   // Get the currently active main action
   const activeMainAction = useMemo(() => {
