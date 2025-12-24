@@ -12,9 +12,9 @@
  * finalScore = baseScore + (dynamicWeights × suppressionFactor) + (queryAffinity × weight)
  */
 
-import type { ActionImpl } from '../../action';
-import type { SearchConfig } from '../types';
-import { getEffectiveAffinityCount } from '../storage/historyUpdater';
+import type { ActionImpl } from "../../action";
+import type { SearchConfig } from "../types";
+import { getEffectiveAffinityCount } from "../storage/historyUpdater";
 import {
   WEIGHT_HISTORY,
   WEIGHT_RECENT_HABIT,
@@ -25,7 +25,7 @@ import {
   TEMPORAL_DECAY_TIME_S,
   TEMPORAL_HEAT_BASE,
   RECENT_USAGE_DAYS,
-} from './weights';
+} from "./weights";
 
 /**
  * Calculate historical launch count score
@@ -48,7 +48,9 @@ function calculateHistoryScore(usageCount: number = 0): number {
  * @param recentUsage - Array of recent usage records
  * @returns Recent habit score
  */
-function calculateRecentHabitScore(recentUsage: Array<{ date: string; count: number }> = []): number {
+function calculateRecentHabitScore(
+  recentUsage: Array<{ date: string; count: number }> = []
+): number {
   if (recentUsage.length === 0) return 0;
 
   const today = new Date();
@@ -102,10 +104,7 @@ function calculateTemporalScore(lastUsedTime: number = 0): number {
  * @param query - The current search query
  * @returns Query affinity score
  */
-function calculateQueryAffinityScore(
-  action: ActionImpl,
-  query: string
-): number {
+function calculateQueryAffinityScore(action: ActionImpl, query: string): number {
   if (!action.queryAffinity || !query) return 0;
 
   const normalizedQuery = query.trim().toLowerCase();
@@ -131,7 +130,10 @@ function calculateQueryAffinityScore(
  * @param threshold - Suppression threshold (default from config)
  * @returns Suppression factor between 0 and 1
  */
-function calculateSuppressionFactor(baseScore: number, threshold: number = SUPPRESSION_THRESHOLD): number {
+function calculateSuppressionFactor(
+  baseScore: number,
+  threshold: number = SUPPRESSION_THRESHOLD
+): number {
   return Math.max(0, Math.min(1, baseScore / threshold));
 }
 
@@ -148,7 +150,7 @@ export function calculateFinalScore(
   action: ActionImpl,
   query: string,
   standardMatchScore: number,
-  config?: SearchConfig,
+  config?: SearchConfig
 ): number {
   // Get weights from config or use defaults
   const weightHistory = config?.weights?.history ?? WEIGHT_HISTORY;
@@ -178,9 +180,7 @@ export function calculateFinalScore(
 
   // Final score formula
   const finalScore =
-    baseScore +
-    dynamicWeights * suppressionFactor +
-    queryAffinityScore * weightQueryAffinity;
+    baseScore + dynamicWeights * suppressionFactor + queryAffinityScore * weightQueryAffinity;
 
   return finalScore;
 }

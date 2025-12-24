@@ -5,18 +5,12 @@
  * based on the preference field definition
  */
 
-import {ComponentsInput} from "@fzdwx/ruaui";
-import {Label} from "@fzdwx/ruaui";
-import {Switch} from "@fzdwx/ruaui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@fzdwx/ruaui";
-import {ShortcutInput} from "./ShortcutInput";
-import type {PreferenceField, PreferenceOption} from "rua-api";
+import { ComponentsInput } from "@fzdwx/ruaui";
+import { Label } from "@fzdwx/ruaui";
+import { Switch } from "@fzdwx/ruaui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@fzdwx/ruaui";
+import { ShortcutInput } from "./ShortcutInput";
+import type { PreferenceField, PreferenceOption } from "rua-api";
 
 interface PreferenceFormFieldProps {
   preference: PreferenceField;
@@ -24,7 +18,7 @@ interface PreferenceFormFieldProps {
   onChange: (value: unknown) => void;
 }
 
-export function PreferenceFormField({preference, value, onChange}: PreferenceFormFieldProps) {
+export function PreferenceFormField({ preference, value, onChange }: PreferenceFormFieldProps) {
   const currentValue = value ?? preference.default;
 
   return (
@@ -61,15 +55,12 @@ export function PreferenceFormField({preference, value, onChange}: PreferenceFor
       )}
 
       {preference.type === "dropdown" && (
-        <Select
-          value={(currentValue as string) || ""}
-          onValueChange={onChange}
-        >
+        <Select value={(currentValue as string) || ""} onValueChange={onChange}>
           <SelectTrigger
             id={preference.name}
             className="bg-[var(--gray3)] border-[var(--gray6)] hover:bg-[var(--gray4)]"
           >
-            <SelectValue placeholder="Select an option"/>
+            <SelectValue placeholder="Select an option" />
           </SelectTrigger>
           <SelectContent className="bg-[var(--gray3)] border-[var(--gray6)] backdrop-blur-md">
             {preference.options?.map((option: PreferenceOption) => (

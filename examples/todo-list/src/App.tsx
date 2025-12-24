@@ -1,13 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { initializeRuaAPI, type RuaAPI } from "rua-api/browser";
-import {
-  CommandPalette,
-  useNavigation,
-  Kbd,
-  showToast,
-  type Action,
-  toast,
-} from"@fzdwx/ruaui";
+import { CommandPalette, useNavigation, Kbd, showToast, type Action, toast } from "@fzdwx/ruaui";
 import { useKeyPress } from "ahooks";
 
 interface Todo {
@@ -58,9 +51,7 @@ function CreateTodoPanel({ onSubmit }: { onSubmit: (title: string) => Promise<vo
     setAccessory(
       <div onClick={handleSubmit} className="cursor-default command-subcommand-trigger">
         <span>Create</span>
-        <Kbd>⌘</Kbd>
-      +
-      <Kbd>Enter</Kbd>
+        <Kbd>⌘</Kbd>+<Kbd>Enter</Kbd>
       </div>
     );
     return () => setAccessory(null);
@@ -108,9 +99,7 @@ function MainAccessory({ onCreateTodo }: { onCreateTodo: (title: string) => Prom
   return (
     <div onClick={openCreatePanel} className="cursor-default command-subcommand-trigger">
       <span>New Todo</span>
-      <Kbd>⌘</Kbd>
-      +
-      <Kbd>O</Kbd>
+      <Kbd>⌘</Kbd>+<Kbd>O</Kbd>
     </div>
   );
 }
@@ -156,33 +145,32 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
       .catch((err) => console.error("Failed to load todos:", err));
   }, [rua]);
 
-const handleCreateTodo = useCallback(
-  async (title: string) => {
-    toast.promise(
-      (async () => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        const newTodo: Todo = {
-          id: Date.now().toString(),
-          title,
-          done: false,
-          createdAt: new Date().toISOString(),
-        };
-        setTodos((prev) => {
-          const newTodos = [...prev, newTodo];
-          rua.storage.set("todos", newTodos);
-          return newTodos;
-        });
-      })(),
-      {
-        loading: "Creating todo...",
-        success: "Todo created!",
-        failure: "Failed to create todo",
-      }
-    );
-  },
-  [rua]
-);
-
+  const handleCreateTodo = useCallback(
+    async (title: string) => {
+      toast.promise(
+        (async () => {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          const newTodo: Todo = {
+            id: Date.now().toString(),
+            title,
+            done: false,
+            createdAt: new Date().toISOString(),
+          };
+          setTodos((prev) => {
+            const newTodos = [...prev, newTodo];
+            rua.storage.set("todos", newTodos);
+            return newTodos;
+          });
+        })(),
+        {
+          loading: "Creating todo...",
+          success: "Todo created!",
+          failure: "Failed to create todo",
+        }
+      );
+    },
+    [rua]
+  );
 
   const actions = useMemo<Action[]>(() => {
     return todos.map(
@@ -195,14 +183,16 @@ const handleCreateTodo = useCallback(
         priority: todo.done ? 0 : 10,
         badge: todo.done ? "Done" : undefined,
         item: todo,
-        perform:()=>{},
+        perform: () => {},
         details: () => (
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <span className="text-3xl">{todo.done ? "✅" : "⭕"}</span>
               <div>
                 <h2 className="text-lg font-semibold text-[var(--gray12)]">{todo.title}</h2>
-                <span className={`text-sm ${todo.done ? "text-green-500" : "text-[var(--gray11)]"}`}>
+                <span
+                  className={`text-sm ${todo.done ? "text-green-500" : "text-[var(--gray11)]"}`}
+                >
                   {todo.done ? "Completed" : "Active"}
                 </span>
               </div>
@@ -212,7 +202,9 @@ const handleCreateTodo = useCallback(
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-[var(--gray11)]">Created</span>
-                  <span className="text-[var(--gray12)]">{new Date(todo.createdAt).toLocaleString()}</span>
+                  <span className="text-[var(--gray12)]">
+                    {new Date(todo.createdAt).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[var(--gray11)]">Status</span>

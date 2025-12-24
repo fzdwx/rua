@@ -27,9 +27,7 @@ fn get_preferences_path(app: &AppHandle) -> Result<PathBuf, String> {
 
 /// Load all preferences from disk
 /// Returns a map of namespace -> (key -> value)
-fn load_preferences(
-  app: &AppHandle,
-) -> Result<HashMap<String, HashMap<String, Value>>, String> {
+fn load_preferences(app: &AppHandle) -> Result<HashMap<String, HashMap<String, Value>>, String> {
   let preferences_path = get_preferences_path(app)?;
 
   if !preferences_path.exists() {
@@ -135,8 +133,12 @@ pub async fn set_all_preferences(
   let namespace_prefs = preferences.entry(namespace).or_insert_with(HashMap::new);
 
   for (key, value) in values {
-    let parsed_value: Value = serde_json::from_str(&value)
-      .map_err(|e| format!("[set_all_preferences] {} - key: {}, value: {}", e, key, value))?;
+    let parsed_value: Value = serde_json::from_str(&value).map_err(|e| {
+      format!(
+        "[set_all_preferences] {} - key: {}, value: {}",
+        e, key, value
+      )
+    })?;
     namespace_prefs.insert(key, parsed_value);
   }
 

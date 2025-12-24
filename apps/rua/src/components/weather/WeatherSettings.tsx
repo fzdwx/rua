@@ -5,9 +5,15 @@ import { Input } from "../../../../../packages/rua-ui/src/components/ui/input";
 import { Button } from "../../../../../packages/rua-ui/src/components/ui/button";
 import { useKeyPress } from "ahooks";
 import { clearQWeatherCache } from "./hefeng/qweather-cache.ts";
-import { Footer } from"@fzdwx/ruaui";
+import { Footer } from "@fzdwx/ruaui";
 import { Icon } from "@iconify/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../packages/rua-ui/src/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../../../../packages/rua-ui/src/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -15,7 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../../../packages/rua-ui/src/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "../../../../../packages/rua-ui/src/components/ui/alert";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "../../../../../packages/rua-ui/src/components/ui/alert";
 
 interface WeatherSettingsProps {
   onClose?: () => void;

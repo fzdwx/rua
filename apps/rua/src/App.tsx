@@ -6,7 +6,7 @@ import { WeatherConfigProvider } from "@/hooks/useWeatherConfig";
 import { ExtensionSystemProvider } from "@/contexts/ExtensionSystemContext.tsx";
 import Settings from "@/settings/Settings.tsx";
 import { useTheme } from "@/hooks/useTheme";
-import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 function AppContent() {
   const { setTheme } = useTheme();

@@ -13,7 +13,7 @@
  * 8. User-provided custom keywords
  */
 
-import { toPinyin, toPinyinAcronym, removeSymbols, containsChinese } from './pinyinUtils';
+import { toPinyin, toPinyinAcronym, removeSymbols, containsChinese } from "./pinyinUtils";
 
 export interface KeywordGenerationInput {
   name: string;
@@ -81,13 +81,16 @@ export function generateKeywords(input: KeywordGenerationInput): string[] {
 
   // 8. User-provided custom keywords
   if (keywords) {
-    if (typeof keywords === 'string') {
+    if (typeof keywords === "string") {
       // Legacy format: comma-separated string
-      const keywordArray = keywords.split(',').map(k => k.trim().toLowerCase()).filter(k => k.length > 0);
-      keywordArray.forEach(k => keywordSet.add(k));
+      const keywordArray = keywords
+        .split(",")
+        .map((k) => k.trim().toLowerCase())
+        .filter((k) => k.length > 0);
+      keywordArray.forEach((k) => keywordSet.add(k));
     } else if (Array.isArray(keywords)) {
       // New format: array of strings
-      keywords.forEach(k => {
+      keywords.forEach((k) => {
         const trimmed = k.trim().toLowerCase();
         if (trimmed) keywordSet.add(trimmed);
       });
@@ -95,7 +98,7 @@ export function generateKeywords(input: KeywordGenerationInput): string[] {
   }
 
   // Convert set to array and filter out empty strings
-  return Array.from(keywordSet).filter(k => k.length > 0);
+  return Array.from(keywordSet).filter((k) => k.length > 0);
 }
 
 /**
@@ -132,5 +135,5 @@ export function generateKeywordVariations(text: string): string[] {
     if (withoutSymbols && withoutSymbols !== lowercased) variations.add(withoutSymbols);
   }
 
-  return Array.from(variations).filter(v => v.length > 0);
+  return Array.from(variations).filter((v) => v.length > 0);
 }

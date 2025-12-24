@@ -92,12 +92,7 @@ export function ShortcutInput({ value, onChange, placeholder }: ShortcutInputPro
       if (e.shiftKey) keys.push("Shift");
 
       // Record main key (non-modifier)
-      if (
-        e.key !== "Control" &&
-        e.key !== "Meta" &&
-        e.key !== "Alt" &&
-        e.key !== "Shift"
-      ) {
+      if (e.key !== "Control" && e.key !== "Meta" && e.key !== "Alt" && e.key !== "Shift") {
         keys.push(e.code || e.key);
       }
 

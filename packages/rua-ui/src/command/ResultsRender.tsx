@@ -226,10 +226,7 @@ export const ResultsRender: React.FC<ResultsRenderProps> = (props) => {
   const pointerMoved = usePointerMovedSinceMount();
 
   return (
-    <div
-      className="flex"
-      style={{ flex: 1, overflow: "hidden", minHeight: 0 }}
-    >
+    <div className="flex" style={{ flex: 1, overflow: "hidden", minHeight: 0 }}>
       <div
         ref={parentRef}
         style={{

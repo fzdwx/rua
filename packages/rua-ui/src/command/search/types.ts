@@ -8,8 +8,8 @@
  * Recent usage record for a specific date
  */
 export interface RecentUsageRecord {
-  date: string;       // Format: YYYY-MM-DD
-  count: number;      // Launch count for that day
+  date: string; // Format: YYYY-MM-DD
+  count: number; // Launch count for that day
 }
 
 /**
@@ -17,8 +17,8 @@ export interface RecentUsageRecord {
  * in response to a specific search query
  */
 export interface QueryAffinityRecord {
-  count: number;      // Effective launch count (with decay accumulation)
-  lastTime: number;   // Last launch timestamp in milliseconds
+  count: number; // Effective launch count (with decay accumulation)
+  lastTime: number; // Last launch timestamp in milliseconds
 }
 
 /**
@@ -37,8 +37,8 @@ export interface ActionHistoryData {
  * Key: 'rua-action-history'
  */
 export interface HistoryStorage {
-  version: number;                              // Data structure version (current: 1)
-  actions: Record<string, ActionHistoryData>;   // Indexed by actionId
+  version: number; // Data structure version (current: 1)
+  actions: Record<string, ActionHistoryData>; // Indexed by actionId
 }
 
 /**

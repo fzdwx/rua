@@ -347,10 +347,7 @@ export function CommandPalette(props: CommandPaletteProps) {
     if (isShowDetails) {
       return (
         <div className="command-split-layout">
-          <div
-            className="command-split-list"
-            style={{ width: splitWidths.listWidth }}
-          >
+          <div className="command-split-list" style={{ width: splitWidths.listWidth }}>
             {layout === "grid" ? (
               <GridRender
                 {...enhancedResultsProps}
@@ -374,12 +371,7 @@ export function CommandPalette(props: CommandPaletteProps) {
 
     // Normal layout without details panel
     return layout === "grid" ? (
-      <GridRender
-        {...enhancedResultsProps}
-        columns={columns}
-        itemHeight={itemHeight}
-        gap={gap}
-      />
+      <GridRender {...enhancedResultsProps} columns={columns} itemHeight={itemHeight} gap={gap} />
     ) : (
       <ResultsRender {...enhancedResultsProps} />
     );

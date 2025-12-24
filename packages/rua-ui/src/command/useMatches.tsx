@@ -28,7 +28,7 @@ export function useMatches(
   search: string,
   actions: ActionTree,
   rootActionId: ActionId | null,
-  searchConfig?: SearchConfig,
+  searchConfig?: SearchConfig
 ) {
   const rootResults = React.useMemo(() => {
     return Object.keys(actions)
@@ -281,13 +281,17 @@ function useInternalMatches(filtered: ActionImpl[], search: string, searchConfig
       // 4. Apply minimum score threshold filter
       if (finalScore < minScoreThreshold) {
         if (debug) {
-          console.log(`[Search] Filtered out "${action.name}" - score: ${finalScore.toFixed(2)} < threshold: ${minScoreThreshold}`);
+          console.log(
+            `[Search] Filtered out "${action.name}" - score: ${finalScore.toFixed(2)} < threshold: ${minScoreThreshold}`
+          );
         }
         continue;
       }
 
       if (debug) {
-        console.log(`[Search] "${action.name}" - base: ${baseScore.toFixed(2)}, final: ${finalScore.toFixed(2)}`);
+        console.log(
+          `[Search] "${action.name}" - base: ${baseScore.toFixed(2)}, final: ${finalScore.toFixed(2)}`
+        );
       }
 
       matches.push({

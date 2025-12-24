@@ -56,9 +56,9 @@ export function calculateEditDistance(query: string, keyword: string): number {
       const cost = query[i - 1] === keyword[j - 1] ? 0 : 1;
 
       curr[j] = Math.min(
-        prev[j] + 1,         // Delete from query
-        curr[j - 1] + 1,     // Insert into query
-        prev[j - 1] + cost   // Replace (or match if cost = 0)
+        prev[j] + 1, // Delete from query
+        curr[j - 1] + 1, // Insert into query
+        prev[j - 1] + cost // Replace (or match if cost = 0)
       );
     }
 

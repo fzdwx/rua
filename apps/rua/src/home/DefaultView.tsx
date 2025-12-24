@@ -1,4 +1,4 @@
-import { ActionImpl, RenderItem, Footer, ResultsRender } from"@fzdwx/ruaui";
+import { ActionImpl, RenderItem, Footer, ResultsRender } from "@fzdwx/ruaui";
 import { QuickResult } from "@/components/quick-result";
 import { getQuickResultInfo } from "@/components/quick-result/utils";
 import { RefObject, useMemo } from "react";

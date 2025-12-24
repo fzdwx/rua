@@ -8,18 +8,18 @@ import {
   useMatches,
 } from "./index.tsx";
 import * as React from "react";
-import {useEffect, useState, useMemo} from "react";
-import {useKeyPress} from "ahooks";
+import { useEffect, useState, useMemo } from "react";
+import { useKeyPress } from "ahooks";
 import {
   Popover,
   PopoverTrigger,
   PopoverPanel,
 } from "../components/animate-ui/components/base/popover.tsx";
-import {Icon} from "@iconify/react";
-import {Kbd} from "../components/ui/kbd.tsx";
-import type {Toast} from "./types";
-import {subscribeToast} from "./toastStore";
-import {FooterIconRenderer, FooterMeta, FooterToast} from "@/command/FooterUtils.tsx";
+import { Icon } from "@iconify/react";
+import { Kbd } from "../components/ui/kbd.tsx";
+import type { Toast } from "./types";
+import { subscribeToast } from "./toastStore";
+import { FooterIconRenderer, FooterMeta, FooterToast } from "@/command/FooterUtils.tsx";
 
 export const Footer: React.FC<{
   current: string | ActionImpl | null;
@@ -32,16 +32,16 @@ export const Footer: React.FC<{
   settings?: Action[]; // Settings actions for settings menu
   accessory?: React.ReactElement; // Custom accessory element to display on the right side
 }> = ({
-        current,
-        actions,
-        icon,
-        content,
-        onSubCommandShow,
-        onSubCommandHide,
-        mainInputRef,
-        settings,
-        accessory,
-      }) => {
+  current,
+  actions,
+  icon,
+  content,
+  onSubCommandShow,
+  onSubCommandHide,
+  mainInputRef,
+  settings,
+  accessory,
+}) => {
   // Subscribe to toast store
   const [toast, setToast] = useState<Toast | null>(null);
 
@@ -56,9 +56,9 @@ export const Footer: React.FC<{
         {/* Left side: icon + content area (can be covered by toast) */}
         <div className="command-footer-left">
           {toast ? (
-            <FooterToast toast={toast}/>
+            <FooterToast toast={toast} />
           ) : (
-            <FooterMeta icon={icon} content={content} current={current}/>
+            <FooterMeta icon={icon} content={content} current={current} />
           )}
         </div>
 
@@ -74,7 +74,7 @@ export const Footer: React.FC<{
 
         {settings && settings.length > 0 && (
           <>
-            <FooterHr/>
+            <FooterHr />
             <FooterSettings
               onSubCommandHide={onSubCommandHide}
               onSubCommandShow={onSubCommandShow}
@@ -94,10 +94,10 @@ const FooterActionRender: React.FC<{
   onSubCommandHide?: () => void;
   onSubCommandShow?: () => void;
   mainInputRef?: React.RefObject<HTMLElement | null>;
-}> = ({actions, onSubCommandHide, onSubCommandShow, current, mainInputRef}) => {
+}> = ({ actions, onSubCommandHide, onSubCommandShow, current, mainInputRef }) => {
   return (
     <>
-      <FooterHr/>
+      <FooterHr />
       <FooterActions
         current={current}
         onSubCommandShow={onSubCommandShow}
@@ -110,7 +110,7 @@ const FooterActionRender: React.FC<{
 };
 
 export const FooterHr: React.FC = () => {
-  return <hr className="command-footer-hr"/>;
+  return <hr className="command-footer-hr" />;
 };
 
 const FooterActions: React.FC<{
@@ -122,14 +122,14 @@ const FooterActions: React.FC<{
   onSubCommandHide: () => void;
   mainInputRef?: React.RefObject<HTMLElement | null>;
 }> = ({
-        actions,
-        initialOpen,
-        initialShortcut,
-        onSubCommandShow,
-        onSubCommandHide,
-        current,
-        mainInputRef,
-      }) => {
+  actions,
+  initialOpen,
+  initialShortcut,
+  onSubCommandShow,
+  onSubCommandHide,
+  current,
+  mainInputRef,
+}) => {
   const [open, setOpen] = React.useState(initialOpen || false);
   const [shortcut] = React.useState(initialShortcut || "ctrl.k");
   const footerInputRef = React.useRef<HTMLInputElement>(null);
@@ -159,10 +159,10 @@ const FooterActions: React.FC<{
   }, [current, actions]);
 
   const [inputValue, setInputValue] = React.useState("");
-  const {useRegisterActions, state, setActiveIndex, setRootActionId} = useActionStore();
+  const { useRegisterActions, state, setActiveIndex, setRootActionId } = useActionStore();
   useRegisterActions(currentActions, [currentActions]);
 
-  const {results, rootActionId} = useMatches(inputValue, state.actions, state.rootActionId);
+  const { results, rootActionId } = useMatches(inputValue, state.actions, state.rootActionId);
 
   return (
     <Popover
@@ -211,7 +211,7 @@ const FooterActions: React.FC<{
             setRootActionId={setRootActionId}
             currentRootActionId={state.rootActionId}
             activeIndex={state.activeIndex}
-            onRender={({item, active}) => {
+            onRender={({ item, active }) => {
               if (typeof item === "string") {
                 return <div>{item}</div>;
               }
@@ -246,7 +246,7 @@ const FooterSettings: React.FC<{
   onSubCommandHide?: () => void;
   onSubCommandShow?: () => void;
   mainInputRef?: React.RefObject<HTMLElement | null>;
-}> = ({settings, onSubCommandHide, onSubCommandShow, mainInputRef}) => {
+}> = ({ settings, onSubCommandHide, onSubCommandShow, mainInputRef }) => {
   const [open, setOpen] = React.useState(false);
 
   const changeVisible = () => setOpen((o) => !o);
@@ -257,10 +257,10 @@ const FooterSettings: React.FC<{
     }
   }, [open, onSubCommandShow]);
 
-  const {useRegisterActions, state, setActiveIndex, setRootActionId} = useActionStore();
+  const { useRegisterActions, state, setActiveIndex, setRootActionId } = useActionStore();
   useRegisterActions(settings, [settings]);
 
-  const {results} = useMatches("", state.actions, state.rootActionId);
+  const { results } = useMatches("", state.actions, state.rootActionId);
 
   return (
     <Popover
@@ -299,7 +299,7 @@ const FooterSettings: React.FC<{
             height: "20px",
           }}
         >
-          <Icon icon="tabler:settings" style={{fontSize: "18px"}}/>
+          <Icon icon="tabler:settings" style={{ fontSize: "18px" }} />
         </div>
       </PopoverTrigger>
       <PopoverPanel side="top" align="end" sideOffset={16} alignOffset={0} className="border-none">
@@ -311,12 +311,11 @@ const FooterSettings: React.FC<{
             handleKeyEvent={true}
             setActiveIndex={setActiveIndex}
             search=""
-            setSearch={() => {
-            }}
+            setSearch={() => {}}
             setRootActionId={setRootActionId}
             currentRootActionId={state.rootActionId}
             activeIndex={state.activeIndex}
-            onRender={({item, active}) => {
+            onRender={({ item, active }) => {
               if (typeof item === "string") {
                 return <div>{item}</div>;
               }

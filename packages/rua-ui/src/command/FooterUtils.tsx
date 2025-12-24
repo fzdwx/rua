@@ -1,9 +1,7 @@
-import {
-  ActionImpl,
-} from "./index.tsx";
-import React, { useMemo} from "react";
-import {Icon} from "@iconify/react";
-import type {Toast} from "./types";
+import { ActionImpl } from "./index.tsx";
+import React, { useMemo } from "react";
+import { Icon } from "@iconify/react";
+import type { Toast } from "./types";
 
 /**
  * Render footer icon with support for multiple formats:
@@ -14,7 +12,7 @@ import type {Toast} from "./types";
  * - SVG strings (rendered with dangerouslySetInnerHTML)
  * - Iconify icon names (rendered with Icon component)
  */
-function FooterIconRenderer({icon}: { icon: string | React.ReactElement }) {
+function FooterIconRenderer({ icon }: { icon: string | React.ReactElement }) {
   const iconContent = useMemo(() => {
     // If it's already a React element, return it directly
     if (React.isValidElement(icon)) {
@@ -55,14 +53,14 @@ function FooterIconRenderer({icon}: { icon: string | React.ReactElement }) {
             alignItems: "center",
             justifyContent: "center",
           }}
-          dangerouslySetInnerHTML={{__html: iconStr}}
+          dangerouslySetInnerHTML={{ __html: iconStr }}
         />
       );
     }
 
     // Check if it looks like an iconify icon name (contains ":")
     if (iconStr.includes(":")) {
-      return <Icon icon={iconStr} style={{fontSize: "16px"}}/>;
+      return <Icon icon={iconStr} style={{ fontSize: "16px" }} />;
     }
 
     // Default: treat as emoji or text
@@ -77,42 +75,40 @@ function FooterIconRenderer({icon}: { icon: string | React.ReactElement }) {
  */
 const FooterToast: React.FC<{
   toast?: Toast;
-}> = ({toast}) => {
+}> = ({ toast }) => {
   return (
     <div className={`footer-toast-container type-${toast.type}`} key={toast.id}>
-      <div className="footer-toast-glow" aria-hidden="true"/>
+      <div className="footer-toast-glow" aria-hidden="true" />
       <div className="footer-toast-content">
         <div className="footer-toast-indicator">
-          {toast.type === 'animated' ? (
-            <div className="footer-toast-spinner"/>
+          {toast.type === "animated" ? (
+            <div className="footer-toast-spinner" />
           ) : (
-            <div className="footer-toast-dot"/>
+            <div className="footer-toast-dot" />
           )}
         </div>
 
-        <div className="footer-toast-message">
-          {toast.message}
-        </div>
+        <div className="footer-toast-message">{toast.message}</div>
       </div>
     </div>
   );
 };
 
 interface FooterMetaProps {
-  icon?: string | React.ReactElement,
-  content?: (current?: (string | ActionImpl | null)) => (string | React.ReactElement),
-  current?: string | ActionImpl
+  icon?: string | React.ReactElement;
+  content?: (current?: string | ActionImpl | null) => string | React.ReactElement;
+  current?: string | ActionImpl;
 }
 
-const FooterMeta = ({icon, content, current}: FooterMetaProps) => {
-  return <div className='footer-toast-content'>
-    <div className="footer-toast-indicator">
-      <FooterIconRenderer icon={icon}/>
+const FooterMeta = ({ icon, content, current }: FooterMetaProps) => {
+  return (
+    <div className="footer-toast-content">
+      <div className="footer-toast-indicator">
+        <FooterIconRenderer icon={icon} />
+      </div>
+      <div className="footer-toast-message">{content(current)}</div>
     </div>
-    <div className='footer-toast-message'>
-      {content(current)}
-    </div>
-  </div>
-}
+  );
+};
 
-export {FooterIconRenderer, FooterToast, FooterMeta}
+export { FooterIconRenderer, FooterToast, FooterMeta };

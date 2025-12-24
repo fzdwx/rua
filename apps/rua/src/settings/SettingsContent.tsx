@@ -128,9 +128,7 @@ export function SettingsContent({ category }: SettingsContentProps) {
           ))}
         </div>
       ) : (
-        <div className="text-[var(--gray11)]">
-          No preferences available for this category.
-        </div>
+        <div className="text-[var(--gray11)]">No preferences available for this category.</div>
       )}
     </div>
   );

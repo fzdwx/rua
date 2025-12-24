@@ -17,10 +17,7 @@ let activeViewExtension: { extensionId: string; clientAPI: RuaClientCallbacks } 
  * This should be called when an extension's iframe loads and RPC is established
  * Replaces any previously active view extension
  */
-export function registerViewExtension(
-  extensionId: string,
-  clientAPI: RuaClientCallbacks
-): void {
+export function registerViewExtension(extensionId: string, clientAPI: RuaClientCallbacks): void {
   console.log("[ViewExtensionManager] Registering view extension:", extensionId);
   activeViewExtension = { extensionId, clientAPI };
 }

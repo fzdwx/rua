@@ -5,7 +5,11 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useKeyPress } from "ahooks";
 import { invoke } from "@tauri-apps/api/core";
 import { motion } from "motion/react";
-import { Card, CardContent, CardHeader } from "../../../../../packages/rua-ui/src/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+} from "../../../../../packages/rua-ui/src/components/ui/card";
 import { Button } from "../../../../../packages/rua-ui/src/components/ui/button";
 import { Alert, AlertDescription } from "../../../../../packages/rua-ui/src/components/ui/alert";
 import { Badge } from "../../../../../packages/rua-ui/src/components/ui/badge";

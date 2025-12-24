@@ -20,6 +20,28 @@
 {{#useVite}}1. Run `{{pmRun}} build` to build the extension
 2. Copy the entire folder to your Rua extensions directory{{/useVite}}{{^useVite}}1. Copy this folder to your Rua extensions directory{{/useVite}}
 3. Enable the extension in the Extension Manager
+4. Configure preferences in Rua Settings
+
+## Preferences
+
+This extension includes the following preferences that can be configured in Settings:
+
+- **API Key**: Enter your API key for the service
+- **Default Language**: Select your preferred language (English, 中文, 日本語, Español)
+- **Enable Notifications**: Toggle desktop notifications
+- **Custom Shortcut**: Set a keyboard shortcut for quick access
+
+### Accessing Preferences in Code
+
+```typescript
+// Get a single preference
+const apiKey = await window.rua.preferences.get("apiKey");
+
+// Get all preferences
+const allPrefs = await window.rua.preferences.getAll();
+console.log(allPrefs.language);
+console.log(allPrefs.enableNotifications);
+```
 
 ## Permissions
 
@@ -31,6 +53,7 @@
 {{#hasClipboard}}- Clipboard read/write access{{/hasClipboard}}
 {{#hasNotification}}- System notifications{{/hasNotification}}
 {{#hasStorage}}- Local storage for extension data{{/hasStorage}}
+- Preferences management via Settings UI
 - UI control (hide/show input, close extension)
 - Dynamic action registration
 

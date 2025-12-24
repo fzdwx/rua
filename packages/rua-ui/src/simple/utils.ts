@@ -207,7 +207,6 @@ export function calculateBackoffDelay(
   return initialDelay * Math.pow(backoffMultiplier, attempt);
 }
 
-
 /**
  * Details panel split ratio type
  */

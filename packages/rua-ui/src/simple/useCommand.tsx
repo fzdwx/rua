@@ -100,8 +100,8 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
   const defaultFooterContent = useCallback(
     (current: any) => {
       if (!current) return "Select an action";
-      if (typeof navigationTitle === 'string') return navigationTitle;
-      if (typeof navigationTitle === 'function') return navigationTitle(current);
+      if (typeof navigationTitle === "string") return navigationTitle;
+      if (typeof navigationTitle === "function") return navigationTitle(current);
 
       // Default: show subtitle or instruction for query actions
       if (current.query) return "Type your query and press Enter";
@@ -116,7 +116,7 @@ export function useCommand(options: UseCommandOptions): UseCommandReturn {
     // Only use activeAction.icon if it's a string or ReactElement (not other ReactNode types)
     if (activeAction?.icon !== undefined && activeAction.icon !== null) {
       const icon = activeAction.icon;
-      if (typeof icon === 'string' || React.isValidElement(icon)) {
+      if (typeof icon === "string" || React.isValidElement(icon)) {
         return icon;
       }
     }

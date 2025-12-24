@@ -13,9 +13,9 @@
  * - charsetScore = query.length if charset match, else 0
  */
 
-import { calculateEditDistanceScore } from './editDistance';
-import { calculatePrefixScore } from './prefixMatch';
-import { calculateCharsetScore } from './charsetMatch';
+import { calculateEditDistanceScore } from "./editDistance";
+import { calculatePrefixScore } from "./prefixMatch";
+import { calculateCharsetScore } from "./charsetMatch";
 
 const DEFAULT_PREFIX_BOOST = 2.0;
 
@@ -30,7 +30,7 @@ const DEFAULT_PREFIX_BOOST = 2.0;
 export function calculateStandardScore(
   query: string,
   keyword: string,
-  prefixBoost: number = DEFAULT_PREFIX_BOOST,
+  prefixBoost: number = DEFAULT_PREFIX_BOOST
 ): number {
   if (!query || !keyword) {
     return -Infinity;
@@ -81,7 +81,7 @@ export function calculateStandardScore(
 export function calculateBestScore(
   query: string,
   keywords: string[],
-  prefixBoost: number = DEFAULT_PREFIX_BOOST,
+  prefixBoost: number = DEFAULT_PREFIX_BOOST
 ): number {
   if (!query || keywords.length === 0) {
     return -Infinity;

@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { toast } from"@fzdwx/ruaui";
+import { toast } from "@fzdwx/ruaui";
 import { useFileWatcher, type FileChangeEvent } from "@/hooks/useFileWatcher";
 import {
   executeBackgroundScript,
@@ -285,7 +285,7 @@ export function ExtensionSystemProvider({ children }: ExtensionSystemProviderPro
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          toast.show(`Failed to load dev extension: ${errorMessage}`,'failure');
+          toast.show(`Failed to load dev extension: ${errorMessage}`, "failure");
           console.error("Failed to load dev extension:", error);
           // Clear the invalid dev path
           localStorage.removeItem("rua:devExtensionPath");

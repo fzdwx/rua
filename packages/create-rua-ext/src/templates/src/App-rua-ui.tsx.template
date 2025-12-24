@@ -161,6 +161,25 @@ function TodoCommandPalette({ rua }: { rua: RuaAPI }) {
       .catch((err) => console.error("Failed to load todos:", err));
   }, [rua]);
 
+  // Example: Access preferences
+  // You can access extension preferences configured in Settings
+  useEffect(() => {
+    // Get a single preference
+    rua.preferences.get("apiKey").then((key) => {
+      if (key) {
+        console.log("API Key configured:", key);
+      }
+    });
+
+    // Get all preferences
+    rua.preferences.getAll().then((prefs) => {
+      console.log("All preferences:", prefs);
+      // Use preferences in your extension
+      // e.g., const language = prefs.language;
+      // e.g., const notificationsEnabled = prefs.enableNotifications;
+    });
+  }, [rua]);
+
 const handleCreateTodo = useCallback(
   async (title: string) => {
     toast.promise(

@@ -34,7 +34,6 @@ bun build
 - `fs:exists`
 - `fs:stat`
 
-
 ## Features
 
 - Clipboard read/write access

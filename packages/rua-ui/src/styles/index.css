@@ -9,7 +9,7 @@
  */
 
 /* Global styles and Tailwind configuration */
-@import './global.css';
+@import "./global.css";
 
 /* Command palette and component styles */
-@import './command.css';
+@import "./command.css";

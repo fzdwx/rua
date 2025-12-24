@@ -57,7 +57,9 @@ export function ExtensionViewWrapper({
    */
   function extractCurrentActionInfo(
     uiEntry: string,
-    manifest?: { rua?: { actions?: Array<{ name: string; title: string; icon?: string; subtitle?: string }> } }
+    manifest?: {
+      rua?: { actions?: Array<{ name: string; title: string; icon?: string; subtitle?: string }> };
+    }
   ): CurrentActionInfo | undefined {
     if (!manifest?.rua?.actions) return undefined;
 

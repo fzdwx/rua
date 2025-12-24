@@ -6,12 +6,10 @@
  */
 
 import { useState, useEffect } from "react";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Icon } from "@iconify/react";
 import { SettingsSidebar } from "./SettingsSidebar";
 import { SettingsContent } from "./SettingsContent";
 import { useExtensionSystem } from "@/contexts/ExtensionSystemContext";
-import { useTheme } from "@/hooks/useTheme";
 import type { PreferenceField } from "rua-api";
 
 export interface SettingsCategory {

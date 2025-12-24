@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-   "@fzdwx/ruaui": "workspace:*",
+    "@fzdwx/ruaui": "workspace:*",
     "ahooks": "^3.9.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -23,7 +23,7 @@ use extension::*;
 use not_linux::*;
 use tauri::{
   http::{Request, Response},
-  App, Manager, Emitter,
+  App, Emitter, Manager,
 };
 
 use crate::{settigns_view::new_settings_view, system_tray::setup_tray};

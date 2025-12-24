@@ -5,9 +5,9 @@
  * Data is cleaned up automatically to remove stale records (> 7 days old).
  */
 
-import type { ActionHistoryData, HistoryStorage, RecentUsageRecord } from '../types';
+import type { ActionHistoryData, HistoryStorage, RecentUsageRecord } from "../types";
 
-const STORAGE_KEY = 'rua-action-history';
+const STORAGE_KEY = "rua-action-history";
 const STORAGE_VERSION = 1;
 const RECENT_USAGE_DAYS = 7;
 
@@ -16,7 +16,7 @@ const RECENT_USAGE_DAYS = 7;
  */
 function getCurrentDate(): string {
   const now = new Date();
-  return now.toISOString().split('T')[0];
+  return now.toISOString().split("T")[0];
 }
 
 /**
@@ -54,7 +54,7 @@ export function loadHistoryStorage(): HistoryStorage {
 
     // Version check - if version mismatch, reset storage
     if (parsed.version !== STORAGE_VERSION) {
-      console.warn('[HistoryStorage] Version mismatch, resetting storage');
+      console.warn("[HistoryStorage] Version mismatch, resetting storage");
       return {
         version: STORAGE_VERSION,
         actions: {},
@@ -71,7 +71,7 @@ export function loadHistoryStorage(): HistoryStorage {
 
     return parsed;
   } catch (error) {
-    console.error('[HistoryStorage] Failed to load history:', error);
+    console.error("[HistoryStorage] Failed to load history:", error);
     return {
       version: STORAGE_VERSION,
       actions: {},
@@ -86,7 +86,7 @@ export function saveHistoryStorage(storage: HistoryStorage): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
   } catch (error) {
-    console.error('[HistoryStorage] Failed to save history:', error);
+    console.error("[HistoryStorage] Failed to save history:", error);
   }
 }
 
@@ -114,7 +114,7 @@ export function clearHistory(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
-    console.error('[HistoryStorage] Failed to clear history:', error);
+    console.error("[HistoryStorage] Failed to clear history:", error);
   }
 }
 
@@ -122,7 +122,7 @@ export function clearHistory(): void {
  * Export for testing or debugging
  */
 export function exportHistory(): string {
-  return localStorage.getItem(STORAGE_KEY) || '{}';
+  return localStorage.getItem(STORAGE_KEY) || "{}";
 }
 
 /**
@@ -134,10 +134,10 @@ export function importHistory(data: string): void {
     if (parsed.version === STORAGE_VERSION) {
       localStorage.setItem(STORAGE_KEY, data);
     } else {
-      console.error('[HistoryStorage] Cannot import - version mismatch');
+      console.error("[HistoryStorage] Cannot import - version mismatch");
     }
   } catch (error) {
-    console.error('[HistoryStorage] Failed to import history:', error);
+    console.error("[HistoryStorage] Failed to import history:", error);
   }
 }
 

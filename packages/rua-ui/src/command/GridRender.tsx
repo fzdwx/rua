@@ -161,7 +161,13 @@ export const GridRender: React.FC<GridRenderProps> = (props) => {
 
     window.addEventListener("keydown", handler, { capture: true });
     return () => window.removeEventListener("keydown", handler, { capture: true });
-  }, [props.activeIndex, props.handleKeyEvent, getGridPosition, getLinearIndex, props.setActiveIndex]);
+  }, [
+    props.activeIndex,
+    props.handleKeyEvent,
+    getGridPosition,
+    getLinearIndex,
+    props.setActiveIndex,
+  ]);
 
   // Scroll to active item
   const { scrollToIndex } = rowVirtualizer;

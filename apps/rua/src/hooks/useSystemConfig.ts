@@ -96,7 +96,7 @@ export function useSystemConfig<T = unknown>(
       setLoading(true);
       try {
         const storedValue = await getSystemConfig<T>(key);
-        setValue(storedValue ?? (defaultValue ?? null));
+        setValue(storedValue ?? defaultValue ?? null);
       } catch (error) {
         console.error(`Failed to load system config "${key}":`, error);
         setValue(defaultValue ?? null);

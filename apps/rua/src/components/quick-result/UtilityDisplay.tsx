@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { toast } from"@fzdwx/ruaui";
+import { toast } from "@fzdwx/ruaui";
 import { Card, CardContent } from "../../../../../packages/rua-ui/src/components/ui/card";
 
 interface UtilityDisplayProps {

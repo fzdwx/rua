@@ -34,15 +34,15 @@ function PopoverTrigger(props: PopoverTriggerProps) {
 type PopoverPanelProps = PopoverPositionerPrimitiveProps & PopoverPopupPrimitiveProps;
 
 function PopoverPanel({
-                        className,
-                        align = "center",
-                        sideOffset = 4,
-                        initialFocus,
-                        finalFocus,
-                        style,
-                        children,
-                        ...props
-                      }: PopoverPanelProps) {
+  className,
+  align = "center",
+  sideOffset = 4,
+  initialFocus,
+  finalFocus,
+  style,
+  children,
+  ...props
+}: PopoverPanelProps) {
   return (
     <PopoverPortalPrimitive>
       <PopoverPositionerPrimitive align={align} sideOffset={sideOffset} className="z-50" {...props}>

@@ -11,7 +11,7 @@ export type {
   ActionHistoryData,
   HistoryStorage,
   SearchConfig,
-} from './types';
+} from "./types";
 
 // Storage
 export {
@@ -24,35 +24,23 @@ export {
   importHistory,
   getCurrentDate,
   RECENT_USAGE_DAYS,
-} from './storage/historyStorage';
+} from "./storage/historyStorage";
 
 export {
   recordActionUsage,
   getEffectiveAffinityCount,
   AFFINITY_COOLDOWN_MS,
   AFFINITY_DECAY_TAU_MS,
-} from './storage/historyUpdater';
+} from "./storage/historyUpdater";
 
 // Matching algorithms
-export {
-  calculateEditDistance,
-  calculateEditDistanceScore,
-} from './matching/editDistance';
+export { calculateEditDistance, calculateEditDistanceScore } from "./matching/editDistance";
 
-export {
-  calculatePrefixMatch,
-  calculatePrefixScore,
-} from './matching/prefixMatch';
+export { calculatePrefixMatch, calculatePrefixScore } from "./matching/prefixMatch";
 
-export {
-  isCharsetSubset,
-  calculateCharsetScore,
-} from './matching/charsetMatch';
+export { isCharsetSubset, calculateCharsetScore } from "./matching/charsetMatch";
 
-export {
-  calculateStandardScore,
-  calculateBestScore,
-} from './matching/scorer';
+export { calculateStandardScore, calculateBestScore } from "./matching/scorer";
 
 // Ranking
 export {
@@ -65,7 +53,7 @@ export {
   RECENT_HABIT_DECAY_FACTOR,
   TEMPORAL_DECAY_TIME_S,
   TEMPORAL_HEAT_BASE,
-} from './ranking/weights';
+} from "./ranking/weights";
 
 export {
   calculateFinalScore,
@@ -74,19 +62,11 @@ export {
   calculateTemporalScore,
   calculateQueryAffinityScore,
   calculateSuppressionFactor,
-} from './ranking/ranker';
+} from "./ranking/ranker";
 
 // Keywords
-export {
-  containsChinese,
-  toPinyin,
-  toPinyinAcronym,
-  removeSymbols,
-} from './keywords/pinyinUtils';
+export { containsChinese, toPinyin, toPinyinAcronym, removeSymbols } from "./keywords/pinyinUtils";
 
-export {
-  generateKeywords,
-  generateKeywordVariations,
-} from './keywords/keywordGenerator';
+export { generateKeywords, generateKeywordVariations } from "./keywords/keywordGenerator";
 
-export type { KeywordGenerationInput } from './keywords/keywordGenerator';
+export type { KeywordGenerationInput } from "./keywords/keywordGenerator";

@@ -8,8 +8,8 @@
  * - Query affinity with exponential decay and cooldown
  */
 
-import type { ActionHistoryData, RecentUsageRecord, QueryAffinityRecord } from '../types';
-import { getActionHistory, saveActionHistory, getCurrentDate } from './historyStorage';
+import type { ActionHistoryData, RecentUsageRecord, QueryAffinityRecord } from "../types";
+import { getActionHistory, saveActionHistory, getCurrentDate } from "./historyStorage";
 
 // Constants for query affinity
 const AFFINITY_COOLDOWN_MS = 60 * 1000; // 60 seconds cooldown
@@ -100,7 +100,7 @@ function updateQueryAffinity(
  * @param actionId - The ID of the action being executed
  * @param query - The search query used when the action was selected
  */
-export function recordActionUsage(actionId: string, query: string = ''): void {
+export function recordActionUsage(actionId: string, query: string = ""): void {
   const now = Date.now();
 
   // Load existing history or create new

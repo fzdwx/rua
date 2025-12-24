@@ -1,6 +1,12 @@
 import invariant from "tiny-invariant";
 import { Command } from "./Command.ts";
-import type { Action, ActionStore, History, RecentUsageRecord, QueryAffinityRecord } from "../types.ts";
+import type {
+  Action,
+  ActionStore,
+  History,
+  RecentUsageRecord,
+  QueryAffinityRecord,
+} from "../types.ts";
 import { Priority } from "../utils.ts";
 import { generateKeywords, generateKeywordVariations, getActionHistory } from "../search";
 
