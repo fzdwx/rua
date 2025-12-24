@@ -1,4 +1,5 @@
 mod control_server;
+mod file_search;
 mod file_watcher;
 mod fs_api;
 pub mod types;
@@ -220,6 +221,8 @@ pub fn run() {
       extension_storage_get,
       extension_storage_set,
       extension_storage_remove,
+      file_search::search_files,
+      file_search::open_file,
       fs_api::fs_read_text_file,
       fs_api::fs_read_binary_file,
       fs_api::fs_write_text_file,
