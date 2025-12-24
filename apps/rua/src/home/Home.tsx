@@ -1,21 +1,21 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {Action, ActionImpl, Input, useActionStore, useMatches} from "@fzdwx/ruaui";
-import {useApplications} from "@/hooks/useApplications";
-import {useBuiltInActions} from "@/hooks/useBuiltInActions";
-import {useExtensionActionsForPalette} from "@/hooks/useExtensionActions";
-import {useFileSearch} from "@/hooks/useFileSearch";
-import {useTheme} from "@/hooks/useTheme";
-import {Icon} from "@iconify/react";
-import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
-import {useActionUsage} from "@/hooks/useActionUsage";
-import {DefaultView} from "./DefaultView";
-import {AnimatePresence} from "motion/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Action, ActionImpl, Input, useActionStore, useMatches } from "@fzdwx/ruaui";
+import { useApplications } from "@/hooks/useApplications";
+import { useBuiltInActions } from "@/hooks/useBuiltInActions";
+import { useExtensionActionsForPalette } from "@/hooks/useExtensionActions";
+import { useFileSearch } from "@/hooks/useFileSearch";
+import { useTheme } from "@/hooks/useTheme";
+import { Icon } from "@iconify/react";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { useActionUsage } from "@/hooks/useActionUsage";
+import { DefaultView } from "./DefaultView";
+import { AnimatePresence } from "motion/react";
 import React from "react";
-import {AnimatedView} from "./AnimatedView";
-import {createViewConfigs} from "./viewConfig";
-import {ViewContext} from "./viewContext";
-import {useExtensionSystem} from "@/contexts/ExtensionSystemContext";
-import {Background, Container} from "@fzdwx/ruaui";
+import { AnimatedView } from "./AnimatedView";
+import { createViewConfigs } from "./viewConfig";
+import { ViewContext } from "./viewContext";
+import { useExtensionSystem } from "@/contexts/ExtensionSystemContext";
+import { Background, Container } from "@fzdwx/ruaui";
 
 export default function Home() {
   const [search, setSearch] = useState("");
@@ -26,15 +26,15 @@ export default function Home() {
   const [extensionInputHidden, setExtensionInputHidden] = useState(false); // Extension-controlled input visibility
   const inputRef = useRef<HTMLInputElement>(null);
   const lastActiveMainActionRef = useRef<ActionImpl | null>(null); // Store last active main action for passing data to edit action
-  const {theme, toggleTheme} = useTheme();
-  const {incrementUsage} = useActionUsage();
-  const {notifyActivate, notifyDeactivate, notifySearchChange} = useExtensionSystem();
+  const { theme, toggleTheme } = useTheme();
+  const { incrementUsage } = useActionUsage();
+  const { notifyActivate, notifyDeactivate, notifySearchChange } = useExtensionSystem();
 
   // Initialize action store
-  const {useRegisterActions, setRootActionId, setActiveIndex, state} = useActionStore();
+  const { useRegisterActions, setRootActionId, setActiveIndex, state } = useActionStore();
 
   // Load applications and convert to actions
-  const {actions: applicationActions} = useApplications();
+  const { actions: applicationActions } = useApplications();
 
   // Get built-in actions (static actions like translate)
   // refreshKey forces re-computation when quick links are updated
@@ -111,7 +111,7 @@ export default function Home() {
   useRegisterActions(allActions, [allActions]);
 
   // Use the matches hook for search and filtering
-  const {results: appResults} = useMatches(search, state.actions, state.rootActionId, {
+  const { results: appResults } = useMatches(search, state.actions, state.rootActionId, {
     minScoreThreshold: 100,
     maxResults: 10,
     debug: false,
@@ -122,20 +122,16 @@ export default function Home() {
     return appResults.filter((item) => typeof item !== "string").length;
   }, [appResults]);
 
-  // Auto file search when app results are less than 5
-  const handleFileOpen = useCallback(async () => {
-    // Hide window after opening file
-    await getCurrentWebviewWindow().hide();
-  }, []);
-
-  const {fileActions} = useFileSearch({
+  const { fileActions } = useFileSearch({
     enabled: search.trim().length > 1,
     query: search,
     currentResultsCount: actualResultsCount,
     threshold: 10,
     maxResults: 5,
-    onFileOpen: handleFileOpen,
   });
+
+  // Register file actions to store so they get proper command objects
+  useRegisterActions(fileActions, [fileActions]);
 
   // Merge file search results with app results
   const results = useMemo(() => {
@@ -250,7 +246,7 @@ export default function Home() {
         icon: (
           <Icon
             icon={theme === "dark" ? "tabler:sun" : "tabler:moon"}
-            style={{fontSize: "20px"}}
+            style={{ fontSize: "20px" }}
           />
         ),
         keywords: "theme dark light mode",

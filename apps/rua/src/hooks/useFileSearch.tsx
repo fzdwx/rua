@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import {Action, toast} from "@fzdwx/ruaui";
+import { Action } from "@fzdwx/ruaui";
 import { Icon } from "@iconify/react";
 import { useDebounce } from "ahooks";
 
@@ -81,11 +81,9 @@ export function useFileSearch({
             <Icon icon="tabler:file" style={{ fontSize: "20px" }} />
           ),
           subtitle: file.path,
-          section: "Files",
           priority: -10, // Lower priority than apps
           perform: async () => {
             try {
-              toast.success("aaaaaaaaaaaaa")
               await invoke("open_file", { path: file.path });
               // Call callback to hide window
               onFileOpen?.();
