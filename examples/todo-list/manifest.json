@@ -18,6 +18,56 @@
         "icon": "./icon.png",
         "subtitle": "TODO List"
       }
+    ],
+    "preferences": [
+      {
+        "name": "apiKey",
+        "title": "API Key",
+        "description": "Enter your API key for the service",
+        "type": "textfield",
+        "required": false,
+        "placeholder": "sk-..."
+      },
+      {
+        "name": "language",
+        "title": "Default Language",
+        "description": "Select your preferred language",
+        "type": "dropdown",
+        "default": "en",
+        "options": [
+          {
+            "label": "English",
+            "value": "en"
+          },
+          {
+            "label": "中文",
+            "value": "zh"
+          },
+          {
+            "label": "日本語",
+            "value": "ja"
+          },
+          {
+            "label": "Español",
+            "value": "es"
+          }
+        ]
+      },
+      {
+        "name": "enableNotifications",
+        "title": "Enable Notifications",
+        "description": "Show desktop notifications for important events",
+        "type": "toggle",
+        "default": true
+      },
+      {
+        "name": "customShortcut",
+        "title": "Custom Shortcut",
+        "description": "Set a keyboard shortcut for quick access",
+        "type": "shortcut",
+        "default": "Ctrl+Shift+E",
+        "placeholder": "Click 'Record' to set your shortcut"
+      }
     ]
   },
   "permissions": [

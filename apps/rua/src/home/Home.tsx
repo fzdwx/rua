@@ -5,7 +5,6 @@ import { useBuiltInActions } from "@/hooks/useBuiltInActions";
 import { useExtensionActionsForPalette } from "@/hooks/useExtensionActions";
 import { useFileSearch } from "@/hooks/useFileSearch";
 import { useTheme } from "@/hooks/useTheme";
-import { Icon } from "@iconify/react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useActionUsage } from "@/hooks/useActionUsage";
 import { DefaultView } from "./DefaultView";

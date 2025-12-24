@@ -23,6 +23,50 @@ pub struct ManifestAction {
   pub query: Option<bool>,
 }
 
+/// Preference option for dropdown
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PreferenceOption {
+  pub label: String,
+  pub value: String,
+}
+
+/// Preference field definition
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "lowercase")]
+pub enum PreferenceField {
+  Textfield {
+    name: String,
+    title: String,
+    description: Option<String>,
+    required: Option<bool>,
+    default: Option<String>,
+    placeholder: Option<String>,
+  },
+  Dropdown {
+    name: String,
+    title: String,
+    description: Option<String>,
+    required: Option<bool>,
+    default: Option<String>,
+    options: Vec<PreferenceOption>,
+  },
+  Toggle {
+    name: String,
+    title: String,
+    description: Option<String>,
+    required: Option<bool>,
+    default: Option<bool>,
+  },
+  Shortcut {
+    name: String,
+    title: String,
+    description: Option<String>,
+    required: Option<bool>,
+    default: Option<String>,
+    placeholder: Option<String>,
+  },
+}
+
 /// Rua-specific configuration in manifest
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RuaConfig {
@@ -30,6 +74,7 @@ pub struct RuaConfig {
   pub engine_version: String,
   pub ui: Option<UiConfig>,
   pub actions: Vec<ManifestAction>,
+  pub preferences: Option<Vec<PreferenceField>>,
 }
 
 /// UI configuration
@@ -85,6 +130,7 @@ pub struct ExtensionManifest {
   pub icon: Option<String>,
   pub permissions: Option<Vec<ExtensionPermission>>,
   pub dependencies: Option<HashMap<String, String>>,
+  pub builtin: Option<bool>,
 }
 
 /// Extension info returned to frontend
@@ -278,6 +324,7 @@ pub async fn get_extensions(app: AppHandle) -> Result<Vec<ExtensionInfo>, String
               engine_version: "0.0.0".to_string(),
               ui: None,
               actions: vec![],
+              preferences: None,
             },
             description: None,
             author: None,
@@ -287,6 +334,7 @@ pub async fn get_extensions(app: AppHandle) -> Result<Vec<ExtensionInfo>, String
             icon: None,
             permissions: None,
             dependencies: None,
+            builtin: None,
           },
           enabled: false,
           loaded: false,
