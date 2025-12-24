@@ -6,10 +6,10 @@
  */
 
 import { useState, useEffect } from "react";
-import { Icon } from "@iconify/react";
 import { SettingsSidebar } from "./SettingsSidebar";
 import { SettingsContent } from "./SettingsContent";
 import { useExtensionSystem } from "@/contexts/ExtensionSystemContext";
+import { ActionIcon } from "@/extension/ActionIcon";
 import type { PreferenceField } from "rua-api";
 
 export interface SettingsCategory {
@@ -101,7 +101,9 @@ export default function Settings() {
       .map((ext) => ({
         id: ext.manifest.id,
         name: ext.manifest.name,
-        icon: ext.manifest.icon ? <Icon icon={ext.manifest.icon} className="text-lg" /> : undefined,
+        icon: ext.manifest.icon ? (
+          <ActionIcon icon={ext.manifest.icon} extensionPath={ext.path} size="18px" />
+        ) : undefined,
         type: "builtin" as const,
         extensionId: ext.manifest.id,
         preferences: ext.manifest.rua.preferences,
@@ -119,7 +121,9 @@ export default function Settings() {
       .map((ext) => ({
         id: ext.manifest.id,
         name: ext.manifest.name,
-        icon: ext.manifest.icon ? <Icon icon={ext.manifest.icon} className="text-lg" /> : undefined,
+        icon: ext.manifest.icon ? (
+          <ActionIcon icon={ext.manifest.icon} extensionPath={ext.path} size="18px" />
+        ) : undefined,
         type: "extension" as const,
         extensionId: ext.manifest.id,
         preferences: ext.manifest.rua.preferences,

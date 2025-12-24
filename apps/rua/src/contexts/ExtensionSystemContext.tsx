@@ -166,6 +166,9 @@ function convertExtensionToActions(ext: ExtensionInfo): ManifestDerivedAction[] 
   const { manifest, path: extPath } = ext;
   const uiEntry = manifest.rua.ui?.entry;
 
+  // Get extension icon for fallback
+  const extensionIcon = manifest.icon;
+
   // Filter out background actions - they run automatically and shouldn't appear in action list
   const userFacingActions = manifest.rua.actions.filter(
     (action: ManifestAction) => action.mode !== "background"
@@ -177,7 +180,7 @@ function convertExtensionToActions(ext: ExtensionInfo): ManifestDerivedAction[] 
       name: action.title,
       mode: action.mode as "view",
       keywords: action.keywords?.join(" "),
-      icon: action.icon,
+      icon: action.icon || extensionIcon,
       subtitle: action.subtitle,
       shortcut: action.shortcut,
       extensionId: manifest.id,

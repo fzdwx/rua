@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "{{description}}",
   "author": "{{author}}",
+  "icon": "tabler:puzzle",
   "rua": {
     "engineVersion": "^0.1.0"{{#hasView}},
     "ui": {

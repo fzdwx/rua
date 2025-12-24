@@ -68,7 +68,7 @@ function convertDynamicToAction(
   extensionId: string,
   dynamicAction: DynamicAction,
   extensions: {
-    manifest: { id: string; rua: { ui?: { entry: string } } };
+    manifest: { id: string; rua: { ui?: { entry: string } }; icon?: string };
     path: string;
   }[],
   setRootActionId: (id: string | null) => void,
@@ -80,6 +80,7 @@ function convertDynamicToAction(
   const extension = extensions.find((p) => p.manifest.id === extensionId);
   const uiEntry = extension?.manifest.rua.ui?.entry;
   const extPath = extension?.path;
+  const extensionIcon = extension?.manifest.icon;
 
   // Build full action ID with extension prefix
   const fullId = `${extensionId}.${dynamicAction.id}`;
@@ -90,6 +91,8 @@ function convertDynamicToAction(
     keywords: dynamicAction.keywords?.join(","),
     icon: dynamicAction.icon ? (
       <ActionIcon icon={dynamicAction.icon} extensionPath={extPath} size="20px" />
+    ) : extensionIcon ? (
+      <ActionIcon icon={extensionIcon} extensionPath={extPath} size="20px" />
     ) : (
       <Icon icon="tabler:sparkles" style={{ fontSize: "20px" }} />
     ),
