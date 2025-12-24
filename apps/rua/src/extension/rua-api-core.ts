@@ -49,6 +49,42 @@ export const apiCore = {
     });
   },
 
+  // Preferences
+  async preferencesGet(namespace: string, key: string): Promise<string | null> {
+    return await invoke<string | null>("get_preference", {
+      namespace,
+      key,
+    });
+  },
+
+  async preferencesGetAll(namespace: string): Promise<Record<string, string>> {
+    return await invoke<Record<string, string>>("get_all_preferences", {
+      namespace,
+    });
+  },
+
+  async preferencesSet(namespace: string, key: string, value: string): Promise<void> {
+    await invoke("set_preference", {
+      namespace,
+      key,
+      value,
+    });
+  },
+
+  async preferencesSetAll(namespace: string, values: Record<string, string>): Promise<void> {
+    await invoke("set_all_preferences", {
+      namespace,
+      values,
+    });
+  },
+
+  async preferencesRemove(namespace: string, key: string): Promise<void> {
+    await invoke("remove_preference", {
+      namespace,
+      key,
+    });
+  },
+
   // File System
   async fsReadTextFile(path: string): Promise<string> {
     return await invoke<string>("fs_read_text_file", { path });

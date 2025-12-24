@@ -105,6 +105,27 @@ export function createRuaAPI(
       await apiCore.storageRemove(extensionInfo.id, key);
     },
 
+    // Preferences API (no permission required - preferences are user-facing)
+    async preferencesGet(key: string): Promise<string | null> {
+      return await apiCore.preferencesGet(extensionInfo.id, key);
+    },
+
+    async preferencesGetAll(): Promise<Record<string, string>> {
+      return await apiCore.preferencesGetAll(extensionInfo.id);
+    },
+
+    async preferencesSet(key: string, value: string): Promise<void> {
+      await apiCore.preferencesSet(extensionInfo.id, key, value);
+    },
+
+    async preferencesSetAll(values: Record<string, string>): Promise<void> {
+      await apiCore.preferencesSetAll(extensionInfo.id, values);
+    },
+
+    async preferencesRemove(key: string): Promise<void> {
+      await apiCore.preferencesRemove(extensionInfo.id, key);
+    },
+
     // File System API
     async fsReadTextFile(path: string, baseDir?: string): Promise<string> {
       const resolvedPath = apiCore.resolvePath(path, baseDir);

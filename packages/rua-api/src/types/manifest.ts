@@ -119,6 +119,86 @@ export interface ManifestAction {
 }
 
 /**
+ * Preference field types
+ */
+export type PreferenceType = "textfield" | "dropdown" | "toggle" | "shortcut";
+
+/**
+ * Dropdown option
+ */
+export interface PreferenceOption {
+  /** Option label shown in UI */
+  label: string;
+  /** Option value stored */
+  value: string;
+}
+
+/**
+ * Base preference field
+ */
+interface BasePreference {
+  /** Unique preference identifier (within extension) */
+  name: string;
+  /** Display title */
+  title: string;
+  /** Description text shown below title */
+  description?: string;
+  /** Whether this preference is required */
+  required?: boolean;
+}
+
+/**
+ * Text input preference
+ */
+export interface TextfieldPreference extends BasePreference {
+  type: "textfield";
+  /** Default value */
+  default?: string;
+  /** Placeholder text */
+  placeholder?: string;
+}
+
+/**
+ * Dropdown/select preference
+ */
+export interface DropdownPreference extends BasePreference {
+  type: "dropdown";
+  /** Default value (must be one of options' value) */
+  default?: string;
+  /** Available options */
+  options: PreferenceOption[];
+}
+
+/**
+ * Toggle/switch preference
+ */
+export interface TogglePreference extends BasePreference {
+  type: "toggle";
+  /** Default value */
+  default?: boolean;
+}
+
+/**
+ * Shortcut/hotkey preference
+ */
+export interface ShortcutPreference extends BasePreference {
+  type: "shortcut";
+  /** Default shortcut value (e.g., "Ctrl+Shift+K") */
+  default?: string;
+  /** Placeholder text */
+  placeholder?: string;
+}
+
+/**
+ * Preference field definition
+ */
+export type PreferenceField =
+  | TextfieldPreference
+  | DropdownPreference
+  | TogglePreference
+  | ShortcutPreference;
+
+/**
  * Rua-specific extension configuration
  */
 export interface RuaConfig {
@@ -137,6 +217,9 @@ export interface RuaConfig {
 
   /** Actions defined by this extension */
   actions: ManifestAction[];
+
+  /** Preference fields */
+  preferences?: PreferenceField[];
 }
 
 /**
@@ -204,6 +287,8 @@ export interface ExtensionManifest {
   keywords?: string[];
   /** Extension icon path or iconify icon name (e.g., "tabler:puzzle") */
   icon?: string;
+  /** Whether this is a built-in extension */
+  builtin?: boolean;
 
   // Permissions
   /** Required permissions for extension functionality */

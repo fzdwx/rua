@@ -2,6 +2,7 @@ mod control_server;
 mod file_search;
 mod file_watcher;
 mod fs_api;
+mod preferences;
 pub mod types;
 mod webpage_info;
 
@@ -22,9 +23,7 @@ use extension::*;
 use not_linux::*;
 use tauri::{
   http::{Request, Response},
-  menu::{Menu, MenuItem},
-  tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-  App, Manager, WebviewUrl,
+  App, Manager, Emitter,
 };
 
 use crate::{settigns_view::new_settings_view, system_tray::setup_tray};
@@ -32,7 +31,7 @@ use crate::{settigns_view::new_settings_view, system_tray::setup_tray};
 fn setup(app: &mut App) -> anyhow::Result<()> {
   // let win = app.get_webview_window("main").unwrap();
   // win.eval("window.location.reload()")?;
-  new_settings_view(app)?;
+  new_settings_view(app.handle(), false)?;
   #[cfg(desktop)]
   let _ = app
     .handle()
@@ -139,6 +138,18 @@ fn serve_file(file_path: &PathBuf) -> Response<Vec<u8>> {
   }
 }
 
+/// Broadcast an event to all windows
+#[tauri::command]
+async fn broadcast_event(
+  app: tauri::AppHandle,
+  event_name: String,
+  payload: serde_json::Value,
+) -> Result<(), String> {
+  app
+    .emit(&event_name, payload)
+    .map_err(|e| format!("Failed to broadcast event: {}", e))
+}
+
 pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_http::init())
@@ -189,6 +200,13 @@ pub fn run() {
       fs_api::fs_read_dir,
       fs_api::fs_exists,
       fs_api::fs_stat,
+      preferences::get_preference,
+      preferences::get_all_preferences,
+      preferences::set_preference,
+      preferences::set_all_preferences,
+      preferences::remove_preference,
+      preferences::remove_all_preferences,
+      broadcast_event,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

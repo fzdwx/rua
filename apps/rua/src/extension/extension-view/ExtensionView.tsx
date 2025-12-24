@@ -132,6 +132,14 @@ export function ExtensionView({
   const [_title, setTitle] = useState(extensionName);
   const { theme } = useTheme();
 
+  // Resolve "system" theme to actual light/dark for extension API
+  const effectiveTheme = useMemo<"light" | "dark">(() => {
+    if (theme === "system") {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return theme;
+  }, [theme]);
+
   // Convert file path to custom ext:// protocol URL
   // Format: ext://BASE64_ENCODED_BASE_DIR/filename?query
   // This allows Rust to resolve relative paths correctly
@@ -266,7 +274,7 @@ export function ExtensionView({
           onUnregisterActions,
           getInitialSearch: () => search || "",
         },
-        theme,
+        effectiveTheme,
         cssContent
       );
 
@@ -324,12 +332,12 @@ export function ExtensionView({
     if (rpcRef.current) {
       const clientAPI = rpcRef.current.getAPI();
       try {
-        clientAPI.onThemeChange?.(theme);
+        clientAPI.onThemeChange?.(effectiveTheme);
       } catch (err) {
         console.log("[ExtensionView] Failed to notify theme change:", err);
       }
     }
-  }, [theme]);
+  }, [effectiveTheme]);
 
   return (
     <iframe

@@ -13,6 +13,13 @@ export type {
   ActionMode,
   ManifestAction,
   RuaConfig,
+  PreferenceType,
+  PreferenceOption,
+  TextfieldPreference,
+  DropdownPreference,
+  TogglePreference,
+  ShortcutPreference,
+  PreferenceField,
 } from "./manifest";
 
 // Rua extension API types

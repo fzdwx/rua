@@ -183,6 +183,20 @@ export interface RuaClientAPI extends CommonRuaAPI {
     getInitialSearch(): Promise<string>;
   };
 
+  /** Preferences API for storing user preferences */
+  preferences: {
+    /** Get a preference value */
+    get<T = unknown>(key: string): Promise<T | null>;
+    /** Get all preferences for this extension */
+    getAll(): Promise<Record<string, unknown>>;
+    /** Set a preference value */
+    set(key: string, value: unknown): Promise<void>;
+    /** Set multiple preferences at once */
+    setAll(values: Record<string, unknown>): Promise<void>;
+    /** Remove a preference value */
+    remove(key: string): Promise<void>;
+  };
+
   /** Register event handler. View mode extensions support: activate, deactivate, action-triggered, theme-change */
   on(
     event: "activate" | "deactivate" | "action-triggered" | "theme-change",
@@ -218,6 +232,17 @@ export interface RuaServerAPI {
   storageSet(key: string, value: string): Promise<void>;
 
   storageRemove(key: string): Promise<void>;
+
+  // Preferences API
+  preferencesGet(key: string): Promise<string | null>;
+
+  preferencesGetAll(): Promise<Record<string, string>>;
+
+  preferencesSet(key: string, value: string): Promise<void>;
+
+  preferencesSetAll(values: Record<string, string>): Promise<void>;
+
+  preferencesRemove(key: string): Promise<void>;
 
   // File System API
   fsReadTextFile(path: string, baseDir?: string): Promise<string>;

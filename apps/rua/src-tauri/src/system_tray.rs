@@ -3,6 +3,7 @@ use tauri::{
   tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
   App, Manager,
 };
+use crate::settigns_view::new_settings_view;
 
 pub fn setup_tray(app: &App) -> anyhow::Result<()> {
   let show_item = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
@@ -26,6 +27,8 @@ pub fn setup_tray(app: &App) -> anyhow::Result<()> {
         if let Some(window) = app.get_webview_window("Settings") {
           let _ = window.show();
           let _ = window.set_focus();
+        }else{
+          new_settings_view(app.app_handle(),true).unwrap();
         }
       }
       "devtools" => {

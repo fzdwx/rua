@@ -232,23 +232,7 @@ export default function Home() {
 
   // Generate settings actions
   const getSettingsActions = useCallback(() => {
-    return [
-      {
-        id: "toggle-theme",
-        name: "Toggle Theme",
-        subtitle: `Switch to ${theme === "dark" ? "light" : "dark"} mode`,
-        icon: (
-          <Icon
-            icon={theme === "dark" ? "tabler:sun" : "tabler:moon"}
-            style={{ fontSize: "20px" }}
-          />
-        ),
-        keywords: "theme dark light mode",
-        perform: () => {
-          toggleTheme();
-        },
-      },
-    ];
+    return [];
   }, [theme, toggleTheme]);
 
   // View configurations

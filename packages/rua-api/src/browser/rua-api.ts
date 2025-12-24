@@ -150,6 +150,39 @@ export async function initializeRuaAPI(): Promise<RuaClientAPI> {
         remove: (key) => hostAPI.storageRemove(key),
       },
 
+      preferences: {
+        get: async (key) => {
+          const value = await hostAPI.preferencesGet(key);
+          if (value === null || value === undefined) return null;
+          try {
+            return JSON.parse(value);
+          } catch {
+            return value as never;
+          }
+        },
+        getAll: async () => {
+          const values = await hostAPI.preferencesGetAll();
+          const result: Record<string, unknown> = {};
+          for (const [key, value] of Object.entries(values)) {
+            try {
+              result[key] = JSON.parse(value);
+            } catch {
+              result[key] = value;
+            }
+          }
+          return result;
+        },
+        set: (key, value) => hostAPI.preferencesSet(key, JSON.stringify(value)),
+        setAll: (values) => {
+          const serialized: Record<string, string> = {};
+          for (const [key, value] of Object.entries(values)) {
+            serialized[key] = JSON.stringify(value);
+          }
+          return hostAPI.preferencesSetAll(serialized);
+        },
+        remove: (key) => hostAPI.preferencesRemove(key),
+      },
+
       fs: {
         readTextFile: (path: string, options?: FsOptions) =>
           hostAPI.fsReadTextFile(path, options?.baseDir),

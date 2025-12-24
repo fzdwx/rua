@@ -1,6 +1,6 @@
-use tauri::{App, WebviewUrl};
+use tauri::{AppHandle, WebviewUrl};
 
-pub fn new_settings_view(app: &mut App) -> anyhow::Result<()> {
+pub fn new_settings_view(app: &AppHandle, show: bool) -> anyhow::Result<()> {
   let settings = tauri::WebviewWindowBuilder::new(
     app,
     "Settings",
@@ -13,6 +13,8 @@ pub fn new_settings_view(app: &mut App) -> anyhow::Result<()> {
   .resizable(false)
   .build()?;
 
-  settings.hide()?;
+  if !show {
+    settings.hide()?;
+  }
   Ok(())
 }
