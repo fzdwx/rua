@@ -5,9 +5,6 @@
  * Plugin developers can import types, utilities, and shared components from this package.
  */
 
-// Export version
-export const VERSION = "0.1.0";
-
 // Export all types
 export * from "./types";
 
