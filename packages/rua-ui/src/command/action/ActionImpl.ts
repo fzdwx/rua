@@ -17,26 +17,32 @@ interface ActionImplOptions {
 }
 
 /**
- * Extends the configured keywords to include the section and subtitle
+ * Extends the configured keywords to include section and subtitle
  * This allows section names and subtitles to be searched for.
+ *
+ * Returns both section keywords and subtitle keywords separately
+ * to allow selective addition to userKeywords.
  */
-const extendKeywords = (action: Action): string[] => {
-  const additional: string[] = [];
+const extendKeywords = (action: Action): { sectionKeywords: string[]; allKeywords: string[] } => {
+  const sectionKeywords: string[] = [];
+  const allKeywords: string[] = [];
 
-  // Add section name
+  // Add section name (to both userKeywords and keywords)
   if (action.section) {
     const sectionName = typeof action.section === "string" ? action.section : action.section.name;
     if (sectionName) {
-      additional.push(...generateKeywordVariations(sectionName));
+      const variations = generateKeywordVariations(sectionName);
+      sectionKeywords.push(...variations);
+      allKeywords.push(...variations);
     }
   }
 
-  // Add subtitle
+  // Add subtitle (only to keywords, not userKeywords)
   if (action.subtitle) {
-    additional.push(...generateKeywordVariations(action.subtitle));
+    allKeywords.push(...generateKeywordVariations(action.subtitle));
   }
 
-  return additional;
+  return { sectionKeywords, allKeywords };
 };
 
 export class ActionImpl implements Action {
@@ -92,7 +98,7 @@ export class ActionImpl implements Action {
           .split(",")
           .map((k) => k.trim().toLowerCase())
           .filter((k) => k.length > 0);
-        keywordArray.forEach((k) => this. userKeywords!.add(k));
+        keywordArray.forEach((k) => this.userKeywords!.add(k));
       } else if (Array.isArray(action.keywords)) {
         action.keywords.forEach((k) => {
           const trimmed = k.trim().toLowerCase();
@@ -101,9 +107,9 @@ export class ActionImpl implements Action {
       }
     }
 
-    // Add subtitle and section keywords to userKeywords
-    const additionalKeywords = extendKeywords(action);
-    additionalKeywords.forEach(kw => this.userKeywords!.add(kw));
+    // Add section keywords (NOT subtitle) to userKeywords for boost scoring
+    const { sectionKeywords, allKeywords } = extendKeywords(action);
+    sectionKeywords.forEach((kw) => this.userKeywords!.add(kw));
 
     // Generate all keywords (including auto-generated ones)
     const baseKeywords = generateKeywords({
@@ -112,7 +118,7 @@ export class ActionImpl implements Action {
     });
 
     // Combine all keywords and ensure uniqueness
-    this.keywords = [...new Set([...baseKeywords, ...additionalKeywords])];
+    this.keywords = [...new Set([...baseKeywords, ...allKeywords])];
 
     // Load history from localStorage
     const history = getActionHistory(action.id);
