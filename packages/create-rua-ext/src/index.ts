@@ -155,6 +155,10 @@ function createTemplateContext(config: ExtensionConfig) {
   const useVite = config.buildTool === "vite";
   const pmRun = config.packageManager === "npm" ? "npm run" : config.packageManager;
 
+  const packageJsonPath = path.join(__dirname, "../package.json");
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+  const version = packageJson.version || "0.0.0";
+
   return {
     // Basic info
     name: config.name,
@@ -162,6 +166,7 @@ function createTemplateContext(config: ExtensionConfig) {
     description: config.description,
     author: config.author,
     kebabName,
+    version,
 
     // Extension type flags
     hasBackground,

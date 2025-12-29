@@ -65,7 +65,7 @@
     },
     "apps/rua": {
       "name": "rua",
-      "version": "0.4.9",
+      "version": "0.5.0",
       "dependencies": {
         "@fzdwx/ruaui": "workspace:*",
         "@tauri-apps/api": "^2",
@@ -138,7 +138,7 @@
     },
     "packages/create-rua-ext": {
       "name": "create-rua-ext",
-      "version": "0.4.9",
+      "version": "0.5.0",
       "bin": {
         "create-rua-ext": "./dist/index.js",
       },
@@ -154,21 +154,15 @@
     },
     "packages/rua-api": {
       "name": "rua-api",
-      "version": "0.4.9",
+      "version": "0.5.0",
       "dependencies": {
         "kkrpc": "^0.6.0",
         "tauri-api-adapter": "^0.3.27",
       },
-      "peerDependencies": {
-        "react": "^18.0.0 || ^19.0.0",
-      },
-      "optionalPeers": [
-        "react",
-      ],
     },
     "packages/rua-ui": {
       "name": "@fzdwx/ruaui",
-      "version": "0.1.0",
+      "version": "0.5.0",
       "dependencies": {
         "@tanstack/react-virtual": "^3.0.1",
         "date-fns": "^4.1.0",

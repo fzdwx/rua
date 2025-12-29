@@ -46,6 +46,12 @@ sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${NEW_VERSION}\"/" packages/cre
 echo "📝 Updating packages/rua-ui/package.json..."
 sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${NEW_VERSION}\"/" packages/rua-ui/package.json
 
+# Update packages/rua-api/src/index.ts VERSION constant
+sed -i "s/export const VERSION = \"[^\"]*\"/export const VERSION = \"${NEW_VERSION}\"/" packages/rua-api/src/index.ts
+
+# Update packages/create-rua-ext/src/templates/package.json.template
+sed -i "s/\"version\": \"[^\"]*\",/\"version\": \"{{version}}\",/" packages/create-rua-ext/src/templates/package.json.template
+
 # Update apps/rua/src-tauri/Cargo.toml
 echo "📝 Updating apps/rua/src-tauri/Cargo.toml..."
 sed -i "s/^version = \"[^\"]*\"/version = \"${NEW_VERSION}\"/" apps/rua/src-tauri/Cargo.toml
@@ -62,15 +68,15 @@ cd "$SCRIPT_DIR"
 
 # Update documentation files
 echo "📝 Updating documentation installation paths..."
-sed -i "s/rua_${CURRENT_VERSION}_amd64\\.deb/rua_${NEW_VERSION}_amd64.deb/g" apps/docs/content/docs/getting-started/installation.mdx
-sed -i "s/rua-${CURRENT_VERSION}-1\\.x86_64\\.rpm/rua-${NEW_VERSION}-1.x86_64.rpm/g" apps/docs/content/docs/getting-started/installation.mdx
-sed -i "s/rua_${CURRENT_VERSION}_amd64\\.AppImage/rua_${NEW_VERSION}_amd64.AppImage/g" apps/docs/content/docs/getting-started/installation.mdx
+sed -i "s/rua_${CURRENT_VERSION}_amd64\.deb/rua_${NEW_VERSION}_amd64.deb/g" apps/docs/content/docs/getting-started/installation.mdx
+sed -i "s/rua-${CURRENT_VERSION}-1\.x86_64\.rpm/rua-${NEW_VERSION}-1.x86_64.rpm/g" apps/docs/content/docs/getting-started/installation.mdx
+sed -i "s/rua_${CURRENT_VERSION}_amd64\.AppImage/rua_${NEW_VERSION}_amd64.AppImage/g" apps/docs/content/docs/getting-started/installation.mdx
 
-sed -i "s/rua_${CURRENT_VERSION}_amd64\\.deb/rua_${NEW_VERSION}_amd64.deb/g" apps/docs/content/docs/user-guide/installation.mdx
-sed -i "s/rua-${CURRENT_VERSION}-1\\.x86_64\\.rpm/rua-${NEW_VERSION}-1.x86_64.rpm/g" apps/docs/content/docs/user-guide/installation.mdx
-sed -i "s/rua_${CURRENT_VERSION}_amd64\\.AppImage/rua_${NEW_VERSION}_amd64.AppImage/g" apps/docs/content/docs/user-guide/installation.mdx
+sed -i "s/rua_${CURRENT_VERSION}_amd64\.deb/rua_${NEW_VERSION}_amd64.deb/g" apps/docs/content/docs/user-guide/installation.mdx
+sed -i "s/rua-${CURRENT_VERSION}-1\.x86_64\.rpm/rua-${NEW_VERSION}-1.x86_64.rpm/g" apps/docs/content/docs/user-guide/installation.mdx
+sed -i "s/rua_${CURRENT_VERSION}_amd64\.AppImage/rua_${NEW_VERSION}_amd64.AppImage/g" apps/docs/content/docs/user-guide/installation.mdx
 
-sed -i "s/rua_${CURRENT_VERSION}_amd64\\.deb/rua_${NEW_VERSION}_amd64.deb/g" apps/docs/content/docs/getting-started/quick-start.mdx
+sed -i "s/rua_${CURRENT_VERSION}_amd64\.deb/rua_${NEW_VERSION}_amd64.deb/g" apps/docs/content/docs/getting-started/quick-start.mdx
 
 # Check if there are any changes
 if git diff --quiet; then
@@ -91,7 +97,9 @@ git add package.json \
     apps/rua/src-tauri/Cargo.lock \
     apps/docs/content/docs/getting-started/installation.mdx \
     apps/docs/content/docs/user-guide/installation.mdx \
-    apps/docs/content/docs/getting-started/quick-start.mdx
+    apps/docs/content/docs/getting-started/quick-start.mdx \
+    packages/rua-api/src/index.ts \
+    packages/create-rua-ext/src/templates/package.json.template
 
 git commit -m "chore: bump version to ${NEW_VERSION}
 

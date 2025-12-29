@@ -12,7 +12,7 @@
     "rua-api": "*",{{#useReact}},
     "react": "^19.1.0",
     "react-dom": "^19.1.0"{{/useReact}}{{#useRuaUI}},
-   "@fzdwx/ruaui" "*",,
+    "@fzdwx/ruaui": "*",
     "ahooks": "^3.8.4"{{/useRuaUI}}{{#useShadcn}},
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
