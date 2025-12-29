@@ -56,6 +56,7 @@ export function useBuiltInActions(
       subtitle: "View and manage installed extensions",
       section: "Settings",
       usageCount: getUsageCount(extensionManagerId),
+      hideSearchBox: true,
       perform: () => {
         incrementUsage(extensionManagerId);
         // Clear search input before entering extension view

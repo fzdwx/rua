@@ -10,12 +10,14 @@ const RenderItem = React.forwardRef(
       action,
       active,
       currentRootActionId,
+      displayName,
       // @ts-ignore
       style,
     }: {
       action: ActionImpl;
       active: boolean;
       currentRootActionId: ActionId;
+      displayName?: string;
       style?: React.CSSProperties;
     },
     ref: React.Ref<HTMLDivElement>
@@ -51,7 +53,7 @@ const RenderItem = React.forwardRef(
                     <span className="mr-2">&rsaquo;</span>
                   </React.Fragment>
                 ))}
-              <span>{action.name}</span>
+              <span>{displayName !== undefined ? displayName : action.name}</span>
             </div>
             {action.subtitle && (
               <span className="text-[9px]" style={{ color: "var(--gray11)" }}>

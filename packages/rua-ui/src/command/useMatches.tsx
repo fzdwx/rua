@@ -256,7 +256,8 @@ function useInternalMatches(filtered: ActionImpl[], search: string, searchConfig
     for (const action of throttledFiltered) {
       // 1. Standard matching algorithm (primary method)
       const keywords = action.keywords || [];
-      let standardScore = calculateBestScore(query, keywords, prefixBoost);
+      const userKeywords = action.userKeywords || new Set<string>();
+      let standardScore = calculateBestScore(query, keywords, prefixBoost, userKeywords);
 
       // 2. Pinyin matching (fallback for Chinese text)
       const pinyinScore = matchPinyin(action, query);

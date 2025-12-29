@@ -43,7 +43,8 @@ export class ActionImpl implements Action {
   id: Action["id"];
   name: Action["name"];
   shortcut: Action["shortcut"];
-  keywords?: string[]; // Changed from string to string[]
+  keywords?: string[]; // All keywords (auto-generated + user-defined)
+  userKeywords?: Set<string>; // User-defined keywords only (for boost scoring)
   section: Action["section"];
   icon: Action["icon"];
   subtitle: Action["subtitle"];
@@ -81,14 +82,34 @@ export class ActionImpl implements Action {
     this.id = action.id;
     this.name = action.name;
 
-    // Generate keywords using multi-keyword generator
+    // Initialize user keywords set
+    this.userKeywords = new Set<string>();
+
+    // Add user-provided keywords to userKeywords set
+    if (action.keywords) {
+      if (typeof action.keywords === "string") {
+        const keywordArray = action.keywords
+          .split(",")
+          .map((k) => k.trim().toLowerCase())
+          .filter((k) => k.length > 0);
+        keywordArray.forEach((k) => this. userKeywords!.add(k));
+      } else if (Array.isArray(action.keywords)) {
+        action.keywords.forEach((k) => {
+          const trimmed = k.trim().toLowerCase();
+          if (trimmed) this.userKeywords!.add(trimmed);
+        });
+      }
+    }
+
+    // Add subtitle and section keywords to userKeywords
+    const additionalKeywords = extendKeywords(action);
+    additionalKeywords.forEach(kw => this.userKeywords!.add(kw));
+
+    // Generate all keywords (including auto-generated ones)
     const baseKeywords = generateKeywords({
       name: action.name,
       keywords: action.keywords,
     });
-
-    // Add extended keywords (section, subtitle)
-    const additionalKeywords = extendKeywords(action);
 
     // Combine all keywords and ensure uniqueness
     this.keywords = [...new Set([...baseKeywords, ...additionalKeywords])];
