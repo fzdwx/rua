@@ -1,15 +1,15 @@
 import * as React from "react";
-import { QuickLink, QuickLinkOpenType, useQuickLinks } from "@/hooks/useQuickLinks";
-import { Footer } from "@fzdwx/ruaui";
-import { Icon } from "@iconify/react";
-import { useKeyPress, useDebounceFn } from "ahooks";
-import { Label } from "@fzdwx/ruaui";
-import { ComponentsInput } from "@fzdwx/ruaui";
-import { Kbd } from "@fzdwx/ruaui";
-import { Button } from "@fzdwx/ruaui";
-import { Switch } from "@fzdwx/ruaui";
-import { invoke } from "@tauri-apps/api/core";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@fzdwx/ruaui";
+import {QuickLink, QuickLinkOpenType, useQuickLinks} from "@/hooks/useQuickLinks";
+import {Footer} from "@fzdwx/ruaui";
+import {Icon} from "@iconify/react";
+import {useKeyPress, useDebounceFn} from "ahooks";
+import {Label} from "@fzdwx/ruaui";
+import {ComponentsInput} from "@fzdwx/ruaui";
+import {Kbd} from "@fzdwx/ruaui";
+import {Button} from "@fzdwx/ruaui";
+import {Switch} from "@fzdwx/ruaui";
+import {invoke} from "@tauri-apps/api/core";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@fzdwx/ruaui";
 
 interface QuickLinkCreatorProps {
   onLoadingChange?: (loading: boolean) => void;
@@ -18,11 +18,11 @@ interface QuickLinkCreatorProps {
 }
 
 export function QuickLinkCreator({
-  onLoadingChange,
-  onReturn,
-  editQuickLink,
-}: QuickLinkCreatorProps) {
-  const { addQuickLink, updateQuickLink } = useQuickLinks();
+                                   onLoadingChange,
+                                   onReturn,
+                                   editQuickLink,
+                                 }: QuickLinkCreatorProps) {
+  const {addQuickLink, updateQuickLink} = useQuickLinks();
   const [editingId, setEditingId] = React.useState<string | null>(editQuickLink?.id || null);
 
   const [name, setName] = React.useState(editQuickLink?.name || "");
@@ -70,7 +70,7 @@ export function QuickLinkCreator({
     setFetchingPageInfo(true);
     console.log("[QuickLinkCreator] Fetching page info for:", targetUrl);
     try {
-      const info = await invoke<PageInfo>("fetch_page_info", { url: targetUrl });
+      const info = await invoke<PageInfo>("fetch_page_info", {url: targetUrl});
       console.log("[QuickLinkCreator] Page info:", info);
 
       // Only set if user hasn't manually entered values
@@ -90,18 +90,18 @@ export function QuickLinkCreator({
   };
 
   // Debounced fetch page info
-  const { run: debouncedFetchPageInfo } = useDebounceFn(
+  const {run: debouncedFetchPageInfo} = useDebounceFn(
     (targetUrl: string) => {
       if (openType === "url" && targetUrl) {
         fetchPageInfo(targetUrl);
       }
     },
-    { wait: 800 }
+    {wait: 800}
   );
 
   const variables = [
-    { name: "query", description: "代表查询内容" },
-    { name: "selection", description: "代表选中的文本（粘贴板内容）" },
+    {name: "query", description: "代表查询内容"},
+    {name: "selection", description: "代表选中的文本（粘贴板内容）"},
   ];
 
   // Check if a string is a URL
@@ -306,7 +306,7 @@ export function QuickLinkCreator({
                   <code className="px-1 py-0.5 rounded bg-muted font-mono text-[11px] text-foreground font-medium">
                     {"{selection}"}
                   </code>
-                  <br />
+                  <br/>
                   表示通过选择文本替换掉{" "}
                   <code className="px-1 py-0.5 rounded bg-muted font-mono text-[11px] text-foreground font-medium">
                     {"{selection}"}
@@ -317,7 +317,8 @@ export function QuickLinkCreator({
 
               {/* Variable selection menu */}
               {showVariableMenu && (
-                <div className="absolute z-50 w-72 mt-1 rounded-lg border border-border/50 bg-popover/95 backdrop-blur-sm shadow-lg overflow-hidden">
+                <div
+                  className="absolute z-50 w-72 mt-1 rounded-lg border border-border/50 bg-popover/95 backdrop-blur-sm shadow-lg overflow-hidden">
                   {variables.map((variable, index) => (
                     <div
                       key={variable.name}
@@ -328,7 +329,8 @@ export function QuickLinkCreator({
                       onClick={() => insertVariable(variable.name)}
                     >
                       <div className="flex items-center gap-3">
-                        <code className="px-2 py-1 rounded-md bg-muted border border-border/50 text-foreground font-mono text-xs">
+                        <code
+                          className="px-2 py-1 rounded-md bg-muted border border-border/50 text-foreground font-mono text-xs">
                           {`{${variable.name}}`}
                         </code>
                         <span className="text-muted-foreground text-xs">
@@ -396,7 +398,7 @@ export function QuickLinkCreator({
                 onValueChange={(value) => setOpenType(value as QuickLinkOpenType)}
               >
                 <SelectTrigger id="open-type-select" className="bg-background w-48">
-                  <SelectValue placeholder="选择打开方式" />
+                  <SelectValue placeholder="选择打开方式"/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="url">浏览器打开 URL</SelectItem>
@@ -440,13 +442,15 @@ export function QuickLinkCreator({
             </Label>
             <div className="flex-1">
               <div className="flex gap-2 items-center">
-                <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center text-xl border rounded-md bg-muted overflow-hidden">
+                <div
+                  className="flex-shrink-0 w-9 h-9 flex items-center justify-center text-xl border rounded-md bg-muted overflow-hidden">
                   {(() => {
                     if (customIcon) {
                       if (isUrl(customIcon)) {
                         if (iconLoadError) {
                           return iconUrl ? (
-                            <img src={iconUrl} alt="icon" className="w-6 h-6" onError={() => {}} />
+                            <img src={iconUrl} alt="icon" className="w-6 h-6" onError={() => {
+                            }}/>
                           ) : (
                             "🔗"
                           );
@@ -466,7 +470,8 @@ export function QuickLinkCreator({
                     }
                     if (iconUrl) {
                       return (
-                        <img src={iconUrl} alt="icon" className="w-6 h-6" onError={() => {}} />
+                        <img src={iconUrl} alt="icon" className="w-6 h-6" onError={() => {
+                        }}/>
                       );
                     }
                     return "🔗";
@@ -488,9 +493,9 @@ export function QuickLinkCreator({
 
       <Footer
         current={null}
-        icon={<Icon icon="tabler:link-plus" className="size-5" />}
+        icon={<Icon icon="tabler:link-plus" className="size-5"/>}
         actions={() => []}
-        content={() => <div />}
+        content={() => <div/>}
         accessory={
           <div className="flex items-center gap-3 pr-6">
             <Button onClick={handleSubmit} size="sm" variant="outline" className="">
