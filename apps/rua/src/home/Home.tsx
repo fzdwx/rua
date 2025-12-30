@@ -114,9 +114,7 @@ export default function Home() {
     minScoreThreshold: 100,
     maxResults: 10,
     debug: true,
-    weights:{
-
-    }
+    weights: {},
   });
 
   // Count non-section items (sections are strings)
@@ -124,13 +122,7 @@ export default function Home() {
     return appResults.filter((item) => typeof item !== "string").length;
   }, [appResults]);
 
-  const { fileActions } = useFileSearch({
-    enabled: search.trim().length > 1,
-    query: search,
-    currentResultsCount: actualResultsCount,
-    threshold: 10,
-    maxResults: 5,
-  });
+  const { fileActions } = useFileSearch({ query: search, currentResultsCount: actualResultsCount});
 
   // Register file actions to store so they get proper command objects
   // Once registered, they will be automatically included in appResults via useMatches

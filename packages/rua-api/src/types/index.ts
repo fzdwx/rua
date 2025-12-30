@@ -19,6 +19,7 @@ export type {
   DropdownPreference,
   TogglePreference,
   ShortcutPreference,
+  PathListPreference,
   PreferenceField,
 } from "./manifest";
 
@@ -46,3 +47,6 @@ export type {
 } from "./rua";
 
 export { BaseDirectory } from "./rua";
+
+export type { FileSearchConfig } from "./file-search";
+export { DEFAULT_FILE_SEARCH_CONFIG } from "./file-search";

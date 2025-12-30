@@ -121,7 +121,7 @@ export interface ManifestAction {
 /**
  * Preference field types
  */
-export type PreferenceType = "textfield" | "dropdown" | "toggle" | "shortcut";
+export type PreferenceType = "textfield" | "dropdown" | "toggle" | "shortcut" | "number" | "open" | "pathlist";
 
 /**
  * Dropdown option
@@ -190,13 +190,58 @@ export interface ShortcutPreference extends BasePreference {
 }
 
 /**
+ * Number input preference
+ */
+export interface NumberPreference extends BasePreference {
+  type: "number";
+  /** Default value */
+  default?: number;
+  /** Minimum allowed value */
+  min?: number;
+  /** Maximum allowed value */
+  max?: number;
+  /** Step increment value */
+  step?: number;
+}
+
+
+/**
+ * Open method preference
+ */
+export interface OpenPreference extends BasePreference {
+  type: "open";
+  /** Default value (false = use default open method) */
+  default?: boolean;
+  /** Comma-separated file paths */
+  paths?: string[];
+  /** Available open method options (exactly 2 options) */
+  options: PreferenceOption[];
+}
+
+/**
+ * Path list preference for managing directory arrays
+ */
+export interface PathListPreference extends BasePreference {
+  type: "pathlist";
+  /** Default value (array of directory paths) */
+  default?: string[];
+  /** Placeholder text */
+  placeholder?: string;
+  /** Enable path validation before adding */
+  validatePaths?: boolean;
+}
+
+/**
  * Preference field definition
  */
 export type PreferenceField =
   | TextfieldPreference
   | DropdownPreference
   | TogglePreference
-  | ShortcutPreference;
+  | ShortcutPreference
+  | NumberPreference
+  | OpenPreference
+  | PathListPreference;
 
 /**
  * Rua-specific extension configuration

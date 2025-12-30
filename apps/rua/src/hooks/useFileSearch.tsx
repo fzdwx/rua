@@ -3,6 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { Action } from "@fzdwx/ruaui";
 import { Icon } from "@iconify/react";
 import { useDebounce } from "ahooks";
+import { useSystemConfig } from "../hooks/useSystemConfig";
+import { DEFAULT_FILE_SEARCH_CONFIG } from "rua-api";
 
 export interface FileSearchResult {
   path: string;
@@ -11,35 +13,26 @@ export interface FileSearchResult {
 }
 
 interface UseFileSearchOptions {
-  enabled: boolean; // Enable file search when results are less than threshold
   query: string;
   currentResultsCount: number;
-  threshold?: number; // Trigger file search if results < threshold
-  maxResults?: number;
-  onFileOpen?: () => void; // Callback after file is opened
+  onFileOpen?: () => void;
 }
 
 /**
- * Custom hook for searching files on the filesystem
+ * Custom hook for searching files on filesystem
  * Automatically triggers when search results are below threshold
  */
-export function useFileSearch({
-  enabled,
-  query,
-  currentResultsCount,
-  threshold = 5,
-  maxResults = 20,
-  onFileOpen,
-}: UseFileSearchOptions) {
+export function useFileSearch({ query, currentResultsCount, onFileOpen }: UseFileSearchOptions) {
   const [fileActions, setFileActions] = useState<Action[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Use ref to store currentResultsCount to avoid triggering re-search
+  const [fileSearchConfig] = useSystemConfig("fileSearch", DEFAULT_FILE_SEARCH_CONFIG);
+  const config = fileSearchConfig ?? DEFAULT_FILE_SEARCH_CONFIG;
+
   const currentResultsCountRef = useRef(currentResultsCount);
   currentResultsCountRef.current = currentResultsCount;
 
-  // Debounce the query to avoid too many searches
   const debouncedQuery = useDebounce(query, { wait: 400 });
 
   const searchFiles = useCallback(
@@ -49,14 +42,11 @@ export function useFileSearch({
         return;
       }
 
-      // Only search if current results are below threshold
-      // Use ref value to avoid dependency issues
-      if (currentResultsCountRef.current >= threshold) {
+      if (currentResultsCountRef.current >= config.threshold) {
         setFileActions([]);
         return;
       }
 
-      // Cancel previous search
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -65,11 +55,15 @@ export function useFileSearch({
       setIsSearching(true);
 
       try {
+        const effectiveMaxResults = config.maxResults;
+        const effectiveSearchPaths =
+          config.customPaths && config.customPaths.length > 0 ? config.customPaths : undefined;
+        const effectiveOpenMethod = config.openMethod ?? "xdg-open";
+
         const searchResults = await invoke<FileSearchResult[]>("search_files", {
           query: searchQuery,
-          maxResults,
-          // Let backend use default search paths (HOME directory)
-          searchPaths: undefined,
+          maxResults: effectiveMaxResults,
+          searchPaths: effectiveSearchPaths,
         });
 
         const actions: Action[] = searchResults.map((file) => ({
@@ -81,11 +75,13 @@ export function useFileSearch({
             <Icon icon="tabler:file" style={{ fontSize: "20px" }} />
           ),
           subtitle: file.path,
-          priority: -10, // Lower priority than apps
+          priority: -10,
           perform: async () => {
             try {
-              await invoke("open_file", { path: file.path });
-              // Call callback to hide window
+              await invoke("open_file", {
+                path: file.path,
+                method: effectiveOpenMethod,
+              });
               onFileOpen?.();
             } catch (error) {
               console.error("Failed to open file:", error);
@@ -101,11 +97,11 @@ export function useFileSearch({
         setIsSearching(false);
       }
     },
-    [threshold, maxResults, onFileOpen]
+    [config, onFileOpen]
   );
 
   useEffect(() => {
-    if (!enabled) {
+    if (!config.enabled) {
       setFileActions([]);
       setIsSearching(false);
       return;
@@ -118,8 +114,7 @@ export function useFileSearch({
         abortControllerRef.current.abort();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, debouncedQuery]);
+  }, [config.enabled, debouncedQuery, searchFiles]);
 
   return {
     fileActions,

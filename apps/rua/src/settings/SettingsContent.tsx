@@ -4,11 +4,12 @@
  * Displays preference fields for the selected category
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { PreferenceFormField } from "./PreferenceFormField";
 import { useTheme } from "@/hooks/useTheme";
 import type { SettingsCategory } from "./Settings";
+import type { FileSearchConfig } from "rua-api";
 
 interface SettingsContentProps {
   category: SettingsCategory;
@@ -18,6 +19,7 @@ export function SettingsContent({ category }: SettingsContentProps) {
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const { setTheme } = useTheme();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
    * System configuration handlers
@@ -52,11 +54,24 @@ export function SettingsContent({ category }: SettingsContentProps) {
       });
 
       const parsedValues: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(prefs)) {
-        try {
-          parsedValues[key] = JSON.parse(value);
-        } catch {
-          parsedValues[key] = value;
+
+      // Special handling for file-search category
+      if (category.id === "file-search" && prefs.fileSearch) {
+        const fileSearchConfig = JSON.parse(prefs.fileSearch) as FileSearchConfig;
+        // Destructure composite object into individual fields for form display
+        parsedValues.enabled = fileSearchConfig.enabled;
+        parsedValues.maxResults = fileSearchConfig.maxResults;
+        parsedValues.threshold = fileSearchConfig.threshold;
+        parsedValues.openMethod = fileSearchConfig.openMethod;
+        parsedValues.customPaths = fileSearchConfig.customPaths;
+      } else {
+        // Normal handling for other categories
+        for (const [key, value] of Object.entries(prefs)) {
+          try {
+            parsedValues[key] = JSON.parse(value);
+          } catch {
+            parsedValues[key] = value;
+          }
         }
       }
 
@@ -71,6 +86,46 @@ export function SettingsContent({ category }: SettingsContentProps) {
   const handleValueChange = async (name: string, value: unknown) => {
     setValues((prev) => ({ ...prev, [name]: value }));
 
+    // Special handling for file-search category with longer debounce (2 seconds)
+    if (category.id === "file-search") {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      saveTimeoutRef.current = setTimeout(async () => {
+        // Read from updated values state using functional update
+        setValues((currentValues) => {
+          const fullConfig: FileSearchConfig = {
+            enabled: (currentValues.enabled ?? true) as boolean,
+            maxResults: (currentValues.maxResults ?? 20) as number,
+            threshold: (currentValues.threshold ?? 5) as number,
+            openMethod: (currentValues.openMethod ?? "xdg-open") as "xdg-open" | "system",
+            customPaths: (currentValues.customPaths ?? []) as string[],
+          };
+
+          // Save preferences
+          invoke("set_preference", {
+            namespace: "system",
+            key: "fileSearch",
+            value: JSON.stringify(fullConfig),
+          }).then(() => {
+            // Broadcast event after successful save
+            return invoke("broadcast_event", {
+              eventName: "rua://system-config-changed",
+              payload: { key: "fileSearch", value: fullConfig },
+            });
+          }).catch((error) => {
+            console.error("Failed to save file search config:", error);
+          });
+
+          return currentValues; // Return unchanged values
+        });
+      }, 2000); // 2 second debounce
+
+      return;
+    }
+
+    // Original behavior for other categories (immediate save)
     try {
       const namespace = category.type === "system" ? "system" : category.extensionId!;
 
@@ -103,6 +158,15 @@ export function SettingsContent({ category }: SettingsContentProps) {
       console.error("Failed to save preference:", error);
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (loading) {
     return (

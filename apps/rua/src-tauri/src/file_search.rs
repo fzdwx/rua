@@ -1,25 +1,53 @@
 use std::{
-  path::PathBuf,
+  path::{Path, PathBuf},
   process::{Command, Stdio},
 };
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct FileSearchResult {
   pub path: String,
   pub name: String,
-  #[serde(rename = "isDirectory")]
   pub is_directory: bool,
 }
 
-/// Open a file with the default application
 #[tauri::command]
-pub async fn open_file(path: String) -> Result<(), String> {
-  Command::new("xdg-open")
-    .arg(&path)
-    .spawn()
-    .map_err(|e| format!("Failed to open file: {}", e))?;
+pub fn validate_search_paths(paths: Vec<String>) -> Result<Vec<bool>, String> {
+  let results: Vec<bool> = paths
+    .iter()
+    .map(|path| Path::new(path).exists())
+    .collect();
+
+  Ok(results)
+}
+
+/// Open a file with the specified method
+#[tauri::command]
+pub async fn open_file(path: String, method: Option<String>) -> Result<(), String> {
+  let open_method = method.as_deref().unwrap_or("xdg-open");
+
+  match open_method {
+    "rifle" => {
+      Command::new("rifle")
+        .arg(&path)
+        .spawn()
+        .map_err(|e| format!("Failed to open file with rifle: {}", e))?;
+    }
+    "system" => {
+      Command::new("xdg-open")
+        .arg(&path)
+        .spawn()
+        .map_err(|e| format!("Failed to open file: {}", e))?;
+    }
+    _ => {
+      Command::new("xdg-open")
+        .arg(&path)
+        .spawn()
+        .map_err(|e| format!("Failed to open file: {}", e))?;
+    }
+  }
 
   Ok(())
 }
@@ -35,7 +63,6 @@ pub async fn search_files(
   let search_paths = search_paths.unwrap_or_else(|| {
     vec![
       std::env::var("HOME").unwrap_or_else(|_| "/home".to_string()),
-      "/".to_string(),
     ]
   });
 
