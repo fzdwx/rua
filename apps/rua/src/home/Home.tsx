@@ -113,7 +113,7 @@ export default function Home() {
   const { results: appResults } = useMatches(search, state.actions, state.rootActionId, {
     minScoreThreshold: 100,
     maxResults: 10,
-    debug: true,
+    debug: false,
     weights: {},
   });
 

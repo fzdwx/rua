@@ -22,10 +22,10 @@ interface SystemConfigChangedEvent {
 /**
  * Get a system configuration value
  */
-export async function getSystemConfig<T = unknown>(key: string): Promise<T | null> {
+export async function getSystemConfig<T = unknown>(key: string, namespace: string = SYSTEM_NAMESPACE): Promise<T | null> {
   try {
     const value = await invoke<string | null>("get_preference", {
-      namespace: SYSTEM_NAMESPACE,
+      namespace,
       key,
     });
 
@@ -35,7 +35,7 @@ export async function getSystemConfig<T = unknown>(key: string): Promise<T | nul
 
     return JSON.parse(value) as T;
   } catch (error) {
-    console.error(`Failed to get system config "${key}":`, error);
+    console.error(`Failed to get system config "${key}" from namespace "${namespace}":`, error);
     return null;
   }
 }
@@ -43,22 +43,24 @@ export async function getSystemConfig<T = unknown>(key: string): Promise<T | nul
 /**
  * Set a system configuration value and notify all windows
  */
-export async function setSystemConfig(key: string, value: unknown): Promise<void> {
+export async function setSystemConfig(key: string, value: unknown, namespace: string = SYSTEM_NAMESPACE): Promise<void> {
   try {
     // Save to preferences
     await invoke("set_preference", {
-      namespace: SYSTEM_NAMESPACE,
+      namespace,
       key,
       value: JSON.stringify(value),
     });
 
-    // Broadcast event to ALL windows using Tauri backend
+    // Broadcast event to ALL windows using Tauri backend (namespace-isolated)
+    // Replace . with / in namespace for event name (Tauri only allows alphanumeric, -, /, :, _)
+    const eventNamespace = namespace.replace(/\./g, "/");
     await invoke("broadcast_event", {
-      eventName: "rua://system-config-changed",
+      eventName: `rua://config-changed:${eventNamespace}`,
       payload: { key, value },
     });
   } catch (error) {
-    console.error(`Failed to set system config "${key}":`, error);
+    console.error(`Failed to set system config "${key}" in namespace "${namespace}":`, error);
     throw error;
   }
 }
@@ -69,6 +71,7 @@ export async function setSystemConfig(key: string, value: unknown): Promise<void
  * @param key - Configuration key
  * @param defaultValue - Default value if not set
  * @param onConfigChange - Optional callback when config changes from other windows
+ * @param namespace - Optional namespace (defaults to "system")
  * @returns [value, setValue, loading] tuple
  *
  * @example
@@ -85,7 +88,8 @@ export async function setSystemConfig(key: string, value: unknown): Promise<void
 export function useSystemConfig<T = unknown>(
   key: string,
   defaultValue?: T,
-  onConfigChange?: (value: T) => void
+  onConfigChange?: (value: T) => void,
+  namespace: string = SYSTEM_NAMESPACE
 ): [T | null, (value: T) => Promise<void>, boolean] {
   const [value, setValue] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,10 +99,10 @@ export function useSystemConfig<T = unknown>(
     const loadValue = async () => {
       setLoading(true);
       try {
-        const storedValue = await getSystemConfig<T>(key);
+        const storedValue = await getSystemConfig<T>(key, namespace);
         setValue(storedValue ?? defaultValue ?? null);
       } catch (error) {
-        console.error(`Failed to load system config "${key}":`, error);
+        console.error(`Failed to load system config "${key}" from namespace "${namespace}":`, error);
         setValue(defaultValue ?? null);
       } finally {
         setLoading(false);
@@ -106,14 +110,16 @@ export function useSystemConfig<T = unknown>(
     };
 
     loadValue();
-  }, [key, defaultValue]);
+  }, [key, defaultValue, namespace]);
 
   // Listen for config changes from other windows
   useEffect(() => {
     let unlisten: (() => void) | undefined;
 
+    // Replace . with / in namespace for event name (Tauri only allows alphanumeric, -, /, :, _)
+    const eventNamespace = namespace.replace(/\./g, "/");
     getCurrentWebviewWindow()
-      .listen<SystemConfigChangedEvent>("rua://system-config-changed", (event) => {
+      .listen<SystemConfigChangedEvent>(`rua://config-changed:${eventNamespace}`, (event) => {
         if (event.payload.key === key) {
           const newValue = event.payload.value as T;
           setValue(newValue);
@@ -127,15 +133,15 @@ export function useSystemConfig<T = unknown>(
     return () => {
       unlisten?.();
     };
-  }, [key, onConfigChange]);
+  }, [key, onConfigChange, namespace]);
 
   // Update value and notify other windows
   const updateValue = useCallback(
     async (newValue: T) => {
       setValue(newValue);
-      await setSystemConfig(key, newValue);
+      await setSystemConfig(key, newValue, namespace);
     },
-    [key]
+    [key, namespace]
   );
 
   return [value, updateValue, loading];

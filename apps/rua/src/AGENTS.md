@@ -38,8 +38,10 @@ React 19 frontend for main Tauri app - components, hooks, extension system, UI l
 **Tauri Integration:**
 
 - **Command Pattern**: All Rust backend calls via `@tauri-apps/api/core` `invoke()`
-- **Window Events**: `rua://window-shown`, `rua://window-hidden`, `rua://system-config-changed`
-- **Preference Storage**: `get_preference()` / `set_preference()` with namespace
+- **Window Events**: `rua://window-shown`, `rua://window-hidden`, `rua://config-changed:{namespace}` (e.g., `rua://config-changed:system/general`, `rua://config-changed:system/file-search`)
+  - Note: Event names use `/` instead of `.` because Tauri only allows alphanumeric, `-`, `/`, `:`, `_` in event names
+- **Preference Storage**: `get_preference()` / `set_preference()` with namespace (e.g., `system.general`, `system.file-search`)
+  - Note: Preference namespaces use `.` for storage, but events use `/` for compatibility
 
 **State Management:**
 

@@ -40,11 +40,6 @@ fn setup(app: &mut App) -> anyhow::Result<()> {
   // Setup system tray
   setup_tray(app)?;
 
-  // Migrate file search configuration from individual keys to composite object
-  if let Err(e) = preferences::migrate_file_search_config(&app.handle()) {
-    eprintln!("Failed to migrate file search config: {}", e);
-  }
-
   // Start the control server in a separate thread
   let app_handle = app.handle().clone();
   std::thread::spawn(move || {

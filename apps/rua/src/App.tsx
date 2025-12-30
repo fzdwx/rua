@@ -37,7 +37,7 @@ function AppContent() {
     let unlisten: (() => void) | undefined;
 
     getCurrentWebviewWindow()
-      .listen<{ key: string; value: unknown }>("rua://system-config-changed", (event) => {
+      .listen<{ key: string; value: unknown }>("rua://config-changed:system/general", (event) => {
         // Handle different system config changes
         if (event.payload.key === "theme") {
           const theme = event.payload.value as "light" | "dark" | "system";

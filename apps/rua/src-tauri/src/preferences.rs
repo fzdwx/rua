@@ -169,33 +169,3 @@ pub async fn remove_all_preferences(app: AppHandle, namespace: String) -> Result
   preferences.remove(&namespace);
   save_preferences(&app, &preferences)
 }
-
-/// Migrate file search configuration from individual keys to composite object
-/// This cleans up orphaned individual preference keys (enabled, maxResults, etc.)
-/// that were created before batching was implemented.
-pub fn migrate_file_search_config(app: &AppHandle) -> Result<(), String> {
-  let mut prefs = load_preferences(app)?;
-
-  if let Some(system_prefs) = prefs.get_mut("system") {
-    // Check if migration needed (has individual keys)
-    let has_individual_keys = system_prefs.contains_key("enabled")
-      || system_prefs.contains_key("maxResults")
-      || system_prefs.contains_key("threshold")
-      || system_prefs.contains_key("openMethod")
-      || system_prefs.contains_key("customPaths");
-
-    if has_individual_keys {
-      // Clean up individual keys (keep only composite "fileSearch" object)
-      system_prefs.remove("enabled");
-      system_prefs.remove("maxResults");
-      system_prefs.remove("threshold");
-      system_prefs.remove("openMethod");
-      system_prefs.remove("customPaths");
-
-      save_preferences(app, &prefs)?;
-      eprintln!("Migrated file search config: removed individual keys");
-    }
-  }
-
-  Ok(())
-}
