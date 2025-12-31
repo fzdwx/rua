@@ -159,13 +159,13 @@ export function ShortcutInput({ value, onChange, placeholder }: ShortcutInputPro
         value={displayValue}
         readOnly
         placeholder={placeholder || "Click 'Record' to set shortcut"}
-        className={isRecording ? "border-blue-9 bg-[var(--blue3)]" : ""}
+        className={isRecording ? "border-blue-9 bg-(--blue3)" : ""}
       />
       <Button
         type="button"
         variant={isRecording ? "default" : "outline"}
         onClick={handleStartRecording}
-        className="whitespace-nowrap"
+        className="whitespace-nowrap text-(--gray12)"
       >
         {isRecording ? "Recording..." : "Record"}
       </Button>

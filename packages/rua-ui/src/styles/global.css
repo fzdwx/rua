@@ -135,8 +135,8 @@
   background-color: var(--input) !important;
 }
 
-[data-state="checked"].data-\[state\=checked\]\:translate-x-4 {
-  transform: translateX(1rem);
+[data-state="checked"].data-\[state\=checked\]\:translate-x-\[1\.25rem\] {
+  transform: translateX(1.25rem);
 }
 
 [data-state="unchecked"].data-\[state\=unchecked\]\:translate-x-0 {

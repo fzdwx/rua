@@ -26,12 +26,12 @@ export function PreferenceFormField({ preference, value, onChange }: PreferenceF
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <Label htmlFor={preference.name} className="text-sm font-medium text-[var(--gray12)]">
+          <Label htmlFor={preference.name} className="text-sm font-medium text-(--gray12)">
             {preference.title}
             {preference.required && <span className="text-red-500 ml-1">*</span>}
           </Label>
           {preference.description && (
-            <p className="text-sm text-[var(--gray11)]">{preference.description}</p>
+            <p className="text-sm text-(--gray11)">{preference.description}</p>
           )}
         </div>
 
@@ -51,7 +51,7 @@ export function PreferenceFormField({ preference, value, onChange }: PreferenceF
           value={(currentValue as string) || ""}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
           placeholder={preference.placeholder}
-          className="bg-[var(--gray3)] border-[var(--gray6)] hover:bg-[var(--gray4)] focus:ring-2 focus:ring-ring"
+          className="bg-(--gray3) border-(--gray6) hover:bg-(--gray4) focus:ring-2 focus:ring-ring"
         />
       )}
 
@@ -59,14 +59,14 @@ export function PreferenceFormField({ preference, value, onChange }: PreferenceF
         <Select value={(currentValue as string) || ""} onValueChange={onChange}>
           <SelectTrigger
             id={preference.name}
-            className="bg-[var(--gray3)] border-[var(--gray6)] hover:bg-[var(--gray4)]"
+            className="bg-(--gray3) border-(--gray6) hover:bg-(--gray4)"
           >
-            <SelectValue placeholder="Select an option" />
+            <SelectValue className="text-(--gray12)" placeholder="Select an option" />
           </SelectTrigger>
-          <SelectContent className="bg-[var(--gray3)] border-[var(--gray6)] backdrop-blur-md">
+          <SelectContent className="bg-(--gray3) border-(--gray6) backdrop-blur-md">
             {preference.options?.map((option: PreferenceOption) => (
               <SelectItem key={option.value} value={option.value}>
-                {option.label}
+                <span className="text-(--gray12)">{option.label}</span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -145,11 +145,11 @@ export function PreferenceFormField({ preference, value, onChange }: PreferenceF
             onValueChange={(val) => onChange({ ...currentValue, method: val })}
           >
             <SelectTrigger
-              className="bg-[var(--gray3)] border-[var(--gray6)] hover:bg-[var(--gray4)]"
+              className="bg-(--gray3) text-(--gray11) border-(--gray6) hover:bg-(--gray4)"
             >
-              <SelectValue placeholder="Select open method" />
+              <SelectValue className="text-(--gray12)" placeholder="Select open method" />
             </SelectTrigger>
-            <SelectContent className="bg-[var(--gray3)] border-[var(--gray6)] backdrop-blur-md">
+            <SelectContent className="text-(--gray12) bg-(--gray3) border-(--gray6) backdrop-blur-md">
               {(preference as any).options?.map((option: PreferenceOption) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -166,7 +166,7 @@ export function PreferenceFormField({ preference, value, onChange }: PreferenceF
               onChange({ ...currentValue, paths });
             }}
             placeholder="Comma-separated paths (e.g., /path/one,/path/two)"
-            className="bg-[var(--gray3)] border-[var(--gray6)] hover:bg-[var(--gray4)] focus:ring-2 focus:ring-ring"
+            className="bg-(--gray3) border-(--gray6) hover:bg-(--gray4) focus:ring-2 focus:ring-ring"
           />
         </div>
       )}

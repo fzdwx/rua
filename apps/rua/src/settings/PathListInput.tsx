@@ -120,13 +120,13 @@ export function PathListInput({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isValidating}
-          className="flex-1 bg-[var(--gray3)] border-[var(--gray6)] hover:bg-[var(--gray4)] focus:ring-2 focus:ring-ring"
+          className="flex-1 bg-(--gray3) border-(--gray6) hover:bg-(--gray4) focus:ring-2 focus:ring-ring"
         />
         <button
           type="button"
           onClick={() => handleAddPath(inputValue)}
           disabled={!inputValue.trim() || isValidating}
-          className="px-3 py-2 text-sm bg-[var(--gray3)] border border-[var(--gray6)] hover:bg-[var(--gray4)] text-[var(--gray12)] rounded flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-2 text-sm bg-(--gray3) border border-(--gray6) hover:bg-(--gray4) text-(--gray12) rounded flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="h-4 w-4" />
           Add
@@ -135,7 +135,7 @@ export function PathListInput({
           type="button"
           onClick={handleBrowse}
           disabled={isValidating}
-          className="px-3 py-2 text-sm bg-[var(--gray3)] border border-[var(--gray6)] hover:bg-[var(--gray4)] text-[var(--gray12)] rounded flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-2 text-sm bg-(--gray3) border border-(--gray6) hover:bg-(--gray4) text-(--gray12) rounded flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <FolderOpen className="h-4 w-4" />
           Browse
@@ -149,23 +149,23 @@ export function PathListInput({
 
       {/* Validation indicator */}
       {isValidating && (
-        <div className="text-sm text-[var(--gray11)]">Validating path...</div>
+        <div className="text-sm text-(--gray11)">Validating path...</div>
       )}
 
       {/* Path list */}
       {value.length > 0 && (
         <div className="space-y-2">
-          <div className="text-sm text-[var(--gray11)]">
+          <div className="text-sm text-(--gray11)">
             {value.length} {value.length === 1 ? "path" : "paths"} added:
           </div>
           <div className="space-y-1">
             {value.map((path, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 p-2 rounded bg-[var(--gray3)] border border-[var(--gray6)] text-sm"
+                className="flex items-center gap-2 p-2 rounded bg-(--gray3) border border-(--gray6) text-sm"
               >
-                <FolderOpen className="h-4 w-4 text-[var(--gray10)] flex-shrink-0" />
-                <span className="flex-1 text-[var(--gray12)] break-all">
+                <FolderOpen className="h-4 w-4 text-(--gray10) flex-shrink-0" />
+                <span className="flex-1 text-(--gray12) break-all">
                   {path}
                 </span>
                 <button
