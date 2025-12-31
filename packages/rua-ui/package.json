@@ -11,7 +11,7 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles": "./src/styles/index.css",
+    "./styles": "./dist/style.css",
     "./styles/global.css": "./src/styles/global.css",
     "./styles/command.css": "./src/styles/command.css"
   },
@@ -20,7 +20,7 @@
     "src/styles"
   ],
   "scripts": {
-    "build": "vite build && tsc --emitDeclarationOnly --declaration --outDir dist",
+    "build": "vite build && tsc --emitDeclarationOnly --declaration --outDir dist && rm -f dist/styles.js dist/styles.js.map",
     "dev": "vite build --watch",
     "type-check": "tsc --noEmit"
   },

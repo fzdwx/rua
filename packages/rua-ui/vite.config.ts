@@ -22,10 +22,16 @@ export default defineConfig({
   },
   build: {
     lib: {
-      entry: resolve(__dirname, "src/index.ts"),
+      entry: {
+        index: resolve(__dirname, "src/index.ts"),
+        styles: resolve(__dirname, "src/styles/build.ts"),
+      },
       name: "@fzdwx/ruaui",
       formats: ["es"],
-      fileName: "index",
+      fileName: (format, entryName) => {
+        if (entryName === 'styles') return 'styles.js';
+        return 'index.js';
+      },
     },
     rollupOptions: {
       external: [
@@ -50,7 +56,9 @@ export default defineConfig({
           "react-dom": "ReactDOM",
         },
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name === "style.css") return "style.css";
+          if (assetInfo.name?.endsWith('.css')) {
+            return 'style.css';
+          }
           return assetInfo.name || "asset";
         },
       },

@@ -40,7 +40,6 @@ export function PreferenceFormField({ preference, value, onChange }: PreferenceF
             id={preference.name}
             checked={currentValue as boolean}
             onCheckedChange={onChange}
-            className="data-[state=checked]:bg-[var(--blue9)] data-[state=unchecked]:bg-[var(--gray6)]"
           />
         )}
       </div>

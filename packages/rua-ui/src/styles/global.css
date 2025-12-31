@@ -5,30 +5,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-html,
-body {
-  padding: 0;
-  margin: 0;
-  font-family: var(--font-sans);
-  height: 100%;
-  width: 100%;
-}
-
-html ::-webkit-scrollbar,
-body ::-webkit-scrollbar {
-  display: none;
-}
-
-body {
-  background-color: transparent !important;
-  overflow-x: hidden;
-}
-
-#root {
-  height: 100%;
-  width: 100%;
-}
-
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -144,14 +120,25 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply font-sans bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
 }
 
 .clip_hight {
   @apply underline text-primary;
+}
+
+/* Support for Radix UI data-state attributes on Switch component */
+[data-state="checked"].data-\[state\=checked\]\:bg-primary {
+  background-color: var(--primary) !important;
+}
+
+[data-state="unchecked"].data-\[state\=unchecked\]\:bg-input {
+  background-color: var(--input) !important;
+}
+
+[data-state="checked"].data-\[state\=checked\]\:translate-x-4 {
+  transform: translateX(1rem);
+}
+
+[data-state="unchecked"].data-\[state\=unchecked\]\:translate-x-0 {
+  transform: translateX(0);
 }

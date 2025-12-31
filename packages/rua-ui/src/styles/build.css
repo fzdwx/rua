@@ -1,0 +1,10 @@
+/**
+ * Rua UI - Compiled Styles Entry
+ *
+ * This file is the build entry for generating standalone CSS bundle.
+ * It imports all styles that need to be compiled and bundled.
+ */
+
+/* Import all source styles - Tailwind will process these */
+@import "./global.css";
+@import "./command.css";
