@@ -249,49 +249,105 @@ fn save_cache(applications: &[Application], timestamp: u64) {
   }
 }
 
-/// Generate possible icon paths for a given icon name
+/// Get XDG data directories, falling back to default if not set
+/// See: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+fn get_xdg_data_dirs() -> Vec<String> {
+  std::env::var("XDG_DATA_DIRS")
+    .unwrap_or_else(|_| "/usr/share:/usr/local/share".to_string())
+    .split(':')
+    .map(|s| s.to_string())
+    .collect()
+}
+
+/// Generate icon paths following XDG Base Directory Specification
+/// See: https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html
 fn generate_icon_paths(icon_name: &str) -> Vec<String> {
-  vec![
-    icon_name.to_string(),
-    format!("/usr/share/icons/hicolor/scalable/apps/{}.svg", icon_name),
-    format!("/usr/share/icons/hicolor/48x48/apps/{}.png", icon_name),
-    format!("/usr/share/icons/hicolor/32x32/apps/{}.png", icon_name),
-    format!("/usr/share/icons/hicolor/16x16/apps/{}.png", icon_name),
-    format!("/usr/share/icons/hicolor/128x128/apps/{}.png", icon_name),
-    format!("/usr/share/icons/hicolor/256x256/apps/{}.png", icon_name),
-    format!("/usr/share/icons/hicolor/512x512/apps/{}.png", icon_name),
-    format!("/usr/share/icons/breeze/apps/48/{}.png", icon_name),
-    format!("/usr/share/icons/breeze/apps/48/{}.svg", icon_name),
-    format!("/usr/share/icons/breeze/apps/16/{}.svg", icon_name),
-    format!("/usr/share/icons/breeze/status/16/{}.svg", icon_name),
-    format!("/usr/share/icons/breeze/status/24/{}.svg", icon_name),
-    format!("/usr/share/pixmaps/{}.svg", icon_name),
-    format!("/usr/share/pixmaps/{}.png", icon_name),
-    format!("/usr/share/pixmaps/{}", icon_name),
-    format!("/usr/share/icons/{}.png", icon_name),
-    format!("/usr/share/icons/breeze/actions/16/{}.svg", icon_name),
-    format!("/usr/share/icons/breeze/actions/24/{}.svg", icon_name),
-    format!("/usr/share/icons/breeze/places/16/{}.svg", icon_name),
-    format!("/usr/share/icons/breeze/preferences/16/{}.svg", icon_name),
-    format!("/usr/share/icons/breeze/devices/16/{}.svg", icon_name),
-    format!("/usr/share/icons/breeze/applets/64/{}.svg", icon_name),
-    format!("/usr/share/icons/breeze/preferences/24/{}.svg", icon_name),
-    format!("/usr/share/icons/breeze/preferences/32/{}.svg", icon_name),
-    format!(
-      "/usr/share/icons/Adwaita/16x16/legacy/{}-symbolic.png",
-      icon_name
-    ),
-    format!(
-      "/usr/share/icons/Adwaita/symbolic/legacy/{}-symbolic.png",
-      icon_name
-    ),
-    format!(
-      "/usr/share/icons/Adwaita/symbolic/legacy/{}-symbolic.svg",
-      icon_name
-    ),
-    format!("/usr/share/icons/breeze/actions/symbolic/{}.svg", icon_name),
-    format!("/usr/share/icons/Adwaita/symbolic/legacy/{}.svg", icon_name),
-  ]
+  let mut paths = Vec::new();
+
+  // Always include the icon name itself first (for named icons)
+  paths.push(icon_name.to_string());
+
+  // Get XDG data directories
+  let xdg_dirs = get_xdg_data_dirs();
+
+  // Icon sizes following XDG icon theme specification (in search order)
+  // Scalable comes first as it's resolution-independent
+  let sizes = vec![
+    "scalable", // SVG preferred for vector graphics
+    "64x64",
+    "48x48",
+    "32x32",
+    "24x24",
+    "16x16",
+    "128x128",
+    "256x256",
+    "512x512",
+  ];
+
+  // Extensions in order of preference (SVG preferred for scalability)
+  let extensions = vec!["svg", "png"];
+
+  // Common icon themes (hicolor is required fallback, others are system-specific)
+  let themes = vec!["hicolor", "breeze", "Adwaita", "oxygen", "gnome", "highcontrast"];
+
+  // Contexts as defined in XDG spec (apps, actions, categories, devices, emblems, mimetypes, places, status)
+  let contexts = vec!["apps", "actions", "categories", "devices", "emblems", "mimetypes", "places", "status"];
+
+  // Generate paths following XDG icon theme specification
+  // Pattern: $XDG_DATA_DIRS/icons/<theme>/<size>/<context>/<name>.<ext>
+  for data_dir in &xdg_dirs {
+    for theme in &themes {
+      // 1. Theme-based icon paths (XDG standard structure)
+      for size in &sizes {
+        for ext in &extensions {
+          // Standard context-based icons
+          for _context in &contexts {
+            paths.push(format!(
+              "{}/icons/{}/{}/{}.{}",
+              data_dir, theme, size, icon_name, ext
+            ));
+          }
+
+          // Legacy location for apps icons (without context)
+          paths.push(format!(
+            "{}/icons/{}/{}/{}",
+            data_dir, theme, size, icon_name
+          ));
+        }
+      }
+
+      // 2. Symbolic icons (Adwaita and breeze specific)
+      // Pattern: icons/<theme>/<context>/symbolic/<name>.svg
+      paths.push(format!("{}/icons/{}/actions/symbolic/{}.svg", data_dir, theme, icon_name));
+      paths.push(format!("{}/icons/{}/status/symbolic/{}.svg", data_dir, theme, icon_name));
+      paths.push(format!("{}/icons/{}/apps/symbolic/{}.svg", data_dir, theme, icon_name));
+
+      // Legacy symbolic paths
+      paths.push(format!(
+        "{}/icons/{}/symbolic/legacy/{}-symbolic.png",
+        data_dir, theme, icon_name
+      ));
+      paths.push(format!(
+        "{}/icons/{}/symbolic/legacy/{}-symbolic.svg",
+        data_dir, theme, icon_name
+      ));
+      paths.push(format!(
+        "{}/icons/{}/16x16/legacy/{}-symbolic.png",
+        data_dir, theme, icon_name
+      ));
+    }
+
+    // 3. Legacy pixmaps directory (still widely used)
+    // $XDG_DATA_DIRS/pixmaps/<name>.<ext>
+    paths.push(format!("{}/pixmaps/{}.svg", data_dir, icon_name));
+    paths.push(format!("{}/pixmaps/{}.png", data_dir, icon_name));
+    paths.push(format!("{}/pixmaps/{}", data_dir, icon_name));
+
+    // 4. Root icons directory (fallback)
+    paths.push(format!("{}/icons/{}.png", data_dir, icon_name));
+  }
+
+  paths
 }
 
 /// Find the actual icon file path for a given icon name
